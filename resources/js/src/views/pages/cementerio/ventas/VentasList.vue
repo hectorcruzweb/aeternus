@@ -401,7 +401,6 @@ import CancelarVenta from "../ventas/CancelarVenta";
 import Password from "@pages/confirmar_password";
 import VerNotas from "@pages/VerNotas";
 import Entregarconvenio from "@pages/Entregarconvenio";
-import usuarios from "@services/Usuarios";
 /**VARIABLES GLOBALES */
 import { mostrarOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";
