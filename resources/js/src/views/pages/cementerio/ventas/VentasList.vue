@@ -400,7 +400,7 @@ import CancelarVenta from "../ventas/CancelarVenta";
 //componente de password
 import Password from "@pages/confirmar_password";
 import VerNotas from "@pages/VerNotas";
-import Entregarconvenio from "@pages/Entregarconvenio";
+import Entregarconvenio from "@pages/EntregarConvenio";
 /**VARIABLES GLOBALES */
 import { mostrarOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";

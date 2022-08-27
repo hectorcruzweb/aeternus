@@ -323,7 +323,7 @@
 <script>
 //planes de venta
 import planes from "@services/planes";
-import Entregarconvenio from "@pages/Entregarconvenio";
+import Entregarconvenio from "@pages/EntregarConvenio";
 import FormularioVentas from "../ventas/FormularioVentas";
 
 import ReportesVentas from "../ventas/ReportesVentas";
@@ -331,8 +331,6 @@ import CancelarVenta from "../ventas/CancelarVenta";
 import VerNotas from "@pages/VerNotas";
 //componente de password
 import Password from "@pages/confirmar_password";
-
-import usuarios from "@services/Usuarios";
 /**VARIABLES GLOBALES */
 import { mostrarOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";
