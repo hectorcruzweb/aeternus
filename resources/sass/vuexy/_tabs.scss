@@ -1,0 +1,46 @@
+.vs-card--header {
+    h3 {
+        @extend .size-base;
+    }
+}
+
+.con-vs-card {
+    padding: 0.5rem 1rem 0.5rem 1rem !important;
+}
+
+.con-slot-tabs {
+    display: none !important;
+}
+
+.ul-tabs {
+    li {
+        &:not(:first-child) {
+            margin-left: 0.25rem;
+        }
+        border-top-right-radius: 8px !important;
+        border-top-left-radius: 8px !important;
+        .vs-tabs--btn {
+            @extend .size-small, .font-medium, .color-copy;
+        }
+
+        padding: 0.1rem 1.25rem 0.1rem 1.25rem;
+
+        &.activeChild {
+            background-color: #fff;
+        }
+    }
+}
+
+.line-vs-tabs {
+    display: none !important;
+}
+
+.con-vs-card {
+    border-top-right-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    margin: 0 !important;
+}
+
+.tab-content {
+    background-color: #fff;
+}

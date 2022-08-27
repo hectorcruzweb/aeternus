@@ -1,0 +1,563 @@
+/*importando los estilos*/
+@import "vuexy/form_elements";
+@import "vuexy/notifications";
+@import "vuexy/login";
+@import "vuexy/dashboard";
+@import "vuexy/buttons";
+@import "vuexy/cards";
+@import "vuexy/tables";
+@import "vuexy/tabs";
+@import "vuexy/popup-forms";
+@import "vuexy/roles";
+@import "vuexy/signature";
+
+@import "vuexy/notifications_in_forms";
+
+/*Desactivand el efecto scroll drawn refresh on mobiles*/
+body {
+    overscroll-behavior: contain !important;
+}
+body {
+    overscroll-behavior-y: contain !important;
+}
+/*Desactivand el efecto scroll drawn refresh on mobiles*/
+
+/*dots*/
+@mixin dot {
+    height: 8px;
+    width: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-success {
+    @include dot;
+    @extend .bg-success-900;
+}
+
+.dot-warning {
+    @include dot;
+    @extend .bg-warning-900;
+}
+
+.dot-danger {
+    @include dot;
+    @extend .bg-danger-900;
+}
+
+/*x de close en responsive menu*/
+.v-nav-menu .header-sidebar .feather-icon svg {
+}
+
+/*fin de dots*/
+
+.img-articulo {
+    display: block;
+    max-width: 175px;
+    min-width: 175px;
+}
+
+.mensaje-requerido {
+    color: rgba(var(--vs-danger), 1) !important;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              estilos de select                             */
+/* -------------------------------------------------------------------------- */
+.large_select .vs__selected {
+    padding: 5px 0px 5px 5px !important;
+    text-transform: uppercase !important;
+    font-size: 1rem !important;
+}
+
+.plan_venta .vs__selected {
+    text-transform: capitalize !important;
+}
+
+.large_textarea .vs-textarea {
+    color: #303030 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+
+.text-primary-forced {
+    color: rgba(var(--vs-primary), 1) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               tablas de datos                              */
+/* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                                   button                                   */
+/* -------------------------------------------------------------------------- */
+.texto-btn {
+    top: -5px !important;
+    margin-left: 5px !important;
+    position: relative !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   estilos                                  */
+/* -------------------------------------------------------------------------- */
+.bg-gray-headers {
+    background-color: #cecece !important;
+}
+
+.bg-gray-dark {
+    background-color: #303030 !important;
+}
+
+.dark-text {
+    color: #303030 !important;
+}
+
+.semidark-text {
+    color: #666666 !important;
+}
+
+.default_color {
+    background-color: #c1c1c1 !important;
+    color: #303030 !important;
+}
+
+.default_color:hover {
+    border-radius: 0px !important;
+    box-shadow: rgba(179, 179, 179, 0.8) 0px 0px 25px -8px !important;
+    -webkit-box-shadow: rgba(179, 179, 179, 0.8) 0px 0px 25px -8px !important;
+    -moz-box-shadow: rgba(179, 179, 179, 0.8) 0px 0px 25px -8px !important;
+    box-shadow: rgba(179, 179, 179, 0.8) 0px 0px 25px -8px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          fin de estilos de botones                         */
+/* -------------------------------------------------------------------------- */
+
+/* Tamaño del scroll */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+/* Estilos barra (thumb) de scroll */
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background-color: #999999;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #b3b3b3;
+    box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos track de scroll */
+::-webkit-scrollbar-track {
+    background: #e1e1e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track:hover,
+::-webkit-scrollbar-track:active {
+    background: #d4d4d4;
+}
+
+.img-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.texto-importante {
+    color: rgba(var(--vs-danger), 1) !important;
+    font-weight: 600;
+}
+
+.opacity-75 {
+    opacity: 1 !important;
+}
+
+.con-vs-popup {
+    //z-index: 52000 !important;
+}
+
+.vs-dialog-primary .vs-dialog .vs-dialog-header {
+    border-radius: 0;
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 14px !important;
+    font-weight: 600;
+    background-color: rgba(var(--vs-primary), 1) !important;
+}
+
+.accion_nombre {
+    color: rgba(var(--vs-primary), 1) !important;
+}
+
+.con-vs-dialog {
+    z-index: 62005 !important;
+}
+
+[dir] .vs__dropdown-toggle {
+    padding: 0 0 4px 0;
+    background: none;
+    border: 1px solid rgba(var(--vs-default_color), 1) !important;
+    border-radius: 4px;
+}
+
+.input-text-right {
+    text-align: end !important;
+    text-align: right;
+}
+
+.td-padding-y {
+    padding: 10px 0px 10px 0px !important;
+}
+
+.texto-bold input {
+    text-transform: uppercase !important;
+    color: #303030 !important;
+    font-weight: 600 !important;
+    font-size: 24px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          estilos flatpick calendar                         */
+/* -------------------------------------------------------------------------- */
+
+.flatpickr-calendar .flatpickr-monthDropdown-months {
+    border: 0px solid rgba(0, 0, 0, 0.3) !important;
+    border-radius: 0px !important;
+    text-align: start !important;
+    font-size: 18.9px !important;
+    width: 145px !important;
+    height: 25px !important;
+    color: #3c3f40 !important;
+}
+
+.flatpickr-calendar .flatpickr-monthDropdown-months:hover,
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper:hover {
+    background-color: rgba(60, 63, 64, 0.05) !important;
+}
+
+.flatpickr-calendar .flatpickr-day.selected,
+.flatpickr-calendar .flatpickr-day.selected:hover,
+.flatpickr-calendar .flatpickr-day:hover,
+.flatpickr-day.today:hover,
+.flatpickr-day.today.selected:hover {
+    color: #fff !important;
+    background-color: rgba(var(--vs-primary), 1) !important;
+    border: 0px !important;
+}
+
+.flatpickr-day.today {
+    color: #fff !important;
+    background-color: rgb(246, 71, 71) !important;
+    border: 1px solid rgb(246, 71, 71);
+}
+
+.flatpickr-next-month:hover,
+.flatpickr-prev-month:hover {
+    svg path {
+        fill: rgba(var(--vs-primary), 1) !important;
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                       fin estilos calendar flat pick                       */
+/* -------------------------------------------------------------------------- */
+
+.vs-input--placeholder {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.texto-informacion {
+    padding: 10px 0px 10px 0px;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: rgba(var(--vs-primary), 1) !important;
+}
+
+/*password checker*/
+.password-checker .password-checker .vs-dialog-cancel--icon {
+    display: none;
+}
+
+.password-checker .vs-dialog-cancel-button {
+    color: red !important;
+}
+
+/*fin password checker*/
+
+/*ESTILOS DEL COMPONENTE DE VENTAS*/
+
+.venta-details .propiedad_tipo {
+    text-transform: capitalize !important;
+}
+
+/*FIN DE ESTILOS DEL COMPONENTE DE VENTAS*/
+
+/*estislod del login*/
+/*[dir] .layout--full-page .bg-img {
+    background-image: url(/images/aeternus/login.jpg) !important;
+    background-color: rgba(248, 247, 216, 0.7);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}*/
+
+/*fin de estilos del login*/
+
+/* estilos de videos tutoriales*/
+.tutorial {
+    padding: 5px 20px;
+    border: 1px solid rgba(var(--vs-primary), 1) !important;
+    margin: 0 auto 0 auto;
+    cursor: pointer;
+}
+
+/*fin de estilos de videos tutoriales*/
+
+/* buttons*/
+
+.firma-digital .con-input-upload {
+    margin: 0 auto 0 auto !important;
+    float: none !important;
+}
+
+.firma-digital .con-img-upload .img-upload {
+    margin: 0 auto 0 auto !important;
+    float: none !important;
+}
+
+/*fin de buttons*/
+
+.zindex1000 {
+    z-index: 1000 !important;
+}
+
+.iniciar-sesion {
+    font-size: 25px;
+    line-height: 1.14286;
+    font-weight: 500;
+}
+
+.sistema-descripcion {
+    line-height: 22px;
+}
+
+.sistema-title {
+    text-align: center !important;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 32px;
+}
+
+.iframe_viewer {
+    max-height: 100vh !important;
+    min-width: 100% !important;
+    border: 1px solid #dae1e7 !important;
+}
+
+.pdfs_modulos {
+    z-index: 52100 !important;
+}
+
+/*FIN pdfs de los reportes de los modulos*/
+
+/**confirmar dialogos */
+.confirmar .vs-dialog {
+    max-width: 550px !important;
+    min-height: 350px !important;
+}
+
+.confirmar .password-checker .vs-dialog-cancel--icon {
+    display: none;
+}
+
+.confirmar .vs-dialog-cancel-button {
+    color: #fff !important;
+    background-color: #c1c1c1 !important;
+}
+
+.confirmar .vs-dialog .vs-dialog-header {
+    display: none !important;
+}
+
+.nota_icono:before {
+    display: block;
+    width: 85px;
+    height: 85px;
+    margin: 0px auto 0px auto !important;
+    content: url("../../../../../resources/assets/images/notes.svg");
+}
+
+.cantidad input {
+    text-align: center !important;
+}
+
+.cantidad_icono:before {
+    display: block;
+    width: 85px;
+    height: 85px;
+    margin: 0px auto 0px auto !important;
+    content: url("../../../../../resources/assets/images/box.svg");
+}
+
+.confirmar .seguro-mensaje {
+    font-size: 1.8rem;
+    color: #636363 !important;
+    font-weight: 500 !important;
+}
+
+.confirmar .seguro-texto {
+    font-size: 1.2rem;
+    color: #999999 !important;
+}
+
+.cancelar {
+    background-color: #c1c1c1;
+}
+
+/*confirmar (sin password) checker*/
+
+/*fin confirmar (sin password) checker*/
+
+/**fin de  confirmar dialogos */
+
+.servicios_funerarios {
+    z-index: 51999 !important;
+}
+
+.searcher_terrenos {
+    z-index: 52000 !important;
+}
+.venta-propiedades {
+    z-index: 52001 !important;
+}
+
+/*searcher clientes*/
+.searcher_clientes,
+.ver_disponibilidad {
+    z-index: 52002 !important;
+}
+
+.clientes,
+.articulos {
+    //1 arriba de searche_clientes
+    z-index: 52003 !important;
+}
+
+.contrasena {
+    z-index: 52100 !important;
+}
+
+.contrasena .vs-popup--header {
+    display: none !important;
+}
+
+.distribucion {
+    width: 100% !important;
+    text-align: center !important;
+    border-collapse: separate !important;
+    border-spacing: 3px;
+    height: 70vh !important;
+}
+
+.distribucion tr td {
+    height: 20px !important;
+    border: 1px solid black;
+    padding: 10px;
+    color: #000;
+    font-weight: bold !important;
+}
+
+.bg-info {
+    background-color: "#0061ff";
+}
+
+.bg-espacio-muerto {
+    background-color: #c1c1c1 !important;
+
+    span {
+        display: none !important;
+    }
+}
+
+.tabla-descripciones {
+    width: 100% !important;
+}
+
+.distribucion tr:hover {
+    .letra-fila {
+        background-color: #1e1e1e !important;
+    }
+}
+
+.tabla-otras-propiedades {
+    height: auto !important;
+    border-collapse: collapse !important;
+    border-spacing: 0px;
+}
+
+.tabla-otras-propiedades tr:hover {
+    td {
+        background-color: rgba(var(--vs-primary), 1) !important;
+    }
+}
+
+.tabla-otras-propiedades tr td {
+    height: auto !important;
+    padding: 5px;
+}
+
+.vs-tooltip {
+    z-index: 55002 !important;
+}
+
+/*cancelar ventas del cementerio**/
+.cancelar_ventas_cementerio .vs-popup {
+    max-width: 90% !important;
+    min-height: 90vh !important;
+}
+
+.cancelar_ventas_cementerio {
+    z-index: 52002 !important;
+}
+
+/*fin de cancelar ventas del cementerio*/
+
+/*medias queries*/
+
+/*alturas verticales personalizadas de los content*/
+
+/**cfdi contenido*/
+.cfdi-contenido {
+}
+
+.cfdis-table table * {
+    font-size: 13px !important;
+}
+
+// Large devices (desktops, less than 1200px)
+
+/*tabs*/
+
+/*estilos del plan funerario en el servicio funerario*/
+.dato_servicio {
+    font-size: 1.05em !important;
+    font-weight: bold !important;
+}
+.dato_servicio_valor {
+    font-weight: bold !important;
+    font-size: 1.05em !important;
+}
+/*FIN estilos del plan funerario en el servicio funerario*/

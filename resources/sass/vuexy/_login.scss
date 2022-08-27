@@ -1,0 +1,24 @@
+.bg-login-password-recovery {
+    background: url(/images/aeternus/login.jpg) !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+}
+
+.layer {
+    background-color: rgba(190, 140, 14, 0.25);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.login-form {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.login-img {
+    max-width: 320px !important;
+    width: 320px !important;
+}

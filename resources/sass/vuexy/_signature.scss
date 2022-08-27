@@ -1,0 +1,60 @@
+.signature {
+  margin: 0 auto 0 auto !important;
+  h3 {
+    @extend .h5, .color-copy, .font-medium;
+  }
+  text-align: center;
+  .firma {
+    margin: 1rem auto 0.5rem auto !important;
+    @extend .theme-background, .border-dark-solid-1;
+    max-width: 400px !important;
+    max-height: 200px !important;
+
+    canvas {
+      max-width: 400px !important;
+      max-height: 200px !important;
+      min-width: 400px !important;
+      min-height: 200px !important;
+      background-color: transparent !important;
+      nav-index: 1 !important;
+    }
+  }
+  p {
+    @extend .size-base;
+  }
+}
+.signature-disabled {
+  display: none;
+}
+/*
+.signature-disabled {
+  padding: 2rem;
+  @extend .theme-background, .border-dark-solid-1;
+  margin: 1rem auto 0 auto !important;
+  text-align: center;
+}
+.signature {
+  display: none;
+}
+.signature-disabled {
+  display: block;
+}
+@media (min-width: 576px) {
+  .signature {
+    display: block;
+  }
+  .signature-disabled {
+    display: none;
+  }
+}
+
+@media (min-width: 992px) {
+  .signature {
+    display: none;
+  }
+  .signature-disabled {
+    display: block;
+  }
+}
+
+*/

@@ -1,0 +1,19 @@
+.vs-button-secondary {
+    background: $secondary-optional !important;
+}
+
+.vs-button-text {
+    font-family: $font-family-sans-serif;
+}
+
+.img-btn {
+    display: inline !important;
+    width: 22px !important;
+}
+
+@for $index from 4 to 64 {
+    .img-btn-#{$index} {
+        display: inline;
+        width: #{$index}px !important;
+    }
+}

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante
+    xmlns:cfdi="http://www.sat.gob.mx/cfd/3"
+    xmlns:pago10="http://www.sat.gob.mx/Pagos"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://www.sat.gob.mx/cfd/3 http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd http://www.sat.gob.mx/Pagos http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos10.xsd"
+                  Version="3.3"
+                  Folio="3"
+                  Fecha="2020-09-29T13:06:44"
+                  Sello="FTwqCr3qAGFC20nVGh1RJU3odU4QRNJu0HqWMZtWgYvHZd2P332s4/d3bKJekiJplozT/kcPRX+qZH5Q0brH7/Xi6s9a4QoWfmxGX9C/qWWkjHdEwF0F2pNd9SnnyiZUHbAxDFxJd84AwqE9ND4yW6mahpNVYX1Kcu1Py6N3B1+SYgCpS0FLtiva6DnQi1f0O5vayZj0NRK1sjpu61D0k3YIhzsNm2dkZk176zVmS2l4Hj1J92Hg+tBDLrNjfPu/rbiVgUyWgo5yLOCb5mrtBScK14fPLVRkiDLytIR59O9VGVEW9Dj7TfmTfK2rOvp+/wcaXrKZrjG4OEpacTbySQ=="
+                  NoCertificado="00001000000407857621"
+                  Certificado="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"
+                  SubTotal="0"
+                  Moneda="XXX"
+                  Total="0"
+                  TipoDeComprobante="P"
+                  LugarExpedicion="82154">
+    <cfdi:Emisor RegimenFiscal="612"
+               Rfc="AUPB9405086X7"
+               Nombre="BENJAMIN AGUIRRE PERAZA" />
+    <cfdi:Receptor Rfc="OUOA000729EZ2"
+                 Nombre="ANDREA OSUNA OLIVARES"
+                 UsoCFDI="P01" />
+    <cfdi:Conceptos>
+        <cfdi:Concepto ClaveProdServ="84111506"
+                   ClaveUnidad="ACT"
+                   Cantidad="1"
+                   Descripcion="Pago"
+                   ValorUnitario="0"
+                   Importe="0" />
+    </cfdi:Conceptos>
+    <cfdi:Complemento>
+        <tfd:TimbreFiscalDigital xsi:schemaLocation="http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd"
+            xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                             Version="1.1"
+                             UUID="8D0E47A8-DD10-4547-A93F-76EE93613DEF"
+                             FechaTimbrado="2020-09-29T14:06:46"
+                             RfcProvCertif="MAS0810247C0"
+                             SelloCFD="FTwqCr3qAGFC20nVGh1RJU3odU4QRNJu0HqWMZtWgYvHZd2P332s4/d3bKJekiJplozT/kcPRX+qZH5Q0brH7/Xi6s9a4QoWfmxGX9C/qWWkjHdEwF0F2pNd9SnnyiZUHbAxDFxJd84AwqE9ND4yW6mahpNVYX1Kcu1Py6N3B1+SYgCpS0FLtiva6DnQi1f0O5vayZj0NRK1sjpu61D0k3YIhzsNm2dkZk176zVmS2l4Hj1J92Hg+tBDLrNjfPu/rbiVgUyWgo5yLOCb5mrtBScK14fPLVRkiDLytIR59O9VGVEW9Dj7TfmTfK2rOvp+/wcaXrKZrjG4OEpacTbySQ=="
+                             NoCertificadoSAT="00001000000404486074"
+                             SelloSAT="IcvPUUBG2Ypk80hBh4AgeKIB0sZePksJXEqhTFbOP+rTnp22oeO8R4M9+7kFJMBKEQZYHU7ufJtax8IyaKlhDhu1DwUpFSFNaR4d0d528SDOF3APK2Tg6HFXoVsflARRwzKRE6pYoTZZnqWQtV6mlbfciP3SXgwsNMXubGV3Qv/Ai81wgIX8ji0/2Gk0GAWxFVqV8L75/TUes3LQ0QxVNGOHbvGhRIfARxwKnXILl1Z92lWPBt3/aEuiOi2Ay34Z1qr01lbteZW0w/P0AtbvoUUjcEXwj5xyS42JDXf25Txx5ziu26KP4w2Vi/BL6SZ+Hgd3HYI100HsCIQd4Jzn1Q==" />
+            <pago10:Pagos Version="1.0">
+                <pago10:Pago 
+                FechaPago="2020-09-29T12:00:00"
+                   FormaDePagoP="03"
+                   MonedaP="MXN"
+                   Monto="8506.68">
+                    <pago10:DoctoRelacionado 
+                    Folio="232"
+                                 IdDocumento="ED735BC9-92D1-4C6A-B746-6F26E8C5DCB5"
+                                 ImpPagado="4253.34"
+                                 ImpSaldoAnt="4253.34"
+                                 ImpSaldoInsoluto="0.00"
+                                 MetodoDePagoDR="PUE"
+                                 MonedaDR="MXN"
+                                 NumParcialidad="1" />
+                    <pago10:DoctoRelacionado Folio="251"
+                                 IdDocumento="4CC3071B-1C31-4534-B712-D13296936BB6"
+                                 ImpPagado="4253.34"
+                                 ImpSaldoAnt="4253.34"
+                                 ImpSaldoInsoluto="0.00"
+                                 MetodoDePagoDR="PUE"
+                                 MonedaDR="MXN"
+                                 NumParcialidad="1" />
+                </pago10:Pago>
+            </pago10:Pagos>
+        </cfdi:Complemento>
+    </cfdi:Comprobante>

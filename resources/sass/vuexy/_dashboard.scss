@@ -1,0 +1,11 @@
+/*barra de usuario top del dashboard*/
+.menu-dropdown-aeternus {
+    ul li {
+        @extend .color-copy;
+        &:hover {
+            cursor: pointer;
+            @extend .bg-primary-50;
+            @extend .color-primary-900;
+        }
+    }
+}

@@ -1,0 +1,109 @@
+.notificaciones {
+    .filling {
+        background: $white !important;
+    }
+
+    h3 {
+        @extend .color-dark-900;
+    }
+
+    p {
+        padding-top: 0px;
+        @extend .color-copy, .size-base, .normal-line;
+        display: inline-block;
+    }
+}
+
+.vs-component {
+    &.vs-notifications {
+        @media (max-width: 576px) {
+            min-width: 380px !important;
+        }
+
+        @extend .notificaciones;
+        &.activeNoti:active {
+            pointer-events: none;
+            .content-noti:active::after {
+                pointer-events: all;
+            }
+        }
+
+        .con-text-noti {
+            overflow: auto;
+        }
+
+        .content-noti::before {
+            content: "";
+            width: 28px;
+            height: 28px;
+            display: block !important;
+            z-index: 50000 !important;
+            padding: 0 21px 0 0px !important;
+        }
+
+        .content-noti::after {
+            cursor: pointer;
+            content: "";
+            width: 16x;
+            height: 16px;
+            display: block !important;
+            z-index: 50000 !important;
+            padding: 0 0px 0 28px !important;
+            background: url("../../assets/images/icons/x.svg") no-repeat;
+        }
+
+        &.activeNoti {
+            padding: 14px 21px 14px 21px;
+        }
+
+        &.vs-noti-danger {
+            &.activeNoti {
+                border-left: 3px solid $danger !important;
+            }
+
+            .content-noti::before {
+                background: url("../../assets/images/icons/error.svg") no-repeat;
+            }
+        }
+
+        &.vs-noti-success {
+            &.activeNoti {
+                border-left: 3px solid $success !important;
+            }
+
+            .content-noti::before {
+                background: url("../../assets/images/icons/ok.svg") no-repeat;
+            }
+        }
+
+        &.vs-noti-info {
+            &.activeNoti {
+                border-left: 3px solid $secondary-optional !important;
+            }
+
+            .content-noti::before {
+                background: url("../../assets/images/icons/info.svg") no-repeat;
+            }
+        }
+
+        &.vs-noti-warning {
+            &.activeNoti {
+                border-left: 3px solid $warning !important;
+            }
+
+            .content-noti::before {
+                background: url("../../assets/images/icons/warn.svg") no-repeat !important;
+            }
+        }
+
+        &.vs-noti-primary {
+            &.activeNoti {
+                border-left: 3px solid $primary !important;
+            }
+
+            .content-noti::before {
+                background: url("../../assets/images/icons/message.svg") no-repeat !important;
+            }
+        }
+    }
+}

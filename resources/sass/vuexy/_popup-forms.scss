@@ -1,0 +1,289 @@
+/*confirms*/
+
+.confirm-form {
+    .vs-popup--header {
+        display: none !important;
+    }
+    .vs-popup {
+        max-width: 440px !important;
+        max-height: 440px !important;
+    }
+
+    .vs-dialog .vs-dialog-header {
+        display: none !important;
+    }
+
+    .password_icono:before {
+        content: url("../../../../../resources/assets/images/password.svg");
+    }
+}
+
+.confirmarDanger {
+    .icono:before {
+        content: url("../../../../../resources/assets/images/question.svg");
+    }
+}
+
+.confirmarAceptar {
+    .icono:before {
+        content: url("../../../../../resources/assets/images/accept.svg");
+    }
+}
+
+/*heighs del form segun su break-points*/
+@media (max-width: 1200px) {
+    /*para los forms que no son fullscreen*/
+    .forms-popup {
+        &:not(&.fullscreen) {
+            .vs-popup {
+                height: 100%;
+            }
+            .vs-popup--content {
+                height: 80%;
+            }
+        }
+    }
+}
+
+@mixin break-points-content {
+    .vs-popup--content {
+        height: 80%;
+    }
+    @media (min-width: 576px) {
+        .vs-popup--content {
+            height: 82%;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .vs-popup--content {
+            height: 84%;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .vs-popup--content {
+            height: 86%;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .vs-popup--content {
+            height: 90% !important;
+        }
+    }
+}
+/*heighs del form segun su break-points*/
+
+.forms-popup .vs-popup {
+    border-radius: 0px !important;
+    @include break-points-content;
+}
+
+.forms-popup .vs-popup--header {
+    padding-top: 14px;
+    margin-bottom: 28px !important;
+    height: 3rem;
+    border-radius: 0 !important;
+    background-color: #fff !important;
+}
+
+.forms-popup .vs-popup--title {
+    border-radius: 0px !important;
+}
+
+.forms-popup .vs-popup--title h3 {
+    @extend .h5, .color-dark-700, .font-medium, .bg-dark-50;
+    text-align: center !important;
+    text-transform: uppercase !important;
+}
+
+.forms-popup .vs-popup--close {
+    padding: 6.6px !important;
+    margin-top: 16px !important;
+    border-radius: 0px !important;
+    margin-right: 15px !important;
+    @extend .h1, .color-dark-900, .font-bold;
+    background-color: #d2d2d2 !important;
+}
+
+.forms-popup .vs-popup--content {
+    padding: 0 1.5rem 0 1.5rem !important;
+}
+
+/*textos forms*/
+.form-group {
+    position: relative !important;
+    border: 1px solid #e6eaed !important;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+
+    &:not(:first-child) {
+        margin-top: 2rem;
+    }
+    &:first-child {
+        margin-top: 0.5rem;
+    }
+}
+
+.title-form-group {
+    @extend .h5, .color-primary-900, .font-medium;
+    position: relative !important;
+    margin-top: -2.3rem !important;
+    background-color: #fff !important;
+    padding: 0 1rem 0 1rem !important;
+    width: fit-content !important;
+}
+
+.form-group-content {
+    position: relative !important;
+    padding-top: 0.5rem;
+}
+
+.bottom-buttons-section {
+    padding: 1.5rem;
+    text-align: right;
+    .text-advice {
+        padding: 0 0 1rem 0;
+        @extend .size-base, .color-copy;
+        .ojo-advice {
+            @extend .font-medium, .color-danger-900;
+        }
+    }
+}
+
+.popup-40 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 80% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 40% !important;
+    }
+}
+
+.popup-50 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 65% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 50% !important;
+    }
+}
+
+.popup-60 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 75% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 60% !important;
+    }
+}
+
+.popup-70 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 80% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 70% !important;
+    }
+}
+
+.popup-75 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 85% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 75% !important;
+    }
+}
+
+.popup-80 .vs-popup {
+    @media (min-width: 768px) {
+        width: 100% !important;
+    }
+
+    @media (min-width: 1200px) {
+        width: 90% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 80% !important;
+    }
+}
+
+.popup-85 .vs-popup {
+    @media (min-width: 576px) {
+        width: 95% !important;
+    }
+
+    @media (min-width: 992px) {
+        width: 90% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 85% !important;
+    }
+}
+
+.popup-90 .vs-popup {
+    width: 100% !important;
+    @media (min-width: 992px) {
+        width: 95% !important;
+    }
+
+    @media (min-width: 1440px) {
+        width: 90% !important;
+    }
+}
+
+.popup-95 .vs-popup {
+    width: 100% !important;
+    @media (min-width: 1200px) {
+        width: 95% !important;
+    }
+}
+
+/*Fin textos forms*/
+
+.bg-content-theme {
+    .vs-popup {
+        @extend .theme-background;
+
+        .vs-popup--content {
+            & > div {
+                .tab-content {
+                    // height: 100vh !important;
+                    padding: 1.5rem 1.25rem 1.5rem 1.25rem;
+                    @media (min-width: 1200px) {
+                        //    height: 82vh !important;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,89 @@
+/* -------------------------------------------------------------------------- */
+/*                              estilos de tablas                             */
+/* -------------------------------------------------------------------------- */
+.vs-con-table {
+    border-collapse: collapse;
+}
+
+.tabla-datos {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+}
+
+.tabla-datos-no-data {
+    .not-data-table {
+        display: none !important;
+    }
+}
+
+.no-header {
+    .header-table {
+        display: none !important;
+    }
+}
+
+.vs-table--header {
+    padding: 4px 0px 4px 0px !important;
+
+    @extend .bg-dark-50;
+    h3 {
+        text-transform: capitalize !important;
+        @extend .font-medium, .h5;
+        margin: 0 auto 0 auto;
+    }
+}
+
+.vs-table--tbody {
+    border: 0px !important;
+    border-top: 1px solid #fff !important;
+}
+
+.vs-table--tr:nth-child(even) {
+    background-color: $theme-background;
+}
+
+.vs-table--tr:hover {
+    cursor: pointer;
+    @extend .bg-dark-50, .font-bold;
+}
+
+.tr_especial,
+.tr_especial:hover {
+    color: #fff !important;
+    background-color: #666666 !important;
+}
+
+.vs-table--thead tr {
+    color: #fff !important;
+    @extend .bg-dark-600;
+}
+
+.vs-table--thead tr th {
+    padding: 7px 0px 7px 0px !important;
+}
+
+.vs-table--thead tr th,
+.vs-table--td {
+    border: 1px solid #ddd;
+}
+
+.vs-table--thead {
+    border: 2px solid #666666 !important;
+}
+
+.vs-table--td {
+    @extend .size-small;
+    span {
+        text-transform: uppercase !important;
+    }
+    text-align: center !important;
+    padding: 3.5px !important;
+}
+
+th .sort-th,
+th .vs-table-text {
+    justify-content: center;
+    text-transform: uppercase !important;
+    @extend .size-small, .font-normal;
+}

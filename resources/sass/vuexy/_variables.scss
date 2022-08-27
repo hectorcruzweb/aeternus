@@ -1,0 +1,382 @@
+/*=========================================================================================
+    File Name: _variables.scss
+    Description: partial- SCSS varibales
+    ----------------------------------------------------------------------------------------
+    Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+      Author: Pixinvent
+    Author URL: http://www.themeforest.net/user/pixinvent
+==========================================================================================*/
+
+/*========================================================
+        SPACING
+=========================================================*/
+
+$spacer: 2.2rem;
+$spacer-sm: ($spacer / 2);
+$spacer-lg: ($spacer * 2);
+
+/*========================================================
+        COLORS
+=========================================================*/
+$primary: #b18b1e;
+$secondary-optional: #007bff;
+$secondary: #75797e;
+$success: #28c76f;
+$danger: #ea5455;
+$warning: #ff9f43;
+$dark: #1e1e1e;
+$grey: #b8c2cc;
+$grey-light: #dae1e7;
+$white: #fff;
+$black: #22292f;
+
+@for $border from 1 to 3 {
+    .border-primary-solid-#{$border} {
+        border: #{$border}px solid #{$primary};
+    }
+    .border-secondary-solid-#{$border} {
+        border: #{$border}px solid #{$secondary-optional};
+    }
+    .border-success-solid-#{$border} {
+        border: #{$border}px solid #{$success};
+    }
+    .border-danger-solid-#{$border} {
+        border: #{$border}px solid #{$danger};
+    }
+    .border-warning-solid-#{$border} {
+        border: #{$border}px solid #{$warning};
+    }
+    .border-dark-solid-#{$border} {
+        border: #{$border}px solid #{$dark};
+    }
+    .border-black-solid-#{$border} {
+        border: #{$border}px solid #{$black};
+    }
+    .border-gray-solid-#{$border} {
+        border: #{$border}px solid #{$grey};
+    }
+
+    .border-primary-dotted-#{$border} {
+        border: #{$border}px dotted #{$primary};
+    }
+    .border-secondary-dotted-#{$border} {
+        border: #{$border}px dotted #{$secondary-optional};
+    }
+    .border-success-dotted-#{$border} {
+        border: #{$border}px dotted #{$success};
+    }
+    .border-danger-dotted-#{$border} {
+        border: #{$border}px dotted #{$danger};
+    }
+    .border-warning-dotted-#{$border} {
+        border: #{$border}px dotted #{$warning};
+    }
+    .border-dark-dotted-#{$border} {
+        border: #{$border}px dotted #{$dark};
+    }
+    .border-black-dotted-#{$border} {
+        border: #{$border}px dotted #{$black};
+    }
+    .border-gray-dotted-#{$border} {
+        border: #{$border}px dotted #{$grey};
+    }
+}
+
+/*========================================================
+        COLOR PRIMARIO CON SUS VARIACIONES
+=========================================================*/
+$primary_map: (
+    "50": "#FBF5E5",
+    "100": "#F6EBCB",
+    "200": "#F2E1B1",
+    "300": "#E9CD7D",
+    "400": "#E9CD7D",
+    "500": "#E5C364",
+    "600": "#E0B94A",
+    "700": "#DCAF30",
+    "800": "#CB9F22",
+    "900": "#B18B1E",
+);
+
+/*========================================================
+        COLOR SECUNDARIO CON SUS VARIACIONES
+=========================================================*/
+$secondary_optional_map: (
+    "50": "#E5F2FF",
+    "100": "#CCE5FF",
+    "200": "#B3D7FF",
+    "300": "#99CAFF",
+    "400": "#80BDFF",
+    "500": "#66B0FF",
+    "600": "#4DA3FF",
+    "700": "#3395FF",
+    "800": "#1A88FF",
+    "900": "#1A88FF",
+);
+
+/*========================================================
+        COLOR SUCCESS CON SUS VARIACIONES
+=========================================================*/
+$success_map: (
+    "50": "#E8FAF0",
+    "100": "#D2F6E2",
+    "200": "#BBF1D3",
+    "300": "#A5EDC5",
+    "400": "#8EE8B6",
+    "500": "#78E4A8",
+    "600": "#61DF99",
+    "700": "#4ADB8B",
+    "800": "#34D67C",
+    "900": "#28C76F",
+);
+
+/*========================================================
+        COLOR DANGER CON SUS VARIACIONES
+=========================================================*/
+$danger_map: (
+    "50": "#FDEEEE",
+    "100": "#FBDDDD",
+    "200": "#F9CCCC",
+    "300": "#F7BBBB",
+    "400": "#F5AAAA",
+    "500": "#F29899",
+    "600": "#F08788",
+    "700": "#EE7677",
+    "800": "#EC6566",
+    "900": "#EA5455",
+);
+
+/*========================================================
+        COLOR WARNING CON SUS VARIACIONES
+=========================================================*/
+$warning_map: (
+    "50": "#FFF5EC",
+    "100": "#FFECD9",
+    "200": "#FFE2C7",
+    "300": "#FFD9B4",
+    "400": "#FFCFA1",
+    "500": "#FFC58E",
+    "600": "#FFBC7B",
+    "700": "#FFB269",
+    "800": "#FFA956",
+    "900": "#FF9F43",
+);
+
+/*========================================================
+        COLOR DARK CON SUS VARIACIONES
+=========================================================*/
+$dark_map: (
+    "50": "#E9E9E9",
+    "100": "#D2D2D2",
+    "200": "#BCBCBC",
+    "300": "#A5A5A5",
+    "400": "#8F8F8F",
+    "500": "#787878",
+    "600": "#626262",
+    "700": "#4B4B4B",
+    "800": "#353535",
+    "900": "#1E1E1E",
+);
+
+/*========================================================
+        COLOR BLACK CON SUS VARIACIONES
+=========================================================*/
+$black_map: (
+    "50": "#E6EAED",
+    "100": "#CDD5DB",
+    "200": "#B4BFC9",
+    "300": "#9BAAB7",
+    "400": "#8395A5",
+    "500": "#6A8093",
+    "600": "#586A7A",
+    "700": "#465461",
+    "800": "#343F48",
+    "900": "#22292F",
+);
+
+$theme-background: #f8f8f8;
+
+/*bg theme*/
+.theme-background {
+    background-color: $theme-background !important;
+}
+
+$content-color: #{map-get($dark_map, "600")};
+.color-copy {
+    color: $content-color;
+}
+/*Creando los colores segun su tono*/
+@for $index from 0 to 10 {
+    $tono: 50;
+
+    /*verificando el tono a aplicar*/
+    @if $index>0 {
+        $tono: $index * 100;
+    }
+
+    /*colores primarios*/
+    @if map-has-key($primary_map, #{$tono}) {
+        .color-primary-#{$tono} {
+            color: #{map-get($primary_map, #{$tono})};
+        }
+        .color-primary-hover-#{$tono}:hover {
+            color: #{map-get($primary_map, #{$tono})};
+        }
+        .bg-primary-#{$tono} {
+            background-color: #{map-get($primary_map, #{$tono})};
+        }
+    }
+
+    /*colores secundarios*/
+    @if map-has-key($secondary_optional_map, #{$tono}) {
+        .color-secondary-#{$tono} {
+            color: #{map-get($secondary_optional_map, #{$tono})};
+        }
+        .bg-secondary-#{$tono} {
+            background-color: #{map-get($secondary_optional_map, #{$tono})};
+        }
+    }
+
+    /*colores success*/
+    @if map-has-key($success_map, #{$tono}) {
+        .color-success-#{$tono} {
+            color: #{map-get($success_map, #{$tono})};
+        }
+        .bg-success-#{$tono} {
+            background-color: #{map-get($success_map, #{$tono})};
+        }
+    }
+
+    /*colores danger*/
+    @if map-has-key($danger_map, #{$tono}) {
+        .color-danger-#{$tono} {
+            color: #{map-get($danger_map, #{$tono})};
+        }
+        .bg-danger-#{$tono} {
+            background-color: #{map-get($danger_map, #{$tono})};
+        }
+    }
+
+    /*colores warning*/
+    @if map-has-key($warning_map, #{$tono}) {
+        .color-warning-#{$tono} {
+            color: #{map-get($warning_map, #{$tono})};
+        }
+        .bg-warning-#{$tono} {
+            background-color: #{map-get($warning_map, #{$tono})};
+        }
+    }
+
+    /*colores dark*/
+    @if map-has-key($dark_map, #{$tono}) {
+        .color-dark-#{$tono} {
+            color: #{map-get($dark_map, #{$tono})};
+        }
+        .bg-dark-#{$tono} {
+            background-color: #{map-get($dark_map, #{$tono})};
+        }
+    }
+
+    /*colores black*/
+    @if map-has-key($black_map, #{$tono}) {
+        .color-black-#{$tono} {
+            color: #{map-get($black_map, #{$tono})};
+        }
+        .bg-black-#{$tono} {
+            background-color: #{map-get($black_map, #{$tono})};
+        }
+    }
+}
+
+/*========================================================
+        TYPOGRAPHY
+=========================================================*/
+
+$font-family-sans-serif: "Roboto", sans-serif !default;
+$font-family-serif: Georgia, "Times New Roman", Times, serif !default;
+
+//** Default monospace fonts for `<code>`, `<kbd>`, and `<pre>`.
+$font-family-monospace: Menlo, Monaco, Consolas, "Courier New", monospace !default;
+$font-family-base: $font-family-sans-serif !default;
+
+/*calculando los sizes de las fuentes segun la escala que se está usando*/
+/*1.125 Major Second*/
+$scale: 1.125;
+
+@function exponente($number, $exponent) {
+    $value: 1;
+    @if $exponent>0 {
+        @for $i from 1 through $exponent {
+            $value: $value * $number;
+        }
+    }
+    @return $value;
+}
+
+$font-size-base: 14px !default;
+
+//$font-size-large:         ceil(($font-size-base * 1.25)) !default; se removió, al parecer no estaba utilizada por ninguna otro estilo
+$small: $font-size-base / exponente($scale, 1);
+$smaller: $font-size-base / exponente($scale, 2);
+$smallest: $font-size-base / exponente($scale, 3);
+
+$h1-font-size: $font-size-base * exponente($scale, 5);
+$h2-font-size: $font-size-base * exponente($scale, 4);
+$h3-font-size: $font-size-base * exponente($scale, 3);
+$h4-font-size: $font-size-base * exponente($scale, 2);
+$h5-font-size: $font-size-base * exponente($scale, 1);
+$normal: $font-size-base;
+
+$line-height-base: 1.625rem !default;
+
+$headings-font-family: inherit !default;
+$headings-font-weight: 500 !default;
+$headings-line-height: 1.2 !default;
+$headings-color: #2c2c2c;
+$headings-margin-bottom: ($spacer / 2) !default;
+
+/*weights*/
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
+
+$font-weight-base: $font-weight-normal;
+$line-height-base: 1.45;
+
+/*========================================================
+        TYPOGRAPHY
+=========================================================*/
+
+$reduced-sidebar-width: 80px;
+
+/*========================================================
+        DARK THEME
+=========================================================*/
+
+$sidebar-dark-bg: #10163a;
+$content-dark-bg: #262c49;
+$dark-card-color: #10163a;
+$table-dark-stripe: #212744;
+$table-light-stripe: #262c49;
+$grid-dark-color: #343661;
+
+$theme-light-dark-bg: #262c49;
+$theme-dark-bg: #10163a;
+$theme-dark-secondary-bg: #171e49;
+$theme-dark-text-color: #c2c6dc;
+$theme-dark-heading-color: #ebeefd;
+// $theme-dark-heading-color: #C9CAD2;
+$theme-dark-border-color: #414561;
+$theme-dark-shadow-color: #0c112e;
+
+/*========================================================
+        Z-INDEX
+=========================================================*/
+
+@for $index from 1 to 100 {
+    /*solo se necesitan 20 indexes hasta el momento*/
+    .z-index#{$index}k {
+        z-index: #{($index * 1000)} !important;
+    }
+}
