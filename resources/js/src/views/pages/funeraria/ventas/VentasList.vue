@@ -465,7 +465,6 @@ export default {
                     ? datos.venta_plan.entrego_convenio.nombre
                     : "";
             this.datosConvenio.nota = datos.venta_plan.nota_convenio;
-
             this.openEntregarconvenio = true;
         },
         closeEntregarConvenio() {

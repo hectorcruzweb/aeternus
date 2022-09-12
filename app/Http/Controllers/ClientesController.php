@@ -47,7 +47,9 @@ class ClientesController extends ApiController
                 DB::Raw('IFNULL( clientes.celular , "N/A" ) as celular'),
                 DB::Raw('IF(clientes.vivo_b=1 , "Vivo","Fallecido" ) as vivo_b'),
                 'nacionalidades_id',
-                'generos_id'
+                'generos_id',
+                'servicios_gratis',
+                'nota_servicios_gratis',
             )->with('regimen')->with('nacionalidad')->with('genero')->where(function ($q) use ($status) {
                 if ($status != '') {
                     $q->where('clientes.status', $status);
@@ -298,6 +300,11 @@ class ClientesController extends ApiController
         }
     }
 
+
+
+
+
+
     /**DELETE CLIENTES */
     public function baja_cliente(Request $request)
     {
@@ -313,6 +320,27 @@ class ClientesController extends ApiController
         return DB::table('clientes')->where('id', $cliente_id)->update(
             [
                 'status' => 0,
+            ]
+        );
+    }
+
+    //servicios gratis para clientes
+    public function servicios_gratis(Request $request)
+    {
+        $cliente_id = $request->id;
+        request()->validate(
+            [
+                'id' => 'required',
+                'servicios_gratis.value' => 'required',
+            ],
+            [
+                'required' => 'Dato necesario.',
+            ]
+        );
+        return DB::table('clientes')->where('id', $cliente_id)->update(
+            [
+                'servicios_gratis' => $request->servicios_gratis['value'],
+                'nota_servicios_gratis' => $request->nota_servicios_gratis
             ]
         );
     }
