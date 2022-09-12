@@ -49,7 +49,7 @@ class ClientesController extends ApiController
                 'nacionalidades_id',
                 'generos_id',
                 'servicios_gratis',
-                'nota_servicios_gratis',
+                'nota_servicios_gratis'
             )->with('regimen')->with('nacionalidad')->with('genero')->where(function ($q) use ($status) {
                 if ($status != '') {
                     $q->where('clientes.status', $status);
