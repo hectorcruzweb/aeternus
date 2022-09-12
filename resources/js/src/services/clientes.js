@@ -117,4 +117,9 @@ export default {
                 })
         })
     },
+
+    servicios_gratis(datos) {
+        let call = "/clientes/servicios_gratis";
+        return axios.post(call, datos);
+    }
 }

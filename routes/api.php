@@ -103,14 +103,15 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('monedas/', 'SATMonedasController@getAll');
 
     /**CLIENTES */
-    Route::get('/clientes/get_clientes', 'ClientesController@get_clientes');
+
     Route::get('/clientes/get_nacionalidades', 'ClientesController@get_nacionalidades');
     Route::post('/clientes/guardar_cliente', 'ClientesController@guardar_cliente');
     Route::post('/clientes/modificar_cliente', 'ClientesController@modificar_cliente');
     Route::get('/clientes/get_cliente_id', 'ClientesController@get_cliente_id');
     Route::post('/clientes/baja_cliente', 'ClientesController@baja_cliente');
     Route::post('/clientes/alta_cliente', 'ClientesController@alta_cliente');
-
+    Route::post('/clientes/servicios_gratis', 'ClientesController@servicios_gratis');
+    Route::get('/clientes/get_clientes', 'ClientesController@get_clientes');
     /**rutas del cementerio */
     Route::get('generarNumeroTitulo', 'CementerioController@generarNumeroTitulo');
     Route::post('cementerio/control_ventas/{tipo_servicio}', 'CementerioController@control_ventas'); //agregar,modificar
