@@ -32,7 +32,7 @@ class InventarioController extends ApiController
         $unidades = SatUnidades::get();
         foreach ($unidades as $key => &$unidad) {
             $unidad['unidad']
-            = $unidad['unidad'] . '(' . $unidad['clave'] . ')';
+                = $unidad['unidad'] . '(' . $unidad['clave'] . ')';
         }
         return $unidades;
     }
@@ -386,7 +386,7 @@ class InventarioController extends ApiController
             }
             DB::commit();
             return
-            $tipo_servicio == 'agregar' ? $id_articulo : $request->id_articulo_modificar;
+                $tipo_servicio == 'agregar' ? $id_articulo : $request->id_articulo_modificar;
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;
@@ -904,8 +904,7 @@ class InventarioController extends ApiController
             return $this->errorResponse('La impresora puede imprimir un máximo de 1500 por rollo.', 409);
         }
 
-        $articulos = Articulos::
-            with('inventario')
+        $articulos = Articulos::with('inventario')
             ->with(['inventario' => function ($q) use ($lotes) {
                 $q->whereIn('lotes_id', $lotes);
             }])
@@ -917,7 +916,7 @@ class InventarioController extends ApiController
             foreach ($datos as $dato) {
                 foreach ($articulo['inventario'] as $inventario) {
                     if ($dato['id_articulo'] == $articulo['id'] && $inventario['lotes_id'] == $dato['lotes_id']) {
-/**lo repito el numero de veces que se ocupa la etiqueta */
+                        /**lo repito el numero de veces que se ocupa la etiqueta */
                         for ($i = 0; $i < $dato['cantidad']; $i++) {
                             array_push($etiquetas, [
                                 'id'                  => $articulo['id'],
@@ -979,7 +978,6 @@ class InventarioController extends ApiController
         } else {
             return $pdf->inline($name_pdf);
         }
-
     }
 
     public function get_inventario_conteo_pdf(Request $request)
@@ -1127,7 +1125,7 @@ class InventarioController extends ApiController
         $total_pagado = $request->pago_efectivo + $request->pago_cheque + $request->pago_tarjeta + $request->pago_transferencia;
 
         if ($total_compra != $total_pagado) {
-            return $this->errorResponse('La cantidad pagada no cubre el total de la compra.', 409);
+            return $this->errorResponse('La cantidad pagada no cubre el total de la compra $' . number_format((float) round($total_compra, 2), 2, '.', ',') . '.', 409);
         }
 
         try {
@@ -1258,7 +1256,6 @@ class InventarioController extends ApiController
             //no se puede cancelar esta compra
             return $this->errorResponse('No se encontró esta venta registrada.', 409);
         }
-
     }
 
     public function get_compras(Request $request, $num_compra = 'all', $paginated = false)
@@ -1269,8 +1266,7 @@ class InventarioController extends ApiController
         $numero_control           = $request->numero_control;
         $status                   = $request->status;
         $fecha_compra             = $request->fecha_compra;
-        $resultado_query          = MovimientosInventario::
-            select(
+        $resultado_query          = MovimientosInventario::select(
             'movimientos_inventario.id',
             "num_compra",
             "folio_referencia",
@@ -1316,8 +1312,8 @@ class InventarioController extends ApiController
             ->with('cancelo:id,nombre')
             ->with('costos_incurridos')
 
-        /**solo ventas de planes funerarios */
-        //solo compras a proveedores
+            /**solo ventas de planes funerarios */
+            //solo compras a proveedores
             ->join('proveedores', 'proveedores.id', '=', 'movimientos_inventario.proveedores_id')
 
             ->where(function ($query) use ($proveedor) {
@@ -1432,7 +1428,6 @@ class InventarioController extends ApiController
                     $compra['status_texto'] = 'Por liquidar';
                 }
             }
-
         } //fin foreach compra
 
         return $resultado_query;
@@ -1538,8 +1533,7 @@ class InventarioController extends ApiController
             ->get()->toArray();
 
         //2- (EA) Entrada de lote por ajustes
-        $movimientos = MovimientosInventario::
-            select(
+        $movimientos = MovimientosInventario::select(
             'id',
             'fecha_movimiento',
             'operaciones_id',
@@ -1665,8 +1659,7 @@ class InventarioController extends ApiController
     public function get_reporte_movimientos_inventario($fecha_inicio, $fecha_fin)
     {
         $inventario  = Inventario::select('lotes_id', 'num_lote_inventario')->get()->toArray();
-        $movimientos = MovimientosInventario::
-            select(
+        $movimientos = MovimientosInventario::select(
             'id',
             'folio_referencia',
             'fecha_movimiento',
@@ -1721,8 +1714,7 @@ class InventarioController extends ApiController
             ->orderBy('fecha_movimiento', 'asc')
             ->get()->toArray();
 
-        $movimientos_costos = MovimientosInventario::
-            select(
+        $movimientos_costos = MovimientosInventario::select(
             'id',
             'fecha_movimiento',
             'tipo_movimientos_id',
@@ -1801,7 +1793,8 @@ class InventarioController extends ApiController
                         $cantidad_articulos = $cantidad_articulos == 0 ? 1 : $cantidad_articulos;
                         $costo_articulo += round(($suma_costos_incurridos / $cantidad_articulos), 2);
                         $importe = $cantidad * $costo_articulo;
-                        array_push($ajuste,
+                        array_push(
+                            $ajuste,
                             [
                                 'antigua_existencia'  => $detalle['existencia_sistema'],
                                 'tipo_b'              => $detalle['existencia_fisica'] > $detalle['existencia_sistema'] ? 1 : 0,
@@ -1847,7 +1840,8 @@ class InventarioController extends ApiController
                         }
                     }
                     $importe = round($detalle['articulos']['precio_compra'] * $detalle['existencia_fisica'], 2);
-                    array_push($ingresos,
+                    array_push(
+                        $ingresos,
                         [
                             'cantidad'            => $detalle['existencia_fisica'],
                             'articulo'            => $detalle['articulos']['descripcion'],
@@ -1865,7 +1859,6 @@ class InventarioController extends ApiController
                 $movimiento['num_lote_ingreso']  = $num_lote;
                 $movimiento['total_entradas']    = $total_movimiento;
                 $total_entradas_general += $total_movimiento;
-
             } elseif ($movimiento['tipo_movimientos_id'] == 3) {
                 /**calculo la tasa del iva para hacer calculos de impuestos */
                 $tasa_iva_compra                     = ($movimiento['iva_porcentaje'] / 100) + 1;
@@ -1917,7 +1910,8 @@ class InventarioController extends ApiController
                     $importe = round($costo_articulo * $detalle['cantidad'], 2);
                     $total_movimiento += $importe;
 
-                    array_push($ingresos,
+                    array_push(
+                        $ingresos,
                         [
                             'cantidad'            => $detalle['cantidad'],
                             'articulo'            => $detalle['articulos']['descripcion'],
@@ -1937,7 +1931,6 @@ class InventarioController extends ApiController
                     /**sumo al total general de ingresos */
                     $total_entradas_general += $movimiento['total_entradas'];
                 }
-
             } elseif ($movimiento['tipo_movimientos_id'] == 9) {
                 /**calculo la tasa del iva para hacer calculos de impuestos */
                 $tasa_iva_venta = ($movimiento['operacion']['tasa_iva'] / 100) + 1;
@@ -2026,7 +2019,8 @@ class InventarioController extends ApiController
                             $cantidad_articulos = $cantidad_articulos == 0 ? 1 : $cantidad_articulos;
                             $costo_articulo += round($suma_costos_incurridos / $cantidad_articulos, 2);
 
-                            array_push($arreglo_salida,
+                            array_push(
+                                $arreglo_salida,
                                 [
                                     'lotes_id'            => $articulo['lotes_id'],
                                     'cantidad'            => $articulo['cantidad'],
@@ -2047,7 +2041,6 @@ class InventarioController extends ApiController
                         /**sumo al total general de ingresos */
                         $total_salidas_general += $movimiento['total_movimiento_costos'];
                     }
-
                 }
                 if (!$tiene_articulos_inventariables) {
                     /**si no tiene articulos este movimiento se quita del arreglo final */
@@ -2116,13 +2109,12 @@ class InventarioController extends ApiController
                 )
             )
             ->where('tipo_articulos_id', 1)
-        //->where('id', 1)
-        //->where('status',1)
-        //->with('inventario_existencia_cero')
+            //->where('id', 1)
+            //->where('status',1)
+            //->with('inventario_existencia_cero')
             ->get()->toArray();
 
-        $movimientos = MovimientosInventario::
-            select(
+        $movimientos = MovimientosInventario::select(
             'id',
             'fecha_movimiento',
             'operaciones_id',
@@ -2135,13 +2127,12 @@ class InventarioController extends ApiController
             ->with('costos_incurridos')
             ->with('operacion:id,status')
             ->whereIn('tipo_movimientos_id', [1, 2, 3, 9])
-        //->where('tipo_movimientos_id', 9)
+            //->where('tipo_movimientos_id', 9)
             ->where('fecha_movimiento', '<=', $fecha_fin)
             ->orderBy('fecha_movimiento', 'asc')
             ->get()->toArray();
 
-        $movimientos_costos = MovimientosInventario::
-            select(
+        $movimientos_costos = MovimientosInventario::select(
             'id',
             'fecha_movimiento',
             'tipo_movimientos_id',
@@ -2368,7 +2359,5 @@ class InventarioController extends ApiController
         $rango_fechas = 'del ' . fecha_abr($fecha_inicio) . ' al ' . fecha_abr($fecha_fin);
         $array        = ['fecha' => $rango_fechas, 'articulos' => $articulos, 'totales' => $totales];
         return $array;
-
     }
-
 }
