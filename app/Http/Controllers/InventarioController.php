@@ -1124,7 +1124,7 @@ class InventarioController extends ApiController
         }
         $total_pagado = $request->pago_efectivo + $request->pago_cheque + $request->pago_tarjeta + $request->pago_transferencia;
 
-        if ($total_compra != $total_pagado) {
+        if (round($total_compra, 2) != round($total_pagado, 2)) {
             return $this->errorResponse('La cantidad pagada no cubre el total de la compra $' . number_format((float) round($total_compra, 2), 2, '.', ',') . '.', 409);
         }
 
