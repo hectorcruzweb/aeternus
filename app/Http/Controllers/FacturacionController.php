@@ -2356,7 +2356,6 @@ class FacturacionController extends ApiController
         }
         /**aqui voy */
         if (ENV('APP_ENV') != 'local') {
-            /*
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($request->id);
             if (isset($checando_cfdi['estado'])) {
@@ -2365,7 +2364,6 @@ class FacturacionController extends ApiController
                 }
             }
             //return $checando_cfdi;
-            */
         } else {
             /**los datos se pasan vacios pues no hay datos rales que mostrar */
             $checando_cfdi['codigoEstatus']      = 'S: Comprobante obtenido satisfactoriamente';
