@@ -2277,7 +2277,7 @@ class FacturacionController extends ApiController
         } else {
             $facturacion_datos_sistema = Facturacion::First();
             /**data from DB */
-            if ($facturacion_datos_sistema->cerFile || $facturacion_datos_sistema->keyFile || $facturacion_datos_sistema->password) {
+            if (!$facturacion_datos_sistema->cerFile || !$facturacion_datos_sistema->keyFile || !$facturacion_datos_sistema->password) {
                 /**no procede */
                 return $this->errorResponse("no se han capturado los certificados digitales de facturación", 409);
             }
