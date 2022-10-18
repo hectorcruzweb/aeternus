@@ -1942,7 +1942,7 @@ class FacturacionController extends ApiController
             $email_to = 'hector@gmail.com';
         }
 
-
+        /*
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
@@ -1952,7 +1952,7 @@ class FacturacionController extends ApiController
                 }
             }
         }
-
+*/
         $myRequest = new Request();
         $myRequest->request->add(['test' => 'test']);
         $cfdi = $this->get_cfdis_timbrados($myRequest, $folio_id)[0];
