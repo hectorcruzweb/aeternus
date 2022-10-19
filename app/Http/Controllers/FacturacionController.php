@@ -489,9 +489,9 @@ class FacturacionController extends ApiController
                         'ClaveProdServ' => '84111506',
                         'ClaveUnidad'   => 'ACT',
                         'Descripcion'   => 'Pago',
-                        'Importe'       => 0,
+                        'Importe'       => 0.0,
                         'ObjetoImp' => '01',
-                        'ValorUnitario' => 0,
+                        'ValorUnitario' => 0.0,
                     ],
                 ]
             );
@@ -1945,14 +1945,15 @@ class FacturacionController extends ApiController
         /*
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
-            $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
+            return $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
             if (isset($checando_cfdi['estado'])) {
                 if ($checando_cfdi['estado'] == 'No Encontrado') {
                     return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
                 }
             }
         }
-*/
+        */
+
         $myRequest = new Request();
         $myRequest->request->add(['test' => 'test']);
         $cfdi = $this->get_cfdis_timbrados($myRequest, $folio_id)[0];
@@ -2100,12 +2101,10 @@ class FacturacionController extends ApiController
         /**datos para la consulta */
         $parametros              = new Parametros();
         $parametros->rfcEmisor   = $cfdi->rfc_emisor;
-        $parametros->uuid        = $cfdi['uuid'];
-        $parametros->totalCFDI   = $cfdi['total'];
-        $parametros->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
         $parametros->rfcReceptor = $cfdi->rfc_receptor;
-        $parametros->total       = $cfdi->total;
-        $parametros->SelloCFD    = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
+        $parametros->totalCFDI   = $cfdi['total'];
+        $parametros->uuid        = $cfdi['uuid'];
+        $parametros->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
         $url_cancelar = '';
         if (ENV('APP_ENV') == 'local') {
             $usuario      = ENV('USER_PAC_DEV');
@@ -2202,6 +2201,7 @@ class FacturacionController extends ApiController
             $validaciones,
             $mensajes
         );
+        /*
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($request->id);
@@ -2211,6 +2211,7 @@ class FacturacionController extends ApiController
                 }
             }
         }
+        */
 
         //verifico si es cancelable
         if ($checando_cfdi['esCancelable'] == "No cancelable") {
@@ -2354,6 +2355,7 @@ class FacturacionController extends ApiController
             $email_to = 'hector@gmail.com';
         }
         /**aqui voy */
+        /*
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
@@ -2364,14 +2366,14 @@ class FacturacionController extends ApiController
             }
             //return $checando_cfdi;
         } else {
-            /**los datos se pasan vacios pues no hay datos rales que mostrar */
+            los datos se pasan vacios pues no hay datos rales que mostrar 
             $checando_cfdi['codigoEstatus']      = 'S: Comprobante obtenido satisfactoriamente';
             $checando_cfdi['esCancelable']       = 'Cancelable sin Aceptación';
             $checando_cfdi['estado']             = 'Cancelado';
             $checando_cfdi['estatusCancelacion'] = 'Cancelado sin aceptación';
             $checando_cfdi['uuid']               = '';
         }
-
+*/
         $cfdi = Cfdis::where('id', $folio_id)->first();
 
         if (empty($cfdi)) {
