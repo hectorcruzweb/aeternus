@@ -194,10 +194,10 @@
         <table class=" mt-1 w-100 texto-base datos_tabla uppercase">
             <tr class="size-15px center">
                 <td class="w-30 py-1 px-1 bg-gray bold">
-                    Observaciones:
+                    No. de Certificado:
                 </td>
                 <td class="w-70 py-1 px-1">
-                    {{ $datos['nota_servicio'] }}
+                    {{ $datos['folio_certificado'] }}
                 </td>
             </tr>
         </table>
@@ -216,13 +216,13 @@
 
     <div class="w-100">
         <div class="w-50 mr-auto ml-auto mt-15">
-            <img src="{{ $firmas['gerente'] }}" class="firma">
-            <div class="w-90 mr-auto ml-auto border-top pt-1">
+            <!--<img src="{{ $firmas['gerente'] }}" class="firma">-->
+            <div class="w-90 mr-auto ml-auto  pt-1">
                 <div class=" pb-1"><span class="texto-base bold uppercase center">
                         <p class=" line-17 size-13px">
                             ATENTAMENTE
                         </p>
-                        <p class=" line-17 size-13px -mt-3">
+                        <p class=" line-17 size-13px mt-3">
                             Administración
                         </p>
 
