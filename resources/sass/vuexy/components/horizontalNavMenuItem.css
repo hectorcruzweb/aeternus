@@ -1,0 +1,1395 @@
+@charset "UTF-8";
+/*=========================================================================================
+    File Name: _variables.scss
+    Description: partial- SCSS varibales
+    ----------------------------------------------------------------------------------------
+    Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+      Author: Pixinvent
+    Author URL: http://www.themeforest.net/user/pixinvent
+==========================================================================================*/
+/*========================================================
+        SPACING
+=========================================================*/
+/*========================================================
+        COLORS
+=========================================================*/
+.border-primary-solid-1 {
+  border: 1px solid #b18b1e;
+}
+
+.border-secondary-solid-1 {
+  border: 1px solid #007bff;
+}
+
+.border-success-solid-1 {
+  border: 1px solid #28c76f;
+}
+
+.border-danger-solid-1 {
+  border: 1px solid #ea5455;
+}
+
+.border-warning-solid-1 {
+  border: 1px solid #ff9f43;
+}
+
+.border-dark-solid-1 {
+  border: 1px solid #1e1e1e;
+}
+
+.border-black-solid-1 {
+  border: 1px solid #22292f;
+}
+
+.border-gray-solid-1 {
+  border: 1px solid #b8c2cc;
+}
+
+.border-primary-dotted-1 {
+  border: 1px dotted #b18b1e;
+}
+
+.border-secondary-dotted-1 {
+  border: 1px dotted #007bff;
+}
+
+.border-success-dotted-1 {
+  border: 1px dotted #28c76f;
+}
+
+.border-danger-dotted-1 {
+  border: 1px dotted #ea5455;
+}
+
+.border-warning-dotted-1 {
+  border: 1px dotted #ff9f43;
+}
+
+.border-dark-dotted-1 {
+  border: 1px dotted #1e1e1e;
+}
+
+.border-black-dotted-1 {
+  border: 1px dotted #22292f;
+}
+
+.border-gray-dotted-1 {
+  border: 1px dotted #b8c2cc;
+}
+
+.border-primary-solid-2 {
+  border: 2px solid #b18b1e;
+}
+
+.border-secondary-solid-2 {
+  border: 2px solid #007bff;
+}
+
+.border-success-solid-2 {
+  border: 2px solid #28c76f;
+}
+
+.border-danger-solid-2 {
+  border: 2px solid #ea5455;
+}
+
+.border-warning-solid-2 {
+  border: 2px solid #ff9f43;
+}
+
+.border-dark-solid-2 {
+  border: 2px solid #1e1e1e;
+}
+
+.border-black-solid-2 {
+  border: 2px solid #22292f;
+}
+
+.border-gray-solid-2 {
+  border: 2px solid #b8c2cc;
+}
+
+.border-primary-dotted-2 {
+  border: 2px dotted #b18b1e;
+}
+
+.border-secondary-dotted-2 {
+  border: 2px dotted #007bff;
+}
+
+.border-success-dotted-2 {
+  border: 2px dotted #28c76f;
+}
+
+.border-danger-dotted-2 {
+  border: 2px dotted #ea5455;
+}
+
+.border-warning-dotted-2 {
+  border: 2px dotted #ff9f43;
+}
+
+.border-dark-dotted-2 {
+  border: 2px dotted #1e1e1e;
+}
+
+.border-black-dotted-2 {
+  border: 2px dotted #22292f;
+}
+
+.border-gray-dotted-2 {
+  border: 2px dotted #b8c2cc;
+}
+
+/*========================================================
+        COLOR PRIMARIO CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR SECUNDARIO CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR SUCCESS CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR DANGER CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR WARNING CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR DARK CON SUS VARIACIONES
+=========================================================*/
+/*========================================================
+        COLOR BLACK CON SUS VARIACIONES
+=========================================================*/
+/*bg theme*/
+.theme-background {
+  background-color: #f8f8f8 !important;
+}
+
+.color-copy {
+  color: #626262;
+}
+
+/*Creando los colores segun su tono*/
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-50 {
+  color: #FBF5E5;
+}
+
+.color-primary-hover-50:hover {
+  color: #FBF5E5;
+}
+
+.bg-primary-50 {
+  background-color: #FBF5E5;
+}
+
+/*colores secundarios*/
+.color-secondary-50 {
+  color: #E5F2FF;
+}
+
+.bg-secondary-50 {
+  background-color: #E5F2FF;
+}
+
+/*colores success*/
+.color-success-50 {
+  color: #E8FAF0;
+}
+
+.bg-success-50 {
+  background-color: #E8FAF0;
+}
+
+/*colores danger*/
+.color-danger-50 {
+  color: #FDEEEE;
+}
+
+.bg-danger-50 {
+  background-color: #FDEEEE;
+}
+
+/*colores warning*/
+.color-warning-50 {
+  color: #FFF5EC;
+}
+
+.bg-warning-50 {
+  background-color: #FFF5EC;
+}
+
+/*colores dark*/
+.color-dark-50 {
+  color: #E9E9E9;
+}
+
+.bg-dark-50 {
+  background-color: #E9E9E9;
+}
+
+/*colores black*/
+.color-black-50 {
+  color: #E6EAED;
+}
+
+.bg-black-50 {
+  background-color: #E6EAED;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-100 {
+  color: #F6EBCB;
+}
+
+.color-primary-hover-100:hover {
+  color: #F6EBCB;
+}
+
+.bg-primary-100 {
+  background-color: #F6EBCB;
+}
+
+/*colores secundarios*/
+.color-secondary-100 {
+  color: #CCE5FF;
+}
+
+.bg-secondary-100 {
+  background-color: #CCE5FF;
+}
+
+/*colores success*/
+.color-success-100 {
+  color: #D2F6E2;
+}
+
+.bg-success-100 {
+  background-color: #D2F6E2;
+}
+
+/*colores danger*/
+.color-danger-100 {
+  color: #FBDDDD;
+}
+
+.bg-danger-100 {
+  background-color: #FBDDDD;
+}
+
+/*colores warning*/
+.color-warning-100 {
+  color: #FFECD9;
+}
+
+.bg-warning-100 {
+  background-color: #FFECD9;
+}
+
+/*colores dark*/
+.color-dark-100 {
+  color: #D2D2D2;
+}
+
+.bg-dark-100 {
+  background-color: #D2D2D2;
+}
+
+/*colores black*/
+.color-black-100 {
+  color: #CDD5DB;
+}
+
+.bg-black-100 {
+  background-color: #CDD5DB;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-200 {
+  color: #F2E1B1;
+}
+
+.color-primary-hover-200:hover {
+  color: #F2E1B1;
+}
+
+.bg-primary-200 {
+  background-color: #F2E1B1;
+}
+
+/*colores secundarios*/
+.color-secondary-200 {
+  color: #B3D7FF;
+}
+
+.bg-secondary-200 {
+  background-color: #B3D7FF;
+}
+
+/*colores success*/
+.color-success-200 {
+  color: #BBF1D3;
+}
+
+.bg-success-200 {
+  background-color: #BBF1D3;
+}
+
+/*colores danger*/
+.color-danger-200 {
+  color: #F9CCCC;
+}
+
+.bg-danger-200 {
+  background-color: #F9CCCC;
+}
+
+/*colores warning*/
+.color-warning-200 {
+  color: #FFE2C7;
+}
+
+.bg-warning-200 {
+  background-color: #FFE2C7;
+}
+
+/*colores dark*/
+.color-dark-200 {
+  color: #BCBCBC;
+}
+
+.bg-dark-200 {
+  background-color: #BCBCBC;
+}
+
+/*colores black*/
+.color-black-200 {
+  color: #B4BFC9;
+}
+
+.bg-black-200 {
+  background-color: #B4BFC9;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-300 {
+  color: #E9CD7D;
+}
+
+.color-primary-hover-300:hover {
+  color: #E9CD7D;
+}
+
+.bg-primary-300 {
+  background-color: #E9CD7D;
+}
+
+/*colores secundarios*/
+.color-secondary-300 {
+  color: #99CAFF;
+}
+
+.bg-secondary-300 {
+  background-color: #99CAFF;
+}
+
+/*colores success*/
+.color-success-300 {
+  color: #A5EDC5;
+}
+
+.bg-success-300 {
+  background-color: #A5EDC5;
+}
+
+/*colores danger*/
+.color-danger-300 {
+  color: #F7BBBB;
+}
+
+.bg-danger-300 {
+  background-color: #F7BBBB;
+}
+
+/*colores warning*/
+.color-warning-300 {
+  color: #FFD9B4;
+}
+
+.bg-warning-300 {
+  background-color: #FFD9B4;
+}
+
+/*colores dark*/
+.color-dark-300 {
+  color: #A5A5A5;
+}
+
+.bg-dark-300 {
+  background-color: #A5A5A5;
+}
+
+/*colores black*/
+.color-black-300 {
+  color: #9BAAB7;
+}
+
+.bg-black-300 {
+  background-color: #9BAAB7;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-400 {
+  color: #E9CD7D;
+}
+
+.color-primary-hover-400:hover {
+  color: #E9CD7D;
+}
+
+.bg-primary-400 {
+  background-color: #E9CD7D;
+}
+
+/*colores secundarios*/
+.color-secondary-400 {
+  color: #80BDFF;
+}
+
+.bg-secondary-400 {
+  background-color: #80BDFF;
+}
+
+/*colores success*/
+.color-success-400 {
+  color: #8EE8B6;
+}
+
+.bg-success-400 {
+  background-color: #8EE8B6;
+}
+
+/*colores danger*/
+.color-danger-400 {
+  color: #F5AAAA;
+}
+
+.bg-danger-400 {
+  background-color: #F5AAAA;
+}
+
+/*colores warning*/
+.color-warning-400 {
+  color: #FFCFA1;
+}
+
+.bg-warning-400 {
+  background-color: #FFCFA1;
+}
+
+/*colores dark*/
+.color-dark-400 {
+  color: #8F8F8F;
+}
+
+.bg-dark-400 {
+  background-color: #8F8F8F;
+}
+
+/*colores black*/
+.color-black-400 {
+  color: #8395A5;
+}
+
+.bg-black-400 {
+  background-color: #8395A5;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-500 {
+  color: #E5C364;
+}
+
+.color-primary-hover-500:hover {
+  color: #E5C364;
+}
+
+.bg-primary-500 {
+  background-color: #E5C364;
+}
+
+/*colores secundarios*/
+.color-secondary-500 {
+  color: #66B0FF;
+}
+
+.bg-secondary-500 {
+  background-color: #66B0FF;
+}
+
+/*colores success*/
+.color-success-500 {
+  color: #78E4A8;
+}
+
+.bg-success-500 {
+  background-color: #78E4A8;
+}
+
+/*colores danger*/
+.color-danger-500 {
+  color: #F29899;
+}
+
+.bg-danger-500 {
+  background-color: #F29899;
+}
+
+/*colores warning*/
+.color-warning-500 {
+  color: #FFC58E;
+}
+
+.bg-warning-500 {
+  background-color: #FFC58E;
+}
+
+/*colores dark*/
+.color-dark-500 {
+  color: #787878;
+}
+
+.bg-dark-500 {
+  background-color: #787878;
+}
+
+/*colores black*/
+.color-black-500 {
+  color: #6A8093;
+}
+
+.bg-black-500 {
+  background-color: #6A8093;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-600 {
+  color: #E0B94A;
+}
+
+.color-primary-hover-600:hover {
+  color: #E0B94A;
+}
+
+.bg-primary-600 {
+  background-color: #E0B94A;
+}
+
+/*colores secundarios*/
+.color-secondary-600 {
+  color: #4DA3FF;
+}
+
+.bg-secondary-600 {
+  background-color: #4DA3FF;
+}
+
+/*colores success*/
+.color-success-600 {
+  color: #61DF99;
+}
+
+.bg-success-600 {
+  background-color: #61DF99;
+}
+
+/*colores danger*/
+.color-danger-600 {
+  color: #F08788;
+}
+
+.bg-danger-600 {
+  background-color: #F08788;
+}
+
+/*colores warning*/
+.color-warning-600 {
+  color: #FFBC7B;
+}
+
+.bg-warning-600 {
+  background-color: #FFBC7B;
+}
+
+/*colores dark*/
+.color-dark-600 {
+  color: #626262;
+}
+
+.bg-dark-600 {
+  background-color: #626262;
+}
+
+/*colores black*/
+.color-black-600 {
+  color: #586A7A;
+}
+
+.bg-black-600 {
+  background-color: #586A7A;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-700 {
+  color: #DCAF30;
+}
+
+.color-primary-hover-700:hover {
+  color: #DCAF30;
+}
+
+.bg-primary-700 {
+  background-color: #DCAF30;
+}
+
+/*colores secundarios*/
+.color-secondary-700 {
+  color: #3395FF;
+}
+
+.bg-secondary-700 {
+  background-color: #3395FF;
+}
+
+/*colores success*/
+.color-success-700 {
+  color: #4ADB8B;
+}
+
+.bg-success-700 {
+  background-color: #4ADB8B;
+}
+
+/*colores danger*/
+.color-danger-700 {
+  color: #EE7677;
+}
+
+.bg-danger-700 {
+  background-color: #EE7677;
+}
+
+/*colores warning*/
+.color-warning-700 {
+  color: #FFB269;
+}
+
+.bg-warning-700 {
+  background-color: #FFB269;
+}
+
+/*colores dark*/
+.color-dark-700 {
+  color: #4B4B4B;
+}
+
+.bg-dark-700 {
+  background-color: #4B4B4B;
+}
+
+/*colores black*/
+.color-black-700 {
+  color: #465461;
+}
+
+.bg-black-700 {
+  background-color: #465461;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-800 {
+  color: #CB9F22;
+}
+
+.color-primary-hover-800:hover {
+  color: #CB9F22;
+}
+
+.bg-primary-800 {
+  background-color: #CB9F22;
+}
+
+/*colores secundarios*/
+.color-secondary-800 {
+  color: #1A88FF;
+}
+
+.bg-secondary-800 {
+  background-color: #1A88FF;
+}
+
+/*colores success*/
+.color-success-800 {
+  color: #34D67C;
+}
+
+.bg-success-800 {
+  background-color: #34D67C;
+}
+
+/*colores danger*/
+.color-danger-800 {
+  color: #EC6566;
+}
+
+.bg-danger-800 {
+  background-color: #EC6566;
+}
+
+/*colores warning*/
+.color-warning-800 {
+  color: #FFA956;
+}
+
+.bg-warning-800 {
+  background-color: #FFA956;
+}
+
+/*colores dark*/
+.color-dark-800 {
+  color: #353535;
+}
+
+.bg-dark-800 {
+  background-color: #353535;
+}
+
+/*colores black*/
+.color-black-800 {
+  color: #343F48;
+}
+
+.bg-black-800 {
+  background-color: #343F48;
+}
+
+/*verificando el tono a aplicar*/
+/*colores primarios*/
+.color-primary-900 {
+  color: #B18B1E;
+}
+
+.color-primary-hover-900:hover {
+  color: #B18B1E;
+}
+
+.bg-primary-900 {
+  background-color: #B18B1E;
+}
+
+/*colores secundarios*/
+.color-secondary-900 {
+  color: #1A88FF;
+}
+
+.bg-secondary-900 {
+  background-color: #1A88FF;
+}
+
+/*colores success*/
+.color-success-900 {
+  color: #28C76F;
+}
+
+.bg-success-900 {
+  background-color: #28C76F;
+}
+
+/*colores danger*/
+.color-danger-900 {
+  color: #EA5455;
+}
+
+.bg-danger-900 {
+  background-color: #EA5455;
+}
+
+/*colores warning*/
+.color-warning-900 {
+  color: #FF9F43;
+}
+
+.bg-warning-900 {
+  background-color: #FF9F43;
+}
+
+/*colores dark*/
+.color-dark-900 {
+  color: #1E1E1E;
+}
+
+.bg-dark-900 {
+  background-color: #1E1E1E;
+}
+
+/*colores black*/
+.color-black-900 {
+  color: #22292F;
+}
+
+.bg-black-900 {
+  background-color: #22292F;
+}
+
+/*========================================================
+        TYPOGRAPHY
+=========================================================*/
+/*calculando los sizes de las fuentes segun la escala que se está usando*/
+/*1.125 Major Second*/
+/*weights*/
+/*========================================================
+        TYPOGRAPHY
+=========================================================*/
+/*========================================================
+        DARK THEME
+=========================================================*/
+/*========================================================
+        Z-INDEX
+=========================================================*/
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index1k {
+  z-index: 1000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index2k {
+  z-index: 2000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index3k {
+  z-index: 3000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index4k {
+  z-index: 4000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index5k {
+  z-index: 5000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index6k {
+  z-index: 6000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index7k {
+  z-index: 7000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index8k {
+  z-index: 8000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index9k {
+  z-index: 9000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index10k {
+  z-index: 10000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index11k {
+  z-index: 11000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index12k {
+  z-index: 12000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index13k {
+  z-index: 13000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index14k {
+  z-index: 14000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index15k {
+  z-index: 15000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index16k {
+  z-index: 16000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index17k {
+  z-index: 17000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index18k {
+  z-index: 18000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index19k {
+  z-index: 19000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index20k {
+  z-index: 20000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index21k {
+  z-index: 21000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index22k {
+  z-index: 22000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index23k {
+  z-index: 23000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index24k {
+  z-index: 24000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index25k {
+  z-index: 25000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index26k {
+  z-index: 26000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index27k {
+  z-index: 27000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index28k {
+  z-index: 28000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index29k {
+  z-index: 29000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index30k {
+  z-index: 30000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index31k {
+  z-index: 31000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index32k {
+  z-index: 32000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index33k {
+  z-index: 33000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index34k {
+  z-index: 34000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index35k {
+  z-index: 35000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index36k {
+  z-index: 36000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index37k {
+  z-index: 37000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index38k {
+  z-index: 38000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index39k {
+  z-index: 39000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index40k {
+  z-index: 40000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index41k {
+  z-index: 41000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index42k {
+  z-index: 42000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index43k {
+  z-index: 43000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index44k {
+  z-index: 44000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index45k {
+  z-index: 45000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index46k {
+  z-index: 46000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index47k {
+  z-index: 47000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index48k {
+  z-index: 48000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index49k {
+  z-index: 49000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index50k {
+  z-index: 50000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index51k {
+  z-index: 51000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index52k {
+  z-index: 52000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index53k {
+  z-index: 53000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index54k {
+  z-index: 54000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index55k {
+  z-index: 55000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index56k {
+  z-index: 56000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index57k {
+  z-index: 57000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index58k {
+  z-index: 58000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index59k {
+  z-index: 59000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index60k {
+  z-index: 60000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index61k {
+  z-index: 61000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index62k {
+  z-index: 62000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index63k {
+  z-index: 63000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index64k {
+  z-index: 64000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index65k {
+  z-index: 65000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index66k {
+  z-index: 66000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index67k {
+  z-index: 67000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index68k {
+  z-index: 68000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index69k {
+  z-index: 69000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index70k {
+  z-index: 70000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index71k {
+  z-index: 71000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index72k {
+  z-index: 72000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index73k {
+  z-index: 73000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index74k {
+  z-index: 74000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index75k {
+  z-index: 75000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index76k {
+  z-index: 76000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index77k {
+  z-index: 77000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index78k {
+  z-index: 78000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index79k {
+  z-index: 79000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index80k {
+  z-index: 80000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index81k {
+  z-index: 81000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index82k {
+  z-index: 82000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index83k {
+  z-index: 83000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index84k {
+  z-index: 84000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index85k {
+  z-index: 85000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index86k {
+  z-index: 86000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index87k {
+  z-index: 87000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index88k {
+  z-index: 88000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index89k {
+  z-index: 89000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index90k {
+  z-index: 90000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index91k {
+  z-index: 91000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index92k {
+  z-index: 92000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index93k {
+  z-index: 93000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index94k {
+  z-index: 94000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index95k {
+  z-index: 95000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index96k {
+  z-index: 96000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index97k {
+  z-index: 97000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index98k {
+  z-index: 98000 !important;
+}
+
+/*solo se necesitan 20 indexes hasta el momento*/
+.z-index99k {
+  z-index: 99000 !important;
+}
+
+.menu-item li .h-nav-menu-item a {
+  padding: 0.75rem 1.5rem;
+}
+.menu-item li .h-nav-menu-item > * {
+  transition: 0.25s ease-in-out;
+}
+.menu-item li .h-nav-menu-item > *:hover {
+  transform: translateX(5px);
+}
+.menu-item li .h-nav-menu-item.h-nav-active-item {
+  background-color: #f6f6f6;
+}
+.theme-dark .menu-item li .h-nav-menu-item.h-nav-active-item {
+  background-color: #10163a;
+}
+
+.menu-link .h-nav-menu-item:hover .nav-link {
+  background: #f6f6f6;
+}
+.theme-dark .menu-link .h-nav-menu-item:hover .nav-link {
+  background: #262c49;
+}
+.menu-link .h-nav-menu-item.h-nav-active-item a {
+  background: linear-gradient(118deg, rgba(var(--vs-primary), 1), rgba(var(--vs-primary), 0.7)) !important;
+  box-shadow: 0px 0px 6px 1px rgba(var(--vs-primary), 0.6);
+  color: #fff;
+}
+.menu-link .h-nav-menu-item a {
+  border-radius: 4px;
+  padding: 0.5rem 1.5rem;
+}/*# sourceMappingURL=horizontalNavMenuItem.css.map */

@@ -234,6 +234,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/entrega_acta_defuncion', 'FunerariaController@entrega_acta_defuncion');
     Route::get('funeraria/entrega_cenizas', 'FunerariaController@entrega_cenizas');
     Route::get('funeraria/orden_servicio', 'FunerariaController@orden_servicio');
+    Route::get('funeraria/constancia_cremacion', 'FunerariaController@constancia_cremacion');
     Route::get('funeraria/get_estados_civiles', 'FunerariaController@get_estados_civiles');
     Route::get('funeraria/get_escolaridades', 'FunerariaController@get_escolaridades');
     Route::get('funeraria/get_afiliaciones', 'FunerariaController@get_afiliaciones');

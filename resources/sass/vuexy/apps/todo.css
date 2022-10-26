@@ -1,0 +1,33 @@
+/*=========================================================================================
+    File Name: todo.scss
+    Description: Todo app's styles. This is imported in Todo.vue file
+    ----------------------------------------------------------------------------------------
+    Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+      Author: Pixinvent
+    Author URL: http://www.themeforest.net/user/pixinvent
+==========================================================================================*/
+#todo-app .vs-sidebar--background {
+  position: absolute;
+}
+#todo-app .todo-scroll-area {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  height: calc(100% - 70px);
+}
+#todo-app .todo-content-scroll-area {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  height: calc(100% - 50px);
+}
+#todo-app .list-item-component {
+  border-top: 1px solid #dae1e7;
+}
+#todo-app .list-item-component:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 3px 10px 0px #ccc;
+}
+#todo-app .todo-list .todo-tags .con-vs-chip {
+  margin-right: 2px !important;
+}/*# sourceMappingURL=todo.css.map */
