@@ -72,7 +72,6 @@
         }
 
         /*fin de parrafos*/
-
     </style>
 </head>
 
@@ -140,10 +139,10 @@
                 @endif
             </span>. Por medio de la presente, certifico que recibí de Aeternus Funerales 1 (UN) acta
             de defunción original cuyo folio es <span class="bold">
-                @if ($datos['folio_certificado'] == null)
+                @if ($datos['folio_acta'] == null)
                     N/A
                 @else
-                    {{ $datos['folio_certificado'] }}
+                    {{ $datos['folio_acta'] }}
                 @endif
             </span>
 
