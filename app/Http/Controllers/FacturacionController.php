@@ -1823,6 +1823,8 @@ class FacturacionController extends ApiController
             /**status */
             if ($cfdi['status'] == 1) {
                 $cfdi['status_texto'] = 'Vigente';
+            } else if ($cfdi['status'] == 3) {
+                $cfdi['status_texto'] = 'En proceso de cancelación';
             } else {
                 $cfdi['status_texto'] = 'Cancelado';
             }
