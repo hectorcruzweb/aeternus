@@ -2201,7 +2201,7 @@ class FacturacionController extends ApiController
             $validaciones,
             $mensajes
         );
-        /*
+
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($request->id);
@@ -2211,7 +2211,7 @@ class FacturacionController extends ApiController
                 }
             }
         }
-        */
+
 
         //verifico si es cancelable
         if ($checando_cfdi['esCancelable'] == "No cancelable") {
