@@ -174,6 +174,16 @@
         <table class=" mt-1 w-100 texto-base datos_tabla uppercase">
             <tr class="size-15px center">
                 <td class="w-30 py-1 px-1 bg-gray bold">
+                    Fecha de Cremación:
+                </td>
+                <td class="w-70 py-1 px-1">
+                    {{ fecha_abr($datos['fechahora_cremacion']) }}
+                </td>
+            </tr>
+        </table>
+        <table class=" mt-1 w-100 texto-base datos_tabla uppercase">
+            <tr class="size-15px center">
+                <td class="w-30 py-1 px-1 bg-gray bold">
                     No. De Servicio:
                 </td>
                 <td class="w-70 py-1 px-1">
