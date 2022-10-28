@@ -105,7 +105,6 @@
         .conceptos-content {
             border: 1px solid #ddd;
         }
-
     </style>
 </head>
 
@@ -124,16 +123,16 @@
                             </tr>
                             <tr>
                                 <td class="w-100">
-                                    @if (ENV('APP_ENV')=='local')
-                                    <span class="texto-xs2 semibold line-0 uppercase text-danger">
-                                        acuse de solicitud de cancelacion
-                                        de cfdi no válido
-                                    </span>
+                                    @if (ENV('APP_ENV') == 'local')
+                                        <span class="texto-xs2 semibold line-0 uppercase text-danger">
+                                            acuse de solicitud de cancelacion
+                                            de cfdi no válido
+                                        </span>
                                     @else
-                                    <span class="texto-xs2 semibold line-0 uppercase">
-                                        acuse de solicitud de cancelacion
-                                        de cfdi
-                                    </span>
+                                        <span class="texto-xs2 semibold line-0 uppercase">
+                                            acuse de solicitud de cancelacion
+                                            de cfdi
+                                        </span>
                                     @endif
                                 </td>
                             </tr>
@@ -181,7 +180,9 @@
         <tr>
             <td class="w-60 py-1 px-2 bg-gray"><span class="bold">cliente</span></td>
             <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Folio/Serie</span></td>
+            <!--
             <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">fecha y hora solicitud</span></td>
+            -->
         </tr>
         <tr>
             <td class="w-60 py-1 px-2" rowspan="3">
@@ -194,7 +195,8 @@
                     </tr>
                     <tr>
                         <td class="w-30">
-                            <span class="bold">r.f.c:</span> <span class="light">{{ $datos['Receptor']['Rfc'] }}</span>
+                            <span class="bold">r.f.c:</span> <span
+                                class="light">{{ $datos['Receptor']['Rfc'] }}</span>
                         </td>
                         <td class="w-70">
                             <span class="bold">uso cfdi:</span> <span
@@ -210,11 +212,14 @@
                 </table>
             </td>
             <td class="w-20 px-1 px-2 center py-2">
-                <span class="light">{{ $datos['Comprobante']['Folio'] . ' / ' . $datos['Comprobante']['Serie'] }}</span>
+                <span
+                    class="light">{{ $datos['Comprobante']['Folio'] . ' / ' . $datos['Comprobante']['Serie'] }}</span>
             </td>
+            <!--
             <td class="w-20 px-1 px-2 center py-2">
                 <span class="light">{{ $datos['Comprobante']['Fecha'] }}</span>
             </td>
+        -->
         </tr>
         <tr>
             <td colspan="2" class="center bg-gray bold">folio fiscal</td>
@@ -237,10 +242,12 @@
                 <td class="w-25 py-4 bg-gray px-2">Fecha de Cancelación</td>
                 <td class=" px-2">{{ $cfdi->fecha_cancelacion }}</td>
             </tr>
+            <!--
             <tr>
                 <td class="w-25 py-4 bg-gray px-2">Sello Digital Sat</td>
                 <td class=" px-2 crop">{{ $datos['Complemento']['TimbreFiscalDigital']['SelloCFD'] }}</td>
             </tr>
+        -->
         </table>
     </div>
 </body>
