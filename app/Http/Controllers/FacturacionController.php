@@ -1945,6 +1945,7 @@ class FacturacionController extends ApiController
         }
 
 
+        /*
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
             $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
@@ -1954,6 +1955,7 @@ class FacturacionController extends ApiController
                 }
             }
         }
+        */
 
 
         $myRequest = new Request();
@@ -2370,6 +2372,7 @@ class FacturacionController extends ApiController
             $email    = false;
             $email_to = 'hector@gmail.com';
         }
+
         /**aqui voy */
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
