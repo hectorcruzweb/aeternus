@@ -439,7 +439,7 @@ class FacturacionController extends ApiController
                         '_attributes'    =>
                         [
                             'Cantidad'      => $concepto['cantidad'],
-                            'ClaveProdServ' => $clave_sat,
+                            'ClaveProdServ' => trim($clave_sat),
                             'ClaveUnidad'   => $clave_unidad,
                             'Descripcion'   => trim(($concepto['descripcion'])),
                             'Importe'       => number_format((float) round($concepto['cantidad'] * $ValorUnitarioPrecioNeto, 2), 2, '.', ''),
@@ -1457,7 +1457,7 @@ class FacturacionController extends ApiController
             ]);
 
             array_push($conceptos, [
-                'ClaveProdServ' => (string) $concepto['ClaveProdServ'],
+                'ClaveProdServ' => trim((string) $concepto['ClaveProdServ']),
                 'ClaveUnidad'   => (string) $concepto['ClaveUnidad'],
                 'Importe'       => (string) $concepto['Importe'],
                 'Cantidad'      => (string) $concepto['Cantidad'],
