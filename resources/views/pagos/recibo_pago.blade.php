@@ -79,7 +79,7 @@
             <thead>
                 <tr>
                     <th class="w-25">
-                        <img class="logo logos -mt-6" src="{{public_path(env('LOGOJPG'))}}" alt="">
+                        <img class="logo logos -mt-6" src="{{ public_path(env('LOGOJPG')) }}" alt="">
                     </th>
                     <th class="w-40">
 
@@ -133,16 +133,18 @@
                                     <span class="bold">Tipo de Operación:</span>
                                     {{ $datos['tipo_operacion_texto'] }}<br>
                                     <span class="bold">Clave Operación:</span>
-                                    @if($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id']==1)
-                                    <!--es de terrenos--->
-                                    {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['ventas_terrenos_id'] }}<br>
-                                    @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id']==4)
-                                    <!--es de planes a futuro--->
-                                    {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['ventas_planes_id'] }}<br>
-                                    @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id']==3)
-                                    <!--es de planes a futuro--->
-                                    {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['servicios_funerarios_id'] }}<br>
+                                    @if ($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 1)
+                                        <!--es de terrenos--->
+                                        {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['ventas_terrenos_id'] }}<br>
+                                    @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 4)
+                                        <!--es de planes a futuro--->
+                                        {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['ventas_planes_id'] }}<br>
+                                    @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 3)
+                                        <!--es de planes a futuro--->
+                                        {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['servicios_funerarios_id'] }}<br>
                                     @endif
+                                    <span class="bold">Fallecido:</span>
+                                    {{ $fallecido }}<br>
                                 </td>
                             </tr>
                         </table>
@@ -165,42 +167,46 @@
                 </thead>
                 <tbody>
                     @foreach ($datos['referencias_cubiertas'] as $referencia)
-                    <tr>
-                        <td class="py-1 center"><span class="px-2 uppercase">{{ $datos['id'] }}</span>
-                        </td>
-                        <td class="py-1"><span class="px-2 capitalize">{{ $datos['movimientos_pagos_texto'] }}</span>
-                        </td>
-                        <td class="py-1"><span class="px-2">{{ $referencia['referencia_pago'] }}</span></td>
-                        <td class="py-1 right"><span class="px-2">
-                                $ {{ number_format($referencia['pagos_cubiertos']['monto'],2)}}
-                            </span>
-                        </td>
-                    </tr>
-                    @foreach ($datos['subpagos'] as $referencia_subpago)
-                    @foreach ($referencia_subpago['referencias_cubiertas'] as $subpago)
-                    @if ($subpago['referencia_pago']==$referencia['referencia_pago'])
-                    <tr>
-                        <td class="py-1 center"><span
-                                class="px-2 uppercase">{{ $referencia_subpago['parent_pago_id'] }}>{{ $referencia_subpago['id'] }}</span>
-                        </td>
+                        <tr>
+                            <td class="py-1 center"><span class="px-2 uppercase">{{ $datos['id'] }}</span>
+                            </td>
+                            <td class="py-1"><span
+                                    class="px-2 capitalize">{{ $datos['movimientos_pagos_texto'] }}</span>
+                            </td>
+                            <td class="py-1"><span class="px-2">{{ $referencia['referencia_pago'] }}</span></td>
+                            <td class="py-1 right"><span class="px-2">
+                                    $ {{ number_format($referencia['pagos_cubiertos']['monto'], 2) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @foreach ($datos['subpagos'] as $referencia_subpago)
+                            @foreach ($referencia_subpago['referencias_cubiertas'] as $subpago)
+                                @if ($subpago['referencia_pago'] == $referencia['referencia_pago'])
+                                    <tr>
+                                        <td class="py-1 center"><span
+                                                class="px-2 uppercase">{{ $referencia_subpago['parent_pago_id'] }}>{{ $referencia_subpago['id'] }}</span>
+                                        </td>
 
-                        <td class="py-1"><span class="px-2 capitalize pl-6">
-                                @if ($referencia_subpago['movimientos_pagos_id']==2)
-                                <img class="w-6" src="{{public_path('images/increase.png')}}" alt="">
-                                @else
-                                <img class="w-5" src="{{public_path('images/decrease.png')}}" alt="">
+                                        <td class="py-1"><span class="px-2 capitalize pl-6">
+                                                @if ($referencia_subpago['movimientos_pagos_id'] == 2)
+                                                    <img class="w-6" src="{{ public_path('images/increase.png') }}"
+                                                        alt="">
+                                                @else
+                                                    <img class="w-5" src="{{ public_path('images/decrease.png') }}"
+                                                        alt="">
+                                                @endif
+                                                {{ $referencia_subpago['movimientos_pagos_texto'] }}
+                                            </span></td>
+                                        <td class="py-1"><span
+                                                class="px-2 pl-6">{{ $subpago['referencia_pago'] }}</span></td>
+                                        <td class="py-1 right"><span class="px-2">
+                                                $ {{ number_format($subpago['pagos_cubiertos']['monto'], 2) }}
+                                            </span>
+                                        </td>
+                                    </tr>
                                 @endif
-                                {{ $referencia_subpago['movimientos_pagos_texto'] }}
-                            </span></td>
-                        <td class="py-1"><span class="px-2 pl-6">{{ $subpago['referencia_pago'] }}</span></td>
-                        <td class="py-1 right"><span class="px-2">
-                                $ {{ number_format($subpago['pagos_cubiertos']['monto'],2)}}
-                            </span>
-                        </td>
-                    </tr>
-                    @endif
-                    @endforeach
-                    @endforeach
+                            @endforeach
+                        @endforeach
                     @endforeach
                     <tr>
                         <td rowspan="6" colspan="2" class="w-50">
@@ -210,7 +216,7 @@
                                 </span>
                                 <div class="px-2 py-1">
                                     <span class="uppercase">
-                                        {{ $datos['nota']}}
+                                        {{ $datos['nota'] }}
                                     </span>
                                 </div>
                             </div>
@@ -220,7 +226,7 @@
                                 </span>
                                 <div class="px-2 pt-1">
                                     <span class="uppercase">
-                                        {{ $datos['referencia']}}
+                                        {{ $datos['referencia'] }}
                                     </span>
                                 </div>
                             </div>
@@ -230,7 +236,7 @@
                                 </span>
                                 <div class="px-2 pt-1">
                                     <span class="uppercase">
-                                        {{ $datos['banco']}}
+                                        {{ $datos['banco'] }}
                                     </span>
                                 </div>
                             </div>
@@ -252,33 +258,33 @@
                         </td>
                         <td class="right">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['deuda_cubierta'],2)}}
+                                $ {{ number_format($datos['deuda_cubierta'], 2) }}
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="py-1 capitalize center">
                             <span class="px-2 uppercase size-12px bold">
-                                <img class="w-10" src="{{public_path('images/increase.png')}}" alt="">
+                                <img class="w-10" src="{{ public_path('images/increase.png') }}" alt="">
                                 intereses aplicados
                             </span>
                         </td>
                         <td class="right">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['intereses_aplicados'],2)}}
+                                $ {{ number_format($datos['intereses_aplicados'], 2) }}
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <td class="py-1 capitalize center">
                             <span class="px-2 uppercase size-12px bold">
-                                <img class="w-8" src="{{public_path('images/decrease.png')}}" alt="">
+                                <img class="w-8" src="{{ public_path('images/decrease.png') }}" alt="">
                                 descuento x pronto pago
                             </span>
                         </td>
                         <td class="right">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['descuento_pronto_pago_aplicado'],2)}}
+                                $ {{ number_format($datos['descuento_pronto_pago_aplicado'], 2) }}
                             </span>
                         </td>
                     </tr>
@@ -290,7 +296,7 @@
                         </td>
                         <td class="right bg-666">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['total_pago'],2)}}
+                                $ {{ number_format($datos['total_pago'], 2) }}
                             </span>
                         </td>
                     </tr>
@@ -303,7 +309,7 @@
                         </td>
                         <td class="right">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['pago_con_cantidad'],2)}}
+                                $ {{ number_format($datos['pago_con_cantidad'], 2) }}
                             </span>
                         </td>
                     </tr>
@@ -315,7 +321,7 @@
                         </td>
                         <td class="right">
                             <span class="px-2 bold">
-                                $ {{ number_format($datos['cambio_pago'],2)}}
+                                $ {{ number_format($datos['cambio_pago'], 2) }}
                             </span>
                         </td>
                     </tr>
@@ -325,14 +331,14 @@
 
 
         <div class="instrucciones">
-            @if ($datos['status']==0)
-            <br>
-            <span class="uppercase bold size-15px text-danger">detalle de cancelación:</span><br>
-            <span class="bold">Canceló:</span> {{ $datos['cancelador']['nombre'] }}<br>
-            <span class="bold">Motivo:</span> {{ $datos['motivos_cancelacion_texto'] }}<br>
-            <span class="bold">Fecha de Cancelación:</span> {{ $datos['fecha_cancelacion_texto'] }}
-            {{ hora($datos['fecha_cancelacion']) }}<br>
-            <span class="bold">Nota:</span> {{ $datos['nota_cancelacion'] }}<br>
+            @if ($datos['status'] == 0)
+                <br>
+                <span class="uppercase bold size-15px text-danger">detalle de cancelación:</span><br>
+                <span class="bold">Canceló:</span> {{ $datos['cancelador']['nombre'] }}<br>
+                <span class="bold">Motivo:</span> {{ $datos['motivos_cancelacion_texto'] }}<br>
+                <span class="bold">Fecha de Cancelación:</span> {{ $datos['fecha_cancelacion_texto'] }}
+                {{ hora($datos['fecha_cancelacion']) }}<br>
+                <span class="bold">Nota:</span> {{ $datos['nota_cancelacion'] }}<br>
             @endif
             <div class="mt-3">
                 <span class="bold uppercase">nota importante:</span>
@@ -342,7 +348,7 @@
                 Este documento no es válido si no cuenta con la firma del
                 personal
                 de
-                <span class="capitalize bold">{{$empresa->nombre_comercial}}</span> que haya registrado el pago.
+                <span class="capitalize bold">{{ $empresa->nombre_comercial }}</span> que haya registrado el pago.
             </p>
 
             <p class="texto-sm justificar line-base">
@@ -351,26 +357,28 @@
             </p>
             <p class="texto-sm justificar line-base">
                 Para solicitar su factura, debe acudir a las instalaciones de <span
-                    class="capitalize bold">{{$empresa->nombre_comercial}}</span> a más tardar a fin de mes que haya
+                    class="capitalize bold">{{ $empresa->nombre_comercial }}</span> a más tardar a fin de mes que haya
                 realizado la
                 operación de pago.
             </p>
         </div>
 
 
-        @if ($datos['cancelo_id']!=null)
-             <div class="w-100 center mt-20">
+        @if ($datos['cancelo_id'] != null)
+            <div class="w-100 center mt-20">
                 <div class="w-50 float-left">
                     <img src="{{ $firmas['cobrador'] }}" class="firma">
                     <div class="w-90 mr-auto ml-auto border-top">
-                        <div class="pt-3 pb-1"><span class="uppercase  texto-sm">{{ $datos['cobrador']['nombre']  }}</span></div>
+                        <div class="pt-3 pb-1"><span
+                                class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
                         <span class="uppercase bold texto-sm">"Recibió el pago"</span>
                     </div>
                 </div>
-                 <div class="w-50 float-right">
+                <div class="w-50 float-right">
                     <img src="{{ $firmas['cancelo'] }}" class="firma">
                     <div class="w-90 mr-auto ml-auto border-top">
-                        <div class="pt-3 pb-1"><span class="uppercase  texto-sm">{{ $datos['cobrador']['nombre']  }}</span></div>
+                        <div class="pt-3 pb-1"><span
+                                class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
                         <span class="uppercase bold texto-sm">"Canceló pago"</span>
                     </div>
                 </div>
@@ -380,14 +388,15 @@
                 <div class="w-50 mr-auto ml-auto">
                     <img src="{{ $firmas['cobrador'] }}" class="firma">
                     <div class="w-90 mr-auto ml-auto border-top">
-                        <div class="pt-3 pb-1"><span class="uppercase  texto-sm">{{ $datos['cobrador']['nombre']  }}</span></div>
+                        <div class="pt-3 pb-1"><span
+                                class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
                         <span class="uppercase bold texto-sm">"Recibió el pago"</span>
                     </div>
                 </div>
             </div>
         @endif
 
-        
+
 
 
 </body>

@@ -17,6 +17,7 @@ use PhpParser\Node\Stmt\TryCatch;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\FirmasController;
+use App\ServiciosFunerarios;
 
 class PagosController extends ApiController
 {
@@ -1209,7 +1210,7 @@ class PagosController extends ApiController
                     $pago['tipo_operacion_texto'] = 'CUOTA DE MTTO. EN CEMENTERIO.';
                 } elseif ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 3) {
                     /**es tipo de  SERVICIOS FUNERARIOS */
-                    $pago['tipo_operacion_texto'] = ' SERVICIOS FUNERARIOS';
+                    $pago['tipo_operacion_texto'] = 'SERVICIOS FUNERARIOS';
                 } elseif ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 4) {
                     /**es tipo de VENTA DE PLANES FUNERARIOS A FUTURO */
                     $pago['tipo_operacion_texto'] = 'VENTA DE PLAN FUNERARIO A FUTURO';
@@ -1233,7 +1234,9 @@ class PagosController extends ApiController
 
     public function recibo_de_pago(Request $request, $id_pago = '')
     {
+
         try {
+
 
             /**estos valores verifican si el usuario quiere mandar el pdf por correo */
             $email =  $request->email_send === 'true' ? true : false;
@@ -1245,7 +1248,8 @@ class PagosController extends ApiController
              * por lo cual puede variar de paramtros degun la ncecesidad
              */
 
-            /*$id_pago = 27;
+            /*
+        $id_pago = 3353;
         $email = false;
         $email_to = 'hector@gmail.com';
 */
@@ -1272,9 +1276,17 @@ class PagosController extends ApiController
             'cancelo' => $cancelo['firma_path']
         ];
 
+        //nombre del fallecido
+        $fallecido = "N/A";
+        $id_servicio_funerario = $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['servicios_funerarios_id'];
+        if ($id_servicio_funerario != null) {
+            $res = ServiciosFunerarios::select('nombre_afectado')->where('id', $id_servicio_funerario)->get()->first();
+            $fallecido = $res->nombre_afectado;
+        }
 
 
-        $pdf = PDF::loadView('pagos/recibo_pago', ['id_pago' => $id_pago, 'datos' => $datos_pago, 'empresa' => $empresa, 'firmas' => $firmas]);
+
+        $pdf = PDF::loadView('pagos/recibo_pago', ['id_pago' => $id_pago, 'datos' => $datos_pago, 'empresa' => $empresa, 'firmas' => $firmas, 'fallecido' => $fallecido]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "RECIBO DE PAGO " . strtoupper($datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['cliente']['nombre']) . '.pdf';
 
