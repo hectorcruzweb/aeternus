@@ -1202,8 +1202,6 @@ class FacturacionController extends ApiController
                 set_time_limit(0);
                 ini_set('display_errors', true);
                 ini_set("soap.wsdl_cache_enabled", "0");
-                date_default_timezone_set("America/Mazatlan");
-
                 /**mandamos crear el XML, con el nombre temporal del folio registrado en la parte superior */
                 $xml_a_timbrar = $this->GenerarXmlCfdi($request, $folio_para_asignar);
 
@@ -2261,7 +2259,6 @@ class FacturacionController extends ApiController
             return $this->errorResponse('Error al cargar los datos del xml.', 409);
         }
 
-        date_default_timezone_set("America/Mazatlan");
         $fecha_cancelacion = date("Y-m-d H:i:s");
         /**datos para la consulta */
         $parametros            = new Parametros();
