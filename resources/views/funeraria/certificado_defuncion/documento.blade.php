@@ -178,15 +178,21 @@
             </td>
             <td class="w-75 px-2">
                 <div class="opcion">
-                    <span
-                        class="<?php if (!is_null($datos['generos_id']) && $datos['generos_id']==1){echo 'display';}else{echo 'hidden';}?>">
+                    <span class="<?php if (!is_null($datos['generos_id']) && $datos['generos_id'] == 1) {
+                        echo 'display';
+                    } else {
+                        echo 'hidden';
+                    } ?>">
                         x
                     </span>
                 </div>
                 Hombre/Male
                 <div class="opcion ml-3">
-                    <span
-                        class="<?php if (!is_null($datos['generos_id']) && $datos['generos_id']==2){echo 'display';}else{echo 'hidden';}?>">
+                    <span class="<?php if (!is_null($datos['generos_id']) && $datos['generos_id'] == 2) {
+                        echo 'display';
+                    } else {
+                        echo 'hidden';
+                    } ?>">
                         x
                     </span>
                 </div>
@@ -206,7 +212,7 @@
             </td>
             <td class="w-35 px-2">
                 @if (!is_null($datos['fecha_nacimiento']))
-                {{ $datos['fecha_nacimiento_texto'] }}
+                    {{ $datos['fecha_nacimiento_texto'] }}
                 @endif
             </td>
             <td class="w-10  bold px-2 ">
@@ -235,7 +241,7 @@
             </td>
             <td class="w-25 px-2">
                 @if (!is_null($datos['nacionalidades_id']))
-                {{ $datos['nacionalidad']['nacionalidad'] }}
+                    {{ $datos['nacionalidad']['nacionalidad'] }}
                 @endif
             </td>
         </tr>
@@ -255,8 +261,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==1){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 1) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -264,8 +273,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==2){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 2) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -273,8 +285,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==4){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 4) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -284,8 +299,11 @@
                     <tr>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==6){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 6) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -293,8 +311,11 @@
                         </td>
                         <td>
                             <div class="opcion mt-1 ">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==3){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 3) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -302,8 +323,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==5){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 5) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -313,8 +337,11 @@
                     <tr>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id']==7){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['estados_civiles_id']) && $datos['estados_civiles_id'] == 7) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -347,8 +374,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==1){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 1) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -356,8 +386,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==2){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 2) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -365,8 +398,11 @@
                         </td>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==3){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 3) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -378,8 +414,11 @@
                     <tr>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==4){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 4) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -387,8 +426,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==5){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 5) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -400,8 +442,11 @@
                     <tr>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==6){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 6) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -409,8 +454,11 @@
                         </td>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==7){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 7) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -418,8 +466,11 @@
                         </td>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id']==8){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['escolaridades_id']) && $datos['escolaridades_id'] == 8) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -443,8 +494,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==1){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 1) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -452,8 +506,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==2){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 2) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -461,8 +518,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==3){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 3) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -472,8 +532,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==7){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 7) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -481,8 +544,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==5){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 5) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -490,8 +556,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==6){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 6) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -501,8 +570,11 @@
                     <tr>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==8){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 8) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -510,8 +582,11 @@
                         </td>
                         <td colspan="2">
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id']==9){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['afiliaciones_id']) && $datos['afiliaciones_id'] == 9) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -553,8 +628,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==1){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 1) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -562,8 +640,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==2){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 2) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -571,8 +652,11 @@
                         </td>
                         <td>
                             <div class="opcion ">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==3){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 3) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -582,8 +666,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==4){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 4) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -591,8 +678,11 @@
                         </td>
                         <td>
                             <div class="opcion  mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==6){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 6) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -600,8 +690,11 @@
                         </td>
                         <td>
                             <div class="opcion  mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==7){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 7) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -611,8 +704,11 @@
                     <tr>
                         <td colspan="2">
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==8){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 8) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -620,8 +716,11 @@
                         </td>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id']==9){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['sitios_muerte_id']) && $datos['sitios_muerte_id'] == 9) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -653,7 +752,7 @@
             </td>
             <td class="w-20 px-2">
                 @if (!is_null($datos['fechahora_defuncion']))
-                {{ $datos['fecha_muerte_texto'] }}
+                    {{ $datos['fecha_muerte_texto'] }}
                 @endif
             </td>
             <td class="w-25  bold px-2 ">
@@ -667,8 +766,11 @@
                     <tr>
                         <td>
                             <div class="opcion">
-                                <span
-                                    class="<?php if (!is_null($datos['atencion_medica_b']) && $datos['atencion_medica_b']==1){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['atencion_medica_b']) && $datos['atencion_medica_b'] == 1) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -676,8 +778,11 @@
                         </td>
                         <td>
                             <div class="opcion mt-1">
-                                <span
-                                    class="<?php if (!is_null($datos['atencion_medica_b']) && $datos['atencion_medica_b']==0){echo 'display';}else{echo 'hidden';}?>">
+                                <span class="<?php if (!is_null($datos['atencion_medica_b']) && $datos['atencion_medica_b'] == 0) {
+                                    echo 'display';
+                                } else {
+                                    echo 'hidden';
+                                } ?>">
                                     x
                                 </span>
                             </div>
@@ -692,16 +797,7 @@
     <table class="w-100 texto-base mt-1 datos_tabla uppercase">
         <tr class="size-13px">
             <td class="w-35  bold px-2 ">
-                ¿padecía alguna enfermedad?
-                <div class="w-normal">
-                    (did he/she have any disease?)
-                </div>
-            </td>
-            <td class="w-65 px-2" colspan="3">{{ $datos['enfermedades_padecidas'] }}</td>
-        </tr>
-        <tr class="size-13px">
-            <td class="w-35  bold px-2 ">
-               causa de muerte
+                causa de muerte
                 <div class="w-normal">
                     (death cause)
                 </div>
@@ -743,7 +839,7 @@
         </tr>
         <tr class="size-13px">
             <td class="w-35  bold px-2 ">
-                médico legista
+                médico que certifica
                 <div class="w-normal">
                     (medical examiner)
                 </div>
@@ -754,7 +850,7 @@
 
     <div class="w-100 center hidden">
         <div class="w-50  mr-auto ml-auto">
-             <img src="{{ $firmas['informante'] }}" class="firma" >
+            <img src="{{ $firmas['informante'] }}" class="firma">
             <div class="w-90 border-top">
                 <div class="pt-1 pb-1"><span class="uppercase  texto-sm"></span></div>
                 <span class="uppercase bold texto-sm">firma del informante</span>

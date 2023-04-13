@@ -47,7 +47,7 @@ class UsuariosController extends ApiController
                         END) AS genero_des')
             )
                 ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
-            //->where('roles_id', ">", 1)
+                //->where('roles_id', ">", 1)
                 ->where(function ($q) use ($status) {
                     if ($status != '') {
                         $q->where('usuarios.status', $status);
@@ -101,7 +101,6 @@ class UsuariosController extends ApiController
             } else {
                 return $this->errorResponse('Error. Contraseña incorrecta.', 409);
             }
-
         } else {
             return $this->errorResponse('Error. Usuario no registrado.', 409);
         }
@@ -142,11 +141,11 @@ class UsuariosController extends ApiController
                 ->join('secciones', 'secciones.id', '=', 'modulos.secciones_id')
                 ->where('usuarios.id', '=', $request->user()->id)
                 ->whereNotIn('modulos.id', [14, 18])
-            //->where('usuarios.roles_id', '=', $request->user()->roles_id)
+                //->where('usuarios.roles_id', '=', $request->user()->roles_id)
                 ->orderBy('secciones.id', 'asc')
                 ->orderBy('modulos.id', 'asc')
                 ->distinct('secciones_id')
-            //->toSql();
+                //->toSql();
                 ->get();
             //return $resultado;
 
@@ -279,7 +278,6 @@ class UsuariosController extends ApiController
         {
             return $this->errorResponse('Usuario no autenticado', 401);
         }
-
     }
 
     /**OBTIENE TODOS LOS PERMISOS DEL USUARIO EN EL SISTEMA TOMANDO COMO PARAMETRO EL ACCESS TOKEN */
@@ -313,12 +311,11 @@ class UsuariosController extends ApiController
         {
             return $this->errorResponse('Usuario no autenticado', 401);
         }
-
     }
 
     public function get_usuarioById(Request $request)
     {
-          $resultado_query= User::select(
+        $resultado_query = User::select(
             'usuarios.id',
             'usuarios.id as id_user',
             'nombre',
@@ -346,21 +343,21 @@ class UsuariosController extends ApiController
             ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
             ->where('usuarios.id', '=', $request->user_id)
             ->get();
-            $path='';
-            if(trim($resultado_query[0]['firma_path'])==''){
-                $path=Storage::disk('signatures')->get('default.png');
-                  $resultado_query[0]['firma_registrada']= false;
-            }else{
-                if (Storage::disk('signatures')->exists('users/'.$resultado_query[0]['id'].'.png')) {
-                 $path=Storage::disk('signatures')->get('users/'.$resultado_query[0]['id'].'.png');
-                }else{
-                     $path=Storage::disk('signatures')->get('default.png');
-                }
-                 $resultado_query[0]['firma_registrada']= true;
+        $path = '';
+        if (trim($resultado_query[0]['firma_path']) == '') {
+            $path = Storage::disk('signatures')->get('default.png');
+            $resultado_query[0]['firma_registrada'] = false;
+        } else {
+            if (Storage::disk('signatures')->exists('users/' . $resultado_query[0]['id'] . '.png')) {
+                $path = Storage::disk('signatures')->get('users/' . $resultado_query[0]['id'] . '.png');
+            } else {
+                $path = Storage::disk('signatures')->get('default.png');
             }
-            $resultado_query[0]['firma_path']= 'data:image/png;base64,'.base64_encode( $path);
-            
-        return $resultado_query;     
+            $resultado_query[0]['firma_registrada'] = true;
+        }
+        $resultado_query[0]['firma_path'] = 'data:image/png;base64,' . base64_encode($path);
+
+        return $resultado_query;
     }
 
     public function logout_usuario()
@@ -395,7 +392,6 @@ class UsuariosController extends ApiController
         {
             return $this->errorResponse('Usuario no autenticado', 401);
         }
-
     }
 
     /**AGREGAR USUARIOS */
@@ -441,22 +437,22 @@ class UsuariosController extends ApiController
                     'nombre_contacto' => $request->nombre_contacto,
                     'tel_contacto'    => $request->tel_contacto,
                     'parentesco'      => $request->parentesco_contacto,
-                    'firma_path' => trim($request->firma)!=''?'capturada':null,
+                    'firma_path' => trim($request->firma) != '' ? 'capturada' : null,
                     'created_at'      => now(),
                 ]
             );
 
             /**guard firma en imagen*/
-           if(trim($request->firma)){
+            if (trim($request->firma)) {
                 $base64_image = $request->firma;
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64_image)) {
                     $data = substr($base64_image, strpos($base64_image, ',') + 1);
                     $data = base64_decode($data);
                     /**guardo la imagen aqui voy */
-                    Storage::disk('signatures')->put('users/'.$id_user.'.png',$data);
+                    Storage::disk('signatures')->put('users/' . $id_user . '.png', $data);
                     //$path=Storage::disk('signatures')->get('default.png');
                 }
-           }
+            }
 
 
             /**inserto cada uno de los puestos que tiene este usuario */
@@ -509,7 +505,6 @@ class UsuariosController extends ApiController
         );
 
         //con cambio de contraseña
-
         try {
             DB::beginTransaction();
 
@@ -517,20 +512,20 @@ class UsuariosController extends ApiController
             DB::table('usuarios_puestos')->where('usuarios_id', $user_id)->delete();
 
 
-           $datos=DB::table('usuarios')->where('id', $user_id)->where('firma_path',null)->get();
-           $firma=null;
-           $crear_imagen=false;
-            if(count($datos)>0){
-                 if(trim($request->firma)!=null){
-                    $firma="capturada";
-                   $crear_imagen=true;
-                 }
-            }else{
-                if($datos[0]->firma_path!=null){
-                     $firma="capturada";
-                }
-            }
+            $datos = DB::table('usuarios')->where('id', $user_id)->where('firma_path', null)->get();
 
+            $firma = null;
+            $crear_imagen = false;
+            if (count($datos) > 0) {
+                if (trim($request->firma) != null) {
+                    $firma = "capturada";
+                    $crear_imagen = true;
+                }
+            } else {
+                //if ($datos[0]->firma_path != null) {
+                $firma = "capturada";
+                //}
+            }
             //actualizando los datos del usuario
             if ($request->password == 'nochanges') {
                 DB::table('usuarios')->where('id', $user_id)->update(
@@ -565,23 +560,23 @@ class UsuariosController extends ApiController
                         'tel_contacto'    => $request->tel_contacto,
                         'parentesco'      => $request->parentesco_contacto,
                         'updated_at'      => now(),
-                         'firma_path' => $firma
+                        'firma_path' => $firma
                     ]
                 );
             }
 
-                 
-               if($crear_imagen==true){
-                 if(trim($request->firma)){
-                 $base64_image = $request->firma;
-                 if (preg_match('/^data:image\/(\w+);base64,/', $base64_image)) {
-                 $data = substr($base64_image, strpos($base64_image, ',') + 1);
-                 $data = base64_decode($data);
-                 Storage::disk('signatures')->put('users/'.$user_id.'.png',$data);
-                 }
-                 }
+
+            if ($crear_imagen == true) {
+                if (trim($request->firma)) {
+                    $base64_image = $request->firma;
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64_image)) {
+                        $data = substr($base64_image, strpos($base64_image, ',') + 1);
+                        $data = base64_decode($data);
+                        Storage::disk('signatures')->put('users/' . $user_id . '.png', $data);
+                    }
                 }
-                 
+            }
+
 
             /**inserto cada uno de los puestos que tiene este usuario */
             foreach ($request->puestos as $puesto) {
@@ -692,7 +687,7 @@ class UsuariosController extends ApiController
                         END) AS status_des')
         )
             ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
-        //->where('roles_id', ">", 1)
+            //->where('roles_id', ">", 1)
             ->where(function ($q) use ($status) {
                 if ($status != '') {
                     $q->where('usuarios.status', $status);
