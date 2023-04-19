@@ -537,6 +537,13 @@ export default {
                     tipo: "pdf",
                     documento_id: 24,
                     firma: true
+                },
+                {
+                    documento: "Constancia de no embalsamiento",
+                    url: "/funeraria/contancia_de_no_embalsamiento",
+                    tipo: "pdf",
+                    documento_id: 27,
+                    firma: true
                 }
             ],
             total: 0 /**rows que se van a remplazar el click en el evento de las tablas para modificar el expand */,
@@ -596,7 +603,8 @@ export default {
                 documento != "Entrega de cenizas" &&
                 documento != "Hoja de Servicio" &&
                 documento != "Contrato" &&
-                documento != "Constancia de Cremación"
+                documento != "Constancia de Cremación" &&
+                documento != "Constancia de no embalsamiento"
             ) {
                 return true;
             } else {
@@ -614,6 +622,10 @@ export default {
                 } else if (documento == "Constancia de embalsamiento") {
                     /**chenado si tiene saldo pendiente */
                     if (this.datosSolicitud.embalsamar_b == 1) {
+                        return true;
+                    } else return false;
+                } else if (documento == "Constancia de no embalsamiento") {
+                    if (this.datosSolicitud.embalsamar_b == 0) {
                         return true;
                     } else return false;
                 } else if (documento == "Material de Velación") {

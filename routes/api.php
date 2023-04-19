@@ -276,7 +276,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
 });
 
-
+Route::get('funeraria/contancia_de_no_embalsamiento', 'FunerariaController@contancia_de_no_embalsamiento');
 
 
 
