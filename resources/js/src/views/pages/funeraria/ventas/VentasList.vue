@@ -119,6 +119,7 @@
                 <vs-th>Plan Funerario</vs-th>
                 <vs-th>Convenio</vs-th>
                 <vs-th>Estatus</vs-th>
+                <vs-th>Usado</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
             <template slot-scope="{ data }">
@@ -189,7 +190,16 @@
                             <span class="dot-success"></span>
                         </p>
                     </vs-td>
-
+                    <vs-td :data="data[indextr].operacion_status">
+                        <p v-if="data[indextr].status_usado_b == 1">
+                            {{ data[indextr].status_usado_texto }}
+                            <span class="dot-warning"></span>
+                        </p>
+                        <p v-else-if="data[indextr].status_usado_b == 0">
+                            {{ data[indextr].status_usado_texto }}
+                            <span class="dot-success"></span>
+                        </p>
+                    </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
                             <img

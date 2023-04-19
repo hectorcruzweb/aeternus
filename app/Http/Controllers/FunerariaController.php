@@ -1288,6 +1288,9 @@ class FunerariaController extends ApiController
                 DB::raw(
                     '(0) AS status_usado_b'
                 ),
+                DB::raw(
+                    '(NULL) AS status_usado_b_texto'
+                ),
                 'numero_solicitud',
                 'numero_convenio',
                 'numero_titulo',
@@ -1448,11 +1451,14 @@ class FunerariaController extends ApiController
         }
 
         foreach ($resultado as $index_venta => &$venta) {
+            $venta["status_usado_texto"] = "No";
             //checando si ya fue usado
             if (isset($venta['usuarios_plan_futuro'])) {
                 //existe
-                if (count($venta['usuarios_plan_futuro']) > 0)
+                if (count($venta['usuarios_plan_futuro']) > 0) {
                     $venta["status_usado_b"] = 1;
+                    $venta["status_usado_texto"] = "Si";
+                }
             }
 
 
