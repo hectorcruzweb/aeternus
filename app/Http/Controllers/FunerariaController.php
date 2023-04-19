@@ -1264,6 +1264,7 @@ class FunerariaController extends ApiController
             ->with('cancelador:id,nombre')
             ->with('registro:id,nombre')
             ->with('venta_plan.entrego_convenio')
+            ->with('usuarios_plan_futuro:ventas_planes_id,nombre_afectado,id')
             ->where('empresa_operaciones_id', '=', 4)
             /**solo ventas de planes funerarios */
             ->select(
@@ -1283,6 +1284,9 @@ class FunerariaController extends ApiController
                 ),
                 DB::raw(
                     '(NULL) AS descuento_neto_calculado'
+                ),
+                DB::raw(
+                    '(0) AS status_usado_b'
                 ),
                 'numero_solicitud',
                 'numero_convenio',
@@ -1444,6 +1448,13 @@ class FunerariaController extends ApiController
         }
 
         foreach ($resultado as $index_venta => &$venta) {
+            //checando si ya fue usado
+            if (isset($venta['usuarios_plan_futuro'])) {
+                //existe
+                if (count($venta['usuarios_plan_futuro']) > 0)
+                    $venta["status_usado_b"] = 1;
+            }
+
 
             /**calculando el costo neto y descuento calcuado */
             $tasa_iva_decimal = $venta['tasa_iva'] / 100;

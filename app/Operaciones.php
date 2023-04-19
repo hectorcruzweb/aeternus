@@ -158,6 +158,14 @@ class Operaciones extends Model
         //return $this->hasMany('App\Comment', 'foreign_key', 'local_key');
     }
 
+
+    public function usuarios_plan_futuro()
+    {
+        return $this->hasMany('App\ServiciosFunerarios', 'ventas_planes_id', 'ventas_planes_id')->select(
+            "*"
+        )->where('status', 1);
+    }
+
     public function AjustesPoliticas()
     {
         return $this->hasOne('App\AjustesPoliticasOperacion', 'operaciones_id', 'operacion_id');

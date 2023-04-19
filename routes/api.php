@@ -167,7 +167,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/documento_estado_de_cuenta_planes', 'FunerariaController@documento_estado_de_cuenta_planes');
     Route::get('funeraria/get_servicios_adeudos', 'FunerariaController@get_servicios_adeudos');
     Route::get('funeraria/get_abonos_vencidos_planes_funerarios', 'FunerariaController@get_abonos_vencidos_planes_funerarios');
-    Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
+
     Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}', 'FunerariaController@get_solicitudes_servicios');
 
 
@@ -277,7 +277,7 @@ Route::middleware(['auth:api'])->group(function () {
 });
 
 Route::get('funeraria/contancia_de_no_embalsamiento', 'FunerariaController@contancia_de_no_embalsamiento');
-
+Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
 
 
 
