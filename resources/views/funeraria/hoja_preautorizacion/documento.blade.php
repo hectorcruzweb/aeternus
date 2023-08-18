@@ -72,7 +72,6 @@
         }
 
         /*fin de parrafos*/
-
     </style>
 </head>
 
@@ -135,12 +134,12 @@
                 <td class="w-1">Yo</td>
                 <td class="w-85 border-bottom center ml-auto mr-auto uppercase">
                     @if (isset($datos['operacion']['cliente']))
-                    @if (!is_null($datos['operacion']['cliente']))
-                    {{$datos['operacion']['cliente']['nombre']}}
-                    @endif
+                        @if (!is_null($datos['operacion']['cliente']))
+                            {{ $datos['operacion']['cliente']['nombre'] }}
+                        @endif
                     @else
-                    <!--aqui va el nombre del contratante provisional-->
-                    {{$datos['nombre_contratante_temp']}}
+                        <!--aqui va el nombre del contratante provisional-->
+                        {{ $datos['nombre_contratante_temp'] }}
                     @endif
                 </td>
                 <td class="w-5">, por</td>
@@ -155,25 +154,26 @@
             , a
             través de las personas que tengan a bien designar, efectúen todos los trámites necesarios ante las
             autoridades
-            correspondientes con el fin de lograr la: <br> <span class="bold">( @if ($datos['embalsamar_b']!=0)
-                __X__
+            correspondientes con el fin de lograr la: <br> <span class="bold">( @if ($datos['embalsamar_b'] != 0)
+                    __X__
                 @else
-                ____
+                    ____
                 @endif ) preparación</span>, <span class="bold">(
-                @if ($datos['inhumacion_b']!=0)
-                __X__
+                @if ($datos['inhumacion_b'] != 0)
+                    __X__
                 @else
-                ____
+                    ____
                 @endif )
-                inhumación</span>, <span class="bold">( @if ($datos['cremacion_b']!=0)
-                __X__
+                inhumación
+            </span>, <span class="bold">( @if ($datos['cremacion_b'] != 0)
+                    __X__
                 @else
-                ____
-                @endif ) cremación, y/o ( @if ($datos['traslado_b']!=0)
-                __X__
-                @else
-                ____
-                @endif) traslado del cuerpo</span>
+                    ____
+                    @endif ) cremación, y/o ( @if ($datos['traslado_b'] != 0)
+                        __X__
+                    @else
+                        ____
+                    @endif) traslado del cuerpo</span>
             del (la)
         </p>
         <table class="w-100 tabla_dato size-19px">
@@ -192,10 +192,10 @@
                 <td class="w-40 border-bottom center ml-auto mr-auto uppercase">
 
                     @if (isset($datos['parentesco_contratante']))
-                    {{ $datos['parentesco_contratante'] }}
+                        {{ $datos['parentesco_contratante'] }}
                     @else
-                    <!--aqui va el nombre del contratante provisional-->
-                    {{$datos['parentesco_contratante_temp']}}
+                        <!--aqui va el nombre del contratante provisional-->
+                        {{ $datos['parentesco_contratante_temp'] }}
                     @endif
 
                 </td>
@@ -214,12 +214,12 @@
             <tr>
                 <td class="w-100 border-bottom center ml-auto mr-auto uppercase">
                     @if (isset($datos['operacion']['cliente']))
-                    @if (!is_null($datos['operacion']['cliente']))
-                    {{$datos['operacion']['cliente']['direccion']}}
-                    @endif
+                        @if (!is_null($datos['operacion']['cliente']))
+                            {{ $datos['operacion']['cliente']['direccion'] }}
+                        @endif
                     @else
-                    <!--aqui va la direccion del contratante provisional-->
-                    {{$datos['direccion_contratante_temp']}}
+                        <!--aqui va la direccion del contratante provisional-->
+                        {{ $datos['direccion_contratante_temp'] }}
                     @endif
                 </td>
             </tr>
@@ -230,12 +230,12 @@
                 <td class="w-20">Siendo mi número de teléfono:</td>
                 <td class="w-40 border-bottom center ml-auto mr-auto uppercase">
                     @if (isset($datos['operacion']['cliente']))
-                    @if (!is_null($datos['operacion']['cliente']))
-                    {{$datos['operacion']['cliente']['telefono']}}
-                    @endif
+                        @if (!is_null($datos['operacion']['cliente']))
+                            {{ $datos['operacion']['cliente']['celular'] }}
+                        @endif
                     @else
-                    <!--aqui va el tel del contratante provisional-->
-                    {{$datos['telefono_contratante_temp']}}
+                        <!--aqui va el tel del contratante provisional-->
+                        {{ $datos['telefono_contratante_temp'] }}
                     @endif
                 </td>
             </tr>
@@ -243,14 +243,14 @@
 
         <div class="w-100 center">
             <div class="w-50 float-left">
-                 <img src="{{ $firmas['otorgante'] }}" class="firma">
+                <img src="{{ $firmas['otorgante'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class=" pb-1"><span class="texto-base bold">Otorgante</span></div>
                 </div>
                 <span class="texto-base">(Nombre y Firma)</span>
             </div>
             <div class="w-50 float-right">
-                 <img src="{{ $firmas['aceptante'] }}" class="firma">
+                <img src="{{ $firmas['aceptante'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class="pb-1"><span class="texto-base bold">Aceptante</span>
                     </div>
@@ -261,14 +261,14 @@
 
         <div class="w-100 center">
             <div class="w-50 float-left">
-                 <img src="{{ $firmas['testigo1'] }}" class="firma">
+                <img src="{{ $firmas['testigo1'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class=" pb-1"><span class="texto-base bold">Testigo</span></div>
                 </div>
                 <span class="texto-base">(Nombre y Firma)</span>
             </div>
             <div class="w-50 float-right">
-                 <img src="{{ $firmas['testigo2'] }}" class="firma">
+                <img src="{{ $firmas['testigo2'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class="pb-1"><span class="texto-base bold">Testigo</span>
                     </div>

@@ -295,7 +295,7 @@
                         Proporcionar e instalar en el espacio mortuorio amparado por este convenio una lápida de mármol,
                         en el que se grabara su nombre, el año de nacimiento y el año de fallecimiento de
                         cada una de las personas a inhumarse en el lote mencionado en la primera
-                        cláusula de dicho convenio. (<span class="texto-xs bold italic">solo aplica a terrenos Dúplex y
+                        cláusula de dicho convenio. (<span class="texto-xs bold italic">solo aplica a espacios Dúplex y
                             Cuádruplex</span>).
                     </span>
                 </p>
@@ -475,7 +475,7 @@
             </span>
             salarios mínimos del distrito Federal (CDMX), vigentes al día <span class="uppercase bold texto-sm">15
                 (QUINCE)</span> del mes de enero de cada año. La empresa no se hará responsable del mantenimiento del
-            lote del terreno mencionado en la cláusula primera, si el
+            lote del espacio mencionado en la cláusula primera, si el
             cliente no se encuentra al corriente con el pago de la cuota por concepto de mantenimiento del parque
             funerario
         </p>
@@ -744,7 +744,8 @@
             importe que se considerará como aportación
             adicional complementaria al cliente. El contratante se obliga a pagar a la agencia funeraria interés
             moratorio del <span class="bold">{{ $datos['ajustes_politicas']['tasa_fija_anual'] }}</span>%
-            ({{ NumerosEnLetras::convertir($datos['ajustes_politicas']['tasa_fija_anual'], '', false) }} por ciento) fija
+            ({{ NumerosEnLetras::convertir($datos['ajustes_politicas']['tasa_fija_anual'], '', false) }} por ciento)
+            fija
             anual, la que se calculará y liquidará sobre
             cantidades que adeude el Contratante a la Agencia Funeraria. Los intereses moratorios se
             calcularán multiplicando el monto de lo que adeude el contratante por la tasa de interés
