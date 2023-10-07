@@ -356,8 +356,14 @@
                             </span>
                         </div>
                         <div class="float-right bg-gray w-55 center">
-                            {{ $datos['venta_terreno']['tipo_propiedad']['capacidad'] }}
-                            gaveta (s)
+                        @if ($datos['venta_terreno']['tipo_propiedades_id'] != 3)
+                            <span
+                                class="uppercase bold texto-sm">{{ $datos['venta_terreno']['tipo_propiedad']['capacidad'] }}</span>
+                            gaveta(s)
+                        @else
+                            <span class="uppercase bold texto-sm">4 </span>
+                            urnas medida estándar
+                        @endif
                         </div>
                     </div>
                 </td>

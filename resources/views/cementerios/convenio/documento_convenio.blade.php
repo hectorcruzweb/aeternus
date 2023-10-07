@@ -253,9 +253,16 @@
                 {{ $datos['venta_terreno']['ubicacion_texto'] }}
             </span>,
             en el <span class="uppercase bold texto-sm">{{ $empresa->cementerio['cementerio'] }}</span>,
-            con una capacidad de <span
-                class="uppercase bold texto-sm">{{ $datos['venta_terreno']['tipo_propiedad']['capacidad'] }}</span>
-            gaveta(s).
+            con una capacidad de
+            @if ($datos['venta_terreno']['tipo_propiedades_id'] != 3)
+                <span
+                    class="uppercase bold texto-sm">{{ $datos['venta_terreno']['tipo_propiedad']['capacidad'] }}</span>
+                gaveta(s)
+            @else
+                <span class="uppercase bold texto-sm">4 </span>
+                urnas medida estándar
+            @endif
+            .
         </p>
 
         <p class="texto-base justificar line-base">

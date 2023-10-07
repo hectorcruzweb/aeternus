@@ -115,7 +115,7 @@
             </td>
             <td width="50%" class="center">
                 <h1 class=text-primary size-20px mt-4 line-small">
-                    {{ $empresa->cementerio['cementerio']}}
+                    {{ $empresa->cementerio['cementerio'] }}
                 </h1>
                 <p class="datos-header  size-16px capitalize line-small">
                     {{ $empresa->cementerio['calle'] }}
@@ -142,13 +142,13 @@
             </td>
             <td colspan="3" class="px-3">
                 <div class="border-bottom-black-1 uppercase px-3">
-                    {{$datos['nombre']}}
+                    {{ $datos['nombre'] }}
                 </div>
             </td>
         </tr>
         <tr>
             <td width="25%" class="bg-black center py-1 text-white uppercase bold">
-                {{$datos['venta_terreno']['tipo_texto']}}
+                {{ $datos['venta_terreno']['tipo_texto'] }}
             </td>
             <td width="25%" class="bg-black center py-1 text-white uppercase bold">
                 fila
@@ -163,24 +163,31 @@
 
         <tr>
             <td width="25%" class=" center py-6  uppercase border-black-1">
-                {{$datos['venta_terreno']['area_nombre']}}
+                {{ $datos['venta_terreno']['area_nombre'] }}
             </td>
             <td width="25%" class=" center py-6  uppercase border-black-1">
-                @if ($datos['venta_terreno']['tipo_propiedad']['id']!=4)
-                N/A
+                @if ($datos['venta_terreno']['tipo_propiedad']['id'] != 4)
+                    N/A
                 @else
-                {{$datos['venta_terreno']['fila_texto']}}
+                    {{ $datos['venta_terreno']['fila_texto'] }}
                 @endif
             </td>
             <td width="25%" class=" center py-6  uppercase border-black-1">
-                @if ($datos['venta_terreno']['tipo_propiedad']['id']==4)
-                {{$datos['venta_terreno']['lote_texto']}}
+                @if ($datos['venta_terreno']['tipo_propiedad']['id'] == 4)
+                    {{ $datos['venta_terreno']['lote_texto'] }}
                 @else
-                {{$datos['venta_terreno']['fila_texto']}}
+                    {{ $datos['venta_terreno']['fila_texto'] }}
                 @endif
             </td>
             <td width="25%" class=" center py-6  uppercase border-black-1">
-                {{$datos['venta_terreno']['tipo_propiedad']['capacidad']}}
+                @if ($datos['venta_terreno']['tipo_propiedades_id'] != 3)
+                    <span
+                        class="uppercase bold texto-sm">{{ $datos['venta_terreno']['tipo_propiedad']['capacidad'] }}</span>
+                    gaveta(s)
+                @else
+                    <span class="uppercase bold texto-sm">4 </span>
+                    urnas medida estándar
+                @endif
             </td>
         </tr>
     </table>
@@ -195,7 +202,8 @@
             <table class="w-100 pt-7">
                 <tr>
                     <td class="w-40 left uppercase size-18px bold text-primary">convenio No.</td>
-                    <td class="w-60 center border-bottom-primary-2  size-18px uppercase">{{$datos['numero_convenio']}}
+                    <td class="w-60 center border-bottom-primary-2  size-18px uppercase">
+                        {{ $datos['numero_convenio'] }}
                     </td>
                 </tr>
             </table>
@@ -203,7 +211,7 @@
                 <tr>
                     <td class="w-40 left uppercase size-18px bold text-primary">solicitud No.</td>
                     <td class="w-60 center border-bottom-primary-2  size-18px uppercase">
-                        {{$datos['numero_solicitud_texto']}}
+                        {{ $datos['numero_solicitud_texto'] }}
                     </td>
                 </tr>
             </table>
