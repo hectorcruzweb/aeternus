@@ -2,30 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use PDF;
 use App\Cfdis;
-use App\cfdi\ClienteFormasDigitales;
-use App\Facturacion;
+use SoapClient;
+use ZipArchive;
+use App\SatPais;
 use App\Funeraria;
+use App\Facturacion;
 use App\MetodosPago;
 use App\Operaciones;
-use App\SatFormasPago;
-use App\SatPais;
-use App\SATProductosServicios;
-use App\SATRegimenes;
 use App\SatUnidades;
 use App\SatUsosCfdi;
-use App\TipoComprobantes;
+use App\SATRegimenes;
+use SimpleXMLElement;
+use App\SatFormasPago;
 use App\TiposRelacion;
-use Illuminate\Http\Request;
+use Milon\Barcode\DNS2D;
+use App\TipoComprobantes;
 use Illuminate\Support\Env;
+use Illuminate\Http\Request;
+use App\SATProductosServicios;
+use Spatie\ArrayToXml\ArrayToXml;
 use Illuminate\Support\Facades\DB;
+use App\cfdi\ClienteFormasDigitales;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Milon\Barcode\DNS2D;
-use PDF;
-use SoapClient;
-use Spatie\ArrayToXml\ArrayToXml;
-use ZipArchive;
 
 class FacturacionController extends ApiController
 {
@@ -1220,6 +1221,7 @@ class FacturacionController extends ApiController
                 $storage_disk_credentials = ENV('STORAGE_DISK_CREDENTIALS');
                 $storage_disk_xmls        = ENV('STORAGE_DISK_XML');
 
+
                 /**datos */
                 $certificado_path     = '';
                 $key_path             = '';
@@ -2086,27 +2088,28 @@ class FacturacionController extends ApiController
         return response()->download($zip_file);
     }
 
-    public function get_cfdi_status_sat($folio = '')
+    public function get_cfdi_status_sat($folio = '', Request $request)
     {
         $cfdi = Cfdis::where('id', $folio)->first();
         if (empty($cfdi)) {
             /**datos no encontrados */
             return $this->errorResponse('Error al cargar los datos del cfdi.', 409);
         }
-
         $xml = $this->leer_xml($folio);
         if (empty($xml)) {
             /**datos no encontrados */
             return $this->errorResponse('Error al cargar los datos del xml.', 409);
         }
-
+        // dd($cfdi);
         /**datos para la consulta */
-        $parametros              = new Parametros();
-        $parametros->rfcEmisor   = $cfdi->rfc_emisor;
-        $parametros->rfcReceptor = $cfdi->rfc_receptor;
-        $parametros->totalCFDI   = $cfdi['total'];
-        $parametros->uuid        = $cfdi['uuid'];
-        $parametros->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
+        $comprobante              = new Comprobante();
+        $cfdi = Cfdis::with('timbro')->with('cliente')->where('id', '=', $folio)->first();
+        //dd($cfdi);
+        $comprobante->rfcEmisor   = $cfdi->rfc_emisor;
+        $comprobante->rfcReceptor = $cfdi->rfc_receptor;
+        $comprobante->uuid        = $cfdi['uuid'];
+        $comprobante->totalCFDI   = $cfdi['sat_tipo_comprobante_id'] != 5 ? (string)sprintf('%g', floatval($cfdi->total)) : "0";
+        $comprobante->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
         $url_cancelar = '';
         if (ENV('APP_ENV') == 'local') {
             $usuario      = ENV('USER_PAC_DEV');
@@ -2120,10 +2123,9 @@ class FacturacionController extends ApiController
         $autentica           = new Autenticar();
         $autentica->usuario  = $usuario;
         $autentica->password = $password;
-        $parametros->accesos = $autentica;
+        $comprobante->accesos = $autentica;
         $client              = new SoapClient($url_cancelar);
-        $result              = $client->ConsultarEstatusCFDI_2($parametros);
-        //dd($result);
+        $result              = $client->ConsultarEstatusCFDI_2($comprobante);
         /**determinando status segun el resultado de la respuesta del sat */
         /**
          * codigoEstatus
@@ -2149,30 +2151,24 @@ class FacturacionController extends ApiController
             Cuando el CFDI se canceló porque se le solicitó autorización al receptor, este no dio respuesta y después de las 72 horas se dio por cancelado el comprobante; este tendrá el estado de "Cancelado" y un estatus de cancelación de "Cancelado plazo vencido".
             Cuando el CFDI NO se canceló debido a que el receptor rechazó la solicitud, este tendrá el estado de "Vigente" y un estatus de cancelación de "Solicitud rechazada".
           */
-
-
-        if ($result->return->estado != 'No Encontrado') {
+        if ($result->return->codigoEstatus === "S - Comprobante obtenido satisfactoriamente.") {
             /**si existe en el sat */
-            if ($result->return->estado == 'Cancelado' || $result->return->estado == 'Cancelado con aceptación' || $result->return->estado == 'Cancelado con aceptación') {
+            if ($result->return->estado === "Cancelado") {
                 /**se actualiza la base de datos */
-                if ($cfdi['status'] != 0) {
-                    $fecha_cancelacion = date("Y-m-d H:i:s");
-                    DB::table('cfdis')->where('id', '=', $folio)->update(
-                        [
-                            'status'            => 0,
-                            'cancelo_id'        => null,
-                            'fecha_cancelacion' => $fecha_cancelacion,
-                        ]
-                    );
-                }
-            }
-            if ($result->return->estatusCancelacion == 'En proceso') {
+                $fecha_cancelacion = date("Y-m-d H:i:s");
+                DB::table('cfdis')->where('id', '=', $folio)->update(
+                    [
+                        'status'            => 0,
+                        'cancelo_id'        => (int) $request->user()->id,
+                        'fecha_cancelacion' => $fecha_cancelacion,
+                    ]
+                );
+            } elseif ($result->return->estado === 'En proceso') {
                 /**se actualiza la base de datos */
-                $fecha_cancelacion = NULL;
                 DB::table('cfdis')->where('id', '=', $folio)->update(
                     [
                         'status'            => 3,
-                        'fecha_cancelacion' => $fecha_cancelacion,
+                        'fecha_cancelacion' => null,
                     ]
                 );
             } else {
@@ -2186,12 +2182,14 @@ class FacturacionController extends ApiController
                     ]
                 );
             }
+        } else {
+            return $this->errorResponse('CFDI no encontrado en la base de datos del SAT.', 409);
         }
         $retorno['codigoEstatus']      = $result->return->codigoEstatus;
         $retorno['esCancelable']       = $result->return->esCancelable;
         $retorno['estado']             = $result->return->estado;
         $retorno['estatusCancelacion'] = $result->return->estatusCancelacion;
-        $retorno['uuid']               = $parametros->uuid;
+        $retorno['uuid']               = $comprobante->uuid;
         return $retorno;
     }
 
@@ -2215,39 +2213,39 @@ class FacturacionController extends ApiController
             $mensajes
         );
 
-        if (ENV('APP_ENV') != 'local') {
-            //actualizamos cfdis en caso de que este en produccion
-            $checando_cfdi = $this->get_cfdi_status_sat($request->id);
-            if (isset($checando_cfdi['estado'])) {
-                if ($checando_cfdi['estado'] == 'No Encontrado') {
-                    return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
-                }
+        if (ENV('APP_ENV') != 'production') {
+            return $this->errorResponse('Esta operación es solo para usuarios en servidor.', 409);
+        }
+        //actualizamos cfdis en caso de que este en produccion
+        $checando_cfdi = $this->get_cfdi_status_sat($request->id, $request);
+        if (isset($checando_cfdi['estado'])) {
+            if ($checando_cfdi['estado'] == 'No Encontrado') {
+                return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
             }
         }
-
-
+        if (isset($checando_cfdi['estado'])) {
+            if ($checando_cfdi['estado'] == 'No Encontrado') {
+                return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
+            }
+        }
         //verifico si es cancelable
         if ($checando_cfdi['esCancelable'] == "No cancelable") {
             return $this->errorResponse('El CFDI ' . $request->id . ' es no cancelable, según respuesta del SAT.', 409);
         }
-
         //verifico status actual del cfdi
         if ($checando_cfdi['estado'] == 'Cancelado') {
-            return $this->errorResponse('El CFDI ' . $request->id . ' ha sido ' . $checando_cfdi['estatusCancelacion'] . '.', 409);
+            return $this->errorResponse('El CFDI ' . $request->id . ' ya ha sido ' . $checando_cfdi['estatusCancelacion'] . '.', 409);
         }
-
         //verifico si hay algun estado en respuesta de una cancelación
         if ($checando_cfdi['estatusCancelacion'] != "") {
             return $this->errorResponse('CFDI ' . $request->id . ' en ' . $checando_cfdi['estatusCancelacion'] . '.', 409);
         }
-
 
         $cfdi = Cfdis::where('id', $request->id)->first();
         if (empty($cfdi)) {
             /**datos no encontrados */
             return $this->errorResponse('Error al cargar los datos del cfdi.', 409);
         }
-
         if ($cfdi['status'] != 1) {
             /**datos no encontrados */
             return $this->errorResponse('Este cfdi ya ha sido cancelado previamente.', 409);
@@ -2264,7 +2262,6 @@ class FacturacionController extends ApiController
         $parametros            = new Parametros();
         $parametros->rfcEmisor = trim($cfdi->rfc_emisor);
         $parametros->fecha     = str_replace(" ", "T", $fecha_cancelacion);
-
         //folios de cancelacion
         $folio1 = new wsFolio();
         $folio1->uuid = $cfdi['uuid'];
@@ -2273,7 +2270,6 @@ class FacturacionController extends ApiController
         if ($folio1->motivo != "03") {
             $folio1->folioSustitucion = $request->uuid_a_sustituir_cancelar;
         }
-
         $folios = new wsFolios();
         $folios->folio = $folio1;
         $parametros->folios = $folios;
@@ -2317,6 +2313,7 @@ class FacturacionController extends ApiController
         $parametros->accesos = $autentica;
         $client              = new SoapClient($url_cancelar, array('trace' => 1));
         $result              = $client->Cancelacion40_1($parametros);
+        dd($result);
         //return $this->errorResponse($result, 409);
         //return $result;
         if (isset($result->return->acuse)) {
@@ -2327,8 +2324,6 @@ class FacturacionController extends ApiController
             204    UUUID no aplicable o cancelación.
             205    UUID No existe.
              */
-
-            /*
             $codigo_respuesta = $result->return->folios->folio->estatusUUID;
             if ($codigo_respuesta == 201 || ENV('APP_ENV') == 'local') {
                 //se guarda acuse en la bd
@@ -2344,7 +2339,6 @@ class FacturacionController extends ApiController
             } else {
                 return $this->errorResponse($result->return->folios->folio->mensaje, 409);
             }
-            */
             //echo "<br><br>Estatus UUID: " . $result->return->folios->folio->estatusUUID . "<br>Mensaje: " . $result->return->folios->folio->mensaje;
             //echo '<br>XML response:<br><textarea>' . $result->return->acuse . '</textarea>';
         } else {
@@ -2373,7 +2367,7 @@ class FacturacionController extends ApiController
         /**aqui voy */
         if (ENV('APP_ENV') != 'local') {
             //actualizamos cfdis en caso de que este en produccion
-            $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
+            $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
             if (isset($checando_cfdi['estado'])) {
                 if ($checando_cfdi['estado'] == 'No Encontrado') {
                     return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
@@ -2461,6 +2455,17 @@ class Parametros
     public $accesos;
     public $comprobante;
 }
+
+class Comprobante
+{
+    public $accesos;
+    public $rfcEmisor;
+    public $rfcReceptor;
+    public $totalCFDI;
+    public $uuid;
+    public $selloCFDI;
+}
+
 
 class wsFolio
 {

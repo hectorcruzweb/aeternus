@@ -1,4 +1,5 @@
 <?php
+
 namespace App\cfdi;
 
 use DOMDocument;
@@ -24,9 +25,9 @@ class ClienteFormasDigitales
     public function timbrar($parametros)
     {
         /* conexion al web service */
-        $web_service=ENV('WEB_SERVICE_DEVELOP');
+        $web_service = ENV('WEB_SERVICE_DEVELOP');
         if (ENV('APP_ENV') != 'local') {
-            $web_service=ENV('WEB_SERVICE_PRODUCTION');
+            $web_service = ENV('WEB_SERVICE_PRODUCTION');
         }
 
         $client = new SoapClient($web_service, array('encoding' => 'UTF-8'));
@@ -53,8 +54,10 @@ class ClienteFormasDigitales
         $crear_pem    = "openssl x509 -inform der -in $path_cer -out $path_cer_pem";
         shell_exec($crear_pem);
 
-        if (!Storage::disk($parametros['disk'])->exists($parametros['key_root'] . $key) || !Storage::disk($parametros['disk'])->exists($parametros['key_root'] . $key_pem) ||
-            !Storage::disk($parametros['disk'])->exists($parametros['cer_root'] . $cer) || !Storage::disk($parametros['disk'])->exists($parametros['cer_root'] . $cer_pem)) {
+        if (
+            !Storage::disk($parametros['disk'])->exists($parametros['key_root'] . $key) || !Storage::disk($parametros['disk'])->exists($parametros['key_root'] . $key_pem) ||
+            !Storage::disk($parametros['disk'])->exists($parametros['cer_root'] . $cer) || !Storage::disk($parametros['disk'])->exists($parametros['cer_root'] . $cer_pem)
+        ) {
             /**algun archivo no existe */
             return 'error';
         }
@@ -104,21 +107,5 @@ class ClienteFormasDigitales
         $proc = new XSLTProcessor();
         @$proc->importStyleSheet($XSL);
         return $proc->transformToXML($this->xml);
-    }
-
-    public function consultar($parametros)
-    {
-        if (ENV('APP_ENV') == 'local') {
-            $url_consulta = ENV('WEB_SERVICE_CONSULTA_DEVELOP');
-        } else {
-            $url_consulta = ENV('WEB_SERVICE_CONSULTA_PRODUCTION');
-        }
-
-        /* conexion al web service */
-        $client = new SoapClient($url_consulta);
-        $result = $client->ConsultarEstatusCFDI_2($parametros);
-        // Mostramos el XML Request enviado al WebService
-        //echo "<b>Request</b>:<br>" . htmlentities($client->__getLastRequest()) . "\n";
-        return $result;
     }
 }
