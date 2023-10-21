@@ -1945,17 +1945,17 @@ class FacturacionController extends ApiController
         }
 
 
-        /*
-        if (ENV('APP_ENV') != 'local') {
-            //actualizamos cfdis en caso de que este en produccion
-            $checando_cfdi = $this->get_cfdi_status_sat($folio_id);
-            if (isset($checando_cfdi['estado'])) {
-                if ($checando_cfdi['estado'] == 'No Encontrado') {
-                    return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
-                }
+
+        //if (ENV('APP_ENV') != 'local') {
+        //actualizamos cfdis en caso de que este en produccion
+        $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
+        if (isset($checando_cfdi['estado'])) {
+            if ($checando_cfdi['estado'] == 'No Encontrado') {
+                return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
             }
         }
-        */
+        //}
+
 
 
         $myRequest = new Request();
@@ -2313,7 +2313,6 @@ class FacturacionController extends ApiController
         $parametros->accesos = $autentica;
         $client              = new SoapClient($url_cancelar, array('trace' => 1));
         $result              = $client->Cancelacion40_1($parametros);
-        dd($result);
         //return $this->errorResponse($result, 409);
         //return $result;
         if (isset($result->return->acuse)) {
@@ -2325,14 +2324,14 @@ class FacturacionController extends ApiController
             205    UUID No existe.
              */
             $codigo_respuesta = $result->return->folios->folio->estatusUUID;
-            if ($codigo_respuesta == 201 || ENV('APP_ENV') == 'local') {
+            if ($codigo_respuesta == 201) {
                 //se guarda acuse en la bd
                 DB::table('cfdis')->where('id', '=', $request->id)->update(
                     [
                         'status'            => 0,
                         'cancelo_id'        => (int) $request->user()->id,
                         'fecha_cancelacion' => $fecha_cancelacion,
-                        'acuse_cancelacion' => $result->return->acuse,
+                        'acuse_cancelacion' => $result->return->acuse
                     ]
                 );
                 return $codigo_respuesta;
