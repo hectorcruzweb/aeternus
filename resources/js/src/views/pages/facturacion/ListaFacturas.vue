@@ -163,6 +163,7 @@
                         <vs-th>Tipo</vs-th>
                         <vs-th>M. de Pago</vs-th>
                         <vs-th>Estatus</vs-th>
+                        <vs-th>$ Monto</vs-th>
                         <vs-th>$ Saldo</vs-th>
                         <vs-th>Acciones</vs-th>
                     </template>
@@ -215,6 +216,11 @@
                             <vs-td :data="data[indextr].status_texto"
                                 >{{ data[indextr].status_texto }}
                             </vs-td>
+                            <vs-td :data="data[indextr].total">
+                                {{
+                                    data[indextr].total | numFormat("0,000.00")
+                                }}</vs-td
+                            >
                             <vs-td :data="data[indextr].saldo_cfdi">
                                 {{
                                     data[indextr].saldo_cfdi

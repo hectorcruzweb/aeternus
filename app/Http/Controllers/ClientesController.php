@@ -146,7 +146,7 @@ class ClientesController extends ApiController
         /**VALIDACIONES CONDICIONADAS*/
 
         if (trim($request->email)) {
-            $validaciones['email'] = 'email|unique:clientes,email';
+            $validaciones['email'] = 'email';
         }
 
         if (trim($request->rfc) != '' || trim($request->razon_social) != '' || trim($request->direccion_fiscal) != '' || trim($request->cp) != '') {
@@ -227,14 +227,14 @@ class ClientesController extends ApiController
         ];
 
         /**VALIDACIONES CONDICIONADAS*/
-
+        /*
         if (trim($request->email)) {
             $validaciones['email'] = [
                 'email',
                 Rule::unique('clientes', 'email')->ignore($request->id_cliente_modificar),
             ];
         }
-
+*/
         if (trim($request->rfc) != '' || trim($request->razon_social) != '' || trim($request->direccion_fiscal) != '' || trim($request->cp) != '') {
             if (trim($request->rfc) != 'XAXX010101000' && trim($request->rfc) != 'XEX010101000') {
                 /*$validaciones['rfc'] = [
