@@ -1946,15 +1946,16 @@ class FacturacionController extends ApiController
 
 
 
-        //if (ENV('APP_ENV') != 'local') {
         //actualizamos cfdis en caso de que este en produccion
-        $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
-        if (isset($checando_cfdi['estado'])) {
-            if ($checando_cfdi['estado'] == 'No Encontrado') {
-                return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
+        if (ENV('APP_ENV') == 'production') {
+            $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
+            if (isset($checando_cfdi['estado'])) {
+                if ($checando_cfdi['estado'] == 'No Encontrado') {
+                    return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
+                }
             }
         }
-        //}
+
 
 
 
