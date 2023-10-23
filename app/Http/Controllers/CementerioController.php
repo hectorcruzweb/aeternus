@@ -4253,7 +4253,7 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-left', 12.4);
         $pdf->setOption('margin-right', 12.4);
         $pdf->setOption('margin-top', 12.4);
-        $pdf->setOption('margin-bottom', 12.4);
+        $pdf->setOption('margin-bottom', 32.4);
         $pdf->setOption('page-size', 'letter');
 
         if ($email == true) {
