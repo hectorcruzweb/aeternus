@@ -68,14 +68,11 @@
                                 <vs-th class="w-2/5">Fallecido (a)</vs-th>
                                 <vs-th class="w-1/5">Fecha de Inhumación</vs-th>
                                 <vs-th class="w-1/5"
-                                    >Seleccionar sepultado</vs-th
+                                    >Ver Órden de Servicio</vs-th
                                 >
                             </template>
                             <template>
                                 <vs-tr
-                                    v-show="
-                                        mostrarsepultado(sepultado.sepultado)
-                                    "
                                     v-for="(sepultado,
                                     index_sepultado) in servicio.sepultados"
                                     v-bind:key="
@@ -103,10 +100,19 @@
                                         <div class="flex justify-center">
                                             <img
                                                 class="cursor-pointer img-btn-25 mx-4"
-                                                src="@assets/images/signature.svg"
-                                                title="Firmar sepultado"
+                                                src="@assets/images/pdf.svg"
+                                                title="Consultar Servicio"
                                                 v-show="
                                                     sepultado.servicios_funerarios_id
+                                                "
+                                                @click="
+                                                    openReporte(
+                                                        'Hoja de Servicio',
+                                                        '/funeraria/orden_servicio',
+                                                        sepultado.servicios_funerarios_id,
+                                                        'pdf',
+                                                        ''
+                                                    )
                                                 "
                                             />
                                         </div>
@@ -129,7 +135,6 @@
 </template>
 <script>
 import Reporteador from "@pages/Reporteador";
-import cementerio from "@services/cementerio";
 export default {
     components: {
         Reporteador
@@ -152,17 +157,9 @@ export default {
                 ).onclick = () => {
                     this.cancelar();
                 };
-                /*
-                (async () => {
-                    await this.consultar_venta_id();
-                    if (this.operacion_id != "") {
-                        await this.consultar_pagos_operacion_id();
-                    }
-                })();
-                */
             } else {
                 /**cerrar ventana */
-                this.fallecidos = [];
+                this.servicio = [];
             }
         }
     },
@@ -191,65 +188,7 @@ export default {
     },
     data() {
         return {
-            sepultados: [
-                {
-                    sepultado: "Formato de Solicitud",
-                    url: "/cementerio/sepultado_solicitud",
-                    tipo: "pdf",
-                    sepultado_id: 1,
-                    firma: true
-                },
-                {
-                    sepultado: "Convenio",
-                    url: "/cementerio/sepultado_convenio",
-                    tipo: "pdf",
-                    sepultado_id: 2,
-                    firma: true
-                },
-                {
-                    sepultado: "Título",
-                    url: "/cementerio/sepultado_titulo",
-                    tipo: "pdf",
-                    sepultado_id: 3,
-                    firma: false
-                },
-                {
-                    sepultado: "Estado de cuenta",
-                    url: "/cementerio/sepultado_estado_de_cuenta_cementerio",
-                    tipo: "pdf",
-                    sepultado_id: 4,
-                    firma: false
-                },
-                {
-                    sepultado: "Talonario de Pagos",
-                    url: "/cementerio/referencias_de_pago",
-                    tipo: "pdf",
-                    sepultado_id: 5,
-                    firma: false
-                },
-                {
-                    sepultado: "Reglamento de Pago",
-                    url: "/cementerio/reglamento_pago",
-                    tipo: "pdf",
-                    sepultado_id: 6,
-                    firma: true
-                },
-                {
-                    sepultado: "Acuse de cancelación",
-                    url: "/cementerio/acuse_cancelacion",
-                    tipo: "pdf",
-                    sepultado_id: 7,
-                    firma: true
-                },
-                {
-                    sepultado: "Servicios en la propiedad",
-                    url: "/cementerio/servicios_propiedad",
-                    tipo: "pdf",
-                    sepultado_id: 8,
-                    firma: false
-                }
-            ],
-            listaFallecidos: [],
+            ListaReportes: [],
             request: {
                 id_pago: "",
                 venta_id: "",
@@ -284,15 +223,9 @@ export default {
                 url: link
             });
             //estado de cuenta
-            this.request.email = this.listaFallecidos.email;
-
-            if (tipo == "pago") {
-                this.request.id_pago = parametro;
-            } else {
-                this.request.venta_id = this.listaFallecidos.ventas_terrenos_id;
-            }
-
-            this.request.destinatario = this.listaFallecidos.nombre;
+            this.request.email = this.servicio.email;
+            this.request.id_servicio = parametro;
+            this.request.destinatario = this.servicio.nombre;
             this.openReportesLista = true;
             this.$vs.loading.close();
         }
