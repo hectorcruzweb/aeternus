@@ -2926,6 +2926,7 @@ class CementerioController extends ApiController
     {
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
         $titular                  = $request->titular;
+        $fallecido                  = $request->fallecido;
         $numero_control           = $request->numero_control;
         $status                   = $request->status;
         $fecha_operacion          = $request->fecha_operacion;
@@ -3108,6 +3109,12 @@ class CementerioController extends ApiController
                     $q->where('operaciones.status', '<>', 0);
                 }
             })
+
+            ->WhereHas('sepultados', function ($q) use ($request) {
+                if (isset($request->fallecido)) {
+                    $q->where('nombre_afectado', 'like', '%' . $request->fallecido . '%');
+                }
+            })
             //fin de filtrado por ubicacion
 
             ->where(function ($q) use ($status) {
@@ -3137,6 +3144,7 @@ class CementerioController extends ApiController
             foreach ($venta['sepultados'] as $index_sepultado => &$sepultado) {
                 /**asigno los datos de los finados dentro de la propiedad */
                 $sepultado['fecha_defuncion_texto'] = fecha_abr($sepultado['fechahora_defuncion']);
+                $sepultado['fecha_inhumacion_texto'] = fecha_abr($sepultado['fechahora_inhumacion']);
             }
 
 

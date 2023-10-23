@@ -134,10 +134,10 @@
                     <div
                         class="
               w-full
-              sm:w-12/12
-              md:w-12/12
-              lg:w-12/12
-              xl:w-12/12
+              sm:w-6/12
+              md:w-6/12
+              lg:w-6/12
+              xl:w-6/12
               px-2
               input-text
             "
@@ -148,6 +148,28 @@
                             icon="search"
                             placeholder="Filtrar por Nombre del Titular"
                             v-model="serverOptions.titular"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                            maxlength="75"
+                        />
+                    </div>
+                    <div
+                        class="
+              w-full
+              sm:w-6/12
+              md:w-6/12
+              lg:w-6/12
+              xl:w-6/12
+              px-2
+              input-text
+            "
+                    >
+                        <label class="">Nombre del Fallecido</label>
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Fallecido"
+                            v-model="serverOptions.fallecido"
                             v-on:keyup.enter="get_data(1)"
                             v-on:blur="get_data(1, 'blur')"
                             maxlength="75"
@@ -259,6 +281,19 @@
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
                             <img
+                                v-if="data[indextr].sepultados.length > 0"
+                                class="cursor-pointer img-btn-24 mr-6"
+                                src="@assets/images/conserviciosfunerarios.svg"
+                                title="Propiedad con servicios Funerarios"
+                                @click="ConsultarListaFallecidos(data[indextr])"
+                            />
+                            <img
+                                v-else
+                                class="cursor-pointer img-btn-24 mr-6"
+                                src="@assets/images/sinserviciosfunerarios.svg"
+                                title="Propiedad sin servicios Funerarios"
+                            />
+                            <img
                                 v-if="data[indextr].nota"
                                 class="cursor-pointer img-btn-20 mr-6"
                                 src="@assets/images/notepad_ver.svg"
@@ -357,6 +392,12 @@
             :id_venta="id_venta"
         ></ReportesVentas>
 
+        <FallecidosList
+            :show="openListaFallecidos"
+            @closeListaFallecidos="closeListaFallecidos"
+            :fallecidos="fallecidos"
+        ></FallecidosList>
+
         <CancelarVenta
             :show="openCancelar"
             @closeCancelarVenta="openCancelar = false"
@@ -395,6 +436,7 @@ import cementerio from "@services/cementerio";
 import FormularioVentas from "../ventas/FormularioVentas";
 
 import ReportesVentas from "../ventas/ReportesVentas";
+import FallecidosList from "../ventas/FallecidosList";
 import CancelarVenta from "../ventas/CancelarVenta";
 
 //componente de password
@@ -417,7 +459,8 @@ export default {
         PlanesVenta,
         CuotasCementerio,
         VerNotas,
-        Entregarconvenio
+        Entregarconvenio,
+        FallecidosList
     },
     watch: {
         actual: function(newValue, oldValue) {
@@ -438,6 +481,7 @@ export default {
     },
     data() {
         return {
+            fallecidos: [],
             verAcuse: false,
             openPlanesVenta: false,
             openCuotasCementerio: false,
@@ -457,6 +501,7 @@ export default {
             titulo_nota: "",
             openCancelar: false,
             openReportes: false,
+            openListaFallecidos: false,
             verFormularioVentas: false,
             tipoFormulario: "",
             //variable
@@ -509,7 +554,8 @@ export default {
                 status: "",
                 filtro_especifico_opcion: "",
                 numero_control: "",
-                titular: ""
+                titular: "",
+                fallecido: ""
             },
             activeTab: 0,
             verPaginado: true,
@@ -558,6 +604,7 @@ export default {
             this.mostrar = { label: "15", value: "15" };
             this.estado = { label: "Todas", value: "" };
             this.serverOptions.titular = "";
+            this.serverOptions.fallecido = "";
             //this.get_data(this.actual);
         },
         async get_data(page, evento = "") {
@@ -579,7 +626,6 @@ export default {
                     return false;
                 }
             }
-            let self = this;
             if (cementerio.cancel) {
                 cementerio.cancel("Operation canceled by the user.");
             }
@@ -639,6 +685,11 @@ export default {
             this.openReportes = true;
         },
 
+        ConsultarListaFallecidos(fallecidos) {
+            this.fallecidos = fallecidos;
+            this.openListaFallecidos = true;
+        },
+
         openModificar(id_venta) {
             this.tipoFormulario = "modificar";
             this.id_venta_modificar = id_venta;
@@ -669,6 +720,12 @@ export default {
                 await this.get_data(this.actual);
             })();
         },
+
+        closeListaFallecidos() {
+            this.openListaFallecidos = false;
+            this.fallecidos = [];
+        },
+
         closeCancelarVentaRefrescar() {
             this.openCancelar = false;
             (async () => {

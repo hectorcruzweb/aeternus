@@ -64,8 +64,13 @@ class Operaciones extends Model
             'ventas_terrenos_id',
             'nombre_afectado',
             'fechahora_defuncion',
+            'fechahora_inhumacion',
+            'id as servicios_funerarios_id',
             DB::raw(
                 '(NULL) AS fecha_defuncion_texto'
+            ),
+            DB::raw(
+                '(NULL) AS fecha_inhumacion_texto'
             )
         );
     }

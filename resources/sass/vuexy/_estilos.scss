@@ -561,3 +561,26 @@ body {
     font-size: 1.05em !important;
 }
 /*FIN estilos del plan funerario en el servicio funerario*/
+
+.bg-data-table {
+    @extend .size-small;
+    background-color: #626262;
+    color: #fff;
+    justify-content: center;
+    text-transform: uppercase !important;
+    font-weight: $font-weight-medium;
+    padding: 4px;
+    text-align: center;
+}
+
+.bg-data-table-text {
+    p {
+        margin-top: 7px;
+        color: #626262;
+        justify-content: center;
+        text-transform: uppercase !important;
+        @extend .size-small, .font-normal;
+        padding: 4px;
+        text-align: center;
+    }
+}
