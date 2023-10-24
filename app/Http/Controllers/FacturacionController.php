@@ -1947,6 +1947,7 @@ class FacturacionController extends ApiController
 
 
         //actualizamos cfdis en caso de que este en produccion
+        /*
         if (ENV('APP_ENV') == 'production') {
             $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
             if (isset($checando_cfdi['estado'])) {
@@ -1955,7 +1956,7 @@ class FacturacionController extends ApiController
                 }
             }
         }
-
+*/
 
 
 
