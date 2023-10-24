@@ -64,6 +64,7 @@ class UsuariosController extends ApiController
                     }
                 })
                 ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
+                ->orderBy("estado", "desc")
                 ->get()
         );
     }
