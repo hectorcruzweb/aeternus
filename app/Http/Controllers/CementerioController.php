@@ -3108,20 +3108,22 @@ class CementerioController extends ApiController
                     $q->where('ubicacion', $request->ubicacion_raw);
                     $q->where('operaciones.status', '<>', 0);
                 }
-            })
+            });
+        if (isset($request->fallecido)) {
+            $resultado_query = $resultado_query->WhereHas('sepultados', function ($q) use ($request) {
+                $q->where('nombre_afectado', 'like', '%' . trim($request->fallecido) . '%');
+            });
+        }
 
-            ->WhereHas('sepultados', function ($q) use ($request) {
-                if (isset($request->fallecido)) {
-                    $q->where('nombre_afectado', 'like', '%' . $request->fallecido . '%');
-                }
-            })
-            //fin de filtrado por ubicacion
+        /*->*/
 
-            ->where(function ($q) use ($status) {
-                if (trim($status) != '') {
-                    $q->where('operaciones.status', '=', $status);
-                }
-            })
+        //fin de filtrado por ubicacion
+
+        $resultado_query = $resultado_query->where(function ($q) use ($status) {
+            if (trim($status) != '') {
+                $q->where('operaciones.status', '=', $status);
+            }
+        })
             ->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
             ->where('nombre', 'like', '%' . $titular . '%')
             ->orderBy('operaciones.ventas_terrenos_id', 'desc')
