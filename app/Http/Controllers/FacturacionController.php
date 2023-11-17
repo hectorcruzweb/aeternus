@@ -479,7 +479,7 @@ class FacturacionController extends ApiController
             $serie = 'P';
 
             foreach ($request->cfdis_a_pagar as $key => $cfdi) {
-                $total += $cfdi['monto_pago'];
+                $total +=  $cfdi['monto_pago'];
             }
             array_push(
                 $conceptos['cfdi:Concepto'],
@@ -963,9 +963,8 @@ class FacturacionController extends ApiController
                                         }
 
                                         if ($cfdi_pagar['monto_pago'] > 0) {
-                                            $importe_saldo_anterior = $cfdi_bd['total'] - $total_pagado - $total_egresado;
-                                            $importe_saldo_insoluto = $cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'];
-
+                                            $importe_saldo_anterior = round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2);
+                                            $importe_saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'], 2);
                                             /**validando que el monto a abonar sea menor o igual al total menos el total pagado y egresado */
                                             if (($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado) <= $cfdi_bd['total']) {
                                                 /**procede la relacion del cfdi para pago */
@@ -992,8 +991,8 @@ class FacturacionController extends ApiController
                                                         'Folio'            => $cfdi_bd['id'],
                                                         'IdDocumento'      => $cfdi_bd['uuid'],
                                                         'ImpPagado'        => $cfdi_pagar['monto_pago'],
-                                                        'ImpSaldoAnt'      => $cfdi_bd['total'] - $total_pagado - $total_egresado,
-                                                        'ImpSaldoInsoluto' => $cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado,
+                                                        'ImpSaldoAnt'      => round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2),
+                                                        'ImpSaldoInsoluto' => round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado, 2),
                                                         'MonedaDR'         => "MXN",
                                                         'NumParcialidad'   => $numero_parcialidad,
                                                         'ObjetoImpDR' => '01'
