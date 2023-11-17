@@ -253,16 +253,7 @@
                       <span>(*)</span>
                     </label>
                     <div
-                      class="
-                        bg-danger-50
-                        text-center
-                        py-2
-                        px-2
-                        size-base
-                        border-danger-solid-1
-                        cursor-pointer
-                        color-danger-900
-                      "
+                      class="bg-danger-50 text-center py-2 px-2 size-base border-danger-solid-1 cursor-pointer color-danger-900"
                       @click="openBuscadorCliente = true"
                     >
                       Click para seleccionar al Receptor
@@ -274,14 +265,7 @@
                       <span>(*)</span>
                     </label>
                     <div
-                      class="
-                        bg-success-50
-                        py-2
-                        px-2
-                        size-base
-                        border-success-solid-2
-                        uppercase
-                      "
+                      class="bg-success-50 py-2 px-2 size-base border-success-solid-2 uppercase"
                     >
                       <div class="flex flex-wrap">
                         <div class="w-full xl:w-8/12">
@@ -612,13 +596,7 @@
               <div class="flex flex-wrap">
                 <div class="w-full text-right">
                   <vs-button
-                    class="
-                      w-full
-                      sm:w-full sm:w-auto
-                      md:w-auto md:ml-2
-                      my-2
-                      md:mt-0
-                    "
+                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
                     color="primary"
                     @click="openBuscadorCfdiPagar('relacionar')"
                   >
@@ -766,13 +744,7 @@
               <div class="flex flex-wrap">
                 <div class="w-full text-right">
                   <vs-button
-                    class="
-                      w-full
-                      sm:w-full sm:w-auto
-                      md:w-auto md:ml-2
-                      my-2
-                      md:mt-0
-                    "
+                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
                     color="primary"
                     @click="openBuscadorCfdiPagar('pagar')"
                   >
@@ -872,17 +844,7 @@
                                     '|max_value:' +
                                     form.cfdis_a_pagar[indextr].saldo_cfdi
                                   "
-                                  class="
-                                    w-full
-                                    sm:w-6/12
-                                    md:w-4/12
-                                    lg:w-4/12
-                                    xl:w-4/12
-                                    mr-auto
-                                    ml-auto
-                                    mt-1
-                                    cantidad
-                                  "
+                                  class="w-full sm:w-6/12 md:w-4/12 lg:w-4/12 xl:w-4/12 mr-auto ml-auto mt-1 cantidad"
                                   maxlength="8"
                                   v-model="
                                     form.cfdis_a_pagar[indextr].monto_pago
@@ -956,13 +918,7 @@
               <div class="flex flex-wrap">
                 <div class="w-full text-right">
                   <vs-button
-                    class="
-                      w-full
-                      sm:w-full sm:w-auto
-                      md:w-auto md:ml-2
-                      my-2
-                      md:mt-0
-                    "
+                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
                     color="primary"
                     @click="openBuscadorOperacion = true"
                   >
@@ -1352,7 +1308,7 @@
                         </vs-td>
                         <vs-td>
                           <div class="capitalize">
-                            <span >
+                            <span>
                               {{
                                 data[indextr].precio_neto
                                   | numFormat("0,000.00")
@@ -1454,30 +1410,14 @@
                             src="@assets/images/notas_add.svg"
                           />
                           <h3
-                            class="
-                              float-right
-                              mt-2
-                              ml-3
-                              text-xl
-                              font-medium
-                              px-2
-                              py-1
-                              bg-seccion-forms
-                            "
+                            class="float-right mt-2 ml-3 text-xl font-medium px-2 py-1 bg-seccion-forms"
                           >
                             Notas / Observaciones Sobre la Factura
                           </h3>
                         </div>
                       </div>
                       <div
-                        class="
-                          w-full
-                          sm:w-12/12
-                          md:w-12/12
-                          lg:w-12/12
-                          xl:w-12/12
-                          px-2
-                        "
+                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2"
                       >
                         <label class="text-sm opacity-75 font-bold"
                           >NOTA U OBSERVACIÓN:</label
@@ -1506,16 +1446,7 @@
                             src="@assets/images/payments.svg"
                           />
                           <h3
-                            class="
-                              float-right
-                              mt-2
-                              ml-3
-                              text-xl
-                              font-medium
-                              px-2
-                              py-1
-                              bg-seccion-forms
-                            "
+                            class="float-right mt-2 ml-3 text-xl font-medium px-2 py-1 bg-seccion-forms"
                           >
                             Total del Comprobante
                           </h3>
@@ -1524,15 +1455,7 @@
                     </div>
                     <div class="flex flex-wrap">
                       <div
-                        class="
-                          w-full
-                          sm:w-12/12
-                          md:w-12/12
-                          lg:w-12/12
-                          xl:w-12/12
-                          px-2
-                          text-center
-                        "
+                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 text-center"
                       >
                         <label class="text-xl opacity-75">
                           Tasa IVA %
@@ -1571,15 +1494,7 @@
                       </div>
 
                       <div
-                        class="
-                          w-full
-                          sm:w-12/12
-                          md:w-12/12
-                          lg:w-12/12
-                          xl:w-12/12
-                          px-2
-                          text-center
-                        "
+                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 text-center"
                       >
                         <label class="text-xl opacity-75"
                           >$ Total a Facturar</label
@@ -1602,14 +1517,7 @@
                       </div>
 
                       <div
-                        class="
-                          w-full
-                          sm:w-12/12
-                          md:w-12/12
-                          lg:w-12/12
-                          xl:w-12/12
-                          px-2
-                        "
+                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2"
                       >
                         <div class="flex flex-wrap">
                           <vs-button
@@ -1667,7 +1575,8 @@
       :callback-on-success="callback"
       @closeVerificar="closePassword"
       :accion="accionNombre"
-    ></Password>
+    >
+    </Password>
     <Reporteador
       :header="'consultar CFDIs'"
       :show="openReportesLista"
@@ -2509,7 +2418,7 @@ export default {
               fecha_timbrado_texto: datos.fecha_timbrado_texto,
               total: datos.total,
               monto_pago: 0,
-              saldo_cfdi: datos.saldo_cfdi,
+              saldo_cfdi: parseFloat(datos.saldo_cfdi).toFixed(2),
               tipo_comprobante_texto: datos.tipo_comprobante_texto,
               rfc_receptor: datos.rfc_receptor,
               nombre_receptor: datos.nombre_receptor,
@@ -3058,7 +2967,10 @@ export default {
 
       if (this.datos_cliente != null) {
         if (this.datos_cliente.datos.regimen != null) {
-          this.form.regimen = {value:datos.datos.regimen.id,label:datos.datos.regimen.regimen};
+          this.form.regimen = {
+            value: datos.datos.regimen.id,
+            label: datos.datos.regimen.regimen,
+          };
         }
       }
       //alert(datos.id_cliente);
@@ -3134,7 +3046,7 @@ export default {
 
     //regresa los datos a su estado inicial
     limpiarVentana() {
-      this.datos_cliente=null;
+      this.datos_cliente = null;
       this.form.id_cliente = "";
       this.form.cliente = "";
       this.form.tipo_rfc = {
