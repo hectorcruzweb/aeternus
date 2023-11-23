@@ -276,6 +276,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
 });
 
+//RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
+Route::middleware(['client'])->group(function () {
+    Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
+    Route::post('login_usuario_checador_registro_huellas', 'Usuarios\UsuariosController@login_usuario_checador_registro_huellas');
+});
+
+
 
 Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
 

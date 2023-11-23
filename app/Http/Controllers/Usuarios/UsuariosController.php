@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\EmpresaController;
+use Exception;
 use GuzzleHttp\Exception\BadResponseException;
 
 class UsuariosController extends ApiController
@@ -781,5 +782,48 @@ class UsuariosController extends ApiController
     public function destroy($id)
     {
         //
+    }
+
+
+
+    public function login_usuario_checador_registro_huellas(Request $request)
+    {
+        request()->validate(
+            [
+                'username'   => 'required|email',
+                'password'   => 'required'
+            ],
+            [
+                'username.required'  => 'Ingrese el email del usuario.',
+                'username.email'     => 'El email debe ser un correo válido.',
+                'password.required' => 'debe ingresar una contraseña.'
+            ]
+        );
+        try {
+            //verifico que el usuario este activo
+            $resultado = DB::table('usuarios')
+                ->select('*')
+                ->where('email', '=', $request->username)
+                ->get();
+            if (!$resultado->isEmpty()) {
+                if ($resultado[0]->status != 0) {
+                    if ($resultado[0]->roles_id != 4 && $resultado[0]->roles_id != 1) {
+                        return $this->errorResponse('Este usuario no tiene permiso para utilizar este módulo.', 403);
+                    }
+                    if (Hash::check($request->password, $resultado[0]->password)) {
+                        //return User Found And Procceed
+                        return $this->successResponse(true, 200);
+                    } else {
+                        return $this->errorResponse('Error de contraseña. Verifique que sus credenciales de acceso son correctas y vuelva a intentarlo.', 409);
+                    }
+                } else {
+                    return $this->errorResponse('Este usuario no cuenta con acceso al sistema.', 409);
+                }
+            } else {
+                return $this->errorResponse('Este usuario no está registrado en este sistema.', 409);
+            }
+        } catch (Exception $e) {
+            return $this->errorResponse(true, 409);
+        }
     }
 }
