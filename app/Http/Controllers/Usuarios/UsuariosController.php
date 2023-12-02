@@ -826,4 +826,105 @@ class UsuariosController extends ApiController
             return $this->errorResponse(true, 409);
         }
     }
+
+
+
+
+    //functiones para el checador
+    public function get_user_list_huellas(Request $request, $usuarios_id = "")
+    {
+        $fingers = ["izquierda_menique", "izquierda_anular", "izquierda_medio", "izquierda_indice", "izquierda_pulgar", "derecha_menique", "derecha_anular", "derecha_medio", "derecha_indice", "derecha_pulgar"];
+        $fingers_texto = ["Menique izquierdo", "Anualar izquierdo", "Dedo medio izquierdo", "Índice izquierdo", "Pulgar izquierdo", "Menique derecho", "Anular derecho", "Dedo medio derecho", "Índice derecho", "Pulgar derecho"];
+        $resultado_query = User::select(
+            'usuarios.id as id_user',
+            'nombre',
+            'rol'
+        )
+            ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
+            ->where(function ($q) use ($request) {
+                if ($request->empleado != '') {
+                    $q->where('usuarios.nombre', 'like', '%' . $request->empleado . '%');
+                }
+            })
+            ->with("huellas")
+            //->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
+            ->orderBy("id_user", "asc");
+        $resultado = array();
+        if (trim($usuarios_id) == "") {
+            //$resultado_query->where("usuarios.status", ">", 0);
+            $resultado_query = $resultado_query->get();
+            /**queire el resultado paginado */
+            $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
+            $resultado       = &$resultado_query['data'];
+        } else {
+            $resultado_query->where("usuarios.id", "=", $usuarios_id);
+            $resultado_query = $resultado_query->get()->toArray();
+            $resultado       = &$resultado_query;
+        }
+
+        foreach ($resultado as $key => &$usuario) {
+            if (!empty($usuario["huellas"])) {
+                foreach ($usuario["huellas"] as $key_huella => &$huella) {
+                    $huella["huella_nombre"] = $fingers[$huella["huellas_id"] - 1];
+                    $huella["huella_nombre_texto"] = $fingers_texto[$huella["huellas_id"] - 1];
+                }
+            }
+        }
+
+
+        return $resultado_query;
+    }
+
+
+
+
+    public function guardar_huella(Request $request)
+    {
+        try {
+            //delete las huellas que ya se habia capturado con el mismo id
+            DB::table('usuarios_huellas')->where('usuarios_id', $request->usuarios_id)->where('huellas_id', $request->huellas_id)->delete();
+            if (DB::table('usuarios_huellas')->insert(
+                [
+                    'usuarios_id'        => $request->usuarios_id,
+                    'huellas_id'          => $request->huellas_id,
+                    'huella'          => $request->huella
+                ]
+            ))
+                return $this->successResponse("success", 200);
+            else
+                return $this->errorResponse("Error on save.", 409);
+        } catch (Exception $e) {
+            return $this->errorResponse($e, 409);
+        }
+    }
+
+    public function get_huellas_users()
+    {
+        return $this->successResponse($resultado = DB::table('usuarios_huellas')->get(), 200);
+    }
+
+
+    public function guardarRegistro(Request $request)
+    {
+        //return $this->errorResponse($request, 409);
+        return $this->successResponse($request, 200);
+        /*
+        try {
+            //delete las huellas que ya se habia capturado con el mismo id
+            DB::table('usuarios_huellas')->where('usuarios_id', $request->usuarios_id)->where('huellas_id', $request->huellas_id)->delete();
+            if (DB::table('usuarios_huellas')->insert(
+                [
+                    'usuarios_id'        => $request->usuarios_id,
+                    'huellas_id'          => $request->huellas_id,
+                    'huella'          => $request->huella
+                ]
+            ))
+                return $this->successResponse("success", 200);
+            else
+                return $this->errorResponse("Error on save.", 409);
+        } catch (Exception $e) {
+            return $this->errorResponse($e, 409);
+        }
+        */
+    }
 }

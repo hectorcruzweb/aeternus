@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -57,5 +58,14 @@ class User extends Authenticatable
     public function rol()
     {
         return $this->belongsTo('App\Roles', 'roles_id', 'id');
+    }
+
+    public function huellas()
+    {
+        return $this->hasMany('App\UsuariosHuellas', 'usuarios_id', 'id_user')->select("*", DB::raw(
+            '(null) as huella_nombre'
+        ), DB::raw(
+            '(null) as huella_nombre_texto'
+        ));
     }
 }
