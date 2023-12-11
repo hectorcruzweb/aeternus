@@ -104,7 +104,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof HttpException) {
             return $this->errorResponse($exception->getMessage(), $exception->getStatusCode());
         }
-        
+
         //con esto validamos si el metodo llamado existe
         if ($exception instanceof BadMethodCallException) {
             return $this->errorResponse('El metodo solicitado no existe', 500);

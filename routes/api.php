@@ -276,9 +276,21 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
 });
 
-Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
-Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
+//RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
+Route::middleware(['client'])->group(function () {
+    Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');
+    Route::post('checador/guardar_huella', 'ChecadorController@guardar_huella');
+    Route::post('checador/login_usuario_checador_registro_huellas', 'ChecadorController@login_usuario_checador_registro_huellas');
+    Route::post('checador/guardarRegistro', 'ChecadorController@guardarRegistro');
+    Route::get('checador/get_user_list_huellas/{usuarios_id?}', 'ChecadorController@get_user_list_huellas');
+    Route::get('checador/get_huellas_users', 'ChecadorController@get_huellas_users');
+    Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
+});
 
+
+
+
+Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
 Route::get('pdfs', 'Usuarios\UsuariosController@pdfs');
 
 //RUTA DEL LOGUIN

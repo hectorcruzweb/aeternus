@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\EmpresaController;
+use Exception;
 use GuzzleHttp\Exception\BadResponseException;
 
 class UsuariosController extends ApiController

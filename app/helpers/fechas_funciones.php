@@ -58,6 +58,11 @@ function hora($fecha)
     return date("h:i a", strtotime($fecha));
 }
 
+function hora_seg($fecha)
+{
+    return date("h:i:s a", strtotime($fecha));
+}
+
 
 
 
