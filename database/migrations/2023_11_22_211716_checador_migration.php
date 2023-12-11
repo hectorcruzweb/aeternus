@@ -24,13 +24,15 @@ class ChecadorMigration extends Migration
                 $table->foreign('usuarios_id')->references('id')->on('usuarios');
             });
             DB::statement("ALTER TABLE usuarios_huellas ADD huella LONGBLOB");
-
+            Schema::create('configuracion_checador', function (Blueprint $table) {
+                $table->increments('id');
+                $table->string('configuracion')->nullable();
+            });
             Schema::create('dias_festivos', function (Blueprint $table) {
                 $table->increments('id');
                 $table->string('festejo')->nullable();
                 $table->date('fecha');
             });
-
             Schema::create('usuarios_permisos', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->tinyInteger('tipo_permiso_id');
@@ -41,7 +43,6 @@ class ChecadorMigration extends Migration
                 $table->unsignedBigInteger('usuarios_id')->unsigned()->nullable();
                 $table->foreign('usuarios_id')->references('id')->on('usuarios');
             });
-
             Schema::create('horarios', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->tinyInteger('tipo_horario_id');
@@ -50,8 +51,6 @@ class ChecadorMigration extends Migration
                 $table->unsignedBigInteger('usuarios_id')->unsigned()->nullable();
                 $table->foreign('usuarios_id')->references('id')->on('usuarios');
             });
-
-
             Schema::create('dias_horario', function (Blueprint $table) {
                 $table->tinyInteger('semana_numero');
                 $table->tinyInteger('dia_laboral_b');
@@ -67,10 +66,15 @@ class ChecadorMigration extends Migration
                 $table->unsignedBigInteger('horarios_id')->unsigned()->nullable();
                 $table->foreign('horarios_id')->references('id')->on('horarios');
             });
-
-
+            Schema::create('registros_checador', function (Blueprint $table) {
+                $table->bigIncrements('id');
+                $table->tinyInteger('tipo_registro_id');
+                $table->dateTime('fecha_hora');
+                $table->tinyInteger('registro_huella_b');
+                $table->unsignedBigInteger('usuarios_id')->unsigned();
+                $table->foreign('usuarios_id')->references('id')->on('usuarios');
+            });
             //creando horarios
-
             $horarios = [
                 [
                     "tipo_horario_id" => 1,
@@ -170,8 +174,6 @@ class ChecadorMigration extends Migration
                     ]
                 ]
             ];
-
-
             $users = User::get();
             foreach ($users as $key => $user) {
                 if ($user->id == 1 || $user->status == 0) {
@@ -213,10 +215,6 @@ class ChecadorMigration extends Migration
                     );
                 }
             }
-
-
-
-
             //seeder express
             DB::table('usuarios_huellas')->insert(
                 [
@@ -245,6 +243,11 @@ class ChecadorMigration extends Migration
                         'huella' => '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',
                         'usuarios_id' => 1,
                     ],
+                    [ //usuario 2
+                        'huellas_id' => 10,
+                        'huella' => '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',
+                        'usuarios_id' => 2,
+                    ]
                     /*
                     [
                         'huellas_id' => 6,
@@ -267,6 +270,15 @@ class ChecadorMigration extends Migration
                         'usuarios_id' => 1,
                     ]
                     */
+
+
+                ]
+            );
+            DB::table('configuracion_checador')->insert(
+                [
+                    [
+                        'configuracion' => 4
+                    ]
                 ]
             );
             DB::commit();
@@ -290,5 +302,7 @@ class ChecadorMigration extends Migration
         Schema::dropIfExists('usuarios_permisos');
         Schema::dropIfExists('dias_horario');
         Schema::dropIfExists('horarios');
+        Schema::dropIfExists('configuracion_checador');
+        Schema::dropIfExists('registros_checador');
     }
 }
