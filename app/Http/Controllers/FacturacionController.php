@@ -1933,31 +1933,34 @@ class FacturacionController extends ApiController
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
         if (isset($request->request_parent)) {
+            $status_actualizado = null;
             $email             = $request->email_send === 'true' ? true : false;
             $email_to          = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
             $folio_id          = $requestVentasList['folio_id'];
+            try {
+                //code...
+                //actualizamos cfdis en caso de que este en produccion
+                if (ENV('APP_ENV') == 'production') {
+                    $checando_cfdi = $this->get_cfdi_status_sat($requestVentasList['folio_id'], $request);
+                    if (isset($checando_cfdi['estado'])) {
+                        if ($checando_cfdi['estado'] == 'No Encontrado') {
+                            //return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
+                            $status_actualizado = false;
+                        } else {
+                            $status_actualizado = true;
+                        }
+                    }
+                }
+            } catch (\Throwable $th) {
+                //throw $th;
+                $status_actualizado = false;
+            }
         } else {
             $folio_id = $folio;
             $email    = false;
             $email_to = 'hector@gmail.com';
         }
-
-
-
-        //actualizamos cfdis en caso de que este en produccion
-        /*
-        if (ENV('APP_ENV') == 'production') {
-            $checando_cfdi = $this->get_cfdi_status_sat($folio_id, $request);
-            if (isset($checando_cfdi['estado'])) {
-                if ($checando_cfdi['estado'] == 'No Encontrado') {
-                    return $this->errorResponse('El CFDI ' . $checando_cfdi['uuid'] . ' no se encuentra en la base de datos del SAT.', 409);
-                }
-            }
-        }
-*/
-
-
 
         $myRequest = new Request();
         $myRequest->request->add(['test' => 'test']);
