@@ -25,6 +25,7 @@ use App\SATProductosServicios;
 use Spatie\ArrayToXml\ArrayToXml;
 use Illuminate\Support\Facades\DB;
 use App\cfdi\ClienteFormasDigitales;
+use Cfdis as GlobalCfdis;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -1941,7 +1942,10 @@ class FacturacionController extends ApiController
             try {
                 //code...
                 //actualizamos cfdis en caso de que este en produccion
-                if (ENV('APP_ENV') == 'production') {
+                //get cfdi status rapido para evitar hacer la peticion al sat
+                $cfdi = Cfdis::select("status")->where("id", $requestVentasList['folio_id'])->first();
+
+                if (ENV('APP_ENV') == 'production' && $cfdi["status"] != 0) {
                     $checando_cfdi = $this->get_cfdi_status_sat($requestVentasList['folio_id'], $request);
                     if (isset($checando_cfdi['estado'])) {
                         if ($checando_cfdi['estado'] == 'No Encontrado') {
