@@ -226,7 +226,8 @@
                 </table>
             </td>
             <td class="w-20 px-1 px-2 center py-2">
-                <span class="light">{{ $datos['Comprobante']['Folio'] . ' / ' . $datos['Comprobante']['Serie'] }}</span>
+                <span
+                    class="light">{{ $datos['Comprobante']['Folio'] . ' / ' . $datos['Comprobante']['Serie'] }}</span>
             </td>
             <td class="w-20 px-1 px-2 center py-2">
                 <span class="light">{{ $datos['Comprobante']['Fecha'] }}</span>
@@ -256,7 +257,17 @@
                                 </span>
                                 <span>{{ $operacion['servicio_funerario']['nombre_afectado'] }}</span>
                             </td>
-                            <td class="w-35 px-1 px-2 "><span class="bold">Fecha de Defunción: </span>
+                            <!--Reparacion temporal para marcar que es una extremidad y no un fallecido.-->
+
+                            <td class="w-35 px-1 px-2 "><span class="bold">
+
+                                    <!--Reparacion temporal para marcar que es una extremidad y no un fallecido.-->
+                                    @if ($datos['Comprobante']['Folio'] == 1382)
+                                        Fecha de servicio:
+                                    @else
+                                        Fecha de fallecimiento:
+                                    @endif
+                                </span>
                                 <span>{{ $operacion['servicio_funerario']['fecha_defuncion_texto'] }}</span>
                             </td>
                         </tr>
