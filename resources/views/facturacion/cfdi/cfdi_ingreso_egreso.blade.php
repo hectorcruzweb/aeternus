@@ -106,7 +106,6 @@
             min-height: 550px;
             border: 1px solid #ddd;
         }
-
     </style>
 </head>
 
@@ -125,17 +124,19 @@
                             </tr>
                             <tr>
                                 <td class="w-100">
-                                    @if (ENV('APP_ENV')=='local')
-                                    <span class="texto-xs2 semibold line-0 uppercase text-danger">este
-                                        documento es una
-                                        representación impresa de un cfdi no válido  versión {{$datos['Comprobante']['Version']}}
-                                    </span>
+                                    @if (ENV('APP_ENV') == 'local')
+                                        <span class="texto-xs2 semibold line-0 uppercase text-danger">este
+                                            documento es una
+                                            representación impresa de un cfdi no válido versión
+                                            {{ $datos['Comprobante']['Version'] }}
+                                        </span>
                                     @else
-                                    <span class="texto-xs2 semibold line-0 uppercase">este
-                                        documento es una representación impresa de un cfdi {{$datos['Comprobante']['Version']}}
-                                    </span>
+                                        <span class="texto-xs2 semibold line-0 uppercase">este
+                                            documento es una representación impresa de un cfdi
+                                            {{ $datos['Comprobante']['Version'] }}
+                                        </span>
                                     @endif
-                                   
+
                                 </td>
                             </tr>
                         </table>
@@ -159,7 +160,8 @@
                                         {{ strtolower($empresa->calle) }} Núm. Ext {{ $empresa->num_ext }} Col.
                                         {{ strtolower($empresa->colonia) }}. cp. {{ $empresa->cp }}.
                                         {{ $empresa->ciudad }}
-                                        {{ $empresa->estado }}. Tel. {{ $empresa->telefono }}, fax {{ $empresa->fax }},
+                                        {{ $empresa->estado }}. Tel. {{ $empresa->telefono }}, fax
+                                        {{ $empresa->fax }},
                                         Email {{ $empresa->email }}.
                                     </span>
                                 </td>
@@ -195,7 +197,8 @@
                     </tr>
                     <tr>
                         <td class="w-30">
-                            <span class="bold">r.f.c:</span> <span class="light">{{ $datos['Receptor']['Rfc'] }}</span>
+                            <span class="bold">r.f.c:</span> <span
+                                class="light">{{ $datos['Receptor']['Rfc'] }}</span>
                         </td>
                         <td class="w-70">
                             <span class="bold">uso cfdi:</span> <span
@@ -223,7 +226,7 @@
                 </table>
             </td>
             <td class="w-20 px-1 px-2 center py-2">
-                <span class="light">{{ $datos['Comprobante']['Folio'].' / '.$datos['Comprobante']['Serie'] }}</span>
+                <span class="light">{{ $datos['Comprobante']['Folio'] . ' / ' . $datos['Comprobante']['Serie'] }}</span>
             </td>
             <td class="w-20 px-1 px-2 center py-2">
                 <span class="light">{{ $datos['Comprobante']['Fecha'] }}</span>
@@ -237,53 +240,64 @@
         </tr>
     </table>
 
-   @foreach ($cfdi['servicios_funerarios'] as $servicio)
-            @if (isset($servicio['operacion_factura']))
+    @foreach ($cfdi['servicios_funerarios'] as $servicio)
+        @if (isset($servicio['operacion_factura']))
             @foreach ($servicio['operacion_factura'] as $operacion)
-            @if ($operacion['empresa_operaciones_id'] == 3)
-            <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3">
-                <tr>
-                    <td class="w-65 py-1 px-2 "><span class="bold">Nombre del Fallecido: </span>
-                        <span>{{ $operacion['servicio_funerario']['nombre_afectado'] }}</span></td>
-                    <td class="w-35 px-1 px-2 "><span class="bold">Fecha de Defunción: </span>
-                        <span>{{ $operacion['servicio_funerario']['fecha_defuncion_texto'] }}</span></td>
-                </tr>
-            </table>
-            @endif
+                @if ($operacion['empresa_operaciones_id'] == 3)
+                    <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3">
+                        <tr>
+                            <td class="w-65 py-1 px-2 "><span class="bold">
+                                    <!--Reparacion temporal para marcar que es una extremidad y no un fallecido.-->
+                                    @if ($datos['Comprobante']['Folio'] == 1382)
+                                        Extremidad
+                                    @else
+                                        Nombre del Fallecido:
+                                    @endif
+                                </span>
+                                <span>{{ $operacion['servicio_funerario']['nombre_afectado'] }}</span>
+                            </td>
+                            <td class="w-35 px-1 px-2 "><span class="bold">Fecha de Defunción: </span>
+                                <span>{{ $operacion['servicio_funerario']['fecha_defuncion_texto'] }}</span>
+                            </td>
+                        </tr>
+                    </table>
+                @endif
             @endforeach
-            @endif
-   @endforeach
+        @endif
+    @endforeach
 
-    
+
 
 
     <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3">
         <tr>
             <td class="w-40 py-1 px-2 center"><span class="bold">facturó: </span>
-                <span>{{ $datos['Sistema']['timbro_nombre'] }}</span></td>
+                <span>{{ $datos['Sistema']['timbro_nombre'] }}</span>
+            </td>
             <td class="w-25 px-1 px-2 center "><span class="bold">Expedido en:
                 </span><span>Mazatlán, Sin.</span></td>
             <td class="w-35 px-1 px-2 center"><span class="bold">tipo de comprobante: </span>
-                <span>{{ $datos['Comprobante']['TipoDeComprobante'] }}</span></td>
+                <span>{{ $datos['Comprobante']['TipoDeComprobante'] }}</span>
+            </td>
         </tr>
     </table>
     @if (isset($datos['CfdisRelacionados']))
-    <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 px-2">
-        <tr>
-            <td class="w-100 py-1 px-2 left">
-                <span class="bold">cfdis relacionados, tipo de relación:</span>
-                <span>{{ $datos['CfdisRelacionados']['TipoRelacionTexto'] }}</span>
-            </td>
-        </tr>
-        @foreach ($datos['CfdisRelacionados']['CfdiRelacionado'] as $relacionado)
-        <tr>
-            <td class="w-100 py-1 px-2 left">
-                <span class="bold">uuid:</span>
-                <span>{{ $relacionado['UUID'] }}</span>
-            </td>
-        </tr>
-        @endforeach
-    </table>
+        <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 px-2">
+            <tr>
+                <td class="w-100 py-1 px-2 left">
+                    <span class="bold">cfdis relacionados, tipo de relación:</span>
+                    <span>{{ $datos['CfdisRelacionados']['TipoRelacionTexto'] }}</span>
+                </td>
+            </tr>
+            @foreach ($datos['CfdisRelacionados']['CfdiRelacionado'] as $relacionado)
+                <tr>
+                    <td class="w-100 py-1 px-2 left">
+                        <span class="bold">uuid:</span>
+                        <span>{{ $relacionado['UUID'] }}</span>
+                    </td>
+                </tr>
+            @endforeach
+        </table>
     @endif
     <div class="conceptos-content">
         <table class="w-100 datos_tabla uppercase texto-xs3">
@@ -298,22 +312,23 @@
                 <td class="px-1 px-1 center bg-gray"><span class="bold">$importe</span></td>
             </tr>
             @foreach ($datos['Conceptos'] as $concepto)
-            <tr>
-                <td class="py-1 px-1 center"><span class="light">{{ $concepto['Cantidad'] }}</span></td>
-                <td class="px-1 px-1 center"><span class="light">{{ $concepto['ClaveUnidad'] }}</span></td>
-                <td class="px-1 px-1 center"><span class="light">{{ $concepto['Descripcion'] }}</span></td>
-                <td class="px-1 px-1 center"><span class="light">{{ $concepto['ClaveProdServ'] }}</span></td>
-                <td class="px-1 px-1 center"><span
-                        class="light">{{number_format( $concepto['ValorUnitario'],2) }}</span>
-                </td>
-                <td class="px-1 px-1 center"><span class="light">{{number_format( $concepto['Descuento'],2) }}</span>
-                <td class="px-1 px-1 center"><span
-                        class="light">{{number_format($concepto['Impuestos']['Traslados'][0]['Importe'],2) }}</span>
-                </td>
-                <td class="px-1 px-1 center"><span
-                        class="light">{{ number_format($concepto['Impuestos']['Traslados'][0]['Importe']+$concepto['ValorUnitario']-$concepto['Descuento'],2) }}</span>
-                </td>
-            </tr>
+                <tr>
+                    <td class="py-1 px-1 center"><span class="light">{{ $concepto['Cantidad'] }}</span></td>
+                    <td class="px-1 px-1 center"><span class="light">{{ $concepto['ClaveUnidad'] }}</span></td>
+                    <td class="px-1 px-1 center"><span class="light">{{ $concepto['Descripcion'] }}</span></td>
+                    <td class="px-1 px-1 center"><span class="light">{{ $concepto['ClaveProdServ'] }}</span></td>
+                    <td class="px-1 px-1 center"><span
+                            class="light">{{ number_format($concepto['ValorUnitario'], 2) }}</span>
+                    </td>
+                    <td class="px-1 px-1 center"><span
+                            class="light">{{ number_format($concepto['Descuento'], 2) }}</span>
+                    <td class="px-1 px-1 center"><span
+                            class="light">{{ number_format($concepto['Impuestos']['Traslados'][0]['Importe'], 2) }}</span>
+                    </td>
+                    <td class="px-1 px-1 center"><span
+                            class="light">{{ number_format($concepto['Impuestos']['Traslados'][0]['Importe'] + $concepto['ValorUnitario'] - $concepto['Descuento'], 2) }}</span>
+                    </td>
+                </tr>
             @endforeach
         </table>
     </div>
@@ -322,25 +337,27 @@
     <table class="w-100 datos_tabla uppercase  texto-xs3">
         <tr>
             <td class="w-75 py-2 px-2 left"><span class="bold">importe con letra: </span>
-                <span>son {{ $datos['Sistema']['total_letra'] }}</span></td>
+                <span>son {{ $datos['Sistema']['total_letra'] }}</span>
+            </td>
             <td class="w-25 px-2 center" rowspan="2">
                 <table class="w-100  uppercase table-borderless">
                     <tr>
                         <td class="w-50 left"><span class="bold">subtotal: </span></td>
-                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['SubTotal'],2) }}</td>
+                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['SubTotal'], 2) }}</td>
                     </tr>
                     <tr>
                         <td class="w-50 left"><span class="bold">descuento: </span></td>
-                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['Descuento'],2) }}</td>
+                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['Descuento'], 2) }}</td>
                     </tr>
                     <tr>
                         <td class="w-50 left"><span class="bold">i.v.a ({{ $cfdi['tasa_iva'] }}%): </span></td>
-                        <td class="w-50 right">$ {{ number_format($datos['Impuestos']['TotalImpuestosTrasladados'],2) }}
+                        <td class="w-50 right">$
+                            {{ number_format($datos['Impuestos']['TotalImpuestosTrasladados'], 2) }}
                         </td>
                     </tr>
                     <tr>
                         <td class="w-50 left"><span class="bold">total: </span></td>
-                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['Total'],2) }}</td>
+                        <td class="w-50 right">$ {{ number_format($datos['Comprobante']['Total'], 2) }}</td>
                     </tr>
                 </table>
             </td>
@@ -352,7 +369,8 @@
                         <td class="w-70"><span class="bold">método de pago:
                             </span><span>{{ $datos['Comprobante']['MetodoPago'] }}</span></td>
                         <td class="w-30"><span class="bold">moneda: </span>
-                            <span>{{ $datos['Comprobante']['Moneda'] }}</span></td>
+                            <span>{{ $datos['Comprobante']['Moneda'] }}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td class="w-70"><span class="bold" colspan='2'>forma de pago: </span>
@@ -369,7 +387,7 @@
         <tr>
             <td class="w-25 py-1 px-2 center">
                 <div class="qr p-4">
-                    <?php echo $datos['CodigoQr'];?>
+                    <?php echo $datos['CodigoQr']; ?>
                 </div>
             </td>
             <td class="w-75 py-1 px-2 left">
