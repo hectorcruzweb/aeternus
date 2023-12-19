@@ -175,6 +175,7 @@ class ChecadorController extends ApiController
             })
             ->with("huellas")
             //->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
+            ->where('usuarios.status', '>', '0') //no muestro usuarios cancelados
             ->orderBy("id_user", "asc");
         $resultado = array();
         if (trim($usuarios_id) == "") {
