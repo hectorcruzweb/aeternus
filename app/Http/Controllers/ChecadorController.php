@@ -105,7 +105,7 @@ class ChecadorController extends ApiController
         );
         try {
             date_default_timezone_set("America/Mazatlan");
-            $registro_last = RegistrosChecador::orderBy('id', 'DESC')->where("usuarios_id", $request->id_usuario)->first();
+            $registro_last = RegistrosChecador::orderBy('fecha_hora', 'DESC')->where("usuarios_id", $request->id_usuario)->first();
             //tipo_registro_id  => 1 es entrada, 0=> es salida
             $tipo_registro_id = 1;
             if ($registro_last != null) {
