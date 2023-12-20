@@ -217,7 +217,7 @@ class ChecadorController extends ApiController
             DB::raw(
                 '(NULL) as mensaje'
             )
-        )->with("usuario:id,nombre")->orderBy('id', 'DESC');
+        )->with("usuario:id,nombre")->orderBy('fecha_hora', 'DESC');
         if ($usuario_id != "all") {
             $resultado_query = $resultado_query->where("usuarios_id", $usuario_id);
         }
