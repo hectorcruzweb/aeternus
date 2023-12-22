@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\User;
+use DateTime;
 use Exception;
 use App\RegistrosChecador;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Hash;
 
 class ChecadorController extends ApiController
@@ -93,6 +97,7 @@ class ChecadorController extends ApiController
         //validamos datos de acceso
         request()->validate(
             [
+                'tipo_registro_entrada_salida' => 'required',
                 'tipo_registro' => 'required',
                 'id_usuario' => 'required',
                 'password' => $request->tipo_registro != "por_huella" ? "required" : ""
@@ -100,11 +105,14 @@ class ChecadorController extends ApiController
             [
                 'tipo_registro.required' => 'El tipo de registro es necesario.',
                 'id_usuario.required' => 'El ID del usuario es necesario.',
-                'password.required' => "ingrese la contraseña del usuario."
+                'password.required' => "ingrese la contraseña del usuario.",
+                'tipo_registro_entrada_salida.required' => 'El tipo de registro es necesario.',
             ]
         );
         try {
             date_default_timezone_set("America/Mazatlan");
+            $tipo_registro_id = $request->tipo_registro_entrada_salida;
+            /*
             $registro_last = RegistrosChecador::orderBy('fecha_hora', 'DESC')->where("usuarios_id", $request->id_usuario)->first();
             //tipo_registro_id  => 1 es entrada, 0=> es salida
             $tipo_registro_id = 1;
@@ -115,6 +123,7 @@ class ChecadorController extends ApiController
                     $tipo_registro_id = 0;
                 }
             }
+            */
             $tipo_registro = $request->tipo_registro == "por_huella" ? 1 : 0;
 
             if ($tipo_registro == 0) {
@@ -240,6 +249,98 @@ class ChecadorController extends ApiController
             $registro["mensaje"] = $registro["tipo_registro_id"] == 1 ? strtoupper("Ingreso registrado correctamente.") : strtoupper("salida registrada correctamente.");
         }
 
+        return $resultado_query;
+    }
+
+
+    public function get_asistencia_reporte(Request $request, $paginated = "no_paginated")
+    {
+        request()->validate(
+            [
+                'fecha_inicio' => 'required|date|date_format:Y-m-d',
+                'fecha_fin'        => 'required|date|date_format:Y-m-d|after_or_equal:fecha_inicio',
+            ],
+            [
+                'fecha_inicio.*' => 'La fecha de inicio es obligatoria.',
+                'fecha_fin.*' => 'La fecha final del reporte es obligatoria (mayor o igual a la fecha de inicio).'
+            ]
+        );
+
+        $resultado_query = User::select(
+            "id",
+            "nombre"
+        );
+        $resultado_query = $resultado_query->where("status", ">", 0);
+        if (isset($request->usuario_id)) {
+            $resultado_query = $resultado_query->where("id", $request->usuario_id);
+        }
+        $resultado_query = $resultado_query->with(["registros" => function ($q) use ($request) {
+            $q->whereBetween('fecha_hora', [$request->fecha_inicio, $request->fecha_fin])->orderBy('fecha_hora', 'asc');
+        }]);
+
+        $resultado_query = $resultado_query->with(["horarios" => function ($q) use ($request) {
+            $q->where('fecha_aplicacion', "<=", $request->fecha_fin)->orderBy('fecha_aplicacion', 'asc');
+        }, "horarios.diashorario"]);
+        $resultado_query = $resultado_query->get();
+        $resultado = array();
+        if ($paginated == "paginated") {
+            $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
+            $resultado = &$resultado_query["data"];
+        } else {
+            $resultado_query = $resultado_query->toArray();
+            $resultado = &$resultado_query;
+        }
+
+        //para ese rango de fechas hago una evaluacion de sus registros en comparacion con sus horarios
+        $fecha_inicial = new DateTime($request->fecha_inicio);
+        $fecha_fin   = new DateTime($request->fecha_fin);
+        for ($dia = $fecha_inicial; $dia <= $fecha_fin; $dia->modify('+1 day')) {
+            //determino su horario para ese dia
+            foreach ($resultado as $keyEmpleado => &$empleado) {
+                $tarjeta = [
+                    "faltas" => 0,
+                    "retardos" => 0,
+                ];
+                $faltas = 0;
+                $retardos = 0;
+                $salidas_antes = 0;
+                $dias_sin_entrada = 0;
+                $dias_sin_salida = 0;
+                $total_horas_trabajadas = 0;
+                $salida_comer_antes = 0;
+                $retardos_comidas = 0;
+                $tiempo_extra = 0;
+                //determino su horario
+                $horario_dia = null;
+                foreach ($empleado["horarios"] as $keyHorario => $horario) {
+                    if (new DateTime($horario["fecha_aplicacion"]) > $dia) {
+                        break;
+                    } else {
+                        if (new DateTime($horario["fecha_aplicacion"]) <= $dia) {
+                            $horario_dia = $horario;
+                        }
+                    }
+                }
+                //una vez obtenido el horario del empleado, determinamos el tipo de horario
+                if ($horario_dia == null || $horario_dia["tipo_horario_id"] == 2) {
+                    //no tiene horario o es variable
+                    foreach ($empleado["registros"] as $keyRegistro => $registro) {
+                        if (new Date($registro["fecha_hora"]) == new Date($dia)) {
+                            if ($registro["tipo_registro_id"] == 1) {
+                                //ingreso
+                            } else {
+                                //salida
+                            }
+                            return $registro;
+                        }
+                        //buscamos los registros correspondientes a este horario (variable)
+                    }
+                } else {
+                    //tiene asigando un horario definido
+                }
+            }
+        }
+        //retorno el resultado
         return $resultado_query;
     }
 }

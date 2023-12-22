@@ -287,6 +287,7 @@ Route::middleware(['client'])->group(function () {
     Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 });
 
+Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
 
 
 

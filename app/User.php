@@ -68,4 +68,14 @@ class User extends Authenticatable
             '(null) as huella_nombre_texto'
         ));
     }
+
+    public function registros()
+    {
+        return $this->hasMany('App\RegistrosChecador', 'usuarios_id', 'id')
+            ->orderBy('fecha_hora', 'asc');
+    }
+    public function horarios()
+    {
+        return $this->hasMany('App\HorariosChecador', 'usuarios_id', 'id');
+    }
 }
