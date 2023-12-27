@@ -108,6 +108,15 @@ function dia($fecha)
     return ($arrayDias[date('w', strtotime($fecha))]);
 }
 
+function dia_completo($fecha)
+{
+    $arrayDias = array(
+        'Domingo', 'Lunes', 'Martes',
+        'Miércoles', 'Jueves', 'Viernes', 'Sábado'
+    );
+    return ($arrayDias[date('w', strtotime($fecha))]);
+}
+
 
 function dia_numero($fecha)
 {

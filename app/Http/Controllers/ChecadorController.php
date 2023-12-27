@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Hash;
 class ChecadorController extends ApiController
 {
 
+    function __construct()
+    {
+        date_default_timezone_set("America/Mazatlan");
+    }
+
 
     public function login_usuario_checador_registro_huellas(Request $request)
     {
@@ -110,7 +115,7 @@ class ChecadorController extends ApiController
             ]
         );
         try {
-            date_default_timezone_set("America/Mazatlan");
+
             $tipo_registro_id = $request->tipo_registro_entrada_salida;
             /*
             $registro_last = RegistrosChecador::orderBy('fecha_hora', 'DESC')->where("usuarios_id", $request->id_usuario)->first();
@@ -257,15 +262,16 @@ class ChecadorController extends ApiController
     {
         request()->validate(
             [
-                'fecha_inicio' => 'required|date|date_format:Y-m-d',
-                'fecha_fin'        => 'required|date|date_format:Y-m-d|after_or_equal:fecha_inicio',
+                'fecha_inicio' => 'required|date|date_format:Y-m-d|before_or_equal:today',
+                'fecha_fin'        => 'required|date|date_format:Y-m-d|after_or_equal:fecha_inicio|before_or_equal:today',
             ],
             [
+                'fecha_inicio.before_or_equal' => 'La fecha inicial del reporte no debe ser mayor a la fecha actual.',
                 'fecha_inicio.*' => 'La fecha de inicio es obligatoria.',
+                'fecha_fin.before_or_equal' => 'La fecha final del reporte no debe ser mayor a la fecha actual.',
                 'fecha_fin.*' => 'La fecha final del reporte es obligatoria (mayor o igual a la fecha de inicio).'
             ]
         );
-
         $resultado_query = User::select(
             "id",
             "nombre"
@@ -275,12 +281,13 @@ class ChecadorController extends ApiController
             $resultado_query = $resultado_query->where("id", $request->usuario_id);
         }
         $resultado_query = $resultado_query->with(["registros" => function ($q) use ($request) {
-            $q->whereBetween('fecha_hora', [$request->fecha_inicio, $request->fecha_fin])->orderBy('fecha_hora', 'asc');
+            $q->whereDate('fecha_hora', '>=', $request->fecha_inicio)
+                ->whereDate('fecha_hora', '<=', $request->fecha_fin)->orderBy('fecha_hora', 'asc');
         }]);
-
         $resultado_query = $resultado_query->with(["horarios" => function ($q) use ($request) {
-            $q->where('fecha_aplicacion', "<=", $request->fecha_fin)->orderBy('fecha_aplicacion', 'asc');
+            $q->where('fecha_aplicacion', "<=",  $request->fecha_fin)->orderBy('fecha_aplicacion', 'asc');
         }, "horarios.diashorario"]);
+        $resultado_query = $resultado_query->where("id", ">", 1);
         $resultado_query = $resultado_query->get();
         $resultado = array();
         if ($paginated == "paginated") {
@@ -290,57 +297,176 @@ class ChecadorController extends ApiController
             $resultado_query = $resultado_query->toArray();
             $resultado = &$resultado_query;
         }
-
-        //para ese rango de fechas hago una evaluacion de sus registros en comparacion con sus horarios
-        $fecha_inicial = new DateTime($request->fecha_inicio);
-        $fecha_fin   = new DateTime($request->fecha_fin);
-        for ($dia = $fecha_inicial; $dia <= $fecha_fin; $dia->modify('+1 day')) {
-            //determino su horario para ese dia
-            foreach ($resultado as $keyEmpleado => &$empleado) {
-                $tarjeta = [
+        //arreglo para las tarjetas a generar
+        $tarjetas_checador = [];
+        foreach ($resultado as $keyEmpleado => $empleado) {
+            array_push($tarjetas_checador, [
+                "id" => $empleado["id"],
+                "empleado" => strtoupper($empleado["nombre"]),
+                "indicadores" => [
                     "faltas" => 0,
-                    "retardos" => 0,
+                    "tiempo_trabajado" => 0,
+                    "cumplio_jornada" => "No",
+                    "horas_extra" => 0,
+                    "tiempo_faltante_jornada" => 0 //las que faltan para las 8 horas diarias
+                ],
+                "tarjeta_checador" => [],
+                "horarios" => [] //$empleado["horarios"]
+            ]);
+            //para ese rango de fechas hago una evaluacion de sus registros en comparacion con sus horarios
+            $fecha_inicial = new DateTime($request->fecha_inicio);
+            $fecha_fin   = new DateTime($request->fecha_fin);
+            //dias para los que se generará la tarjeta
+            //$dias_tarjeta =  $fecha_inicial->diff($fecha_fin)->d + 1;
+            //creando los dias que componen la tarjeta
+            for ($dia = $fecha_inicial; $dia <= $fecha_fin; $dia->modify('+1 day')) {
+                $tarjeta_empleado = [
+                    "dia" => $dia->format('Y-m-d'),
+                    "indicadores" => [
+                        "asistido" => "",
+                        "tiempo_trabajado" => "0 Horas",
+                        "cumplio_jornada" => "No",
+                        "horas_extra" => "0 Horas",
+                        "tiempo_faltante_jornada" => "0 h 0 Min." //las que faltan para las 8 horas diarias
+                    ],
+                    "registros" => []
                 ];
-                $faltas = 0;
-                $retardos = 0;
-                $salidas_antes = 0;
-                $dias_sin_entrada = 0;
-                $dias_sin_salida = 0;
-                $total_horas_trabajadas = 0;
-                $salida_comer_antes = 0;
-                $retardos_comidas = 0;
-                $tiempo_extra = 0;
-                //determino su horario
+                //agrego sus registros por dia
+                foreach ($empleado["registros"] as $keyRegistro => $registro) {
+                    $registro_dia = new DateTime($registro["fecha_hora"]);
+                    if ($registro_dia->format('Y-m-d') == $dia->format('Y-m-d')) {
+                        array_push(
+                            $tarjeta_empleado["registros"],
+                            [
+                                "tipo_registro_id" => $registro["tipo_registro_id"],
+                                "tipo_registro_texto" => $registro["tipo_registro_id"] == 1 ? "Entrada" : "Salida",
+                                "fecha_hora" => $registro["fecha_hora"],
+                                "forma_registro" => $registro["registro_huella_b"] == 1 ? "Huella Digital" : "# de Usuario y Contraseña",
+                                "jornada_texto" => "",
+                                "registro_valido" => 0
+                            ]
+                        );
+                    }
+                }
+                array_push($tarjetas_checador[$keyEmpleado]["tarjeta_checador"], $tarjeta_empleado);
+            }
+        }
+        //Hasta aqui ya tenemos los registros de cada empleado por orden de dia
+        foreach ($tarjetas_checador as $keyEmpleado => &$empleado) {
+            foreach ($empleado["tarjeta_checador"] as $keyTarjeta => &$tarjeta) {
+                /*
+                Deshabilito los horarios definidos hasta nueva orden, estaremos trabajando solo con los registros capturados en cuestión de tiempo
                 $horario_dia = null;
                 foreach ($empleado["horarios"] as $keyHorario => $horario) {
-                    if (new DateTime($horario["fecha_aplicacion"]) > $dia) {
+                    if (new DateTime($horario["fecha_aplicacion"]) > new DateTime($tarjeta["dia"])) {
                         break;
                     } else {
-                        if (new DateTime($horario["fecha_aplicacion"]) <= $dia) {
+                        if (new DateTime($horario["fecha_aplicacion"]) <= new DateTime($tarjeta["dia"])) {
                             $horario_dia = $horario;
                         }
                     }
                 }
-                //una vez obtenido el horario del empleado, determinamos el tipo de horario
-                if ($horario_dia == null || $horario_dia["tipo_horario_id"] == 2) {
-                    //no tiene horario o es variable
-                    foreach ($empleado["registros"] as $keyRegistro => $registro) {
-                        if (new Date($registro["fecha_hora"]) == new Date($dia)) {
-                            if ($registro["tipo_registro_id"] == 1) {
-                                //ingreso
-                            } else {
-                                //salida
-                            }
-                            return $registro;
-                        }
-                        //buscamos los registros correspondientes a este horario (variable)
+                */
+                //Verifico si hay asistencia o falta ese día
+                $asistido = false;
+                foreach ($tarjeta["registros"] as $key => &$registro) {
+                    if ($registro["tipo_registro_id"] == 1) {
+                        $asistido = true;
+                        break;
                     }
-                } else {
-                    //tiene asigando un horario definido
                 }
+                if ($asistido) {
+                    $tarjeta["indicadores"]["asistido"] = "Si";
+                    $minutos_trabajados_jornada = 0;
+                    $minutos_extra_jornada = 0;
+                    $minutos_faltantes_jornada = 0;
+                    //obtenemos el tiempo trabajado
+                    foreach ($tarjeta["registros"] as $key => &$registro) {
+                        if ($registro["tipo_registro_id"] == 0) {
+                            // si son de salida solo continuamos
+                            continue;
+                        } else {
+                            if (isset($tarjeta["registros"][$key + 1])) {
+                                if ($tarjeta["registros"][$key + 1]["tipo_registro_id"] == 1) {
+                                    continue;
+                                }
+                                $registro["registro_valido"] = 1;
+                                $hora_llegada = strtotime($registro["fecha_hora"]);
+                                $hora_salida = strtotime($tarjeta["registros"][$key + 1]["fecha_hora"]);
+                                $minutos_trabajados_jornada += round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                $registro["jornada_texto"] = "Llegada " . hora($registro["fecha_hora"]) . " - Salida " . hora($tarjeta["registros"][$key + 1]["fecha_hora"]);
+                            } else {
+                                //reviso si existe un registro de salida en el día siguiente para hacer el calculo de tiempo
+                                if (isset($empleado["tarjeta_checador"][$keyTarjeta + 1])) {
+                                    $registro_salida = $empleado["tarjeta_checador"][$keyTarjeta + 1];
+                                    //pregunta si en registros esta un registro de salida
+                                    if (count($registro_salida["registros"]) > 0) {
+                                        if ($registro_salida["registros"][0]["tipo_registro_id"] == 0) {
+                                            $registro["registro_valido"] = 1;
+                                            $hora_llegada = strtotime($registro["fecha_hora"]);
+                                            $hora_salida = strtotime($registro_salida["registros"][0]["fecha_hora"]);
+                                            $minutos_trabajados_jornada += round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                            $registro["jornada_texto"] =  "Llegada " . hora($registro["fecha_hora"]) . " - Salida " . dia_completo($registro_salida["dia"]) . " " . fecha_abr($registro_salida["dia"]) . " " . hora($registro_salida["registros"][0]["fecha_hora"]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $tarjeta["indicadores"]["tiempo_trabajado"] = (($minutos_trabajados_jornada - ($minutos_trabajados_jornada % 60)) / 60) . " h " . ($minutos_trabajados_jornada % 60) . " Min.";
+                    $empleado["indicadores"]["tiempo_trabajado"] += $minutos_trabajados_jornada;
+                    if ($minutos_trabajados_jornada >= 480) {
+                        //mayor a 8 horas x dia
+                        $tarjeta["indicadores"]["cumplio_jornada"] = "Si";
+                        $minutos_extra_jornada  = ($minutos_trabajados_jornada - 480);
+                        if ($minutos_extra_jornada > 60) {
+                            //si es mayor a 60 minutos se agrega un tiempo extra
+                            $empleado["indicadores"]["horas_extra"] += $minutos_extra_jornada;
+                            $tarjeta["indicadores"]["horas_extra"] = (($minutos_extra_jornada - ($minutos_extra_jornada % 60)) / 60) . " h " . ($minutos_extra_jornada % 60) . " Min.";
+                        }
+                    } else {
+                        $minutos_faltantes_jornada  = (480 - $minutos_trabajados_jornada);
+                        $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
+                        if ($minutos_faltantes_jornada < 20) {
+                            //tolerancia de 20 minutos para cuando se cumple o no con la jornada
+                            $tarjeta["indicadores"]["cumplio_jornada"] = "Si";
+                        } else {
+                            //se acumula en el global de tiempo faltante para hacer la indicacion
+                            $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                        }
+                    }
+                    //return round($minutos_trabajados % 60, 0);
+                } else {
+                    $empleado["indicadores"]["faltas"] += 1;
+                    $tarjeta["indicadores"]["asistido"] = "No";
+
+                    //al no tener registros se hacen el cargo de las 8 horas que tiene faltante "tiempo_faltante_jornada"
+                    $minutos_faltantes_jornada  = 480; //8 horas
+                    $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
+                    $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                }
+                /*
+                Deshabilito los horarios definidos hasta nueva orden, estaremos trabajando solo con los registros capturados en cuestión de tiempo
+                //obtengo el horario sobre el cual serán evualuados los indicadores
+                if ($horario_dia == null || $horario_dia["tipo_horario_id"] == 2) {
+                    //sin horario o variable / calculando los indicadores
+                    //calcula si falto el dia
+
+                } else {
+                    //tiene horario
+                }
+                */
+                $tarjeta["dia"] = dia_completo($tarjeta["dia"]) . " " . fecha_abr($tarjeta["dia"]);
             }
+            $empleado["indicadores"]["tiempo_trabajado"] = (($empleado["indicadores"]["tiempo_trabajado"] - ($empleado["indicadores"]["tiempo_trabajado"] % 60)) / 60) . " h " . ($empleado["indicadores"]["tiempo_trabajado"] % 60) . " Min.";
+            if ($empleado["indicadores"]["tiempo_faltante_jornada"] < 480) {
+                //si el tiempo faltante de jornada es mayor a 480 min = 1 dia de 8 horas se marca como que no cumple con su jornada
+                $empleado["indicadores"]["cumplio_jornada"] = "Si";
+            }
+            $empleado["indicadores"]["tiempo_faltante_jornada"] = (($empleado["indicadores"]["tiempo_faltante_jornada"] - ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60)) / 60) . " h " . ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60) . " Min.";
+            $empleado["indicadores"]["horas_extra"] = (($empleado["indicadores"]["horas_extra"] - ($empleado["indicadores"]["horas_extra"] % 60)) / 60) . " h " . ($empleado["indicadores"]["horas_extra"] % 60) . " Min.";
         }
-        //retorno el resultado
-        return $resultado_query;
+        //retorno las tarjetas
+        return  $tarjetas_checador;
     }
 }
