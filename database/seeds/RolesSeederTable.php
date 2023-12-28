@@ -29,8 +29,6 @@ class RolesSeederTable extends Seeder
                 'descripcion' => $key['descripcion']
             ]);
         }
-
-
         //aqui inserto los permisos en los roles
         $modulos = DB::table('modulos')->select('id')->where('url', '<>', '')->get();
         $roles_res = DB::table('roles')->where('id', '<=', 2)->get();
