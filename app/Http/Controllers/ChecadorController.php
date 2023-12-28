@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DiasFestivos;
 use App\User;
 use DateTime;
 use Exception;
@@ -260,6 +261,7 @@ class ChecadorController extends ApiController
 
     public function get_asistencia_reporte(Request $request, $paginated = "no_paginated")
     {
+
         request()->validate(
             [
                 'fecha_inicio' => 'required|date|date_format:Y-m-d|before_or_equal:today',
@@ -299,6 +301,11 @@ class ChecadorController extends ApiController
         }
         //arreglo para las tarjetas a generar
         $tarjetas_checador = [];
+
+
+        //dias_festuivos
+        $dias_festivos = DiasFestivos::get();
+
         foreach ($resultado as $keyEmpleado => $empleado) {
             array_push($tarjetas_checador, [
                 "id" => $empleado["id"],
@@ -311,7 +318,7 @@ class ChecadorController extends ApiController
                     "tiempo_faltante_jornada" => 0 //las que faltan para las 8 horas diarias
                 ],
                 "tarjeta_checador" => [],
-                "horarios" => [] //$empleado["horarios"]
+                //"horarios" => [] //$empleado["horarios"]
             ]);
             //para ese rango de fechas hago una evaluacion de sus registros en comparacion con sus horarios
             $fecha_inicial = new DateTime($request->fecha_inicio);
@@ -327,7 +334,8 @@ class ChecadorController extends ApiController
                         "tiempo_trabajado" => "0 Horas",
                         "cumplio_jornada" => "No",
                         "horas_extra" => "0 Horas",
-                        "tiempo_faltante_jornada" => "0 h 0 Min." //las que faltan para las 8 horas diarias
+                        "tiempo_faltante_jornada" => "0 h 0 Min.", //las que faltan para las 8 horas diarias
+                        "dia_descanso_obligatorio" => "No",
                     ],
                     "registros" => []
                 ];
@@ -375,6 +383,18 @@ class ChecadorController extends ApiController
                         break;
                     }
                 }
+                //determina si es día festivo el dia en cuestion
+                $dia_festivo_aplicado = null;
+                foreach ($dias_festivos as $key => $dia) {
+                    $dia_registro = new DateTime($tarjeta["dia"]);
+                    $dia_festivo = new DateTime($dia_registro->format('Y') . "-" . $dia["num_mes"] . "-" . $dia["num_dia"]);
+                    if ($dia_registro->format('Y-m-d') == $dia_festivo->format('Y-m-d')) {
+                        $dia_festivo_aplicado = $dia["festejo"];
+                        $tarjeta["indicadores"]["dia_descanso_obligatorio"] = "Si (" . $dia_festivo_aplicado . ")";
+                        break;
+                    }
+                }
+
                 if ($asistido) {
                     $tarjeta["indicadores"]["asistido"] = "Si";
                     $minutos_trabajados_jornada = 0;
@@ -427,7 +447,7 @@ class ChecadorController extends ApiController
                     } else {
                         $minutos_faltantes_jornada  = (480 - $minutos_trabajados_jornada);
                         $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
-                        if ($minutos_faltantes_jornada < 20) {
+                        if ($minutos_faltantes_jornada <= 20) {
                             //tolerancia de 20 minutos para cuando se cumple o no con la jornada
                             $tarjeta["indicadores"]["cumplio_jornada"] = "Si";
                         } else {
@@ -437,13 +457,17 @@ class ChecadorController extends ApiController
                     }
                     //return round($minutos_trabajados % 60, 0);
                 } else {
-                    $empleado["indicadores"]["faltas"] += 1;
-                    $tarjeta["indicadores"]["asistido"] = "No";
-
-                    //al no tener registros se hacen el cargo de las 8 horas que tiene faltante "tiempo_faltante_jornada"
-                    $minutos_faltantes_jornada  = 480; //8 horas
-                    $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
-                    $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                    if ($dia_festivo_aplicado == null) {
+                        //no asistido
+                        $empleado["indicadores"]["faltas"] += 1;
+                        $tarjeta["indicadores"]["asistido"] = "No";
+                        //al no tener registros se hacen el cargo de las 8 horas que tiene faltante "tiempo_faltante_jornada"
+                        $minutos_faltantes_jornada  = 480; //8 horas
+                        $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
+                        $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                    } else {
+                        $tarjeta["indicadores"]["asistido"] = "No (Día de descanso obligatorio)";
+                    }
                 }
                 /*
                 Deshabilito los horarios definidos hasta nueva orden, estaremos trabajando solo con los registros capturados en cuestión de tiempo

@@ -28,11 +28,6 @@ class ChecadorMigration extends Migration
                 $table->increments('id');
                 $table->string('configuracion')->nullable();
             });
-            Schema::create('dias_festivos', function (Blueprint $table) {
-                $table->increments('id');
-                $table->string('festejo')->nullable();
-                $table->date('fecha');
-            });
             Schema::create('usuarios_permisos', function (Blueprint $table) {
                 $table->bigIncrements('id');
                 $table->tinyInteger('tipo_permiso_id');
@@ -298,7 +293,6 @@ class ChecadorMigration extends Migration
     {
         //
         Schema::dropIfExists('usuarios_huellas');
-        Schema::dropIfExists('dias_festivos');
         Schema::dropIfExists('usuarios_permisos');
         Schema::dropIfExists('dias_horario');
         Schema::dropIfExists('horarios');
