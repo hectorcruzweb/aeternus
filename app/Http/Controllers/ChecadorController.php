@@ -249,19 +249,24 @@ class ChecadorController extends ApiController
             $resultado = &$resultado_query;
         }
         foreach ($resultado as $key => &$registro) {
-            $registro["tipo_registro_texto"] = strtoupper($registro["tipo_registro_id"] == 1 ? "registro de entrada" : "registro de salida");
+            $registro["tipo_registro_texto"] = strtoupper($registro["tipo_registro_id"] == 1 ? "entrada" : "salida");
             $registro["fecha_registro_texto"] = strtoupper(fecha_abr($registro["fecha_hora"]));
             $registro["hora_registro"] = strtoupper(hora_seg($registro["fecha_hora"]));
             $registro["mensaje"] = $registro["tipo_registro_id"] == 1 ? strtoupper("Ingreso registrado correctamente.") : strtoupper("salida registrada correctamente.");
+            if ($registro["registro_huella_b"] == 1) {
+                $registro["forma_registro"] = strtoupper("Huella Digital");
+            } elseif ($registro["registro_huella_b"] == 2) {
+                $registro["forma_registro"] = strtoupper("Núm. Usuario y Contraseña");
+            } else {
+                $registro["forma_registro"] = strtoupper("Administrativa");
+            }
         }
-
         return $resultado_query;
     }
 
 
     public function get_asistencia_reporte(Request $request, $paginated = "no_paginated")
     {
-
         request()->validate(
             [
                 'fecha_inicio' => 'required|date|date_format:Y-m-d|before_or_equal:today',
@@ -284,7 +289,7 @@ class ChecadorController extends ApiController
         }
         $resultado_query = $resultado_query->with(["registros" => function ($q) use ($request) {
             $q->whereDate('fecha_hora', '>=', $request->fecha_inicio)
-                ->whereDate('fecha_hora', '<=', $request->fecha_fin)->orderBy('fecha_hora', 'asc');
+                ->whereDate('fecha_hora', '<=', $request->fecha_fin)->where("status", 1)->orderBy('fecha_hora', 'asc');
         }]);
         $resultado_query = $resultado_query->with(["horarios" => function ($q) use ($request) {
             $q->where('fecha_aplicacion', "<=",  $request->fecha_fin)->orderBy('fecha_aplicacion', 'asc');

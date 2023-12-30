@@ -139,6 +139,33 @@ const router = new Router({
                 },
                 /**FIN DE RUTAS PARA EL MODULO DE EMPRESAS */
 
+                /*Modulo de checador */
+                {
+                    path: "/control-de-asistencia",
+                    name: "Control de asistencia",
+                    component: () =>
+                        import(
+                            "@/views/pages/control_de_asistencia/checador.vue"
+                        ),
+                    //component: () => import('@/views/pages/empresa/Empresa.vue'),
+                    meta: {
+                        breadcrumb: [
+                            {
+                                title: "Home",
+                                url: "/"
+                            },
+                            {
+                                title: "Control de Asistencia",
+                                active: true
+                            }
+                        ],
+                        pageTitle: "Checador",
+                        rule: "editor",
+                        authRequired: true
+                    }
+                },
+                /*fin del modulo de checador */
+
                 {
                     path: "/cementerio/ventas",
                     name: "cementerio_ventas",

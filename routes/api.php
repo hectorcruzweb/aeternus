@@ -275,7 +275,7 @@ Route::middleware(['auth:api'])->group(function () {
     /**rutas de reportes */
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
 });
-
+Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {
     Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');

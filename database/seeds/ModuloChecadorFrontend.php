@@ -28,7 +28,7 @@ class ModuloChecadorFrontend extends Seeder
                 'modulo' => 'Reloj Checador',
                 'icon' =>  'ClockIcon',
                 'parent_modulo_id' => 0,
-                'url' =>  '/checador',
+                'url' =>  '/control-de-asistencia',
                 'secciones_id' => 1,
                 'status' => 1
             ]);
