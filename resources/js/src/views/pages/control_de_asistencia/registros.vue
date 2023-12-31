@@ -26,7 +26,7 @@
         <div class="flex flex-wrap">
           <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
             <div class="w-full input-text pb-2">
-              <label class="">Filtrar Específico</label>
+              <label class="">Filtrar Por Fecha</label>
               <v-select
                 :options="filtrosEspecificos"
                 :clearable="false"
@@ -36,7 +36,7 @@
               />
             </div>
           </div>
-          <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
+          <div class="w-full sm:w-12/12 md:w-6/12 lg:w-4/12 xl:w-4/12 px-2">
             <div class="w-full input-text">
               <label class="">
                 Rango de Fechas año/mes/dia
@@ -52,17 +52,16 @@
                 class="w-full"
                 @on-close="onCloseDate"
               />
-              {{ rango_fechas }}
             </div>
           </div>
-          <div class="w-full sm:w-12/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2">
+          <div class="w-full sm:w-12/12 md:w-12/12 lg:w-5/12 xl:w-5/12 px-2">
             <div class="w-full input-text pb-2">
               <label class="">Empleado</label>
               <v-select
-                :options="filtrosEspecificos"
+                :options="empleados"
                 :clearable="false"
                 :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                v-model="filtroEspecifico"
+                v-model="empleado"
                 class="md:mb-0"
               />
             </div>
@@ -200,6 +199,7 @@ import {
   PermisosModulo,
 } from "@/VariablesGlobales";
 import ServiciosGratis from "@pages/clientes/ServiciosGratis";
+const moment = require("moment");
 import vSelect from "vue-select";
 
 export default {
@@ -215,7 +215,19 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data(this.actual);
     },
+    "empleado.value": function (newValue, oldValue) {
+      (async () => {
+        await this.get_data(1);
+      })();
+    },
+    "filtroEspecifico.value": function (newValue, oldValue) {
+      if (newValue == "1")
+        (async () => {
+          await this.get_data(1);
+        })();
+    },
   },
+
   computed: {
     habilitar_rango: function () {
       if (this.filtroEspecifico.value != "") {
@@ -239,18 +251,20 @@ export default {
           value: "2",
         },
       ],
+      empleado: { label: "Todos", value: "" },
+      empleados: [],
       serverOptions: {
         page: "",
-        per_page: "15",
+        per_page: "25",
         status: "",
         filtro_especifico_opcion: "",
-        numero_control: "",
-        cliente: "",
+        fecha_inicio: "",
+        fecha_fin: "",
+        id_empleado: "",
       },
       verPaginado: true,
       total: 0,
       actual: 1,
-      fecha: "",
       rango_fechas: [],
       //hasta aqui
 
@@ -284,33 +298,59 @@ export default {
   methods: {
     reset(card) {
       card.removeRefreshAnimation(500);
-      this.filtroEspecifico = {
-        label: "Núm. Cliente",
-        value: "1",
-      };
-      this.serverOptions.numero_control = "";
-      this.serverOptions.cliente = "";
-      this.get_data(this.actual);
+      this.rango_fechas = [];
+      this.filtroEspecifico = this.filtrosEspecificos[0];
+      this.empleado = this.empleados[0];
+      (async () => {
+        //await this.get_data(1);
+      })();
     },
 
-    get_data(page, evento = "") {
+    async get_empleados() {
+      try {
+        this.$vs.loading();
+        let res = await checador.get_empleados();
+        this.empleados.push({
+          value: "",
+          label: "Todos",
+        });
+        res.data.data.forEach((element) => {
+          this.empleados.push({
+            value: element.id,
+            label: element.nombre,
+          });
+        });
+        this.empleado = this.empleados[0];
+        this.$vs.loading.close();
+      } catch (error) {
+        this.$vs.loading.close();
+      }
+    },
+
+    async get_data(page, evento = "") {
       if (evento == "blur") {
         if (
-          this.serverOptions.cliente != "" ||
-          this.serverOptions.cliente == ""
+          this.serverOptions.id_cliente != "" ||
+          this.serverOptions.id_cliente == ""
         ) {
           //la funcion no avanza
           return false;
         }
         if (
-          this.serverOptions.numero_control == "" ||
-          this.serverOptions.numero_control != ""
+          this.serverOptions.fecha_fin == "" ||
+          this.serverOptions.fecha_fin != ""
+        ) {
+          //la funcion no avanza
+          return false;
+        }
+        if (
+          this.serverOptions.fecha_inicio == "" ||
+          this.serverOptions.fecha_inicio != ""
         ) {
           //la funcion no avanza
           return false;
         }
       }
-      let self = this;
       if (checador.cancel) {
         checador.cancel("Operation canceled by the user.");
       }
@@ -318,6 +358,7 @@ export default {
       this.verPaginado = false;
       this.serverOptions.page = page;
       this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+      this.serverOptions.id_empleado = this.empleado.value;
       checador
         .get_registros(this.serverOptions)
         .then((res) => {
@@ -345,6 +386,67 @@ export default {
           }
         });
     },
+
+    onCloseDate(selectedDates, dateStr, instance) {
+      /**se valdiad que se busque la informacion solo en los casos donde la fechas cambien */
+      if (selectedDates.length == 0) {
+        /**no hay fechas que buscar */
+        this.serverOptions.fecha_inicio = "";
+        this.serverOptionsfecha_fin = "";
+        this.filtroEspecifico = this.filtrosEspecificos[0];
+      } else if (selectedDates.length == 1) {
+        this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
+          "YYYY-MM-DD"
+        );
+        this.serverOptions.fecha_fin = moment(selectedDates[0]).format(
+          "YYYY-MM-DD"
+        );
+        //aqui mando llamar los nuevos datos
+        (async () => {
+          await this.get_data(this.actual);
+        })();
+      } else {
+        /**hay fechas que buscar */
+        if (
+          this.serverOptions.fecha_inicio !=
+            moment(selectedDates[0]).format("YYYY-MM-DD") ||
+          this.serverOptions.fecha_fin !=
+            moment(selectedDates[1]).format("YYYY-MM-DD")
+        ) {
+          /**agreggo la fecha 1 */
+          this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
+            "YYYY-MM-DD"
+          );
+          this.serverOptions.fecha_fin = moment(selectedDates[1]).format(
+            "YYYY-MM-DD"
+          );
+          //aqui mando llamar los nuevos datos
+          (async () => {
+            await this.get_data(this.actual);
+          })();
+        }
+      }
+    },
+    validarRangoFecha() {
+      if (
+        this.serverOptions.fecha_inicio == "" ||
+        this.serverOptions.fecha_fin == ""
+      ) {
+        this.$vs.notify({
+          title: "Error",
+          text: "Seleccione el rango de fechas para el reporte.",
+          iconPack: "feather",
+          icon: "icon-alert-circle",
+          color: "danger",
+          position: "bottom-right",
+          time: "6000",
+        });
+        return false;
+      } else {
+        return true;
+      }
+    },
+
     handleSearch(searching) {},
     handleChangePage(page) {},
     handleSort(key, active) {},
@@ -486,7 +588,10 @@ export default {
     },
   },
   created() {
-    this.get_data(this.actual);
+    (async () => {
+      await this.get_empleados();
+      await this.get_data(this.actual);
+    })();
   },
 };
 </script>

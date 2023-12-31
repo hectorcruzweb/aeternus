@@ -13,18 +13,21 @@
       ></Registros>
     </div>
     <div class="" v-show="activeTab == 1">
+      <!--
       <RegistroPublico
         :datos="datosEmpresa"
         :erroresForm="erroresRegistroPublico"
         @actualizar="actualizar"
       ></RegistroPublico>
-    </div>
+    --></div>
     <div class=" " v-show="activeTab == 2">
+      <!--
       <Funeraria
         :datos="datosEmpresa"
         :erroresForm="erroresFuneraria"
         @actualizar="actualizar"
       ></Funeraria>
+      -->
     </div>
     <Password
       :show="operConfirmar"

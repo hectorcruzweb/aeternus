@@ -7,24 +7,28 @@ let cancel;
 export default {
     cancel: null,
     get_registros(param) {
-        let service =
-            "/checador/get_registros_checador_frontend/all/all/paginated";
-        /*
-        if (param.filtro_especifico_opcion == 4) {
-            if (param.numero_control.trim() != "") {
-                service =
-                    "/cementerio/get_ventas/" +
-                    param.numero_control.trim() +
-                    "/paginated";
-            }
+        let service = "/checador/get_registros_checador_frontend/all/";
+        if (param.id_empleado != "") {
+            service += param.id_empleado;
+        } else {
+            service += "all";
         }
-        */
+        service += "/paginated";
+        if (param.filtro_especifico_opcion != 2) {
+            //por fechas
+            param.fecha_inicio = "";
+            param.fecha_fin = "";
+        }
         return axios.get(service, {
             cancelToken: new CancelToken(c => {
                 this.cancel = c;
             }),
             params: param
         });
+    },
+
+    get_empleados() {
+        return axios.get("checador/get_empleados");
     },
     //fin de servicios de checador
 

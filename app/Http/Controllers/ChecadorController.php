@@ -23,6 +23,20 @@ class ChecadorController extends ApiController
     }
 
 
+    public function get_empleados()
+    {
+        return $this->showAll(
+            User::select(
+                'id',
+                'nombre',
+
+            )
+                ->whereHas('registros')
+                ->orderBy("id", "asc")
+                ->get()
+        );
+    }
+
     public function login_usuario_checador_registro_huellas(Request $request)
     {
         request()->validate(
@@ -216,7 +230,7 @@ class ChecadorController extends ApiController
         return $resultado_query;
     }
 
-    public function get_registros_checador($registro_id = "all", $usuario_id = "all", $paginated = "no_paginated")
+    public function get_registros_checador(Request $request, $registro_id = "all", $usuario_id = "all", $paginated = "no_paginated")
     {
         $resultado_query = RegistrosChecador::select(
             "*",
@@ -239,6 +253,12 @@ class ChecadorController extends ApiController
         if ($registro_id != "all") {
             $resultado_query->where("id", "=", $registro_id);
         }
+
+        if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
+            $resultado_query->whereDate('fecha_hora', '>=', $request->fecha_inicio)->whereDate('fecha_hora', '<=', $request->fecha_fin);
+        }
+
+
         $resultado_query = $resultado_query->get();
         $resultado = array();
         if ($paginated == "paginated") {
