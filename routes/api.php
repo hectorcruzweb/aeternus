@@ -274,6 +274,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
     /**rutas de reportes */
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
+    Route::post('checador/modificar_registro_administrativo', 'ChecadorController@modificar_registro_administrativo');
     Route::post('checador/guardar_registro_administrativo', 'ChecadorController@guardar_registro_administrativo');
     Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro');
     Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro');

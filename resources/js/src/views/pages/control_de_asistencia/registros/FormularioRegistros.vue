@@ -194,7 +194,7 @@ export default {
           if (this.getTipoformulario == "modificar") {
             this.title = "Modificar Datos del Registro";
             /**se cargan los datos al formulario */
-            await this.get_cliente_by_id(this.get_registro_id);
+            await this.get_registro_by_id(this.get_registro_id);
           } else {
             this.title = "Crear Nuevo Registro";
           }
@@ -274,7 +274,7 @@ export default {
   methods: {
     async get_empleados() {
       try {
-        this.$vs.loading();
+        //this.$vs.loading();
         let res = await checador.get_empleados_todos();
         this.empleados.push({
           value: "",
@@ -287,74 +287,64 @@ export default {
           });
         });
         this.empleado = this.empleados[0];
-        this.$vs.loading.close();
+        //this.$vs.loading.close();
       } catch (error) {
-        this.$vs.loading.close();
+        //this.$vs.loading.close();
       }
     },
 
-    async get_cliente_by_id() {
-      /**trae la informacion de el cliente por id */
+    async get_registro_by_id() {
+      /**trae la informacion de el registro por id */
       this.$vs.loading();
-      await clientes
-        .get_registro_id(this.get_registro_id)
+      await checador
+        .get_registro_by_id(this.get_registro_id)
         .then((res) => {
-          //actualizo los datos en el formulario
-          this.form.nombre = res.data.nombre;
-          this.form.direccion = res.data.direccion;
-          this.form.ciudad = res.data.ciudad;
-          this.form.estado = res.data.estado;
-          this.form.nacionalidad = {
-            value: res.data.nacionalidad["id"],
-            label: res.data.nacionalidad["nacionalidad"],
-          };
-          this.form.tipo_registro_id = {
-            value: res.data.tipo_registro_id["id"],
-            label: res.data.tipo_registro_id["tipo_registro_id"],
-          };
-          this.form.telefono = res.data.telefono;
-          this.form.celular = res.data.celular;
-          this.form.telefono_extra = res.data.telefono_extra;
-          this.form.email = res.data.email;
+          if (res) {
+            let registro = res.data[0];
+            //actualizo los datos en el formulario
+            var fecha_cremacion = registro.fecha_hora.substr(0, 10).split("-");
+            var hora_cremacion = registro.fecha_hora.substr(11, 19).split(":");
+            //yyyy-mm-dd hh:mm
+            this.form.fechahora = new Date(
+              fecha_cremacion[0],
+              fecha_cremacion[1] - 1,
+              fecha_cremacion[2],
+              hora_cremacion[0],
+              hora_cremacion[1]
+            );
 
-          if (res.data.fechahora != null) {
-            var partes = res.data.fechahora.split("-");
-            //yyyy-mm-dd
-            this.form.fechahora = new Date(partes[0], partes[1] - 1, partes[2]);
-          } else {
-            this.form.fechahora = "";
+            if (registro.tipo_registro_id == 1) {
+              this.form.tipo = this.tipos[0];
+            } else {
+              this.form.tipo = this.tipos[1];
+            }
+            //selecciono empleado
+            var empleado_disponible = false;
+            this.empleados.forEach((element, index) => {
+              if (element.value == registro.usuarios_id) {
+                empleado_disponible = true;
+                this.form.empleado = element;
+                return;
+              }
+            });
           }
-
-          /**datos del cliente fiscal */
-          this.form.rfc = res.data.rfc != null ? res.data.rfc : "";
-          this.form.direccion_fiscal =
-            res.data.direccion_fiscal != null ? res.data.direccion_fiscal : "";
-          this.form.cp = res.data.cp != null ? res.data.cp : "";
-          this.form.razon_social =
-            res.data.razon_social != null ? res.data.razon_social : "";
-          if (res.data.regimen != null) {
-            this.form.regimen = {
-              value: res.data.regimen["id"],
-              label: res.data.regimen["regimen"],
-            };
-          } else {
-            this.form.regimen = {
-              value: "",
-              label: "Seleccione 1",
-            };
+          if (empleado_disponible == false) {
+            this.$vs.notify({
+              title: "Modificar Registro",
+              text: "Verifique que el empleado esté habilitado para modificar este registro.",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "danger",
+              position: "bottom-right",
+              time: "8000",
+            });
           }
-          /**datos del contacto extra de referencia */
-          this.form.nombre_contacto = res.data.nombre_contacto;
-          this.form.parentesco_contacto = res.data.parentesco_contacto;
-          this.form.telefono_contacto = res.data.telefono_contacto;
-
-          this.form.status_registro = res.data.vivo_b_raw;
           this.$vs.loading.close();
         })
         .catch((err) => {
           this.$vs.loading.close();
           this.$vs.notify({
-            title: "Modificar Cliente",
+            title: "Modificar Registro",
             text: "Ocurrió un error al traer la informacion, reintente.",
             iconPack: "feather",
             icon: "icon-alert-circle",
@@ -371,7 +361,10 @@ export default {
         .then((result) => {
           if (!result) {
             this.$vs.notify({
-              title: "Guardar Registro",
+              title:
+                this.getTipoformulario == "agregar"
+                  ? "Guardar Registro"
+                  : "Modificar Registro",
               text: "Verifique que todos los datos han sido capturados",
               iconPack: "feather",
               icon: "icon-alert-circle",
@@ -388,7 +381,7 @@ export default {
             } else {
               /**modificar, se valida con password */
               this.form.id_registro_modificar = this.get_registro_id;
-              this.callback = this.modificar_cliente;
+              this.callback = this.modificar_registro_administrativo;
               this.operConfirmar = true;
             }
           }
@@ -476,18 +469,25 @@ export default {
         });
     },
 
-    modificar_cliente() {
+    modificar_registro_administrativo() {
       //aqui mando modoificar los datos
       this.errores = [];
       this.$vs.loading();
-      clientes
-        .modificar_cliente(this.form)
+
+      let request = {
+        fechahora: this.form.fechahora,
+        tipo_registro_id: this.form.tipo.value,
+        id_usuario: this.form.empleado.value,
+        id_registro_modificar: this.get_registro_id,
+      };
+      checador
+        .modificar_registro_administrativo(request)
         .then((res) => {
           if (res.data >= 1) {
             //success
             this.$vs.notify({
-              title: "Modificación de Clientes",
-              text: "Se modificó el cliente correctamente.",
+              title: "Modificación de Registros",
+              text: "Se modificó el registro correctamente.",
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "success",
@@ -498,8 +498,8 @@ export default {
             this.cerrarVentana();
           } else {
             this.$vs.notify({
-              title: "Modificación de Clientes",
-              text: "Error al guardar el cliente, por favor reintente.",
+              title: "Modificación de Registros",
+              text: "Error al guardar modificar registro, por favor reintente.",
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "danger",
@@ -511,7 +511,18 @@ export default {
         })
         .catch((err) => {
           if (err.response) {
-            if (err.response.status == 403) {
+            if (err.response.status == 409) {
+              /**FORBIDDEN ERROR */
+              this.$vs.notify({
+                title: "Modificar Registros",
+                text: err.response.data.error,
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "danger",
+                time: 8000,
+                position: "bottom-right",
+              });
+            } else if (err.response.status == 403) {
               /**FORBIDDEN ERROR */
               this.$vs.notify({
                 title: "Permiso denegado",
@@ -526,7 +537,7 @@ export default {
               //checo si existe cada error
               this.errores = err.response.data.error;
               this.$vs.notify({
-                title: "Modificación de Clientes",
+                title: "Modificación de Registros",
                 text: "Verifique los errores encontrados en los datos.",
                 iconPack: "feather",
                 icon: "icon-alert-circle",

@@ -172,7 +172,7 @@
       @closeReportes="openReportesLista = false"
     ></Reporteador>
     <FormularioRegistros
-      :id_cliente="id_cliente_modificar"
+      :id_registro="registro_id"
       :tipo="tipoFormulario"
       :show="verFormularioRegistros"
       @closeVentana="verFormularioRegistros = false"
@@ -290,7 +290,6 @@ export default {
       tipoFormulario: "",
       verFormularioRegistros: false,
       verModificar: false,
-      id_cliente_modificar: 0,
       selected: [],
       users: [],
       /**opciones para filtrar la peticion del server */
@@ -472,9 +471,9 @@ export default {
       this.tipoFormulario = tipo;
       this.verFormularioRegistros = true;
     },
-    openModificar(id_cliente) {
+    openModificar(id_registro) {
       this.tipoFormulario = "modificar";
-      this.id_cliente_modificar = id_cliente;
+      this.registro_id = id_registro;
       this.verFormularioRegistros = true;
     },
     retorno_id(dato) {

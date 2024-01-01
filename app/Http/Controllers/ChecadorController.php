@@ -606,4 +606,37 @@ class ChecadorController extends ApiController
             return $this->errorResponse($e, 409);
         }
     }
+
+
+    public function modificar_registro_administrativo(Request $request)
+    {
+        //validamos datos de acceso
+        request()->validate(
+            [
+                'fechahora' => 'required',
+                'tipo_registro_id' => 'required',
+                'id_usuario' => 'required',
+                'id_registro_modificar' => "required"
+            ],
+            [
+                'fechahora.required' => 'Ingrese la fecha y hora del registro.',
+                'id_usuario.required' => 'El ID del usuario es necesario.',
+                'tipo_registro_id.required' => 'El tipo de registro es necesario.',
+                'id_registro_modificar.required' => 'El tipo de registro es necesario.',
+            ]
+        );
+        try {
+            return DB::table('registros_checador')->where('id', $request->id_registro_modificar)->update(
+                [
+                    'tipo_registro_id'        => $request->tipo_registro_id,
+                    'fecha_hora'          => $request->fechahora,
+                    'registro_huella_b'          => 3, //administrativa
+                    "usuarios_id" => $request->id_usuario,
+                    "modifico_id" =>  auth()->user()->id
+                ]
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse($e, 409);
+        }
+    }
 }

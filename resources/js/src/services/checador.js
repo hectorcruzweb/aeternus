@@ -48,6 +48,19 @@ export default {
         let call = "/checador/guardar_registro_administrativo";
         return axios.post(call, datos);
     },
+    get_registro_by_id(id) {
+        let service =
+            "/checador/get_registros_checador_frontend/" +
+            id +
+            "/all/no_paginated";
+        return axios.get(service);
+    },
+
+    modificar_registro_administrativo(datos) {
+        let call = "/checador/modificar_registro_administrativo";
+        return axios.post(call, datos);
+    },
+
     //fin de servicios de checador
 
     registrar_precio_propiedad(datos) {
@@ -80,13 +93,6 @@ export default {
         return axios.get("/cementerio/get_tipo_propiedades");
     },
     /**busca un precio por id */
-    get_precio_by_id(id) {
-        return axios.get("/cementerio/get_precio_by_id", {
-            params: {
-                id_precio: id
-            }
-        });
-    },
 
     //obtiene las propieades del cementerio
     get_cementerio() {
@@ -127,11 +133,6 @@ export default {
 
     guardar_venta(datos) {
         let call = "/cementerio/control_ventas/agregar";
-        return axios.post(call, datos);
-    },
-
-    modificar_venta(datos) {
-        let call = "/cementerio/control_ventas/modificar";
         return axios.post(call, datos);
     },
 
