@@ -14,7 +14,10 @@ class AddStatusRegistrosChecador extends Migration
     public function up()
     {
         Schema::table('registros_checador', function ($table) {
-            $table->tinyInteger('status')->after('usuarios_id')->default(1);;
+            $table->tinyInteger('status')->after('usuarios_id')->default(1);
+            $table->unsignedBigInteger('registro_id')->after('status')->nullable();
+            $table->unsignedBigInteger('modifico_id')->after('status')->nullable();
+            $table->unsignedBigInteger('cancelo_id')->after('status')->nullable();
         });
     }
 
@@ -27,6 +30,9 @@ class AddStatusRegistrosChecador extends Migration
     {
         Schema::table('registros_checador', function ($table) {
             $table->dropColumn('status');
+            $table->dropColumn('registro_id');
+            $table->dropColumn('modifico_id');
+            $table->dropColumn('cancelo_id');
         });
     }
 }

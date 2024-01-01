@@ -94,7 +94,11 @@
       <template slot-scope="{ data }">
         <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
           <vs-td :data="data[indextr].id">
-            <span class="font-bold"
+            <span
+              :class="[
+                'font-bold',
+                data[indextr].status == 1 ? '' : 'text-danger',
+              ]"
               >{{ data[indextr].fecha_registro_texto }}
               {{ data[indextr].hora_registro }}</span
             >
@@ -131,14 +135,14 @@
                 class="img-btn-24 mx-2"
                 src="@assets/images/switchon.svg"
                 title="Deshabilitar"
-                @click="deleteCliente(data[indextr].id, data[indextr].nombre)"
+                @click="CancelarRegistro(data[indextr])"
               />
               <img
                 v-else
                 class="img-btn-24 mx-2"
                 src="@assets/images/switchoff.svg"
                 title="Habilitar"
-                @click="altaCliente(data[indextr].id, data[indextr].nombre)"
+                @click="AltaRegistro(data[indextr])"
               />
             </div>
           </vs-td>
@@ -154,7 +158,6 @@
       ></vs-pagination>
     </div>
     <pre ref="pre"></pre>
-
     <Password
       :show="openStatus"
       :callback-on-success="callback"
@@ -168,13 +171,13 @@
       :request="request"
       @closeReportes="openReportesLista = false"
     ></Reporteador>
-    <FormularioClientes
+    <FormularioRegistros
       :id_cliente="id_cliente_modificar"
       :tipo="tipoFormulario"
-      :show="verFormularioClientes"
-      @closeVentana="verFormularioClientes = false"
+      :show="verFormularioRegistros"
+      @closeVentana="verFormularioRegistros = false"
       @retornar_id="retorno_id"
-    ></FormularioClientes>
+    ></FormularioRegistros>
   </div>
 </template>
 
@@ -184,10 +187,9 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
 import Reporteador from "@pages/Reporteador";
-import clientes from "@services/clientes";
 import checador from "@services/checador";
 
-import FormularioClientes from "@pages/clientes/FormularioClientes";
+import FormularioRegistros from "@pages/control_de_asistencia/registros/FormularioRegistros";
 
 //componente de password
 import Password from "@pages/confirmar_password";
@@ -206,7 +208,7 @@ export default {
   components: {
     "v-select": vSelect,
     Password,
-    FormularioClientes,
+    FormularioRegistros,
     Reporteador,
     ServiciosGratis,
     flatPickr,
@@ -221,10 +223,12 @@ export default {
       })();
     },
     "filtroEspecifico.value": function (newValue, oldValue) {
-      if (newValue == "1")
+      if (newValue == "1") {
+        this.rango_fechas = [];
         (async () => {
           await this.get_data(1);
         })();
+      }
     },
   },
 
@@ -266,6 +270,9 @@ export default {
       total: 0,
       actual: 1,
       rango_fechas: [],
+      registro_id: "",
+      accionNombre: "",
+      errores: [],
       //hasta aqui
 
       //control de servicios gratis
@@ -278,10 +285,10 @@ export default {
       //fin variables
       openStatus: false,
       callback: Function,
-      accionNombre: "",
+
       datosModifcar: {},
       tipoFormulario: "",
-      verFormularioClientes: false,
+      verFormularioRegistros: false,
       verModificar: false,
       id_cliente_modificar: 0,
       selected: [],
@@ -302,28 +309,28 @@ export default {
       this.filtroEspecifico = this.filtrosEspecificos[0];
       this.empleado = this.empleados[0];
       (async () => {
-        //await this.get_data(1);
+        await this.get_data(1);
       })();
     },
 
     async get_empleados() {
       try {
-        this.$vs.loading();
+        //this.$vs.loading();
         let res = await checador.get_empleados();
         this.empleados.push({
           value: "",
           label: "Todos",
         });
-        res.data.data.forEach((element) => {
+        res.data.forEach((element) => {
           this.empleados.push({
             value: element.id,
             label: element.nombre,
           });
         });
         this.empleado = this.empleados[0];
-        this.$vs.loading.close();
+        //this.$vs.loading.close();
       } catch (error) {
-        this.$vs.loading.close();
+        //this.$vs.loading.close();
       }
     },
 
@@ -463,43 +470,50 @@ export default {
 
     formulario(tipo) {
       this.tipoFormulario = tipo;
-      this.verFormularioClientes = true;
+      this.verFormularioRegistros = true;
     },
     openModificar(id_cliente) {
       this.tipoFormulario = "modificar";
       this.id_cliente_modificar = id_cliente;
-      this.verFormularioClientes = true;
+      this.verFormularioRegistros = true;
     },
     retorno_id(dato) {
-      this.get_data(this.actual);
-    },
-    deleteCliente(id_cliente, nombre) {
-      this.accionNombre = "deshabilitar cliente " + nombre;
-      this.cliente_id = id_cliente;
-      this.openStatus = true;
-      this.callback = this.delete_cliente;
+      (async () => {
+        await this.get_data(this.actual);
+      })();
     },
 
-    altaCliente(id_cliente, nombre) {
-      this.accionNombre = "Habilitar cliente " + nombre;
-      this.cliente_id = id_cliente;
+    AltaRegistro(registro) {
+      this.registro_id = registro.id;
       this.openStatus = true;
-      this.callback = this.habilitar_cliente;
+      (async () => {
+        this.callback = this.habilitar_registro;
+      })();
     },
-    delete_cliente() {
+
+    CancelarRegistro(registro) {
+      this.registro_id = registro.id;
+      this.openStatus = true;
+      (async () => {
+        this.callback = await this.cancelar_registro;
+      })();
+    },
+    async cancelar_registro() {
       this.$vs.loading();
       let datos = {
-        cliente_id: this.cliente_id,
+        registro_id: this.registro_id,
       };
-      clientes
-        .delete_cliente(datos)
+      await checador
+        .cancelar_registro(datos)
         .then((res) => {
           this.$vs.loading.close();
-          this.get_data(this.actual);
+          (async () => {
+            await this.get_data(this.actual);
+          })();
           if (res.data >= 1) {
             this.$vs.notify({
-              title: "Deshabilitar Cliente",
-              text: "Se ha deshabilitado al cliente exitosamente.",
+              title: "Cancelar Registro",
+              text: "Se ha deshabilitado el registro exitosamente.",
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "success",
@@ -507,7 +521,7 @@ export default {
             });
           } else {
             this.$vs.notify({
-              title: "Deshabilitar Cliente",
+              title: "Cancelar Registro",
               text: "No se realizaron cambios.",
               iconPack: "feather",
               icon: "icon-alert-circle",
@@ -536,20 +550,22 @@ export default {
           }
         });
     },
-    habilitar_cliente() {
+    async habilitar_registro() {
       this.$vs.loading();
       let datos = {
-        cliente_id: this.cliente_id,
+        registro_id: this.registro_id,
       };
-      clientes
-        .alta_cliente(datos)
+      await checador
+        .habilitar_registro(datos)
         .then((res) => {
           this.$vs.loading.close();
-          this.get_data(this.actual);
+          (async () => {
+            await this.get_data(this.actual);
+          })();
           if (res.data >= 1) {
             this.$vs.notify({
-              title: "Habilitar Cliente",
-              text: "Se ha habilitado al cliente exitosamente.",
+              title: "Habilitar Registro",
+              text: "Se ha habilitado el registro exitosamente.",
               iconPack: "feather",
               icon: "icon-alert-circle",
               color: "success",
@@ -557,7 +573,7 @@ export default {
             });
           } else {
             this.$vs.notify({
-              title: "Habilitar Cliente",
+              title: "Habilitar Registro",
               text: "No se realizaron cambios.",
               iconPack: "feather",
               icon: "icon-alert-circle",

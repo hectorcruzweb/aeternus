@@ -274,6 +274,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
     /**rutas de reportes */
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
+    Route::post('checador/guardar_registro_administrativo', 'ChecadorController@guardar_registro_administrativo');
+    Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro');
+    Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro');
 });
 Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
@@ -288,7 +291,7 @@ Route::middleware(['client'])->group(function () {
 });
 
 Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
-Route::get('checador/get_empleados', 'ChecadorController@get_empleados');
+Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
 
 
 Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');

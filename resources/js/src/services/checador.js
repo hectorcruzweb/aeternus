@@ -30,6 +30,24 @@ export default {
     get_empleados() {
         return axios.get("checador/get_empleados");
     },
+
+    cancelar_registro(datos) {
+        let call = "/checador/cancelar_registro";
+        return axios.post(call, datos);
+    },
+    habilitar_registro(datos) {
+        let call = "/checador/habilitar_registro";
+        return axios.post(call, datos);
+    },
+
+    get_empleados_todos() {
+        return axios.get("checador/get_empleados/si");
+    },
+
+    guardar_registro_administrativo(datos) {
+        let call = "/checador/guardar_registro_administrativo";
+        return axios.post(call, datos);
+    },
     //fin de servicios de checador
 
     registrar_precio_propiedad(datos) {

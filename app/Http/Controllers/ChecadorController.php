@@ -23,19 +23,22 @@ class ChecadorController extends ApiController
     }
 
 
-    public function get_empleados()
+    public function get_empleados($empleados_todos = "no")
     {
-        return $this->showAll(
-            User::select(
-                'id',
-                'nombre',
-
-            )
-                ->whereHas('registros')
-                ->orderBy("id", "asc")
-                ->get()
+        $empleados = User::select(
+            'id',
+            'nombre',
         );
+
+        if ($empleados_todos == "no") {
+            $empleados->whereHas('registros');
+        } else {
+            $empleados->where("status", ">", 0)->where("id", ">", 1);
+        }
+        return $empleados->orderBy("id", "asc")->get();
     }
+
+
 
     public function login_usuario_checador_registro_huellas(Request $request)
     {
@@ -517,5 +520,90 @@ class ChecadorController extends ApiController
         }
         //retorno las tarjetas
         return  $tarjetas_checador;
+    }
+
+
+
+    public function cancelar_registro(Request $request)
+    {
+        $registro_id = $request->registro_id;
+        request()->validate(
+            [
+                'registro_id' => 'required',
+            ],
+            [
+                'registro_id.required' => 'El ID del registro es necesario.',
+            ]
+        );
+        return DB::table('registros_checador')->where('id', $registro_id)->update(
+            [
+                'status' => 0,
+                "cancelo_id" =>  auth()->user()->id
+            ]
+        );
+    }
+
+    public function habilitar_registro(Request $request)
+    {
+        $registro_id = $request->registro_id;
+        request()->validate(
+            [
+                'registro_id' => 'required',
+            ],
+            [
+                'registro_id.required' => 'El ID del registro es necesario.',
+            ]
+        );
+
+        $registro = RegistrosChecador::where("id", $registro_id)->first();
+        if ($registro != null) {
+            if ($registro->status != 0) {
+                return $this->errorResponse("El registro se encuentra activo.", 409);
+            }
+            return DB::table('registros_checador')->where('id', $registro_id)->update(
+                [
+                    'status' => 1,
+                    "cancelo_id" => null,
+                    "modifico_id" =>  auth()->user()->id
+                ]
+            );
+        } else {
+            return $this->errorResponse("Este registro no existe en la Base de Datos.", 409);
+        }
+    }
+
+
+    public function guardar_registro_administrativo(Request $request)
+    {
+        //validamos datos de acceso
+        request()->validate(
+            [
+                'fechahora' => 'required',
+                'tipo_registro_id' => 'required',
+                'id_usuario' => 'required',
+            ],
+            [
+                'fechahora.required' => 'Ingrese la fecha y hora del registro.',
+                'id_usuario.required' => 'El ID del usuario es necesario.',
+                'tipo_registro_id.required' => 'El tipo de registro es necesario.',
+            ]
+        );
+        try {
+            $registro = RegistrosChecador::insertGetId(
+                [
+                    'tipo_registro_id'        => $request->tipo_registro_id,
+                    'fecha_hora'          => $request->fechahora,
+                    'registro_huella_b'          => 3, //administrativa
+                    "usuarios_id" => $request->id_usuario,
+                    "registro_id" =>  auth()->user()->id
+                ]
+            );
+            if ($registro) //registro correcto
+                return $registro;
+            else
+                return $this->errorResponse("Error on save.", 409);
+        } catch (Exception $e) {
+            return $this->errorResponse($e, 409);
+        }
     }
 }
