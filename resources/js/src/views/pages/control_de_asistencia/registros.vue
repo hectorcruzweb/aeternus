@@ -4,7 +4,7 @@
       <vs-button
         class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
         color="primary"
-        @click="formulario('agregar')"
+        @click="openReporte()"
       >
         <span>Imprimir Lista de Registros</span>
       </vs-button>
@@ -165,7 +165,7 @@
       :accion="accionNombre"
     ></Password>
     <Reporteador
-      :header="'consultar reporte de venta'"
+      :header="'consultar reporte de registros'"
       :show="openReportesLista"
       :listadereportes="ListaReportes"
       :request="request"
@@ -225,6 +225,8 @@ export default {
     "filtroEspecifico.value": function (newValue, oldValue) {
       if (newValue == "1") {
         this.rango_fechas = [];
+        this.serverOptions.fecha_fin = "";
+        this.serverOptions.fecha_inicio = "";
         (async () => {
           await this.get_data(1);
         })();
@@ -273,31 +275,19 @@ export default {
       registro_id: "",
       accionNombre: "",
       errores: [],
-      //hasta aqui
-
-      //control de servicios gratis
-      datosCliente: [],
-      //variable
       ListaReportes: [],
       PermisosModulo: PermisosModulo,
       openReportesLista: false,
-
-      //fin variables
       openStatus: false,
       callback: Function,
-
-      datosModifcar: {},
       tipoFormulario: "",
       verFormularioRegistros: false,
       verModificar: false,
-      selected: [],
-      users: [],
       /**opciones para filtrar la peticion del server */
       /**user id para bajas y altas */
-      cliente_id: "",
       request: {
-        venta_id: "",
         email: "",
+        destinatario: "",
       },
     };
   },
@@ -600,6 +590,30 @@ export default {
             }
           }
         });
+    },
+    openReporte() {
+      /**verificandoque tipo de pago es */
+      let url = "/checador/lista_registros/";
+      if (this.serverOptions.fecha_inicio == "") {
+        url += "all/all/";
+      } else {
+        url +=
+          this.serverOptions.fecha_inicio +
+          "/" +
+          this.serverOptions.fecha_fin +
+          "/";
+      }
+      if (this.empleado.value == "") {
+        url += "all";
+      } else {
+        url += this.empleado.value;
+      }
+      this.ListaReportes = [];
+      this.ListaReportes.push({
+        nombre: "Lista de Registros",
+        url: url,
+      });
+      this.openReportesLista = true;
     },
   },
   created() {

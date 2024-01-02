@@ -279,6 +279,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro');
     Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro');
 });
+Route::get('checador/lista_registros/{fecha_inicio?}/{fecha_fin?}/{empleado_id?}', 'ChecadorController@lista_registros');
 Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {

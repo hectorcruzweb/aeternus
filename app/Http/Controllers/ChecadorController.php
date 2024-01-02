@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use PDF;
 use App\DiasFestivos;
 use App\User;
 use DateTime;
@@ -283,6 +284,7 @@ class ChecadorController extends ApiController
             } else {
                 $registro["forma_registro"] = strtoupper("Administrativa");
             }
+            $registro["status_texto"] = $registro["status"] == 1 ? "Activo" : "Cancelado";
         }
         return $resultado_query;
     }
@@ -522,8 +524,6 @@ class ChecadorController extends ApiController
         return  $tarjetas_checador;
     }
 
-
-
     public function cancelar_registro(Request $request)
     {
         $registro_id = $request->registro_id;
@@ -637,6 +637,79 @@ class ChecadorController extends ApiController
             );
         } catch (Exception $e) {
             return $this->errorResponse($e, 409);
+        }
+    }
+
+
+    public function lista_registros(Request $request, $fecha_inicio = "all", $fecha_fin = "all", $usuario_id = "all")
+    {
+        try {
+            $email             = $request->email_send === 'true' ? true : false;
+            $email_to          = $request->email_address;
+        } catch (\Throwable $th) {
+            $email = false;
+            $email_to = 'hector@gmail.com';
+        }
+        $request = new \Illuminate\Http\Request();
+        $request->replace(
+            [
+                'fecha_inicio' => $fecha_inicio == "all" ? "" : $fecha_inicio,
+                'fecha_fin' => $fecha_fin == "all" ? "" : $fecha_fin,
+            ]
+        );
+        $datos = $this->get_registros_checador($request, "all", $usuario_id, "no_paginated");
+        /* if (empty($datos)) {
+            return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 409);
+        }
+        */
+        $get_funeraria = new EmpresaController();
+        $empresa       = $get_funeraria->get_empresa_data();
+        $empleado = User::select(
+            'nombre',
+        )->where("id", $usuario_id)->first();
+        $empleado = $usuario_id != "all" ? $empleado->nombre : "Todos";
+        $fecha =  $fecha_inicio != "all" ? ("Del " . fecha_abr($fecha_inicio) . " al " . fecha_abr($fecha_fin)) : "Todo el Historial";
+        $datos = [
+            "empleado" => $empleado,
+            "datos" => $datos,
+            "rango_fechas" => $fecha
+        ];
+        $pdf = PDF::loadView('checador/registros/reporte', ['datos' => $datos, 'empresa' => $empresa]);
+        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+        $name_pdf = "REGLAMENTO DE PAGO " . strtoupper("nombre del reporte") . '.pdf';
+        $pdf->setOptions([
+            'title'       => $name_pdf,
+            'footer-html' => view('checador.registros.footer', ['empresa' => $empresa]),
+        ]);
+        $pdf->setOption('orientation', 'landscape');
+        $pdf->setOption('margin-left', 13.4);
+        $pdf->setOption('margin-right', 13.4);
+        $pdf->setOption('margin-top', 9.4);
+        $pdf->setOption('margin-bottom', 13.4);
+        $pdf->setOption('page-size', 'Letter');
+        if ($email == true) {
+            /**email */
+            /**
+             * parameters lista de la funcion
+             * to destinatario
+             * to_name nombre del destinatario
+             * subject motivo del correo
+             * name_pdf nombre del pdf
+             * pdf archivo pdf a enviar
+             */
+            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+            $email_controller = new EmailController();
+            $enviar_email     = $email_controller->pdf_email(
+                $email_to,
+                strtoupper($empleado),
+                'reporte de registros de checador ' . $fecha,
+                $name_pdf,
+                $pdf
+            );
+            return $enviar_email;
+            /**email fin */
+        } else {
+            return $pdf->inline($name_pdf);
         }
     }
 }

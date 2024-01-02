@@ -430,7 +430,7 @@ export default {
         .catch((err) => {
           if (err.response) {
             if (err.response.status == 409) {
-              /**FORBIDDEN ERROR */
+              /**CONFLICT ERROR */
               this.$vs.notify({
                 title: "Guardar Registros",
                 text: err.response.data.error,
