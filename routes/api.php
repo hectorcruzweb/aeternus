@@ -294,6 +294,8 @@ Route::middleware(['client'])->group(function () {
 
 Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
 Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
+Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
+Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta');
 
 
 Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');

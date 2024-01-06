@@ -39,6 +39,25 @@ class ChecadorController extends ApiController
         return $empleados->orderBy("id", "asc")->get();
     }
 
+    public function get_empleados_paginados(Request $request)
+    {
+        $resultado_query = User::select(
+            'id',
+            'nombre',
+            'roles_id',
+            'genero',
+            'status',
+            'email'
+        )->whereHas('registros')->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%')->orderBy("id", "asc")->get();
+        $resultado = array();
+        $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
+        $resultado       = &$resultado_query['data'];
+        foreach ($resultado as $key => &$usuario) {
+            $usuario["genero"] = $usuario["genero"] == 2 ? "Mujer" : "Hombre";
+        }
+        return $resultado_query;
+    }
+
 
 
     public function login_usuario_checador_registro_huellas(Request $request)
@@ -306,8 +325,10 @@ class ChecadorController extends ApiController
         );
         $resultado_query = User::select(
             "id",
-            "nombre"
-        );
+            "nombre",
+            "roles_id",
+            "genero",
+        )->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%');
         $resultado_query = $resultado_query->where("status", ">", 0);
         if (isset($request->usuario_id)) {
             $resultado_query = $resultado_query->where("id", $request->usuario_id);
@@ -340,6 +361,8 @@ class ChecadorController extends ApiController
             array_push($tarjetas_checador, [
                 "id" => $empleado["id"],
                 "empleado" => strtoupper($empleado["nombre"]),
+                "rol" => $empleado["rol"],
+                "genero" => $empleado["genero"],
                 "indicadores" => [
                     "faltas" => 0,
                     "tiempo_trabajado" => 0,
@@ -365,7 +388,7 @@ class ChecadorController extends ApiController
                         "cumplio_jornada" => "No",
                         "horas_extra" => "0 Horas",
                         "tiempo_faltante_jornada" => "0 h 0 Min.", //las que faltan para las 8 horas diarias
-                        "dia_descanso_obligatorio" => "No",
+                        "dia_descanso_obligatorio" => "No"
                     ],
                     "registros" => []
                 ];
@@ -443,8 +466,10 @@ class ChecadorController extends ApiController
                                 $registro["registro_valido"] = 1;
                                 $hora_llegada = strtotime($registro["fecha_hora"]);
                                 $hora_salida = strtotime($tarjeta["registros"][$key + 1]["fecha_hora"]);
-                                $minutos_trabajados_jornada += round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                $minutos_trabajados = round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                $minutos_trabajados_jornada +=  $minutos_trabajados;
                                 $registro["jornada_texto"] = "Llegada " . hora($registro["fecha_hora"]) . " - Salida " . hora($tarjeta["registros"][$key + 1]["fecha_hora"]);
+                                $registro["horas"] = (($minutos_trabajados - ($minutos_trabajados % 60)) / 60) . " h " . ($minutos_trabajados % 60) . " Min.";
                             } else {
                                 //reviso si existe un registro de salida en el día siguiente para hacer el calculo de tiempo
                                 if (isset($empleado["tarjeta_checador"][$keyTarjeta + 1])) {
@@ -455,8 +480,10 @@ class ChecadorController extends ApiController
                                             $registro["registro_valido"] = 1;
                                             $hora_llegada = strtotime($registro["fecha_hora"]);
                                             $hora_salida = strtotime($registro_salida["registros"][0]["fecha_hora"]);
-                                            $minutos_trabajados_jornada += round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                            $minutos_trabajados = round(abs($hora_llegada - $hora_salida) / 60, 0);
+                                            $minutos_trabajados_jornada +=  $minutos_trabajados;
                                             $registro["jornada_texto"] =  "Llegada " . hora($registro["fecha_hora"]) . " - Salida " . dia_completo($registro_salida["dia"]) . " " . fecha_abr($registro_salida["dia"]) . " " . hora($registro_salida["registros"][0]["fecha_hora"]);
+                                            $registro["horas"] = (($minutos_trabajados - ($minutos_trabajados % 60)) / 60) . " h " . ($minutos_trabajados % 60) . " Min.";
                                         }
                                     }
                                 }
@@ -519,6 +546,8 @@ class ChecadorController extends ApiController
             }
             $empleado["indicadores"]["tiempo_faltante_jornada"] = (($empleado["indicadores"]["tiempo_faltante_jornada"] - ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60)) / 60) . " h " . ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60) . " Min.";
             $empleado["indicadores"]["horas_extra"] = (($empleado["indicadores"]["horas_extra"] - ($empleado["indicadores"]["horas_extra"] % 60)) / 60) . " h " . ($empleado["indicadores"]["horas_extra"] % 60) . " Min.";
+
+            $empleado["genero"] = $empleado["genero"] == 1 ? "Hombre" : "Mujer";
         }
         //retorno las tarjetas
         return  $tarjetas_checador;
@@ -703,6 +732,72 @@ class ChecadorController extends ApiController
                 $email_to,
                 strtoupper($empleado),
                 'reporte de registros de checador ' . $fecha,
+                $name_pdf,
+                $pdf
+            );
+            return $enviar_email;
+            /**email fin */
+        } else {
+            return $pdf->inline($name_pdf);
+        }
+    }
+
+    public function reporte_tarjeta(Request $request)
+    {
+
+        if (!isset($request->fecha_inicio) || !isset($request->fecha_fin))
+            return $this->errorResponse('Error, debe ingresar la fecha de inicio y fin del reporte.', 409);
+        try {
+            $email             = $request->email_send === 'true' ? true : false;
+            $email_to          = $request->email_address;
+        } catch (\Throwable $th) {
+            $email = false;
+            $email_to = 'hector@gmail.com';
+        }
+        $requestService = new \Illuminate\Http\Request();
+        $requestService->replace(
+            [
+                'fecha_inicio' => $request->fecha_inicio,
+                'fecha_fin' => $request->fecha_fin,
+                'usuario_id' => $request->usuario_id,
+                'nombre' => $request->nombre
+            ]
+        );
+        $datos = $this->get_asistencia_reporte($requestService);
+        if (empty($datos)) {
+            return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 409);
+        }
+        $get_funeraria = new EmpresaController();
+        $empresa       = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('checador/tarjeta/reporte', ['datos' => $datos, 'empresa' => $empresa]);
+        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+        $name_pdf = "REGLAMENTO DE PAGO " . strtoupper("nombre del reporte") . '.pdf';
+        $pdf->setOptions([
+            'title'       => $name_pdf,
+            'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
+        ]);
+        //$pdf->setOption('orientation', 'landscape');
+        $pdf->setOption('margin-left', 13.4);
+        $pdf->setOption('margin-right', 13.4);
+        $pdf->setOption('margin-top', 9.4);
+        $pdf->setOption('margin-bottom', 13.4);
+        $pdf->setOption('page-size', 'Letter');
+        if ($email == true) {
+            /**email */
+            /**
+             * parameters lista de la funcion
+             * to destinatario
+             * to_name nombre del destinatario
+             * subject motivo del correo
+             * name_pdf nombre del pdf
+             * pdf archivo pdf a enviar
+             */
+            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+            $email_controller = new EmailController();
+            $enviar_email     = $email_controller->pdf_email(
+                $email_to,
+                strtoupper("ok"),
+                'reporte de registros de checador ' . "ok",
                 $name_pdf,
                 $pdf
             );

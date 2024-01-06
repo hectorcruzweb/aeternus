@@ -10,6 +10,7 @@
         :datos="datosEmpresa"
         :erroresForm="erroresRegistros"
         @actualizar="actualizar"
+        scope="this api replaced by slot-scope in 2.5.0+"
       ></Registros>
     </div>
     <div class="" v-show="activeTab == 1">
@@ -21,13 +22,7 @@
       ></RegistroPublico>
     --></div>
     <div class=" " v-show="activeTab == 2">
-      <!--
-      <Funeraria
-        :datos="datosEmpresa"
-        :erroresForm="erroresFuneraria"
-        @actualizar="actualizar"
-      ></Funeraria>
-      -->
+      <Tarjetas></Tarjetas>
     </div>
     <Password
       :show="operConfirmar"
@@ -40,7 +35,7 @@
 </template>
 
 <script>
-import Funeraria from "../control_de_asistencia/funeraria";
+import Tarjetas from "../control_de_asistencia/tarjetas";
 import RegistroPublico from "../control_de_asistencia/registro_publico";
 import Registros from "../control_de_asistencia/registros";
 import pdf from "../pdf_viewer.vue";
@@ -62,7 +57,7 @@ export default {
     "v-select": vSelect,
     Password,
     pdf,
-    Funeraria,
+    Tarjetas,
     RegistroPublico,
     Registros,
   },

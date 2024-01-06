@@ -63,6 +63,11 @@ function hora_seg($fecha)
     return date("h:i:s a", strtotime($fecha));
 }
 
+function diferencia_horas($fecha)
+{
+    return date("h:i", strtotime($fecha)) . " Hrs.";
+}
+
 
 
 
