@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DiasDescanso;
 use PDF;
 use App\DiasFestivos;
 use App\User;
@@ -152,7 +153,15 @@ class ChecadorController extends ApiController
                 'tipo_registro_entrada_salida.required' => 'El tipo de registro es necesario.',
             ]
         );
+
         try {
+            DB::beginTransaction();
+            //guardamos los 7 dias de descanso
+            /* $dias_descanso = DiasDescanso::get();
+            if (!$dias_descanso) {
+                //guardamos los dias descanso del usuario
+            }*/
+
 
             $tipo_registro_id = $request->tipo_registro_entrada_salida;
             /*
@@ -201,10 +210,15 @@ class ChecadorController extends ApiController
                 ]
             );
             if ($registro) //registro correcto
+            {
+                DB::commit();
                 return $this->get_registros_checador($registro)[0];
-            else
+            } else {
+                DB::rollBack();
                 return $this->errorResponse("Error on save.", 409);
+            }
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e, 409);
         }
     }
@@ -328,7 +342,7 @@ class ChecadorController extends ApiController
             "nombre",
             "roles_id",
             "genero",
-        )->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%');
+        )->with("rol:id,rol")->with("dias_descanso")->where('nombre', 'like', '%' . $request->nombre . '%');
         $resultado_query = $resultado_query->where("status", ">", 0);
         if (isset($request->usuario_id)) {
             $resultado_query = $resultado_query->where("id", $request->usuario_id);
@@ -353,6 +367,8 @@ class ChecadorController extends ApiController
         //arreglo para las tarjetas a generar
         $tarjetas_checador = [];
 
+        //parametros del reporte
+        $dias_tarjeta =  0;
 
         //dias_festuivos
         $dias_festivos = DiasFestivos::get();
@@ -363,26 +379,32 @@ class ChecadorController extends ApiController
                 "empleado" => strtoupper($empleado["nombre"]),
                 "rol" => $empleado["rol"],
                 "genero" => $empleado["genero"],
-                "indicadores" => [
-                    "faltas" => 0,
+                "indicadores_empleado" => [
+                    "dias_a_descansar" => 0,
+                    "dias_descansados" => 0,
+                    "horas_requeridas" => 0,
                     "tiempo_trabajado" => 0,
                     "cumplio_jornada" => "No",
+                    "tiempo_faltante_jornada" => 0, //las que faltan para las 8 horas diarias
+                    "faltas" => 0,
                     "horas_extra" => 0,
-                    "tiempo_faltante_jornada" => 0 //las que faltan para las 8 horas diarias
+                    "porcentaje_asistencia" => ""
                 ],
                 "tarjeta_checador" => [],
                 //"horarios" => [] //$empleado["horarios"]
+                "dias_descanso" => $empleado["dias_descanso"]
             ]);
             //para ese rango de fechas hago una evaluacion de sus registros en comparacion con sus horarios
             $fecha_inicial = new DateTime($request->fecha_inicio);
             $fecha_fin   = new DateTime($request->fecha_fin);
             //dias para los que se generará la tarjeta
-            //$dias_tarjeta =  $fecha_inicial->diff($fecha_fin)->d + 1;
+            $dias_tarjeta =  $fecha_inicial->diff($fecha_fin)->d + 1;
             //creando los dias que componen la tarjeta
             for ($dia = $fecha_inicial; $dia <= $fecha_fin; $dia->modify('+1 day')) {
                 $tarjeta_empleado = [
                     "dia" => $dia->format('Y-m-d'),
-                    "indicadores" => [
+                    "descanso" => 0,
+                    "indicadores_tarjeta" => [
                         "asistido" => "",
                         "tiempo_trabajado" => "0 Horas",
                         "cumplio_jornada" => "No",
@@ -392,6 +414,22 @@ class ChecadorController extends ApiController
                     ],
                     "registros" => []
                 ];
+                //buscamos si son sus dias laborales
+                //calculo si es dia laboral para ir sumando las horas (horas_requeridas) en array tarjetas_checador 480 hrs son 8 horas por dia
+                $dia_semana = $dia->format('w');
+                $descanso = false;
+                foreach ($tarjetas_checador[$keyEmpleado]["dias_descanso"] as $key_dia => &$dias_descanso) {
+                    $dias_descanso["dias_id"] == 7 ? $dias_descanso["dias_id"] = 0 : $dias_descanso["dias_id"] = $dias_descanso["dias_id"];
+                    if ($dia_semana == $dias_descanso["dias_id"]) {
+                        $descanso = true;
+                        $tarjeta_empleado["descanso"] = 1;
+                        break;
+                    }
+                }
+                if (!$descanso) {
+                    //si no es dia de descanso aumentamos las 8 horas de trabajo
+                    $tarjetas_checador[$keyEmpleado]["indicadores_empleado"]["horas_requeridas"] += 480;
+                }
                 //agrego sus registros por dia
                 foreach ($empleado["registros"] as $keyRegistro => $registro) {
                     $registro_dia = new DateTime($registro["fecha_hora"]);
@@ -415,6 +453,11 @@ class ChecadorController extends ApiController
         //Hasta aqui ya tenemos los registros de cada empleado por orden de dia
         foreach ($tarjetas_checador as $keyEmpleado => &$empleado) {
             foreach ($empleado["tarjeta_checador"] as $keyTarjeta => &$tarjeta) {
+                $descanso = false;
+                if ($tarjeta["descanso"] == 1) {
+                    $descanso = true;
+                    $empleado["indicadores_empleado"]["dias_a_descansar"] += 1;
+                }
                 /*
                 Deshabilito los horarios definidos hasta nueva orden, estaremos trabajando solo con los registros capturados en cuestión de tiempo
                 $horario_dia = null;
@@ -443,16 +486,15 @@ class ChecadorController extends ApiController
                     $dia_festivo = new DateTime($dia_registro->format('Y') . "-" . $dia["num_mes"] . "-" . $dia["num_dia"]);
                     if ($dia_registro->format('Y-m-d') == $dia_festivo->format('Y-m-d')) {
                         $dia_festivo_aplicado = $dia["festejo"];
-                        $tarjeta["indicadores"]["dia_descanso_obligatorio"] = "Si (" . $dia_festivo_aplicado . ")";
+                        $tarjeta["indicadores_tarjeta"]["dia_descanso_obligatorio"] = "Si (" . $dia_festivo_aplicado . ")";
                         break;
                     }
                 }
-
+                $minutos_faltantes_jornada = 0;
+                $minutos_trabajados_jornada = 0;
+                $minutos_extra_jornada = 0;
                 if ($asistido) {
-                    $tarjeta["indicadores"]["asistido"] = "Si";
-                    $minutos_trabajados_jornada = 0;
-                    $minutos_extra_jornada = 0;
-                    $minutos_faltantes_jornada = 0;
+                    $tarjeta["indicadores_tarjeta"]["asistido"] = "Si";
                     //obtenemos el tiempo trabajado
                     foreach ($tarjeta["registros"] as $key => &$registro) {
                         if ($registro["tipo_registro_id"] == 0) {
@@ -490,40 +532,44 @@ class ChecadorController extends ApiController
                             }
                         }
                     }
-                    $tarjeta["indicadores"]["tiempo_trabajado"] = (($minutos_trabajados_jornada - ($minutos_trabajados_jornada % 60)) / 60) . " h " . ($minutos_trabajados_jornada % 60) . " Min.";
-                    $empleado["indicadores"]["tiempo_trabajado"] += $minutos_trabajados_jornada;
+                    $tarjeta["indicadores_tarjeta"]["tiempo_trabajado"] = (($minutos_trabajados_jornada - ($minutos_trabajados_jornada % 60)) / 60) . " h " . ($minutos_trabajados_jornada % 60) . " Min.";
+                    $empleado["indicadores_empleado"]["tiempo_trabajado"] += $minutos_trabajados_jornada;
                     if ($minutos_trabajados_jornada >= 480) {
                         //mayor a 8 horas x dia
-                        $tarjeta["indicadores"]["cumplio_jornada"] = "Si";
+                        $tarjeta["indicadores_tarjeta"]["cumplio_jornada"] = "Si";
                         $minutos_extra_jornada  = ($minutos_trabajados_jornada - 480);
                         if ($minutos_extra_jornada > 60) {
                             //si es mayor a 60 minutos se agrega un tiempo extra
-                            $empleado["indicadores"]["horas_extra"] += $minutos_extra_jornada;
-                            $tarjeta["indicadores"]["horas_extra"] = (($minutos_extra_jornada - ($minutos_extra_jornada % 60)) / 60) . " h " . ($minutos_extra_jornada % 60) . " Min.";
+                            $empleado["indicadores_empleado"]["horas_extra"] += $minutos_extra_jornada;
+                            $tarjeta["indicadores_tarjeta"]["horas_extra"] = (($minutos_extra_jornada - ($minutos_extra_jornada % 60)) / 60) . " h " . ($minutos_extra_jornada % 60) . " Min.";
                         }
                     } else {
                         $minutos_faltantes_jornada  = (480 - $minutos_trabajados_jornada);
-                        $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
+                        $tarjeta["indicadores_tarjeta"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
                         if ($minutos_faltantes_jornada <= 20) {
                             //tolerancia de 20 minutos para cuando se cumple o no con la jornada
-                            $tarjeta["indicadores"]["cumplio_jornada"] = "Si";
+                            $tarjeta["indicadores_tarjeta"]["cumplio_jornada"] = "Si";
                         } else {
                             //se acumula en el global de tiempo faltante para hacer la indicacion
-                            $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                            $empleado["indicadores_empleado"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
                         }
                     }
-                    //return round($minutos_trabajados % 60, 0);
                 } else {
-                    if ($dia_festivo_aplicado == null) {
-                        //no asistido
-                        $empleado["indicadores"]["faltas"] += 1;
-                        $tarjeta["indicadores"]["asistido"] = "No";
-                        //al no tener registros se hacen el cargo de las 8 horas que tiene faltante "tiempo_faltante_jornada"
-                        $minutos_faltantes_jornada  = 480; //8 horas
-                        $tarjeta["indicadores"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
-                        $empleado["indicadores"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                    if ($descanso) {
+                        $tarjeta["indicadores_tarjeta"]["asistido"] = "Descanso asignado.";
+                        $empleado["indicadores_empleado"]["dias_descansados"] += 1;
                     } else {
-                        $tarjeta["indicadores"]["asistido"] = "No (Día de descanso obligatorio)";
+                        if ($dia_festivo_aplicado == null) {
+                            //no asistido
+                            $empleado["indicadores_empleado"]["faltas"] += 1;
+                            $tarjeta["indicadores_tarjeta"]["asistido"] = "No";
+                            //al no tener registros se hacen el cargo de las 8 horas que tiene faltante "tiempo_faltante_jornada"
+                            $minutos_faltantes_jornada  = 480; //8 horas
+                            $tarjeta["indicadores_tarjeta"]["tiempo_faltante_jornada"] = (($minutos_faltantes_jornada - ($minutos_faltantes_jornada % 60)) / 60) . " h " . ($minutos_faltantes_jornada % 60) . " Min.";
+                            $empleado["indicadores_empleado"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
+                        } else {
+                            $tarjeta["indicadores_tarjeta"]["asistido"] = "No (Día de descanso obligatorio)";
+                        }
                     }
                 }
                 /*
@@ -532,23 +578,44 @@ class ChecadorController extends ApiController
                 if ($horario_dia == null || $horario_dia["tipo_horario_id"] == 2) {
                     //sin horario o variable / calculando los indicadores
                     //calcula si falto el dia
-
                 } else {
                     //tiene horario
                 }
                 */
                 $tarjeta["dia"] = dia_completo($tarjeta["dia"]) . " " . fecha_abr($tarjeta["dia"]);
+                $tarjeta["descanso"] = $tarjeta["descanso"] == 0 ? "No" : "Si";
             }
-            $empleado["indicadores"]["tiempo_trabajado"] = (($empleado["indicadores"]["tiempo_trabajado"] - ($empleado["indicadores"]["tiempo_trabajado"] % 60)) / 60) . " h " . ($empleado["indicadores"]["tiempo_trabajado"] % 60) . " Min.";
-            if ($empleado["indicadores"]["tiempo_faltante_jornada"] < 480) {
+
+            //escribo las horas requeridas para el periodo seleccionado
+            $horas_requeridas = $empleado["indicadores_empleado"]["horas_requeridas"];
+            $empleado["indicadores_empleado"]["horas_requeridas"]  = (($horas_requeridas - ($horas_requeridas % 60)) / 60) . " h " . ($horas_requeridas % 60) . " Min.";;
+            $horas_trabajadas = $empleado["indicadores_empleado"]["tiempo_trabajado"];
+            $empleado["indicadores_empleado"]["tiempo_trabajado"] = (($horas_trabajadas - ($horas_trabajadas % 60)) / 60) . " h " . ($horas_trabajadas % 60) . " Min.";
+
+            //porcentaje_asistencia
+            $empleado["indicadores_empleado"]["porcentaje_asistencia"] = round(($horas_trabajadas * 100) / $horas_requeridas, 0);
+            if ($empleado["indicadores_empleado"]["tiempo_faltante_jornada"] < 480) {
                 //si el tiempo faltante de jornada es mayor a 480 min = 1 dia de 8 horas se marca como que no cumple con su jornada
-                $empleado["indicadores"]["cumplio_jornada"] = "Si";
+                $empleado["indicadores_empleado"]["cumplio_jornada"] = "Si";
             }
-            $empleado["indicadores"]["tiempo_faltante_jornada"] = (($empleado["indicadores"]["tiempo_faltante_jornada"] - ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60)) / 60) . " h " . ($empleado["indicadores"]["tiempo_faltante_jornada"] % 60) . " Min.";
-            $empleado["indicadores"]["horas_extra"] = (($empleado["indicadores"]["horas_extra"] - ($empleado["indicadores"]["horas_extra"] % 60)) / 60) . " h " . ($empleado["indicadores"]["horas_extra"] % 60) . " Min.";
+            $empleado["indicadores_empleado"]["tiempo_faltante_jornada"] = (($empleado["indicadores_empleado"]["tiempo_faltante_jornada"] - ($empleado["indicadores_empleado"]["tiempo_faltante_jornada"] % 60)) / 60) . " h " . ($empleado["indicadores_empleado"]["tiempo_faltante_jornada"] % 60) . " Min.";
+            $empleado["indicadores_empleado"]["horas_extra"] = (($empleado["indicadores_empleado"]["horas_extra"] - ($empleado["indicadores_empleado"]["horas_extra"] % 60)) / 60) . " h " . ($empleado["indicadores_empleado"]["horas_extra"] % 60) . " Min.";
 
             $empleado["genero"] = $empleado["genero"] == 1 ? "Hombre" : "Mujer";
         }
+
+
+
+
+
+        //retorno de datos solicitados
+        $tarjetas_checador = [
+            "parametros" => [
+                "dias_tarjeta" => $dias_tarjeta
+            ],
+            "tarjetas" => $tarjetas_checador
+        ];
+
         //retorno las tarjetas
         return  $tarjetas_checador;
     }
@@ -763,24 +830,32 @@ class ChecadorController extends ApiController
                 'nombre' => $request->nombre
             ]
         );
+
+        $fecha_del_reporte = strtoupper("DEL" . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
+
         $datos = $this->get_asistencia_reporte($requestService);
-        if (empty($datos)) {
+        if (empty($datos["tarjetas"])) {
             return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 409);
+        } else {
+            if (!isset($request->usuario_id)) {
+                $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE TODOS LOS EMPLEADOS " . $fecha_del_reporte) . '.pdf';
+            } else {
+                $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE " . $datos["tarjetas"][0]["empleado"] . " " . $fecha_del_reporte) . '.pdf';
+            }
         }
         $get_funeraria = new EmpresaController();
         $empresa       = $get_funeraria->get_empresa_data();
-        $pdf = PDF::loadView('checador/tarjeta/reporte', ['datos' => $datos, 'empresa' => $empresa]);
+        $pdf = PDF::loadView('checador/tarjeta/reporte', ['datos' => $datos, "fecha_del_reporte" => $fecha_del_reporte, 'empresa' => $empresa]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf = "REGLAMENTO DE PAGO " . strtoupper("nombre del reporte") . '.pdf';
         $pdf->setOptions([
             'title'       => $name_pdf,
             'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
         ]);
         //$pdf->setOption('orientation', 'landscape');
         $pdf->setOption('margin-left', 13.4);
-        $pdf->setOption('margin-right', 13.4);
+        $pdf->setOption('margin-right', 9.4);
         $pdf->setOption('margin-top', 9.4);
-        $pdf->setOption('margin-bottom', 13.4);
+        $pdf->setOption('margin-bottom', 9.4);
         $pdf->setOption('page-size', 'Letter');
         if ($email == true) {
             /**email */

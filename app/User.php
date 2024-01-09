@@ -78,4 +78,9 @@ class User extends Authenticatable
     {
         return $this->hasMany('App\HorariosChecador', 'usuarios_id', 'id');
     }
+
+    public function dias_descanso()
+    {
+        return $this->hasMany('App\DiasDescanso', 'usuarios_id', 'id');
+    }
 }

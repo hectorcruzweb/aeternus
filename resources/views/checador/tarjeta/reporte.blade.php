@@ -47,26 +47,22 @@
         }
 
 
-
-        .texto-dia {
-            background-color: #ccc;
+        .bg-indicadores {
+            background-color: #dee2e6;
         }
     </style>
 </head>
 
 <body>
     @include('layouts.estilos')
-
-
-    @foreach ($datos as $empleado)
+    @foreach ($datos['tarjetas'] as $empleado)
         <table class="w-100 line page-break-empleado">
             <tr>
                 <td class=""><img class="logo logos -mt-4" src="{{ public_path(env('LOGOJPG')) }}" alt="">
                 </td>
                 <td class="right">
                     <div class="">
-                        <span class="uppercase size-14px bold">Del 28 de Diciembre del 2023 al 04 de Enero
-                            del 2024</span>
+                        <span class="uppercase size-14px bold">{{ $fecha_del_reporte }}</span>
                     </div>
                 </td>
             </tr>
@@ -83,7 +79,7 @@
             </tr>
         </table>
         @foreach ($empleado['tarjeta_checador'] as $tarjeta)
-            <table class="w-100 texto-base  registros page-break">
+            <table class="w-100 texto-base registros page-break">
                 <thead>
                     <tr>
                         <td class="bold  w-20">Fecha</td>
@@ -96,31 +92,32 @@
                 </thead>
                 <tbody>
                     <tr class="tr_line">
-                        <td class="py-1"><span class="bold texto-dia">{{ $tarjeta['dia'] }}</span></td>
+                        <td class="pt-1"><span class="bold bg-indicadores">{{ $tarjeta['dia'] }}</span></td>
                         <td class="">
-                            @if ($tarjeta['indicadores']['asistido'] == 'No')
-                                <span class="text-danger">{{ $tarjeta['indicadores']['asistido'] }}</span>
+                            @if ($tarjeta['indicadores_tarjeta']['asistido'] == 'No')
+                                <span class="text-danger">{{ $tarjeta['indicadores_tarjeta']['asistido'] }}</span>
                             @else
-                                <span class="">{{ $tarjeta['indicadores']['asistido'] }}</span>
+                                <span class="">{{ $tarjeta['indicadores_tarjeta']['asistido'] }}</span>
                             @endif
                         </td>
                         <td class="">
-                            @if ($tarjeta['indicadores']['cumplio_jornada'] == 'No')
-                                <span class="text-danger">{{ $tarjeta['indicadores']['cumplio_jornada'] }}</span>
+                            @if ($tarjeta['indicadores_tarjeta']['cumplio_jornada'] == 'No')
+                                <span
+                                    class="text-danger">{{ $tarjeta['indicadores_tarjeta']['cumplio_jornada'] }}</span>
                             @else
-                                <span class="">{{ $tarjeta['indicadores']['cumplio_jornada'] }}</span>
+                                <span class="">{{ $tarjeta['indicadores_tarjeta']['cumplio_jornada'] }}</span>
                             @endif
                         </td>
-                        <td class="">{{ $tarjeta['indicadores']['horas_extra'] }}</td>
-                        <td class="">{{ $tarjeta['indicadores']['tiempo_faltante_jornada'] }}</td>
-                        <td class="">{{ $tarjeta['indicadores']['dia_descanso_obligatorio'] }}</td>
+                        <td class="">{{ $tarjeta['indicadores_tarjeta']['horas_extra'] }}</td>
+                        <td class="">{{ $tarjeta['indicadores_tarjeta']['tiempo_faltante_jornada'] }}</td>
+                        <td class="">{{ $tarjeta['indicadores_tarjeta']['dia_descanso_obligatorio'] }}</td>
                     </tr>
                     <tr>
                         <td colspan="7">
                             <table class="w-100">
                                 <tr>
                                     <td class="w-75">
-                                        @if ($tarjeta['indicadores']['asistido'] == 'Si')
+                                        @if ($tarjeta['indicadores_tarjeta']['asistido'] == 'Si')
                                             <table class="w-100 texto-base  center">
                                                 <thead>
                                                     <tr>
@@ -142,19 +139,19 @@
                                                 </tbody>
                                             </table>
                                         @endif
-                                        <table class="w-100 texto-base center mb-4">
+                                        <table class="w-100 texto-base center mb-2">
                                             <tr>
                                                 <td class="w-70 bold center"><span class="">Total de Horas
                                                         Laboradas</span>
                                                 </td>
-                                                <td class="w-30">
-                                                    {{ $tarjeta['indicadores']['tiempo_trabajado'] }}
+                                                <td class="w-30 bold">
+                                                    {{ $tarjeta['indicadores_tarjeta']['tiempo_trabajado'] }}
                                                 </td>
                                             </tr>
                                         </table>
                                     </td>
                                     <td class="w-25">
-                                        <div class="w-90 ml-auto right mt-8">
+                                        <div class="w-90 ml-auto right mt-8 bold">
                                             <div class=" line my-2"> </div>
                                             <div>
                                                 Firma de Conformidad
@@ -168,6 +165,68 @@
         @endforeach
         </tbody>
         </table>
+
+        <div class="mt-6 center w-100 bg-0 uppercase bold size-16px bg-indicadores py-1">
+            <span>
+                Resumen de indicadores por periodo de {{ $datos['parametros']['dias_tarjeta'] }} días
+                ({{ $fecha_del_reporte }}).
+        </div>
+
+
+        <table class="w-100 texto-base mt-5  center">
+            <thead>
+                <tr>
+                    <td class=""><span class="bold">Horas Requeridas</span></td>
+                    <td class="w-25"><span class="bold">Horas Trabajadas</span></td>
+                    <td class="w-25"><span class="bold">Horas Faltantes</span></td>
+                    <td class="w-25"><span class="bold">Cumplió Jornada en Gral.</span></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $empleado['indicadores_empleado']['horas_requeridas'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['tiempo_trabajado'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['tiempo_faltante_jornada'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['cumplio_jornada'] }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="w-100 texto-base center">
+            <thead>
+                <tr>
+                    <td class=""><span class="bold">Días a descansar</span></td>
+                    <td class="w-25"><span class="bold">Días Descansados</span></td>
+                    <td class="w-25"><span class="bold">Faltas</span></td>
+                    <td class="w-25"><span class="bold">Tiempo Extra</span></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $empleado['indicadores_empleado']['dias_a_descansar'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['dias_descansados'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['faltas'] }}</td>
+                    <td>{{ $empleado['indicadores_empleado']['horas_extra'] }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table class="w-100 uppercase center mt-5 size-20px bold">
+            <tr>
+                <td class="w-30 center ">Porcentaje de asistencia:
+                    {{ $empleado['indicadores_empleado']['porcentaje_asistencia'] }} / 100 %</td>
+            </tr>
+        </table>
+
+        <div class="w-40 ml-auto mr-auto center mt-24">
+            <div>
+                {{ $empleado['empleado'] }}
+            </div>
+            <div class=" line"> </div>
+            <div class="bold mt-1">
+                Firma de Conformidad
+            </div>
+        </div>
     @endforeach
 
 </body>

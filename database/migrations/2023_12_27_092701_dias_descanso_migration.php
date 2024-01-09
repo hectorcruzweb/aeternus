@@ -15,7 +15,7 @@ class DiasDescansoMigration extends Migration
     public function up()
     {
         Schema::create('dias_descanso', function (Blueprint $table) {
-            $table->dateTime('fecha_aplicacion');
+            $table->date('fecha_aplicacion');
             $table->tinyInteger('dias_id');
             $table->unsignedBigInteger('usuarios_id')->unsigned()->nullable();
             $table->foreign('usuarios_id')->references('id')->on('usuarios');
