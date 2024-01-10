@@ -803,7 +803,7 @@ class ChecadorController extends ApiController
         $get_funeraria = new EmpresaController();
         $empresa       = $get_funeraria->get_empresa_data();
         $empleado = User::select(
-            'nombre',
+            'nombre'
         )->where("id", $usuario_id)->first();
         $empleado = $usuario_id != "all" ? $empleado->nombre : "Todos";
         $fecha =  $fecha_inicio != "all" ? ("Del " . fecha_abr($fecha_inicio) . " al " . fecha_abr($fecha_fin)) : "Todo el Historial";
