@@ -913,8 +913,8 @@ class ChecadorController extends ApiController
             $email_controller = new EmailController();
             $enviar_email     = $email_controller->pdf_email(
                 $email_to,
-                strtoupper($datos["tarjetas"][0]["empleado"]["nombre"]),
-                'reporte de registros de checador ' . $datos["tarjetas"][0]["empleado"]["nombre"],
+                strtoupper("reporte de asistencia"),
+                'reporte de registros de checador ',
                 $name_pdf,
                 $pdf
             );
