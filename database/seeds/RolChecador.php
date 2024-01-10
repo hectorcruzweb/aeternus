@@ -26,22 +26,48 @@ class RolChecador extends Seeder
                 ]
             );
             $modulo_id = DB::getPdo()->lastInsertId();
-
-            DB::table('permisos')->insert(
+            $permisos = [
                 [
                     'modulos_id'        => $modulo_id,
-                    'permiso'          => "Todos"
-                ]
-            );
-            $rol_id = DB::getPdo()->lastInsertId();
-
-            DB::table('roles_permisos')->insert(
+                    'permiso'          => "Crear Registros"
+                ],
                 [
-                    'roles_id'        => 1,
-                    'permisos_id'          => $rol_id
+                    'modulos_id'        => $modulo_id,
+                    'permiso'          => "Modificar Registros"
+                ],
+                [
+                    'modulos_id'        => $modulo_id,
+                    'permiso'          => "Habilitar / Deshabilitar Registros"
+                ],
+                [
+                    'modulos_id'        => $modulo_id,
+                    'permiso'          => "Descargar Lista de Registros"
+                ],
+                [
+                    'modulos_id'        => $modulo_id,
+                    'permiso'          => "Modificar Días de Descanso"
+                ],
+                [
+                    'modulos_id'        => $modulo_id,
+                    'permiso'          => "Consultar Tarjetas de Asistencia"
                 ]
-            );
-
+            ];
+            foreach ($permisos as $key => $permiso) {
+                DB::table('permisos')->insert($permiso);
+                $permiso_id = DB::getPdo()->lastInsertId();
+                DB::table('roles_permisos')->insert(
+                    [
+                        'roles_id'        => 1,
+                        'permisos_id'          => $permiso_id
+                    ]
+                );
+                DB::table('roles_permisos')->insert(
+                    [
+                        'roles_id'        => 4,
+                        'permisos_id'          => $permiso_id
+                    ]
+                );
+            }
             DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
