@@ -274,14 +274,21 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
     /**rutas de reportes */
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
-    Route::post('checador/modificar_registro_administrativo', 'ChecadorController@modificar_registro_administrativo');
-    Route::post('checador/guardar_registro_administrativo', 'ChecadorController@guardar_registro_administrativo');
-    Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro');
-    Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro');
-    Route::post('/checador/guardar_dias_descanso', 'ChecadorController@guardar_dias_descanso');
+    /**rutas de checador via web */
+    Route::post('/checador/modificar_registro_administrativo', 'ChecadorController@modificar_registro_administrativo')->middleware(['permiso:23,66']);
+    Route::post('/checador/guardar_registro_administrativo', 'ChecadorController@guardar_registro_administrativo')->middleware(['permiso:23,65']);
+    Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro')->middleware(['permiso:23,67']);
+    Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro')->middleware(['permiso:23,67']);
+    Route::post('/checador/guardar_dias_descanso', 'ChecadorController@guardar_dias_descanso')->middleware(['permiso:23,69']);
+    Route::get('checador/lista_registros/{fecha_inicio?}/{fecha_fin?}/{empleado_id?}', 'ChecadorController@lista_registros')->middleware(['permiso:23,68']);
+    Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
+    Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
+    Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
+    Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
+    Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
+    Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 });
-Route::get('checador/lista_registros/{fecha_inicio?}/{fecha_fin?}/{empleado_id?}', 'ChecadorController@lista_registros');
-Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
+
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {
     Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');
@@ -293,11 +300,7 @@ Route::middleware(['client'])->group(function () {
     Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 });
 
-Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
-Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
-Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
-Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
-Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta');
+
 
 
 Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
