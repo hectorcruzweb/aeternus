@@ -2,7 +2,7 @@
   <div>
     <vs-tabs alignment="left" position="top" v-model="activeTab">
       <vs-tab label="REGISTROS DEL CHECADOR" class=""></vs-tab>
-      <vs-tab label="PERMISOS"></vs-tab>
+      <!--<vs-tab label="PERMISOS"></vs-tab>-->
       <vs-tab label="TARJETAS DE ASISTENCIA"></vs-tab>
     </vs-tabs>
     <div class="" v-show="activeTab == 0">
@@ -13,15 +13,16 @@
         scope="this api replaced by slot-scope in 2.5.0+"
       ></Registros>
     </div>
+    <!--
     <div class="" v-show="activeTab == 1">
-      <!--
       <RegistroPublico
         :datos="datosEmpresa"
         :erroresForm="erroresRegistroPublico"
         @actualizar="actualizar"
       ></RegistroPublico>
-    --></div>
-    <div class=" " v-show="activeTab == 2">
+    </div>
+  -->
+    <div class=" " v-show="activeTab == 1">
       <Tarjetas></Tarjetas>
     </div>
     <Password
