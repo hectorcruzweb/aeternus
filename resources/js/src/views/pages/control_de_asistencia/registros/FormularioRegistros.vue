@@ -250,7 +250,6 @@ export default {
       openConfirmarAceptar: false,
       callBackConfirmarAceptar: Function,
       accionNombre: "Modificar Cliente",
-      regimenes: [],
       tipos: [
         {
           value: "1",
@@ -338,6 +337,8 @@ export default {
               position: "bottom-right",
               time: "8000",
             });
+            this.$vs.loading.close();
+            this.cerrarVentana();
           }
           this.$vs.loading.close();
         })
@@ -567,7 +568,9 @@ export default {
       this.$emit("closeVentana");
     },
     //regresa los datos a su estado inicial
-    limpiarVentana() {},
+    limpiarVentana() {
+      this.empleados = [];
+    },
 
     closeChecker() {
       this.operConfirmar = false;
