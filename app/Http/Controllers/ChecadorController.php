@@ -30,7 +30,7 @@ class ChecadorController extends ApiController
     {
         return User::select(
             'id',
-            'nombre',
+            'nombre'
         )->where("id", $id)->with("dias_descanso")->first();
     }
 
