@@ -873,7 +873,7 @@ class ChecadorController extends ApiController
             ]
         );
 
-        $fecha_del_reporte = strtoupper("DEL" . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
+        $fecha_del_reporte = strtoupper("DEL " . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
 
         $datos = $this->get_asistencia_reporte($requestService);
         if (empty($datos["tarjetas"])) {
