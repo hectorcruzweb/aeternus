@@ -38,7 +38,7 @@ class ChecadorController extends ApiController
     {
         $empleados = User::select(
             'id',
-            'nombre',
+            'nombre'
         );
 
         if ($empleados_todos == "no") {
@@ -159,7 +159,7 @@ class ChecadorController extends ApiController
                 'tipo_registro.required' => 'El tipo de registro es necesario.',
                 'id_usuario.required' => 'El ID del usuario es necesario.',
                 'password.required' => "ingrese la contraseña del usuario.",
-                'tipo_registro_entrada_salida.required' => 'El tipo de registro es necesario.',
+                'tipo_registro_entrada_salida.required' => 'El tipo de registro es necesario.'
             ]
         );
 
@@ -334,7 +334,7 @@ class ChecadorController extends ApiController
         request()->validate(
             [
                 'fecha_inicio' => 'required|date|date_format:Y-m-d|before_or_equal:today',
-                'fecha_fin'        => 'required|date|date_format:Y-m-d|after_or_equal:fecha_inicio|before_or_equal:today',
+                'fecha_fin'        => 'required|date|date_format:Y-m-d|after_or_equal:fecha_inicio|before_or_equal:today'
             ],
             [
                 'fecha_inicio.before_or_equal' => 'La fecha inicial del reporte no debe ser mayor a la fecha actual.',
@@ -347,7 +347,7 @@ class ChecadorController extends ApiController
             "id",
             "nombre",
             "roles_id",
-            "genero",
+            "genero"
         )->with("rol:id,rol")->with("dias_descanso")->where('nombre', 'like', '%' . $request->nombre . '%');
         $resultado_query = $resultado_query;
         if (isset($request->usuario_id)) {
@@ -630,10 +630,10 @@ class ChecadorController extends ApiController
         $registro_id = $request->registro_id;
         request()->validate(
             [
-                'registro_id' => 'required',
+                'registro_id' => 'required'
             ],
             [
-                'registro_id.required' => 'El ID del registro es necesario.',
+                'registro_id.required' => 'El ID del registro es necesario.'
             ]
         );
         return DB::table('registros_checador')->where('id', $registro_id)->update(
@@ -652,7 +652,7 @@ class ChecadorController extends ApiController
                 'registro_id' => 'required',
             ],
             [
-                'registro_id.required' => 'El ID del registro es necesario.',
+                'registro_id.required' => 'El ID del registro es necesario.'
             ]
         );
 
@@ -681,12 +681,12 @@ class ChecadorController extends ApiController
             [
                 'fechahora' => 'required',
                 'tipo_registro_id' => 'required',
-                'id_usuario' => 'required',
+                'id_usuario' => 'required'
             ],
             [
                 'fechahora.required' => 'Ingrese la fecha y hora del registro.',
                 'id_usuario.required' => 'El ID del usuario es necesario.',
-                'tipo_registro_id.required' => 'El tipo de registro es necesario.',
+                'tipo_registro_id.required' => 'El tipo de registro es necesario.'
             ]
         );
         try {
@@ -714,7 +714,7 @@ class ChecadorController extends ApiController
         request()->validate(
             [
                 'dias' => 'required',
-                'empleado_id' => 'required',
+                'empleado_id' => 'required'
             ],
             [
                 'dias.required' => 'Ingrese los datos de los días de descanso a registrar.',
@@ -760,7 +760,7 @@ class ChecadorController extends ApiController
                 'fechahora.required' => 'Ingrese la fecha y hora del registro.',
                 'id_usuario.required' => 'El ID del usuario es necesario.',
                 'tipo_registro_id.required' => 'El tipo de registro es necesario.',
-                'id_registro_modificar.required' => 'El tipo de registro es necesario.',
+                'id_registro_modificar.required' => 'El tipo de registro es necesario.'
             ]
         );
         try {
