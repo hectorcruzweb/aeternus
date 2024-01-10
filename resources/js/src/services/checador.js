@@ -40,6 +40,15 @@ export default {
         return axios.post(call, datos);
     },
 
+    get_dias_descanso_empleado(id) {
+        let service = "checador/get_empleados_dias_descanso/" + id;
+        return axios.get(service);
+    },
+    guardar_dias_descanso(datos) {
+        let call = "/checador/guardar_dias_descanso";
+        return axios.post(call, datos);
+    },
+
     get_empleados_todos() {
         return axios.get("checador/get_empleados/si");
     },
@@ -62,10 +71,6 @@ export default {
     },
 
     get_empleados_paginados(param) {
-        console.log(
-            "🚀 ~ file: checador.js:60 ~ get_empleados_paginados ~ param:",
-            param
-        );
         let service = "/checador/get_empleados_paginados";
         return axios.get(service, {
             cancelToken: new CancelToken(c => {

@@ -25,6 +25,15 @@ class ChecadorController extends ApiController
     }
 
 
+
+    public function get_empleados_dias_descanso($id = "")
+    {
+        return User::select(
+            'id',
+            'nombre',
+        )->where("id", $id)->with("dias_descanso")->first();
+    }
+
     public function get_empleados($empleados_todos = "no")
     {
         $empleados = User::select(
@@ -290,12 +299,9 @@ class ChecadorController extends ApiController
         if ($registro_id != "all") {
             $resultado_query->where("id", "=", $registro_id);
         }
-
         if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
             $resultado_query->whereDate('fecha_hora', '>=', $request->fecha_inicio)->whereDate('fecha_hora', '<=', $request->fecha_fin);
         }
-
-
         $resultado_query = $resultado_query->get();
         $resultado = array();
         if ($paginated == "paginated") {
@@ -343,7 +349,7 @@ class ChecadorController extends ApiController
             "roles_id",
             "genero",
         )->with("rol:id,rol")->with("dias_descanso")->where('nombre', 'like', '%' . $request->nombre . '%');
-        $resultado_query = $resultado_query->where("status", ">", 0);
+        $resultado_query = $resultado_query;
         if (isset($request->usuario_id)) {
             $resultado_query = $resultado_query->where("id", $request->usuario_id);
         }
@@ -549,14 +555,13 @@ class ChecadorController extends ApiController
                         if ($minutos_faltantes_jornada <= 20) {
                             //tolerancia de 20 minutos para cuando se cumple o no con la jornada
                             $tarjeta["indicadores_tarjeta"]["cumplio_jornada"] = "Si";
-                        } else {
-                            //se acumula en el global de tiempo faltante para hacer la indicacion
-                            $empleado["indicadores_empleado"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
                         }
+                        //se acumula en el global de tiempo faltante para hacer la indicacion
+                        $empleado["indicadores_empleado"]["tiempo_faltante_jornada"] += $minutos_faltantes_jornada;
                     }
                 } else {
                     if ($descanso) {
-                        $tarjeta["indicadores_tarjeta"]["asistido"] = "Descanso asignado.";
+                        $tarjeta["indicadores_tarjeta"]["asistido"] = "Descanso semanal.";
                         $empleado["indicadores_empleado"]["dias_descansados"] += 1;
                     } else {
                         if ($dia_festivo_aplicado == null) {
@@ -702,6 +707,43 @@ class ChecadorController extends ApiController
             return $this->errorResponse($e, 409);
         }
     }
+
+    public function guardar_dias_descanso(Request $request)
+    {
+        //validamos datos de acceso
+        request()->validate(
+            [
+                'dias' => 'required',
+                'empleado_id' => 'required',
+            ],
+            [
+                'dias.required' => 'Ingrese los datos de los días de descanso a registrar.',
+                'empleado_id.required' => 'El ID del usuario es necesario.'
+            ]
+        );
+
+
+        try {
+            DB::beginTransaction();
+            DB::table('dias_descanso')->where('usuarios_id', $request->empleado_id)->delete();
+            foreach ($request->dias as $key => $dia) {
+                if ($dia["seleccionado"] == 1)
+                    DB::table('dias_descanso')->insert(
+                        [
+                            'fecha_aplicacion'        => now(),
+                            'dias_id'          => $dia["id"],
+                            'usuarios_id' => $request["empleado_id"]
+                        ]
+                    );
+            }
+            DB::commit();
+            return 1;
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $this->errorResponse("od", 409);
+        }
+    }
+
 
 
     public function modificar_registro_administrativo(Request $request)
@@ -871,8 +913,8 @@ class ChecadorController extends ApiController
             $email_controller = new EmailController();
             $enviar_email     = $email_controller->pdf_email(
                 $email_to,
-                strtoupper("ok"),
-                'reporte de registros de checador ' . "ok",
+                strtoupper($datos["tarjetas"][0]["empleado"]["nombre"]),
+                'reporte de registros de checador ' . $datos["tarjetas"][0]["empleado"]["nombre"],
                 $name_pdf,
                 $pdf
             );

@@ -214,7 +214,7 @@
         <table class="w-100 uppercase center mt-5 size-20px bold">
             <tr>
                 <td class="w-30 center ">Porcentaje de asistencia:
-                    {{ $empleado['indicadores_empleado']['porcentaje_asistencia'] }} / 100 %</td>
+                    [{{ $empleado['indicadores_empleado']['porcentaje_asistencia'] }}] / 100 %</td>
             </tr>
         </table>
 

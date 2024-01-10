@@ -81,7 +81,7 @@
       class="tabla-datos"
     >
       <template slot="header">
-        <h3>Listado de Clientes Registrados</h3>
+        <h3>Listado de Registros de Checador</h3>
       </template>
       <template slot="thead">
         <vs-th>Fecha / Hora</vs-th>
@@ -103,9 +103,9 @@
               {{ data[indextr].hora_registro }}</span
             >
           </vs-td>
-          <vs-td :data="data[indextr].usuario">{{
-            data[indextr].usuario.nombre
-          }}</vs-td>
+          <vs-td :data="data[indextr].usuario">
+            {{ data[indextr].usuario.nombre }}
+          </vs-td>
           <vs-td :data="data[indextr].tipo_registro_texto">
             <p v-if="data[indextr].tipo_registro_id == 1">
               Entrada <span class="dot-success"></span>
@@ -120,7 +120,7 @@
             <p v-if="data[indextr].status == 1">
               Activo <span class="dot-success"></span>
             </p>
-            <p v-else>Cancelado <span class="dot-danger"></span></p>
+            <p v-else>Cancelado<span class="dot-danger"></span></p>
           </vs-td>
           <vs-td :data="data[indextr].id_user">
             <div class="flex justify-center">
@@ -196,7 +196,6 @@ import Password from "@pages/confirmar_password";
 
 /**VARIABLES GLOBALES */
 import { configdateTimePickerRange, PermisosModulo } from "@/VariablesGlobales";
-import ServiciosGratis from "@pages/clientes/ServiciosGratis";
 const moment = require("moment");
 import vSelect from "vue-select";
 
@@ -206,7 +205,6 @@ export default {
     Password,
     FormularioRegistros,
     Reporteador,
-    ServiciosGratis,
     flatPickr,
   },
   watch: {

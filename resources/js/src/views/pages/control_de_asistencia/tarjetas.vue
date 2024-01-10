@@ -4,7 +4,7 @@
       <vs-button
         class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
         color="primary"
-        @click="openReporte(null)"
+        @click="openReporte()"
       >
         <span>Imprimir Lista de Registros</span>
       </vs-button>
@@ -109,7 +109,13 @@
                 class="cursor-pointer img-btn-18 mx-2"
                 src="@assets/images/pdf.svg"
                 title="Ver Reporte de Asistencia"
-                @click="openReporte(data[indextr])"
+                @click="openReporte(data[indextr].id)"
+              />
+              <img
+                class="cursor-pointer img-btn-18 mx-2"
+                src="@assets/images/calendar.svg"
+                title="Asignar Días de Descanso"
+                @click="openDiasDescanso(data[indextr])"
               />
             </div>
           </vs-td>
@@ -138,6 +144,11 @@
       :request="request"
       @closeReportes="openReportesLista = false"
     ></Reporteador>
+    <FormularioDiasDescanso
+      :usuario_id="usuario_id"
+      :show="verFormularioDiasDescanso"
+      @CloseFormularioDiasDescanso="verFormularioDiasDescanso = false"
+    ></FormularioDiasDescanso>
   </div>
 </template>
 
@@ -150,9 +161,9 @@ import Reporteador from "@pages/Reporteador";
 import checador from "@services/checador";
 //componente de password
 import Password from "@pages/confirmar_password";
+import FormularioDiasDescanso from "@pages/control_de_asistencia/tarjetas/FormularioDiasDescanso";
 /**VARIABLES GLOBALES */
 import { configdateTimePickerRange, PermisosModulo } from "@/VariablesGlobales";
-import ServiciosGratis from "@pages/clientes/ServiciosGratis";
 const moment = require("moment");
 import vSelect from "vue-select";
 
@@ -161,8 +172,8 @@ export default {
     "v-select": vSelect,
     Password,
     Reporteador,
-    ServiciosGratis,
     flatPickr,
+    FormularioDiasDescanso,
   },
   watch: {
     actual: function (newValue, oldValue) {
@@ -181,6 +192,7 @@ export default {
           value: "1",
         },
       ],
+      usuario_id: "",
       empleados: [],
       serverOptions: {
         page: "",
@@ -204,7 +216,7 @@ export default {
       openStatus: false,
       callback: Function,
       tipoFormulario: "",
-      verFormularioRegistros: false,
+      verFormularioDiasDescanso: false,
       verModificar: false,
       /**opciones para filtrar la peticion del server */
       /**user id para bajas y altas */
@@ -335,41 +347,33 @@ export default {
     },
     formulario(tipo) {
       this.tipoFormulario = tipo;
-      this.verFormularioRegistros = true;
+      this.verFormularioDiasDescanso = true;
     },
     openModificar(id_registro) {
       this.tipoFormulario = "modificar";
       this.registro_id = id_registro;
-      this.verFormularioRegistros = true;
+      this.verFormularioDiasDescanso = true;
     },
-    openReporte(datos) {
+    openReporte(usuario = "") {
       if (!this.validarRangoFecha()) return;
-
-      /*
-      let url = "/checador/lista_registros/";
-      if (this.serverOptions.fecha_inicio == "") {
-        url += "all/all/";
-      } else {
-        url +=
-          this.serverOptions.fecha_inicio +
-          "/" +
-          this.serverOptions.fecha_fin +
-          "/";
+      let url =
+        "/checador/reporte_tarjeta?fecha_inicio=" +
+        this.serverOptions.fecha_inicio +
+        "&fecha_fin=" +
+        this.serverOptions.fecha_fin;
+      if (usuario != "") {
+        url += "&usuario_id=" + usuario;
       }
-      if (this.empleado.value == "") {
-        url += "all";
-      } else {
-        url += this.empleado.value;
-      }
-      */
-      /*
       this.ListaReportes = [];
       this.ListaReportes.push({
-        nombre: "Lista de Registros",
+        nombre: "Reporte de Asistencia",
         url: url,
       });
       this.openReportesLista = true;
-      */
+    },
+    openDiasDescanso(datos) {
+      this.usuario_id = datos.id;
+      this.verFormularioDiasDescanso = true;
     },
   },
   created() {
