@@ -221,7 +221,8 @@ class ChecadorController extends ApiController
             if ($registro) //registro correcto
             {
                 DB::commit();
-                return $this->get_registros_checador($registro)[0];
+                $request = new \Illuminate\Http\Request();
+                return $this->get_registros_checador($request, $registro)[0];
             } else {
                 DB::rollBack();
                 return $this->errorResponse("Error on save.", 409);
