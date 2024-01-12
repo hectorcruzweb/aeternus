@@ -165,66 +165,67 @@
         @endforeach
         </tbody>
         </table>
-
-        <div class="mt-6 center w-100 bg-0 uppercase bold size-16px bg-indicadores py-1">
-            <span>
-                Resumen de indicadores por periodo de {{ $datos['parametros']['dias_tarjeta'] }} días
-                ({{ $fecha_del_reporte }}).
-        </div>
-
-
-        <table class="w-100 texto-base mt-5  center">
-            <thead>
-                <tr>
-                    <td class=""><span class="bold">Horas Requeridas</span></td>
-                    <td class="w-25"><span class="bold">Horas Trabajadas</span></td>
-                    <td class="w-25"><span class="bold">Horas Faltantes</span></td>
-                    <td class="w-25"><span class="bold">Cumplió Jornada en Gral.</span></td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $empleado['indicadores_empleado']['horas_requeridas'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['tiempo_trabajado'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['tiempo_faltante_jornada'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['cumplio_jornada'] }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table class="w-100 texto-base center">
-            <thead>
-                <tr>
-                    <td class=""><span class="bold">Días a descansar</span></td>
-                    <td class="w-25"><span class="bold">Días Descansados</span></td>
-                    <td class="w-25"><span class="bold">Faltas</span></td>
-                    <td class="w-25"><span class="bold">Tiempo Extra</span></td>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>{{ $empleado['indicadores_empleado']['dias_a_descansar'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['dias_descansados'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['faltas'] }}</td>
-                    <td>{{ $empleado['indicadores_empleado']['horas_extra'] }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <table class="w-100 uppercase center mt-5 size-20px bold">
-            <tr>
-                <td class="w-30 center ">Porcentaje de asistencia:
-                    [{{ $empleado['indicadores_empleado']['porcentaje_asistencia'] }}] / 100 %</td>
-            </tr>
-        </table>
-
-        <div class="w-40 ml-auto mr-auto center mt-24">
-            <div>
-                {{ $empleado['empleado'] }}
+        <div class="page-break">
+            <div class="mt-6 center w-100 bg-0 uppercase bold size-16px bg-indicadores py-1">
+                <span>
+                    Resumen de indicadores por periodo de {{ $datos['parametros']['dias_tarjeta'] }} días
+                    ({{ $fecha_del_reporte }}).
             </div>
-            <div class=" line"> </div>
-            <div class="bold mt-1">
-                Firma de Conformidad
+
+
+            <table class="w-100 texto-base mt-5  center">
+                <thead>
+                    <tr>
+                        <td class=""><span class="bold">Horas Requeridas</span></td>
+                        <td class="w-25"><span class="bold">Horas Trabajadas</span></td>
+                        <td class="w-25"><span class="bold">Horas Faltantes</span></td>
+                        <td class="w-25"><span class="bold">Cumplió Jornada en Gral.</span></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ $empleado['indicadores_empleado']['horas_requeridas'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['tiempo_trabajado'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['tiempo_faltante_jornada'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['cumplio_jornada'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="w-100 texto-base center">
+                <thead>
+                    <tr>
+                        <td class=""><span class="bold">Días a descansar</span></td>
+                        <td class="w-25"><span class="bold">Días Descansados</span></td>
+                        <td class="w-25"><span class="bold">Faltas</span></td>
+                        <td class="w-25"><span class="bold">Tiempo Extra</span></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ $empleado['indicadores_empleado']['dias_a_descansar'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['dias_descansados'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['faltas'] }}</td>
+                        <td>{{ $empleado['indicadores_empleado']['horas_extra'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="w-100 uppercase center mt-5 size-20px bold">
+                <tr>
+                    <td class="w-30 center ">Porcentaje de asistencia:
+                        [{{ $empleado['indicadores_empleado']['porcentaje_asistencia'] }}] / 100 %</td>
+                </tr>
+            </table>
+
+            <div class="w-40 ml-auto mr-auto center mt-24">
+                <div>
+                    {{ $empleado['empleado'] }}
+                </div>
+                <div class=" line"> </div>
+                <div class="bold mt-1">
+                    Firma de Conformidad
+                </div>
             </div>
         </div>
     @endforeach
