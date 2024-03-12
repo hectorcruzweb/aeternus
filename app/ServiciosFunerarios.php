@@ -20,6 +20,11 @@ class ServiciosFunerarios extends Model
         return $this->hasOne('App\User', 'id', 'recogio_id');
     }
 
+    public function estado_cuerpo()
+    {
+        return $this->hasOne('App\EstadosAfectado', 'id', 'estado_afectado_id');
+    }
+
     public function operacion()
     {
         return $this->hasOne('App\Operaciones', 'servicios_funerarios_id', 'id')->select(

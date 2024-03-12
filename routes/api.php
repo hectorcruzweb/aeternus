@@ -168,7 +168,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/get_servicios_adeudos', 'FunerariaController@get_servicios_adeudos');
     Route::get('funeraria/get_abonos_vencidos_planes_funerarios', 'FunerariaController@get_abonos_vencidos_planes_funerarios');
     Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
-    Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}', 'FunerariaController@get_solicitudes_servicios');
+    
 
 
     /**rutas de pagos */
@@ -223,7 +223,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('funeraria/control_solicitud/{tipo_servicio}', 'FunerariaController@control_solicitud');
     Route::post('funeraria/control_contratos/{tipo_servicio}', 'FunerariaController@control_contratos');
     Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
-
+    Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}', 'FunerariaController@get_solicitudes_servicios');
+    Route::get('funeraria/autorizacion_cremacion', 'FunerariaController@autorizacion_cremacion');
     Route::get('funeraria/get_hoja_solicitud', 'FunerariaController@get_hoja_solicitud');
     Route::get('funeraria/hoja_preautorizacion', 'FunerariaController@hoja_preautorizacion');
     Route::get('funeraria/certificado_defuncion', 'FunerariaController@certificado_defuncion');

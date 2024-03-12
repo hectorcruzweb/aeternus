@@ -504,6 +504,13 @@ export default {
                     firma: true
                 },
                 {
+                    documento: "Autorización de Cremación",
+                    url: "/funeraria/autorizacion_cremacion",
+                    tipo: "pdf",
+                    documento_id: 28,
+                    firma: true
+                },
+                {
                     documento: "Entrega de cenizas",
                     url: "/funeraria/entrega_cenizas",
                     tipo: "pdf",
@@ -604,7 +611,8 @@ export default {
                 documento != "Hoja de Servicio" &&
                 documento != "Contrato" &&
                 documento != "Constancia de Cremación" &&
-                documento != "Constancia de no embalsamiento"
+                documento != "Constancia de no embalsamiento" &&
+                documento != "Autorización de Cremación"
             ) {
                 return true;
             } else {
@@ -648,7 +656,13 @@ export default {
                     if (this.datosSolicitud.cremacion_b == 1) {
                         return true;
                     } else return false;
-                } else if (documento == "Hoja de Servicio") {
+                }else if (documento == "Autorización de Cremación") {
+                    /**chenado si tiene saldo pendiente */
+                    if (this.datosSolicitud.cremacion_b == 1) {
+                        return true;
+                    } else return false;
+                } 
+                else if (documento == "Hoja de Servicio") {
                     /**chenado si tiene saldo pendiente */
                     if (this.datosSolicitud.operacion != null) {
                         return true;
