@@ -21,7 +21,7 @@ class ChecadorController extends ApiController
 
     function __construct()
     {
-        date_default_timezone_set("America/Mazatlan");
+        date_default_timezone_set("Etc/GMT+7");
     }
 
 
@@ -210,10 +210,11 @@ class ChecadorController extends ApiController
                 }
             }
 
+
             $registro = RegistrosChecador::insertGetId(
                 [
                     'tipo_registro_id'        => $tipo_registro_id,
-                    'fecha_hora'          => now(),
+                    'fecha_hora'          => date("Y-m-d H:i:s"),
                     'registro_huella_b'          => $tipo_registro,
                     "usuarios_id" => $request->id_usuario
                 ]
