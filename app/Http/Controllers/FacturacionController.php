@@ -364,10 +364,10 @@ class FacturacionController extends ApiController
         $datos_funeraria = Funeraria::first();
 
         /**checabndo que tipo de comprobante es */
-        $subtotal                       = 0;
-        $descuento                      = 0;
-        $iva_trasladado                 = 0;
-        $total                          = 0;
+        $subtotal                       = 0.0;
+        $descuento                      = 0.0;
+        $iva_trasladado                 = 0.0;
+        $total                          = 0.0;
         $serie                          = '';
         $claves_productos_servicios_sat = $this->get_claves_productos_sat();
         $get_sat_unidades               = $this->get_sat_unidades();
@@ -783,7 +783,7 @@ class FacturacionController extends ApiController
         } else {
             return $this->errorResponse('el tipo de comprobante no es válido', 409);
         }
-
+        
         /**procede con las validaciones y se hace la insercion de la transanccion en la base de datos */
         $datos_funeraria = Funeraria::first();
         /**COMENZANDO A GUARDAR EL CFDI EN LA BASE DE DATOS */
@@ -967,7 +967,7 @@ class FacturacionController extends ApiController
                                             $importe_saldo_anterior = round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2);
                                             $importe_saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'], 2);
                                             /**validando que el monto a abonar sea menor o igual al total menos el total pagado y egresado */
-                                            if (($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado) <= $cfdi_bd['total']) {
+                                            if (round($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado,2) <= round($cfdi_bd['total'],2)) {
                                                 /**procede la relacion del cfdi para pago */
                                                 DB::table('cfdis_tipo_relacion')->insert(
                                                     [
@@ -986,14 +986,15 @@ class FacturacionController extends ApiController
                                                     $this->regresar_bd_folio();
                                                     return $this->errorResponse('No se encontró el método de pago que se está utilizando.', 409);
                                                 }
+                                               $saldo_insoluto=$cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado;
                                                 array_push($array_cfdis_a_pagar_xml, [
                                                     '_attributes' => [
                                                         'EquivalenciaDR' => "1",
                                                         'Folio'            => $cfdi_bd['id'],
                                                         'IdDocumento'      => $cfdi_bd['uuid'],
-                                                        'ImpPagado'        => $cfdi_pagar['monto_pago'],
+                                                        'ImpPagado'        => round($cfdi_pagar['monto_pago'],2),
                                                         'ImpSaldoAnt'      => round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2),
-                                                        'ImpSaldoInsoluto' => round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado, 2),
+                                                        'ImpSaldoInsoluto' => $saldo_insoluto<0?0:$saldo_insoluto,
                                                         'MonedaDR'         => "MXN",
                                                         'NumParcialidad'   => $numero_parcialidad,
                                                         'ObjetoImpDR' => '01'
@@ -1129,7 +1130,6 @@ class FacturacionController extends ApiController
                     return $this->errorResponse('Debe relacionar un cfdi para egresos.', 409);
                 }
             }
-
             /**GUARDANDO CFDIS RELACIONADOS A ESTE NUEVO DOCUMENTO*/
             /**aqui voy */
             $array_cfdis_a_relacionar_xml = [];
@@ -1197,7 +1197,7 @@ class FacturacionController extends ApiController
                     ]);
                 }
             }
-
+            
             header('Content-type: text/html; charset=utf-8');
             try {
                 set_time_limit(0);
@@ -1205,7 +1205,6 @@ class FacturacionController extends ApiController
                 ini_set("soap.wsdl_cache_enabled", "0");
                 /**mandamos crear el XML, con el nombre temporal del folio registrado en la parte superior */
                 $xml_a_timbrar = $this->GenerarXmlCfdi($request, $folio_para_asignar);
-
                 //return $this->errorResponse( $xml_a_timbrar, 409);
 
                 /**verificando que el xml se haya genrado sin errores */
@@ -1273,22 +1272,17 @@ class FacturacionController extends ApiController
                     'key_root' => $root_path_key,
                     'password' => $credentials_password,
                 ];
-
                 if (ENV('GENERAR_PEMS') == true) {
                     $clienteFD->crear_pem_files($datos_credenciales);
                 }
-
-
                 $certFile = Storage::disk($storage_disk_credentials)->path($root_path_cer . $certificado_path);
                 $keyFile  = Storage::disk($storage_disk_credentials)->path($root_path_key . $key_path . '.pem');
-
                 $clienteFD->sellarXML($certFile, $keyFile);
                 $retorno_del_sellado     = $clienteFD->sellarXML($certFile, $keyFile);
                 $parametros->comprobante = $retorno_del_sellado['xml'];
                 $cadena_original_cfdi    = $retorno_del_sellado['cadena_original'];
                 /* se manda el xml a TIMBRAR */
                 $responseTimbre = $clienteFD->timbrar($parametros);
-
                 if (isset($responseTimbre->acuseCFDI->error)) {
                     /**regreso el id de la base de datos que se iba consumir */
                     $this->regresar_bd_folio();
