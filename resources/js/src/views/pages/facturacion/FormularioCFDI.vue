@@ -845,7 +845,7 @@
                                     form.cfdis_a_pagar[indextr].saldo_cfdi
                                   "
                                   class="w-full sm:w-6/12 md:w-4/12 lg:w-4/12 xl:w-4/12 mr-auto ml-auto mt-1 cantidad"
-                                  maxlength="8"
+                                  maxlength="12"
                                   v-model="
                                     form.cfdis_a_pagar[indextr].monto_pago
                                   "
