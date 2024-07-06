@@ -962,10 +962,11 @@ class FacturacionController extends ApiController
                                             $this->regresar_bd_folio();
                                             return $this->errorResponse('El RFC del receptor debe ser igual al CFDI a pagar.', 409);
                                         }
-
+                                       
                                         if ($cfdi_pagar['monto_pago'] > 0) {
                                             $importe_saldo_anterior = round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2);
                                             $importe_saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'], 2);
+                                            
                                             /**validando que el monto a abonar sea menor o igual al total menos el total pagado y egresado */
                                             if (round($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado,2) <= round($cfdi_bd['total'],2)) {
                                                 /**procede la relacion del cfdi para pago */
@@ -986,7 +987,9 @@ class FacturacionController extends ApiController
                                                     $this->regresar_bd_folio();
                                                     return $this->errorResponse('No se encontró el método de pago que se está utilizando.', 409);
                                                 }
-                                               $saldo_insoluto=$cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado;
+                                               $saldo_insoluto=round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado);
+                                               //return $this->errorResponse($cfdi_bd['total']."-".$total_pagado."-".$cfdi_pagar['monto_pago']."-". $total_egresado."=".$saldo_insoluto, 409);
+
                                                 array_push($array_cfdis_a_pagar_xml, [
                                                     '_attributes' => [
                                                         'EquivalenciaDR' => "1",
@@ -1841,7 +1844,7 @@ class FacturacionController extends ApiController
                     /**pue */
                     $cfdi['total_pagado']     = $cfdi['total'];
                     $cfdi['saldo_cfdi']       = 0;
-                    $cfdi['maximo_a_egresar'] = $cfdi['total'] - $total_egresado;
+                    $cfdi['maximo_a_egresar'] = round($cfdi['total'] - $total_egresado);
                     /**aunque tenga egresos asociados el documento quedo liquidado */
                 } else {
                     /**ppd */
@@ -1851,7 +1854,7 @@ class FacturacionController extends ApiController
                             $pagado += $pago['monto_relacion'];
                         }
                     }
-                    $cfdi['total_pagado']     = $pagado;
+                    $cfdi['total_pagado']     = round($pagado,2);
                     $cfdi['saldo_cfdi']       = $cfdi['total'] - $cfdi['total_pagado'] - $cfdi['total_egresos'];
                     $cfdi['maximo_a_egresar'] = $cfdi['total'] - $cfdi['total_pagado'] - $total_egresado;
 
