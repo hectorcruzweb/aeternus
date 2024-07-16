@@ -954,7 +954,7 @@ class FacturacionController extends ApiController
                                         $total_egresado += $egreso['monto_relacion'];
                                     }
                                 }
-
+                                
                                 foreach ($request->cfdis_a_pagar as $key_pagar => $cfdi_pagar) {
                                     if ($cfdi_pagar['id'] == $cfdi_bd['id']) {
                                         /**valido qie el rfc del receptor es igual al rfc del cfdi a pagar */
@@ -962,7 +962,6 @@ class FacturacionController extends ApiController
                                             $this->regresar_bd_folio();
                                             return $this->errorResponse('El RFC del receptor debe ser igual al CFDI a pagar.', 409);
                                         }
-                                       
                                         if ($cfdi_pagar['monto_pago'] > 0) {
                                             $importe_saldo_anterior = round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2);
                                             $importe_saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'], 2);
@@ -987,9 +986,9 @@ class FacturacionController extends ApiController
                                                     $this->regresar_bd_folio();
                                                     return $this->errorResponse('No se encontró el método de pago que se está utilizando.', 409);
                                                 }
-                                               $saldo_insoluto=round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado);
+                                               $saldo_insoluto=round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado,2);
                                                //return $this->errorResponse($cfdi_bd['total']."-".$total_pagado."-".$cfdi_pagar['monto_pago']."-". $total_egresado."=".$saldo_insoluto, 409);
-
+                                               //return $this->errorResponse('aqui =>'.$saldo_insoluto, 409);
                                                 array_push($array_cfdis_a_pagar_xml, [
                                                     '_attributes' => [
                                                         'EquivalenciaDR' => "1",
