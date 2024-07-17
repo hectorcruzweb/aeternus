@@ -951,10 +951,10 @@ class FacturacionController extends ApiController
                                 foreach ($cfdi_bd['egresos_asociados'] as $key_egreso => $egreso) {
                                     if ($egreso['status'] == 1) {
                                         /**pago activo */
-                                        $total_egresado += $egreso['monto_relacion'];
+                                        $total_egresado += round($egreso['monto_relacion'],2);
                                     }
                                 }
-                                
+                               
                                 foreach ($request->cfdis_a_pagar as $key_pagar => $cfdi_pagar) {
                                     if ($cfdi_pagar['id'] == $cfdi_bd['id']) {
                                         /**valido qie el rfc del receptor es igual al rfc del cfdi a pagar */
@@ -987,16 +987,16 @@ class FacturacionController extends ApiController
                                                     return $this->errorResponse('No se encontró el método de pago que se está utilizando.', 409);
                                                 }
                                                $saldo_insoluto=round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado,2);
+                                              
                                                //return $this->errorResponse($cfdi_bd['total']."-".$total_pagado."-".$cfdi_pagar['monto_pago']."-". $total_egresado."=".$saldo_insoluto, 409);
-                                               //return $this->errorResponse('aqui =>'.$saldo_insoluto, 409);
-                                                array_push($array_cfdis_a_pagar_xml, [
+                                               array_push($array_cfdis_a_pagar_xml, [
                                                     '_attributes' => [
                                                         'EquivalenciaDR' => "1",
                                                         'Folio'            => $cfdi_bd['id'],
                                                         'IdDocumento'      => $cfdi_bd['uuid'],
                                                         'ImpPagado'        => round($cfdi_pagar['monto_pago'],2),
                                                         'ImpSaldoAnt'      => round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2),
-                                                        'ImpSaldoInsoluto' => $saldo_insoluto<0?0:$saldo_insoluto,
+                                                        'ImpSaldoInsoluto' => $saldo_insoluto==-0?0:$saldo_insoluto,
                                                         'MonedaDR'         => "MXN",
                                                         'NumParcialidad'   => $numero_parcialidad,
                                                         'ObjetoImpDR' => '01'
@@ -1015,6 +1015,7 @@ class FacturacionController extends ApiController
                                         break;
                                     }
                                 }
+                                //return $this->errorResponse('aqui =>'.$cfdi_bd['total'], 409);
                                 $request->merge([
                                     'array_cfdis_a_pagar_xml' => $array_cfdis_a_pagar_xml,
                                 ]);
