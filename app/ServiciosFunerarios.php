@@ -28,7 +28,6 @@ class ServiciosFunerarios extends Model
     public function operacion()
     {
         return $this->hasOne('App\Operaciones', 'servicios_funerarios_id', 'id')->select(
-            'id',
             'id as operacion_id',
             'clientes_id',
             'subtotal',
@@ -36,6 +35,7 @@ class ServiciosFunerarios extends Model
             'impuestos',
             'tasa_iva',
             'total',
+            'saldo',
             'servicios_funerarios_id',
             'fecha_operacion',
             'fecha_registro',

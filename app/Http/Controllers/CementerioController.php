@@ -2,28 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use PDF;
-use App\User;
-use App\Cuotas;
 use App\Ajustes;
-use App\Clientes;
-use Carbon\Carbon;
-use App\Operaciones;
-use App\Propiedades;
-use PagosProgramados;
-use App\SatFormasPago;
-use GuzzleHttp\Client;
-use App\VentasTerrenos;
-use App\tipoPropiedades;
 use App\AjustesPoliticas;
 use App\AntiguedadesVenta;
-use App\PreciosPropiedades;
-use Illuminate\Http\Request;
-use App\PagosPagosProgramados;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
+use App\Clientes;
+use App\Cuotas;
 use App\Http\Controllers\FirmasController;
+use App\Operaciones;
+use App\PagosPagosProgramados;
 use App\PagosProgramados as AppPagosProgramados;
+use App\PreciosPropiedades;
+use App\Propiedades;
+use App\SatFormasPago;
+use App\tipoPropiedades;
+use App\User;
+use App\VentasTerrenos;
+use Carbon\Carbon;
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use PDF;
 
 class CementerioController extends ApiController
 {
@@ -36,30 +35,27 @@ class CementerioController extends ApiController
 
         //validaciones directas sin condicionales
         $validaciones = [
-            'descripcion'           => 'required',
-            'fecha_inicio'           => 'required|date',
-            'fecha_fin'           => 'required|date|after:fecha_inicio',
-            'cuota_total'           => 'required|numeric|min:1',
-            'tasa_iva'           => 'required|numeric|min:0|max:16',
-            'id_cuota'           => $tipo_servicio == "agregar" ? '' : 'required|integer|min:1'
+            'descripcion' => 'required',
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'required|date|after:fecha_inicio',
+            'cuota_total' => 'required|numeric|min:1',
+            'tasa_iva' => 'required|numeric|min:0|max:16',
+            'id_cuota' => $tipo_servicio == "agregar" ? '' : 'required|integer|min:1',
         ];
-
-
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
         $mensajes = [
-            'descripcion.required'           => 'Ingrese la descripción de la cuota.',
-            'fecha_inicio.required'           => 'Ingrese la fecha de inicio.',
-            'fecha_fin.required'           => 'Ingrese la fecha final.',
-            'fecha_fin.after'           => 'La fecha final debe ser mayor que la fecha inicial.',
-            'tasa_iva.required'           => 'Ingrese la tasa de IVA.'
+            'descripcion.required' => 'Ingrese la descripción de la cuota.',
+            'fecha_inicio.required' => 'Ingrese la fecha de inicio.',
+            'fecha_fin.required' => 'Ingrese la fecha final.',
+            'fecha_fin.after' => 'La fecha final debe ser mayor que la fecha inicial.',
+            'tasa_iva.required' => 'Ingrese la tasa de IVA.',
         ];
 
         request()->validate(
             $validaciones,
             $mensajes
         );
-
 
         $id_return = 0;
         try {
@@ -94,12 +90,11 @@ class CementerioController extends ApiController
              */
 
             /**agrego los datos del request que necesita la funcion de programar pagos */
-            $request->request->add(['costo_neto' =>  $total]);
-            $request->request->add(['pago_inicial' =>  $total]);
-            $request->request->add(['descuento' =>  $descuento]);
-            $request->request->add(['fecha_venta' =>  $request->fecha_inicio]);
+            $request->request->add(['costo_neto' => $total]);
+            $request->request->add(['pago_inicial' => $total]);
+            $request->request->add(['descuento' => $descuento]);
+            $request->request->add(['fecha_venta' => $request->fecha_inicio]);
             $request->request->add(['tipo_financiamiento' => 1]); //de contado
-
 
             if ($tipo_servicio == 'modificar') {
                 $id_cuota = $request->id_cuota;
@@ -130,12 +125,12 @@ class CementerioController extends ApiController
 
                 DB::table('cuotas_cementerio')->where('id', $id_cuota)->update(
                     [
-                        'descripcion'               => $request->descripcion,
-                        'cuota_total'               => $request->cuota_total,
-                        'fecha_inicio'               => $request->fecha_inicio,
-                        'fecha_fin'               => $request->fecha_fin,
-                        'tasa_iva'               => $request->tasa_iva,
-                        'modifico_id'        => (int) $request->user()->id
+                        'descripcion' => $request->descripcion,
+                        'cuota_total' => $request->cuota_total,
+                        'fecha_inicio' => $request->fecha_inicio,
+                        'fecha_fin' => $request->fecha_fin,
+                        'tasa_iva' => $request->tasa_iva,
+                        'modifico_id' => (int) $request->user()->id,
                     ]
                 );
                 /**se hace el borrado de datos operaciones, pagos_programados, pagos_pagos_programados, pagos para volver a insertar la informacion nueva */
@@ -143,14 +138,14 @@ class CementerioController extends ApiController
                 /**es agregar */
                 $id_cuota = DB::table('cuotas_cementerio')->insertGetId(
                     [
-                        'descripcion'               => $request->descripcion,
-                        'cuota_total'               => $request->cuota_total,
-                        'fecha_inicio'               => $request->fecha_inicio,
-                        'fecha_fin'               => $request->fecha_fin,
-                        'tasa_iva'               => $request->tasa_iva,
-                        'registro_id'        => (int) $request->user()->id,
-                        'modifico_id'        => (int) $request->user()->id,
-                        'fechahora_registro'     => now(),
+                        'descripcion' => $request->descripcion,
+                        'cuota_total' => $request->cuota_total,
+                        'fecha_inicio' => $request->fecha_inicio,
+                        'fecha_fin' => $request->fecha_fin,
+                        'tasa_iva' => $request->tasa_iva,
+                        'registro_id' => (int) $request->user()->id,
+                        'modifico_id' => (int) $request->user()->id,
+                        'fechahora_registro' => now(),
                     ]
                 );
             }
@@ -167,8 +162,7 @@ class CementerioController extends ApiController
             /**se hace la inserccion de pagos programados en la base de datos */
             ini_set('max_execution_time', '300'); //300 seconds = 5 minutes
 
-
-            foreach ($operaciones_a_programar_pagos as  $operacion) {
+            foreach ($operaciones_a_programar_pagos as $operacion) {
                 /**operacion tipo 2- 002- SERVICIO DE MANTENIMIENTO ANUAL EN CEMENTERIO.
                  * El id venta lo modificamos para que se ajuste a las necesidades de esta operacion
                  * en el caso de pago de cuota de mantenimiento se agregan los digitos de la tabla de ventas_terrenos para mantener la singularidad del registro de pagos en
@@ -194,12 +188,12 @@ class CementerioController extends ApiController
 
         //validar id de cuota a cencelar
         $validaciones = [
-            'id_cuotas'           => 'required|integer|min:1'
+            'id_cuotas' => 'required|integer|min:1',
         ];
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
         $mensajes = [
-            'id_cuotas.required'           => 'Ingrese la cuota a cancelar.'
+            'id_cuotas.required' => 'Ingrese la cuota a cancelar.',
         ];
 
         request()->validate(
@@ -217,26 +211,23 @@ class CementerioController extends ApiController
              * 2 - La cuota al cancelarse se cancelan las operaciones relacionadas a ella
              */
 
-
             $datos_cuota = $this->get_cuotas($request, $id_cuota, false)[0];
             if (!empty($datos_cuota)) {
                 //validando primero que la cuota este activa
                 if ($datos_cuota['status'] != 0) {
 
-
-
                     DB::table('cuotas_cementerio')->where('id', $id_cuota)->update(
                         [
-                            'fechahora_cancelacion'               => now(),
-                            'status'               => 0,
-                            'cancelo_id'        => (int) $request->user()->id
+                            'fechahora_cancelacion' => now(),
+                            'status' => 0,
+                            'cancelo_id' => (int) $request->user()->id,
                         ]
                     );
                     DB::table('operaciones')->where('cuotas_cementerio_id', $id_cuota)->update(
                         [
-                            'fecha_cancelacion'               => now(),
-                            'status'               => 0,
-                            'cancelo_id'        => (int) $request->user()->id
+                            'fecha_cancelacion' => now(),
+                            'status' => 0,
+                            'cancelo_id' => (int) $request->user()->id,
                         ]
                     );
                 }
@@ -255,7 +246,6 @@ class CementerioController extends ApiController
         }
     }
 
-
     /**get cuotas simple */
     public function get_cuotas_simple()
     {
@@ -264,15 +254,14 @@ class CementerioController extends ApiController
             ->get();
     }
 
-
     /**obtiene todas cuotas de mantenimiento en el cementerio */
     public function get_cuotas(Request $request, $id_cuota = 'all', $paginated = false)
     {
 
         /**este servicio debe listar las cuotas registradas, el numero de propieades que tienen asignadas a pagar, lo ya cobrado, lo que resta de pagar */
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
-        $numero_control           = $request->numero_control;
-        $status                   = $request->status;
+        $numero_control = $request->numero_control;
+        $status = $request->status;
 
         $resultado_query = Cuotas::with('cancelador:id,nombre')
             ->with('registro:id,nombre')
@@ -362,13 +351,11 @@ class CementerioController extends ApiController
         if ($paginated == 'paginated') {
             /**queire el resultado paginado */
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
-            $resultado       = &$resultado_query['data'];
+            $resultado = &$resultado_query['data'];
         } else {
             $resultado_query = $resultado_query->toArray();
-            $resultado       = &$resultado_query;
+            $resultado = &$resultado_query;
         }
-
-
 
         /**datos del cmeenterio para actualizar los valores de la ubicacion */
         $datos_cementerio = $this->get_cementerio();
@@ -382,15 +369,11 @@ class CementerioController extends ApiController
             /**periodo fechas */
             $cuota['periodo'] = 'Del ' . fecha_abr($cuota['fecha_inicio']) . ' al ' . fecha_abr($cuota['fecha_fin']);
 
-
             foreach ($cuota['propiedades'] as $index_propiedad => &$propiedad) {
                 /**asignamos la ubicación que tiene la propiedad */
                 $propiedad['venta_terreno'] = $this->ubicacion_texto($propiedad['venta_terreno']['ubicacion'], $datos_cementerio);
 
-
-
                 /**asignamos los totales recibidos por los pagos programados */
-
 
                 $propiedad['intereses'] = 0;
                 $propiedad['abonado_capital'] = 0;
@@ -412,17 +395,15 @@ class CementerioController extends ApiController
                 $propiedad['num_pagos_programados'] = count($propiedad['get_pagos_pagos_programados']);
                 $num_pagos_programados_vigentes = 0;
 
-
-
                 if ($propiedad['num_pagos_programados'] > 0) {
                     /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
                     /**recorriendo arreglo de pagos programados */
-                    $vencidos                         = 0;
-                    $pagos_programados_cubiertos      = 0;
+                    $vencidos = 0;
+                    $pagos_programados_cubiertos = 0;
                     $dias_vencido_primer_pago_vencido = '';
-                    $pagos_vigentes                   = 0;
-                    $pagos_cancelados                 = 0;
-                    $pagos_realizados                 = 0;
+                    $pagos_vigentes = 0;
+                    $pagos_cancelados = 0;
+                    $pagos_realizados = 0;
 
                     $arreglo_de_pagos_realizados = [];
                     /**guardo los dias que lleva vencido el pago vencido mas antiguo */
@@ -446,14 +427,14 @@ class CementerioController extends ApiController
                         /**aumento el pago programado vigente */
                         /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
                         /**montos segun su tipo de movimiento */
-                        $abonado_intereses       = 0;
-                        $abonado_capital         = 0;
-                        $descontado_pronto_pago  = 0;
-                        $descontado_capital      = 0;
+                        $abonado_intereses = 0;
+                        $abonado_capital = 0;
+                        $descontado_pronto_pago = 0;
+                        $descontado_capital = 0;
                         $complemento_cancelacion = 0;
                         /**aqui voy */
-                        $total_cubierto          = 0;
-                        $fecha_ultimo_pago       = '';
+                        $total_cubierto = 0;
+                        $fecha_ultimo_pago = '';
 
                         foreach ($programado['pagados'] as $index_pagados => &$pagado) {
                             /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
@@ -511,28 +492,28 @@ class CementerioController extends ApiController
                         } //fin foreach pagado
 
                         /** al final del ciclo se actualizan los valores en el pago programado*/
-                        $programado['abonado_capital']           = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                        $programado['abonado_intereses']         = $abonado_intereses;
-                        $programado['descontado_pronto_pago']    = $descontado_pronto_pago;
-                        $programado['descontado_capital']        = $descontado_capital;
+                        $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                        $programado['abonado_intereses'] = $abonado_intereses;
+                        $programado['descontado_pronto_pago'] = $descontado_pronto_pago;
+                        $programado['descontado_capital'] = $descontado_capital;
                         $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
                         $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
 
                         /**sumo al total x cuota */
-                        $cuota['total_x_cuota']                  += $programado['monto_programado'];
+                        $cuota['total_x_cuota'] += $programado['monto_programado'];
 
                         $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
                         /**asignando la fecha del pago que liquidado el pago programado */
                         if ($programado['saldo_neto'] <= 0) {
-                            $programado['fecha_ultimo_pago']     = $fecha_ultimo_pago;
+                            $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
                             $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
                         }
                         /**verificando el estado del pago programado*/
                         /**verificando si la fecha sigue vigente o esta vencida */
                         /**variables para controlar el incremento por intereses */
                         $dias_retrasados_del_pago = 0;
-                        $fecha_programada_pago    = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+                        $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
 
                         /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
                         $fecha_para_intereses = date('Y-m-d');
@@ -544,7 +525,7 @@ class CementerioController extends ApiController
                         }
 
                         $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
-                        $interes_generado                = 0;
+                        $interes_generado = 0;
                         $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
                         /**fin varables por intereses */
                         /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
@@ -556,33 +537,33 @@ class CementerioController extends ApiController
                                 if ($dias_vencido_primer_pago_vencido == '') {
                                     $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
                                 }
-                                $programado['fecha_a_pagar']     = date('Y-m-d');
+                                $programado['fecha_a_pagar'] = date('Y-m-d');
                                 $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
                                 /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                                 $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
                                 /**la fecha qui es mayor que la fecha programada del pago */
-                                $programado['status_pago']       = 0;
+                                $programado['status_pago'] = 0;
                                 $programado['status_pago_texto'] = 'Vencido';
                                 $vencidos++;
                                 $programado['dias_vencido'] = $dias_retrasados_del_pago;
-                                $programado['intereses']    = $interes_generado;
+                                $programado['intereses'] = $interes_generado;
                             } else {
                                 /**la fecha aun no vence */
-                                $programado['fecha_a_pagar']     = $programado['fecha_programada'];
-                                $programado['status_pago']       = 1;
+                                $programado['fecha_a_pagar'] = $programado['fecha_programada'];
+                                $programado['status_pago'] = 1;
                                 $programado['status_pago_texto'] = 'Pendiente';
                             }
                         } else {
                             $pagos_programados_cubiertos++;
                             $programado['fecha_a_pagar'] = $pagado['fecha_pago'];
                             /**el pago programado ya fue cubierto */
-                            $programado['status_pago']       = 2;
+                            $programado['status_pago'] = 2;
                             $programado['status_pago_texto'] = 'Pagado';
                         }
 
                         /**monto con pronto pago de cada abono */
                         $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
-                        $programado['total_cubierto']    = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+                        $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
 
                         /**actualizando los totales de montos en la operacion de cuota */
                         $propiedad['intereses'] += $interes_generado;
@@ -597,31 +578,29 @@ class CementerioController extends ApiController
                     } //fin foreach programados
 
                     /**actualizando los datos en general por cuota */
-                    $propiedad['pagos_realizados']               = $pagos_realizados;
-                    $propiedad['pagos_vigentes']                 = $pagos_vigentes;
+                    $propiedad['pagos_realizados'] = $pagos_realizados;
+                    $propiedad['pagos_vigentes'] = $pagos_vigentes;
 
-                    $propiedad['pagos_cancelados']               = $pagos_cancelados;
-                    $propiedad['pagos_programados_cubiertos']    = $pagos_programados_cubiertos;
-                    $propiedad['pagos_vencidos']                 = $vencidos;
-                    $propiedad['dias_vencidos']                  = $dias_vencido_primer_pago_vencido;
-
+                    $propiedad['pagos_cancelados'] = $pagos_cancelados;
+                    $propiedad['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
+                    $propiedad['pagos_vencidos'] = $vencidos;
+                    $propiedad['dias_vencidos'] = $dias_vencido_primer_pago_vencido;
 
                     /**actualizando los datos en general por cuota */
 
-
-                    $cuota['num_pagos_programados']               += 1;
+                    $cuota['num_pagos_programados'] += 1;
                     $cuota['num_pagos_programados_vigentes'] += $num_pagos_programados_vigentes;
-                    $cuota['total_cubierto']                  += $propiedad['total_cubierto'];
-                    $cuota['abonado_capital']                  += $propiedad['abonado_capital'];
-                    $cuota['abonado_intereses']                  += $propiedad['abonado_intereses'];
-                    $cuota['descontado_capital']                  += $propiedad['descontado_capital'];
-                    $cuota['complementado_cancelacion']                  += $propiedad['complementado_cancelacion'];
-                    $cuota['saldo_neto']                  += $propiedad['saldo_neto'];
-                    $cuota['pagos_vencidos']                 += $vencidos;
-                    $cuota['pagos_programados_cubiertos']    += $pagos_programados_cubiertos;
-                    $cuota['pagos_realizados']              += $pagos_realizados;
-                    $cuota['pagos_vigentes']                 += $pagos_vigentes;
-                    $cuota['pagos_cancelados']               += $pagos_cancelados;
+                    $cuota['total_cubierto'] += $propiedad['total_cubierto'];
+                    $cuota['abonado_capital'] += $propiedad['abonado_capital'];
+                    $cuota['abonado_intereses'] += $propiedad['abonado_intereses'];
+                    $cuota['descontado_capital'] += $propiedad['descontado_capital'];
+                    $cuota['complementado_cancelacion'] += $propiedad['complementado_cancelacion'];
+                    $cuota['saldo_neto'] += $propiedad['saldo_neto'];
+                    $cuota['pagos_vencidos'] += $vencidos;
+                    $cuota['pagos_programados_cubiertos'] += $pagos_programados_cubiertos;
+                    $cuota['pagos_realizados'] += $pagos_realizados;
+                    $cuota['pagos_vigentes'] += $pagos_vigentes;
+                    $cuota['pagos_cancelados'] += $pagos_cancelados;
                 } else {
                     /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
                 }
@@ -633,7 +612,6 @@ class CementerioController extends ApiController
         return $resultado_query;
         /**aqui se puede hacer todo los calculos para llenar la informacion calculada del servicio get_cuotas */
     }
-
 
     /**CANCELAR LA VENTA */
     public function cancelar_venta(Request $request)
@@ -649,16 +627,16 @@ class CementerioController extends ApiController
 
         /**unicamente puede regresarse lo que  se ha cubierto de capital */
         $validaciones = [
-            'venta_id'     => 'required',
+            'venta_id' => 'required',
             'motivo.value' => 'required',
-            'cantidad'     => 'numeric|min:0|' . 'max:' . $datos_venta['abonado_capital'],
+            'cantidad' => 'numeric|min:0|' . 'max:' . $datos_venta['abonado_capital'],
         ];
 
         $mensajes = [
             'required' => 'Ingrese este dato',
-            'numeric'  => 'Este dato debe ser un número',
-            'max'      => 'La cantidad a devolver no debe superar a la cantidad abonada hasta la fecha: $ ' . number_format($datos_venta['abonado_capital'], 2),
-            'min'      => 'La cantidad a devolver debe ser mínimo: $ 00.00 Pesos MXN',
+            'numeric' => 'Este dato debe ser un número',
+            'max' => 'La cantidad a devolver no debe superar a la cantidad abonada hasta la fecha: $ ' . number_format($datos_venta['abonado_capital'], 2),
+            'min' => 'La cantidad a devolver debe ser mínimo: $ 00.00 Pesos MXN',
         ];
         request()->validate(
             $validaciones,
@@ -682,31 +660,31 @@ class CementerioController extends ApiController
             DB::beginTransaction();
             DB::table('operaciones')->where('ventas_terrenos_id', $request->venta_id)->update(
                 [
-                    'motivos_cancelacion_id'          => $request['motivo.value'],
-                    'fecha_cancelacion'               => now(),
+                    'motivos_cancelacion_id' => $request['motivo.value'],
+                    'fecha_cancelacion' => now(),
                     'cantidad_a_regresar_cancelacion' => (float) $request->cantidad,
-                    'cancelo_id'                      => (int) $request->user()->id,
-                    'nota_cancelacion'                => $request->comentario,
-                    'status'                          => 0,
+                    'cancelo_id' => (int) $request->user()->id,
+                    'nota_cancelacion' => $request->comentario,
+                    'status' => 0,
                 ]
             );
 
             /**se cancelan las operaciones relacionadas a las cuotas de esta venta */
             DB::table('operaciones')->where('ventas_terrenos_id', $request->venta_id)->where('empresa_operaciones_id', 2)->update(
                 [
-                    'motivos_cancelacion_id'          => $request['motivo.value'],
-                    'fecha_cancelacion'               => now(),
+                    'motivos_cancelacion_id' => $request['motivo.value'],
+                    'fecha_cancelacion' => now(),
                     'cantidad_a_regresar_cancelacion' => 0,
-                    'cancelo_id'                      => (int) $request->user()->id,
-                    'nota_cancelacion'                => $request->comentario,
-                    'status'                          => 0,
+                    'cancelo_id' => (int) $request->user()->id,
+                    'nota_cancelacion' => $request->comentario,
+                    'status' => 0,
                 ]
             );
             /**cnacelando los pagos programados de dicha cuota */
             $operaciones_cuotas = Operaciones::select('id')->where('empresa_operaciones_id', 2)->where('ventas_terrenos_id', $request->venta_id)->get()->toArray();
             DB::table('pagos_programados')->whereIn('operaciones_id', $operaciones_cuotas)->update(
                 [
-                    'status'                          => 0,
+                    'status' => 0,
                 ]
             );
 
@@ -722,13 +700,13 @@ class CementerioController extends ApiController
     {
         /**unicamente puede regresarse lo que  se ha cubierto de capital */
         $validaciones = [
-            'id'     => 'required',
+            'id' => 'required',
             'tipo' => 'required',
-            'action'     => 'required'
+            'action' => 'required',
         ];
 
         $mensajes = [
-            'required' => 'Ingrese este dato'
+            'required' => 'Ingrese este dato',
         ];
         request()->validate(
             $validaciones,
@@ -741,14 +719,13 @@ class CementerioController extends ApiController
         $fecha = now();
         $usuario = (int) $request->user()->id;
 
-
         //verificamos que tipo es
         if ($request->tipo == 'terreno') {
             $solicitud = DB::table('ventas_terrenos')->where('id', $id)->first();
             if ($solicitud->status_convenio == 1) {
                 if ($request->action == 0) {
-                    $fecha = NULL;
-                    $usuario = NULL;
+                    $fecha = null;
+                    $usuario = null;
                 } else {
                     $fecha = $solicitud->fecha_registro_convenio;
                     $usuario = $solicitud->registro_id_convenio;
@@ -757,18 +734,18 @@ class CementerioController extends ApiController
             //checo si ya fue actualizado
             DB::table('ventas_terrenos')->where('id', $id)->update(
                 [
-                    'status_convenio'  => $request->action,
-                    'nota_convenio'         => $nota,
-                    'fecha_registro_convenio'              => $fecha,
-                    'registro_id_convenio'              => $usuario
+                    'status_convenio' => $request->action,
+                    'nota_convenio' => $nota,
+                    'fecha_registro_convenio' => $fecha,
+                    'registro_id_convenio' => $usuario,
                 ]
             );
         } else {
             $solicitud = DB::table('ventas_planes')->where('id', $id)->first();
             if ($solicitud->status_convenio == 1) {
                 if ($request->action == 0) {
-                    $fecha = NULL;
-                    $usuario = NULL;
+                    $fecha = null;
+                    $usuario = null;
                 } else {
                     $fecha = $solicitud->fecha_registro_convenio;
                     $usuario = $solicitud->registro_id_convenio;
@@ -777,17 +754,15 @@ class CementerioController extends ApiController
             //checo si ya fue actualizado
             DB::table('ventas_planes')->where('id', $id)->update(
                 [
-                    'status_convenio'  => $request->action,
-                    'nota_convenio'         => $nota,
-                    'fecha_registro_convenio'              => $fecha,
-                    'registro_id_convenio'              => $usuario
+                    'status_convenio' => $request->action,
+                    'nota_convenio' => $nota,
+                    'fecha_registro_convenio' => $fecha,
+                    'registro_id_convenio' => $usuario,
                 ]
             );
         }
         return $this->successResponse(1, 200);
     }
-
-
 
     public function get_cuota_pdf($idioma = 'es', Request $request)
     {
@@ -804,8 +779,8 @@ class CementerioController extends ApiController
                 $this->errorResponse('Es necesario un correo y un destinatario', 409);
             }
         }
-        $email_to        = $request->email_address;
-        $datos_request   = json_decode($request->request_parent[0], true);
+        $email_to = $request->email_address;
+        $datos_request = json_decode($request->request_parent[0], true);
 
         $id_cuota = $datos_request['reporte']['value'];
 
@@ -815,7 +790,7 @@ class CementerioController extends ApiController
         /*  $id_cuota = 1;
         $email = false;
         $email_to = 'hector@gmail.com';
-        */
+         */
         $cuota = $this->get_cuotas($request, $id_cuota, false);
         if (count($cuota) > 0) {
             $cuota = $cuota[0];
@@ -824,12 +799,12 @@ class CementerioController extends ApiController
         //obtengo la informacion de esa cuota
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('cementerios/cuotas/cuota', ['empresa' => $empresa, 'cuota' => $cuota, 'idioma' => $idioma]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('cementerios/cuotas/cuota', ['empresa' => $empresa, 'cuota' => $cuota, 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = __('cementerio/cuotas.cuota') . '.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.cuotas.footer', ['empresa' => $empresa]),
         ]);
 
@@ -856,7 +831,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 $request->destinatario,
                 __('cementerio/cuotas.cuota'),
@@ -887,7 +862,7 @@ class CementerioController extends ApiController
         /*
         $email_to        = $request->email_address;
         $datos_request   = json_decode($request->request_parent[0], true);
-*/
+         */
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
@@ -897,14 +872,13 @@ class CementerioController extends ApiController
 
         $ventas = $this->get_ventas($request, 'all', false);
 
-
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('cementerios/abonos_vencidos/reporte', ['empresa' => $empresa, 'ventas' => $ventas, 'idioma' => $idioma]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('cementerios/abonos_vencidos/reporte', ['empresa' => $empresa, 'ventas' => $ventas, 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf =  'Pagos vencidos en propiedades.pdf';
+        $name_pdf = 'Pagos vencidos en propiedades.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.abonos_vencidos.footer', ['empresa' => $empresa]),
         ]);
 
@@ -931,7 +905,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 $request->destinatario,
                 'Abonos vencidos de propiedades',
@@ -944,8 +918,6 @@ class CementerioController extends ApiController
             return $pdf->inline($name_pdf);
         }
     }
-
-
 
     public function get_mapeado($idioma = 'es', Request $request)
     {
@@ -982,7 +954,7 @@ class CementerioController extends ApiController
             $filtro_seleccion = $datosRequest['filtro_seleccion']['value'];
             $fecha_inicio = $datosRequest['fecha_inicio'];
             $fecha_fin = $datosRequest['fecha_fin'];
-            $email_to        = $request->email_address;
+            $email_to = $request->email_address;
         } else {
             //return $this->errorResponse('Error al generar el reporte', 409);
             $tipo_propiedad_id = '4';
@@ -993,7 +965,6 @@ class CementerioController extends ApiController
             $email = false;
             $email_to = 'hector@gmail.com';
         }
-
 
         $cementerio = $this->get_cementerio();
         //$ventas = $this->get_ventas($request, 'all', false);
@@ -1016,12 +987,12 @@ class CementerioController extends ApiController
                     $q->WhereBetween('fechahora_inhumacion', [$fecha_inicio, $fecha_fin]);
                 }
             }])
-            /*
-            ->WhereHas(isset($request->filtrar_solo_adeudos) ? 'operacion' : 'registro', function ($q) use ($request) {
-                if (isset($request->filtrar_solo_adeudos)) {
-                    $q->where('status', 1)->where('total', '>', 0);
-                }
-            })*/
+        /*
+        ->WhereHas(isset($request->filtrar_solo_adeudos) ? 'operacion' : 'registro', function ($q) use ($request) {
+        if (isset($request->filtrar_solo_adeudos)) {
+        $q->where('status', 1)->where('total', '>', 0);
+        }
+        })*/
             ->where('empresa_operaciones_id', 1)->where('status', '<>', 0);
 
         //aplico los filtros a las ventas que sean en la fecha señalada si aplican
@@ -1039,8 +1010,6 @@ class CementerioController extends ApiController
             $venta['fila_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[2]));
             $venta['lote_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[3]));
         }
-
-
 
         //aqui ando
 
@@ -1079,7 +1048,7 @@ class CementerioController extends ApiController
                             'cliente' => $venta['cliente']['nombre'],
                             'fecha_venta_texto' => fecha_abr($venta['fecha_operacion']),
                             'num_servicios' => count($venta['venta_terreno']['servicios_por_terreno']),
-                            'servicios_funerarios' => $venta['venta_terreno']['servicios_por_terreno']
+                            'servicios_funerarios' => $venta['venta_terreno']['servicios_por_terreno'],
                         ]
                     );
                 }
@@ -1114,22 +1083,20 @@ class CementerioController extends ApiController
                 'fecha_inicio' => $fecha_inicio,
                 'fecha_fin' => $fecha_fin,
                 'filtro_seleccion' => $filtro_seleccion,
-                'nombre_reporte' => $nombre_reporte
-            ]
+                'nombre_reporte' => $nombre_reporte,
+            ],
         ];
-
-
 
         //return $cementerio;
 
         //aqui estoy trabajando
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('cementerios/cementerio_mapa/reporte', ['empresa' => $empresa, 'cementerio' => $cementerio, 'idioma' => $idioma]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('cementerios/cementerio_mapa/reporte', ['empresa' => $empresa, 'cementerio' => $cementerio, 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf =  'Pagos vencidos en propiedades.pdf';
+        $name_pdf = 'Pagos vencidos en propiedades.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.cementerio_mapa.footer', ['empresa' => $empresa]),
         ]);
 
@@ -1156,7 +1123,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 $request->destinatario,
                 'Abonos vencidos de propiedades',
@@ -1169,7 +1136,6 @@ class CementerioController extends ApiController
             return $pdf->inline($name_pdf);
         }
     }
-
 
     public function get_cuota_pdf_todas($idioma = 'es', Request $request)
     {
@@ -1186,7 +1152,7 @@ class CementerioController extends ApiController
                 $this->errorResponse('Es necesario un correo y un destinatario', 409);
             }
         }
-        $email_to        = $request->email_address;
+        $email_to = $request->email_address;
         // $datos_request   = json_decode($request->request_parent[0], true);
         //$id_cuota = $datos_request['id_cuota'];
 
@@ -1196,20 +1162,19 @@ class CementerioController extends ApiController
         /*  $id_cuota = 1;
         $email = false;
         $email_to = 'hector@gmail.com';
-        */
+         */
         $cuotas = $this->get_cuotas($request, 'all', false);
-
 
         //obtengo la informacion de esa cuota
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
-        $pdf           = PDF::loadView('cementerios/cuotas_todas/cuota', ['empresa' => $empresa, 'cuotas' => $cuotas, 'idioma' => $idioma]);
+        $pdf = PDF::loadView('cementerios/cuotas_todas/cuota', ['empresa' => $empresa, 'cuotas' => $cuotas, 'idioma' => $idioma]);
 
-        $name_pdf =  'Cuotas de cementerio.pdf';
+        $name_pdf = 'Cuotas de cementerio.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.cuotas_todas.footer', ['empresa' => $empresa]),
         ]);
 
@@ -1236,7 +1201,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 $request->destinatario,
                 __('cementerio/cuotas_todas.cuota'),
@@ -1249,14 +1214,6 @@ class CementerioController extends ApiController
             return $pdf->inline($name_pdf);
         }
     }
-
-
-
-
-
-
-
-
 
     public function get_cementerio()
     {
@@ -1298,23 +1255,23 @@ class CementerioController extends ApiController
             foreach ($dato['tipo_propiedad']['precios'] as $precio_key => &$precio) {
 
                 if ($precio['financiamiento'] == 1) {
-                    $precio['tipo_financiamiento']        = "Pago Único/Uso Inmediato";
+                    $precio['tipo_financiamiento'] = "Pago Único/Uso Inmediato";
                     $precio['tipo_financiamiento_ingles'] = "Spot Price";
                     $precio['pago_mensual']
-                        = 0;
+                    = 0;
                 } else {
-                    $precio['tipo_financiamiento']        = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
+                    $precio['tipo_financiamiento'] = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
                     $precio['tipo_financiamiento_ingles'] = $precio['financiamiento'] . "-Month Payment";
                     $precio['pago_mensual']
-                        = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
+                    = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
                 }
                 /**sacando los descuentos en caso de que tenga pronto pago */
                 if ($precio['descuento_pronto_pago_b'] == 1) {
 
-                    $precio['descuento_x_pago']       = ($precio['costo_neto'] - $precio['costo_neto_pronto_pago']) / $precio['financiamiento'];
+                    $precio['descuento_x_pago'] = ($precio['costo_neto'] - $precio['costo_neto_pronto_pago']) / $precio['financiamiento'];
                     $precio['porcentaje_pronto_pago'] = 100 - (($precio['costo_neto_financiamiento_normal'] * 100) / $precio['costo_neto']);
                 } else {
-                    $precio['descuento_x_pago']       = ' 0';
+                    $precio['descuento_x_pago'] = ' 0';
                     $precio['porcentaje_pronto_pago'] = ' 0';
                 }
             }
@@ -1349,7 +1306,7 @@ class CementerioController extends ApiController
         //id del conjunto de propieades
 
         return
-            SatFormasPago::where('clave', '<>', '99')->where('clave', '<>', '25')->get();
+        SatFormasPago::where('clave', '<>', '99')->where('clave', '<>', '25')->get();
     }
 
     /**GUARDAR LA VENTA */
@@ -1364,43 +1321,43 @@ class CementerioController extends ApiController
         /**valdiando que cuadren las cantidades de la venta */
         //validaciones directas sin condicionales
         $validaciones = [
-            'salarios_minimos'             => 'integer|required|min:1|max:150',
+            'salarios_minimos' => 'integer|required|min:1|max:150',
             //datos de la propiedad
-            'id_venta'                     => '',
+            'id_venta' => '',
             /**solo para modificaciones */
-            'tipo_propiedades_id'          => 'required|min:1',
-            'propiedades_id'               => 'required|min:1',
-            'ubicacion'                    => 'required',
+            'tipo_propiedades_id' => 'required|min:1',
+            'propiedades_id' => 'required|min:1',
+            'ubicacion' => 'required',
             //fin de datos de la propiedad
             //datos de la venta
-            'fecha_venta'                  => 'required|date',
-            'ventaAntiguedad.value'        => 'required',
-            'tipo_financiamiento'          => 'required',
-            'filas.value'                  => 'required',
-            'lotes.value'                  => '', //modificada segun condiciones
-            'vendedor.value'               => 'required',
-            'solicitud'                    => '',
-            'convenio'                     => '',
-            'titulo'                       => '',
+            'fecha_venta' => 'required|date',
+            'ventaAntiguedad.value' => 'required',
+            'tipo_financiamiento' => 'required',
+            'filas.value' => 'required',
+            'lotes.value' => '', //modificada segun condiciones
+            'vendedor.value' => 'required',
+            'solicitud' => '',
+            'convenio' => '',
+            'titulo' => '',
             /**id del cliente */
-            'id_cliente'                   => 'required',
+            'id_cliente' => 'required',
             //info del plan de venta y pagos
             //'planVenta.value' => 'numeric|required',
             /**nuevos datos a requerir */
-            'financiamiento'               => '',
-            'tasa_iva'                     => 'numeric|required|min:1|max:25',
-            'descuento'                    => '',
-            'costo_neto'                   => 'numeric|required|min:1',
-            'pago_inicial'                 => '',
+            'financiamiento' => '',
+            'tasa_iva' => 'numeric|required|min:1|max:25',
+            'descuento' => '',
+            'costo_neto' => 'numeric|required|min:1',
+            'pago_inicial' => '',
             /**titular_sustituto */
-            'titular_sustituto'            => 'required',
+            'titular_sustituto' => 'required',
             'parentesco_titular_sustituto' => 'required',
-            'telefono_titular_sustituto'   => 'required',
+            'telefono_titular_sustituto' => 'required',
             /**beneficiarios */
-            'beneficiarios.*.nombre'       => [
+            'beneficiarios.*.nombre' => [
                 'required',
             ],
-            'beneficiarios.*.parentesco'   => [
+            'beneficiarios.*.parentesco' => [
                 'required',
             ],
         ];
@@ -1425,25 +1382,25 @@ class CementerioController extends ApiController
         /**creamos los calculos del total a pagar para desglosar impuestos y pago inicial necesario segun el financiamiento */
         /**aqui comienzan a gurdar los datos */
         $tasa_iva_calculos = 0;
-        $tasa_iva_decimal  = 0;
+        $tasa_iva_decimal = 0;
         if (isset($request->tasa_iva) && isset($request->costo_neto) && isset($request->descuento)) {
             if ($request->tasa_iva > 0) {
                 $tasa_iva_calculos = ($request->tasa_iva / 100) + 1;
-                $tasa_iva_decimal  = $request->tasa_iva / 100;
+                $tasa_iva_decimal = $request->tasa_iva / 100;
             }
         } else {
             return $this->errorResponse('Ingrese IVA, costo neto y descuento.', 409);
         }
 
-        $tasa_iva   = $request->tasa_iva;
+        $tasa_iva = $request->tasa_iva;
         $costo_neto = $request->costo_neto;
-        $descuento  = $request->descuento;
+        $descuento = $request->descuento;
 
         /**total neto a pagar */
         $total_pagar = $costo_neto - $descuento;
 
         /**calculando los descuentos para calcular los impuestos por IVA */
-        $subtotal               = $costo_neto / $tasa_iva_calculos;
+        $subtotal = $costo_neto / $tasa_iva_calculos;
         $subtotal_con_descuento = $total_pagar / $tasa_iva_calculos;
         /**obtengo la cantidad que se le aplica al subototal como descuento para registrar impuestos */
         $descuento_real_para_impuestos = $subtotal - $subtotal_con_descuento;
@@ -1552,7 +1509,7 @@ class CementerioController extends ApiController
         } else if ($request->ventaAntiguedad['value'] == 3) {
             /**venta ya liquidada antes del sistema */
             $validaciones['convenio'] = 'required';
-            $validaciones['titulo']   = 'required';
+            $validaciones['titulo'] = 'required';
 
             /**validando de manera manual si la solicitud enviado ya esta registrado y esto activa */
             $convenio = VentasTerrenos::select('ventas_terrenos.id')->join('operaciones', 'operaciones.ventas_terrenos_id', '=', 'ventas_terrenos.id')
@@ -1582,21 +1539,21 @@ class CementerioController extends ApiController
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
         $mensajes = [
-            'id_venta.required'     => 'Ingrese un la clave única de la venta para continuar',
-            'max'                   => 'verifique la cantidad',
-            'required'              => 'Ingrese este dato',
-            'numeric'               => 'Este dato debe ser un número',
-            'ubicacion.unique'      => 'Este terreno ya fue vendido',
-            'solicitud.unique'      => 'Esta solicitud ya fue registrada en otra venta',
-            'convenio.unique'       => 'Este convenio ya fue registrado en otra venta',
-            'titulo.unique'         => 'Este título ya fue registrado en otra venta',
-            'num_operacion.unique'  => 'Este número de operación ya fue capturado',
+            'id_venta.required' => 'Ingrese un la clave única de la venta para continuar',
+            'max' => 'verifique la cantidad',
+            'required' => 'Ingrese este dato',
+            'numeric' => 'Este dato debe ser un número',
+            'ubicacion.unique' => 'Este terreno ya fue vendido',
+            'solicitud.unique' => 'Esta solicitud ya fue registrada en otra venta',
+            'convenio.unique' => 'Este convenio ya fue registrado en otra venta',
+            'titulo.unique' => 'Este título ya fue registrado en otra venta',
+            'num_operacion.unique' => 'Este número de operación ya fue capturado',
             //beneficiarios
-            '*.nombre.required'     => 'ingrese este dato',
+            '*.nombre.required' => 'ingrese este dato',
             '*.parentesco.required' => 'ingrese este dato',
-            'lte'                   => 'verifique la cantidad',
-            'unique.num_operacion'  => 'Este número de operación ya fue registrado.',
-            'pago_inicial.min'      => 'El pago inicial debe ser al menos :min ',
+            'lte' => 'verifique la cantidad',
+            'unique.num_operacion' => 'Este número de operación ya fue registrado.',
+            'pago_inicial.min' => 'El pago inicial debe ser al menos :min ',
         ];
         request()->validate(
             $validaciones,
@@ -1890,47 +1847,47 @@ class CementerioController extends ApiController
                 //captura de la venta
                 $id_venta = DB::table('ventas_terrenos')->insertGetId(
                     [
-                        'ubicacion'                  => $request->ubicacion,
-                        'propiedades_id'             => $request->propiedades_id,
-                        'tipo_propiedades_id'        => $request->tipo_propiedades_id,
-                        'vendedor_id'                => (int) $request->vendedor['value'],
+                        'ubicacion' => $request->ubicacion,
+                        'propiedades_id' => $request->propiedades_id,
+                        'tipo_propiedades_id' => $request->tipo_propiedades_id,
+                        'vendedor_id' => (int) $request->vendedor['value'],
                         'considerar_mantenimiento_b' => 1,
-                        'tipo_financiamiento'        => $request->tipo_financiamiento,
-                        'salarios_minimos'           => $request->salarios_minimos,
+                        'tipo_financiamiento' => $request->tipo_financiamiento,
+                        'salarios_minimos' => $request->salarios_minimos,
                     ]
                 );
                 /**a partir de la venta se crea la operaicon */
                 $id_operacion = DB::table('operaciones')->insertGetId(
                     [
-                        'clientes_id'                      => (int) $request->id_cliente,
-                        'ventas_terrenos_id'               => $id_venta,
+                        'clientes_id' => (int) $request->id_cliente,
+                        'ventas_terrenos_id' => $id_venta,
                         /**venta a futuro solamente */
-                        'numero_solicitud'                 => ($request->tipo_financiamiento == 2) ? $request->solicitud : null,
+                        'numero_solicitud' => ($request->tipo_financiamiento == 2) ? $request->solicitud : null,
                         /**venta  liquidada solamente */
-                        'numero_convenio'                  => $this->generarNumeroConvenio($request),
-                        'numero_titulo'                    => ($request->ventaAntiguedad['value'] == 3) ? $request->titulo : null,
-                        'empresa_operaciones_id'           => 1, //venta de terrenos
-                        'subtotal'                         => round($subtotal, 2, PHP_ROUND_HALF_UP),
-                        'tasa_iva'                         => $tasa_iva,
-                        'descuento'                        => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
-                        'impuestos'                        => round($iva, 2, PHP_ROUND_HALF_UP),
-                        'total'                            => round($total_pagar, 2, PHP_ROUND_HALF_UP),
-                        'descuento_pronto_pago_b'          => 1,
-                        'costo_neto_pronto_pago'           => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
-                        'antiguedad_operacion_id'          => (int) $request->ventaAntiguedad['value'],
+                        'numero_convenio' => $this->generarNumeroConvenio($request),
+                        'numero_titulo' => ($request->ventaAntiguedad['value'] == 3) ? $request->titulo : null,
+                        'empresa_operaciones_id' => 1, //venta de terrenos
+                        'subtotal' => round($subtotal, 2, PHP_ROUND_HALF_UP),
+                        'tasa_iva' => $tasa_iva,
+                        'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
+                        'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
+                        'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'descuento_pronto_pago_b' => 1,
+                        'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
+                        'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],
                         /** titular_sustituto */
-                        'titular_sustituto'                => $request->titular_sustituto,
-                        'parentesco_titular_sustituto'     => $request->parentesco_titular_sustituto,
-                        'telefono_titular_sustituto'       => $request->telefono_titular_sustituto,
-                        'financiamiento'                   => $request->financiamiento,
-                        'aplica_devolucion_b'              => 0,
+                        'titular_sustituto' => $request->titular_sustituto,
+                        'parentesco_titular_sustituto' => $request->parentesco_titular_sustituto,
+                        'telefono_titular_sustituto' => $request->telefono_titular_sustituto,
+                        'financiamiento' => $request->financiamiento,
+                        'aplica_devolucion_b' => 0,
                         'costo_neto_financiamiento_normal' => $costo_neto,
-                        'comision_venta_neto'              => 0,
-                        'fecha_registro'                   => now(),
-                        'fecha_operacion'                  => date('Y-m-d H:i:s', strtotime($request->fecha_venta)),
-                        'registro_id'                      => (int) $request->user()->id,
-                        'nota'                             => $request->nota,
-                        'status'                           => $costo_neto > 0 ? 1 : '2',
+                        'comision_venta_neto' => 0,
+                        'fecha_registro' => now(),
+                        'fecha_operacion' => date('Y-m-d H:i:s', strtotime($request->fecha_venta)),
+                        'registro_id' => (int) $request->user()->id,
+                        'nota' => $request->nota,
+                        'status' => $costo_neto > 0 ? 1 : '2',
                     ]
                 );
                 /**guardando los datos de la tasa para intereses */
@@ -1984,12 +1941,11 @@ class CementerioController extends ApiController
                      * aplica_devolucion_b =>0
                      */
                     /**agrego los datos del request que necesita la funcion de programar pagos */
-                    $request->request->add(['costo_neto' =>  $total]);
-                    $request->request->add(['pago_inicial' =>  $total]);
-                    $request->request->add(['descuento' =>  $descuento]);
-                    $request->request->add(['fecha_venta' =>  $cuota['fecha_inicio']]);
+                    $request->request->add(['costo_neto' => $total]);
+                    $request->request->add(['pago_inicial' => $total]);
+                    $request->request->add(['descuento' => $descuento]);
+                    $request->request->add(['fecha_venta' => $cuota['fecha_inicio']]);
                     $request->request->add(['tipo_financiamiento' => 1]); //de contado
-
 
                     /**guardo operacion */
                     $id_operacion_cuota = DB::table('operaciones')->insertGetId(
@@ -2011,7 +1967,7 @@ class CementerioController extends ApiController
                             'modifico_id' => (int) $request->user()->id,
                             'status' => $cuota['status'],
                             'aplica_devolucion_b' => 0,
-                            'costo_neto_pronto_pago' => $total
+                            'costo_neto_pronto_pago' => $total,
                         ]
                     );
 
@@ -2031,42 +1987,42 @@ class CementerioController extends ApiController
                 /**es modificar */
                 DB::table('ventas_terrenos')->where('id', '=', $request->id_venta)->update(
                     [
-                        'ubicacion'           => $request->ubicacion,
-                        'propiedades_id'      => $request->propiedades_id,
+                        'ubicacion' => $request->ubicacion,
+                        'propiedades_id' => $request->propiedades_id,
                         'tipo_propiedades_id' => $request->tipo_propiedades_id,
-                        'vendedor_id'         => (int) $request->vendedor['value'],
+                        'vendedor_id' => (int) $request->vendedor['value'],
                         'tipo_financiamiento' => $request->tipo_financiamiento,
-                        'salarios_minimos'    => $request->salarios_minimos,
+                        'salarios_minimos' => $request->salarios_minimos,
                     ]
                 );
 
                 DB::table('operaciones')->where('id', '=', $datos_venta['operacion_id'])->update(
                     [
-                        'clientes_id'                      => (int) $request->id_cliente,
+                        'clientes_id' => (int) $request->id_cliente,
                         /**venta a futuro solamente */
-                        'numero_solicitud'                 => ($request->tipo_financiamiento == 2) ? trim($request->solicitud) : null,
+                        'numero_solicitud' => ($request->tipo_financiamiento == 2) ? trim($request->solicitud) : null,
                         /**venta  liquidada solamente */
-                        'numero_convenio'                  => trim($request->convenio),
-                        'numero_titulo'                    => trim($request->titulo),
-                        'subtotal'                         => round($subtotal, 2, PHP_ROUND_HALF_UP),
-                        'tasa_iva'                         => $tasa_iva,
-                        'descuento'                        => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
-                        'impuestos'                        => round($iva, 2, PHP_ROUND_HALF_UP),
-                        'total'                            => round($total_pagar, 2, PHP_ROUND_HALF_UP),
-                        'descuento_pronto_pago_b'          => 1,
-                        'costo_neto_pronto_pago'           => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
-                        'antiguedad_operacion_id'          => (int) $request->ventaAntiguedad['value'],
+                        'numero_convenio' => trim($request->convenio),
+                        'numero_titulo' => trim($request->titulo),
+                        'subtotal' => round($subtotal, 2, PHP_ROUND_HALF_UP),
+                        'tasa_iva' => $tasa_iva,
+                        'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
+                        'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
+                        'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'descuento_pronto_pago_b' => 1,
+                        'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
+                        'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],
                         /** titular_sustituto */
-                        'titular_sustituto'                => $request->titular_sustituto,
-                        'parentesco_titular_sustituto'     => $request->parentesco_titular_sustituto,
-                        'telefono_titular_sustituto'       => $request->telefono_titular_sustituto,
-                        'financiamiento'                   => $request->financiamiento,
+                        'titular_sustituto' => $request->titular_sustituto,
+                        'parentesco_titular_sustituto' => $request->parentesco_titular_sustituto,
+                        'telefono_titular_sustituto' => $request->telefono_titular_sustituto,
+                        'financiamiento' => $request->financiamiento,
                         'costo_neto_financiamiento_normal' => $costo_neto,
-                        'status'                           => ($costo_neto > 0 && $datos_venta['saldo_neto'] > 0) ? '1' : '2',
-                        'fecha_modificacion'               => now(),
-                        'fecha_operacion'                  => date('Y-m-d H:i:s', strtotime($request->fecha_venta)),
-                        'modifico_id'                      => (int) $request->user()->id,
-                        'nota'                             => $request->nota,
+                        'status' => ($costo_neto > 0 && $datos_venta['saldo_neto'] > 0) ? '1' : '2',
+                        'fecha_modificacion' => now(),
+                        'fecha_operacion' => date('Y-m-d H:i:s', strtotime($request->fecha_venta)),
+                        'modifico_id' => (int) $request->user()->id,
+                        'nota' => $request->nota,
                     ]
                 );
 
@@ -2124,7 +2080,7 @@ class CementerioController extends ApiController
             if ($ajustes->numero_convenios_sistematizados == true) {
                 //quiere decir que ya esta funcionando esto y debo elejir el numero de convenio mayor para crear el siguiente
                 //$numero_convenio = ((int) VentasPropiedades::where('antiguedad_ventas_id', 1)->where('ventas_referencias_id', 2)->max('numero_convenio')) + 1;
-                $result          = DB::select(DB::raw("SELECT MAX(CAST(numero_convenio AS UNSIGNED) ) AS max_numero_convenio FROM operaciones"));
+                $result = DB::select(DB::raw("SELECT MAX(CAST(numero_convenio AS UNSIGNED) ) AS max_numero_convenio FROM operaciones"));
                 $ultimo_convenio = json_decode(json_encode($result), true)[0]['max_numero_convenio'];
                 $numero_convenio = ((float) $ultimo_convenio) + 1;
                 if ($numero_convenio < 500) {
@@ -2134,7 +2090,7 @@ class CementerioController extends ApiController
             } else {
                 //comenzamos en numero 500 (quinientos) y marcamos numero_convenios_sistematizados como true en la base de datos
                 $ajustes->numero_convenios_sistematizados = true;
-                $ajustes->timestamps                      = false;
+                $ajustes->timestamps = false;
                 $ajustes->save();
                 $numero_convenio = 500;
             }
@@ -2162,11 +2118,11 @@ class CementerioController extends ApiController
                     /**verificando que la operacion no tenga un titulo ya asigando, si tiene titulo se le deja el original */
                     if (trim($operacion_info['numero_titulo']) == '') {
                         //determino si ya esta en funcion la asignacion de numeros de titulos automaticos
-                        $ajustes       = Ajustes::first();
+                        $ajustes = Ajustes::first();
                         $numero_titulo = 0;
                         if ($ajustes->numero_titulos_sistematizados == true) {
                             //quiere decir que ya esta funcionando esto y debo elejir el numero de convenio mayor para crear el siguiente
-                            $result        = DB::select(DB::raw("SELECT MAX(CAST(numero_titulo AS UNSIGNED) ) AS max_numero_titulo FROM operaciones"));
+                            $result = DB::select(DB::raw("SELECT MAX(CAST(numero_titulo AS UNSIGNED) ) AS max_numero_titulo FROM operaciones"));
                             $ultimo_titulo = json_decode(json_encode($result), true)[0]['max_numero_titulo'];
                             if (intval($ultimo_titulo) > 0) {
                                 $numero_titulo = $ultimo_titulo + 1;
@@ -2176,7 +2132,7 @@ class CementerioController extends ApiController
                         } else {
                             //comenzamos en numero 500 (quinientos) y marcamos numero_titulos_sistematizados como true en la base de datos
                             $ajustes->numero_titulos_sistematizados = true;
-                            $ajustes->timestamps                    = false;
+                            $ajustes->timestamps = false;
                             $ajustes->save();
                             $numero_titulo = 500;
                         }
@@ -2184,7 +2140,7 @@ class CementerioController extends ApiController
                         $operacion = Operaciones::find($operacion_id);
                         //actualizamos la venta con su nuevo numero de titulo
                         $operacion->numero_titulo = $numero_titulo;
-                        $operacion->timestamps    = false;
+                        $operacion->timestamps = false;
                         $operacion->save();
                     }
                 }
@@ -2199,14 +2155,14 @@ class CementerioController extends ApiController
         /**hago un registro con la informacion que afectara el control de intereses para esta venta */
         DB::table('ajustes_politicas_operacion')->insert(
             [
-                'tasa_fija_anual'                     => $ajustes_politicas->tasa_fija_anual,
-                'dias_antes_vencimiento'              => $ajustes_politicas->dias_antes_vencimiento,
-                'maximo_dias_retraso'                 => $ajustes_politicas->maximo_dias_retraso,
+                'tasa_fija_anual' => $ajustes_politicas->tasa_fija_anual,
+                'dias_antes_vencimiento' => $ajustes_politicas->dias_antes_vencimiento,
+                'maximo_dias_retraso' => $ajustes_politicas->maximo_dias_retraso,
                 'porcentaje_pena_convencional_minima' => $ajustes_politicas->porcentaje_pena_convencional_minima,
-                'minima_partes_cubiertas'             => $ajustes_politicas->minima_partes_cubiertas,
-                'maximo_pagos_vencidos'               => $ajustes_politicas->maximo_pagos_vencidos,
-                'maximo_dias_cancelar_contrato'       => $ajustes_politicas->maximo_dias_cancelar_contrato,
-                'operaciones_id'                      => $operacion_id,
+                'minima_partes_cubiertas' => $ajustes_politicas->minima_partes_cubiertas,
+                'maximo_pagos_vencidos' => $ajustes_politicas->maximo_pagos_vencidos,
+                'maximo_dias_cancelar_contrato' => $ajustes_politicas->maximo_dias_cancelar_contrato,
+                'operaciones_id' => $operacion_id,
             ]
         );
     }
@@ -2224,9 +2180,9 @@ class CementerioController extends ApiController
         for ($i = 0; $i < count($request['beneficiarios']); $i++) {
             DB::table('beneficiarios')->insert(
                 [
-                    'nombre'         => $request['beneficiarios'][$i]['nombre'],
-                    'parentesco'     => $request['beneficiarios'][$i]['parentesco'],
-                    'telefono'       => $request['beneficiarios'][$i]['telefono'],
+                    'nombre' => $request['beneficiarios'][$i]['nombre'],
+                    'parentesco' => $request['beneficiarios'][$i]['parentesco'],
+                    'telefono' => $request['beneficiarios'][$i]['telefono'],
                     'operaciones_id' => $operacion_id,
                 ]
             );
@@ -2259,13 +2215,13 @@ class CementerioController extends ApiController
         $tasa_iva = $request->tasa_iva;
 
         $costo_neto = $request->costo_neto;
-        $descuento  = $request->descuento;
+        $descuento = $request->descuento;
 
         /**total neto a pagar */
         $total_pagar = $costo_neto - $descuento;
 
         /**calculando los descuentos para calcular los impuestos por IVA */
-        $subtotal               = $costo_neto / $tasa_iva_calculos;
+        $subtotal = $costo_neto / $tasa_iva_calculos;
         $subtotal_con_descuento = $total_pagar / $tasa_iva_calculos;
         /**obtengo la cantidad que se le aplica al subototal como descuento para registrar impuestos */
         $descuento_real_para_impuestos = $subtotal - $subtotal_con_descuento;
@@ -2295,16 +2251,16 @@ class CementerioController extends ApiController
             //de uso inmediato sin importar si es seleccionado a futuro o inmediato ya que selecciono pagarlo de contado
             /**se crea un solo pago */
             //se agregan 0 dias a los enganches y a las liquidaciones para ser capturadas
-            $fecha_maxima             = Carbon::createFromformat('Y-m-d', date('Y-m-d', strtotime($request->fecha_venta)))->add(0, 'day');
+            $fecha_maxima = Carbon::createFromformat('Y-m-d', date('Y-m-d', strtotime($request->fecha_venta)))->add(0, 'day');
             $id_pago_programado_unico = DB::table('pagos_programados')->insertGetId(
                 [
-                    'num_pago'           => 1, //numero 1, pues es unico
-                    'referencia_pago'    => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
-                    'fecha_programada'   => $fecha_maxima, //fecha de la venta
+                    'num_pago' => 1, //numero 1, pues es unico
+                    'referencia_pago' => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
+                    'fecha_programada' => $fecha_maxima, //fecha de la venta
                     'conceptos_pagos_id' => 3, //3-pago unico //que concepto de pago es, segun los conceptos de pago, abono, enganche o liquidacion
-                    'monto_programado'   => $total_pagar,
-                    'operaciones_id'     => $operacion_id,
-                    'status'             => 1,
+                    'monto_programado' => $total_pagar,
+                    'operaciones_id' => $operacion_id,
+                    'status' => 1,
                 ]
             );
         } else {
@@ -2323,13 +2279,13 @@ class CementerioController extends ApiController
 
             $id_pago_programado_enganche = DB::table('pagos_programados')->insertGetId(
                 [
-                    'num_pago'           => 1, //numero 1, pues es unico
-                    'referencia_pago'    => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
-                    'fecha_programada'   => $fecha_maxima, //fecha de la venta
+                    'num_pago' => 1, //numero 1, pues es unico
+                    'referencia_pago' => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
+                    'fecha_programada' => $fecha_maxima, //fecha de la venta
                     'conceptos_pagos_id' => 1, //3-pago unico //que concepto de pago es, segun los conceptos de pago, abono, enganche o liquidacion
-                    'monto_programado'   => $pago_inicial,
-                    'operaciones_id'     => $operacion_id,
-                    'status'             => 1,
+                    'monto_programado' => $pago_inicial,
+                    'operaciones_id' => $operacion_id,
+                    'status' => 1,
                 ]
             );
 
@@ -2355,23 +2311,23 @@ class CementerioController extends ApiController
                     $decimales = $monto_abono - intval($monto_abono);
                     if ($decimales > 0) {
                         /**tiene decimales */
-                        $abono       = ($total_pagar - $request->pago_inicial) - (intval($monto_abono) * $request->financiamiento);
+                        $abono = ($total_pagar - $request->pago_inicial) - (intval($monto_abono) * $request->financiamiento);
                         $monto_abono = round($abono + intval($monto_abono), 2, PHP_ROUND_HALF_UP);
                     }
                 } else {
-                    $abono       = intval($monto_abono);
+                    $abono = intval($monto_abono);
                     $monto_abono = $abono;
                 }
 
                 $id_pago_programado = DB::table('pagos_programados')->insertGetId(
                     [
-                        'num_pago'           => ($i + 1), //numero 1, pues es unico
-                        'referencia_pago'    => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . $numero_pago_para_referencia . $id_venta, //se crea una referencia para saber a que pago pertenece
-                        'fecha_programada'   => $fecha, //fecha de la venta
+                        'num_pago' => ($i + 1), //numero 1, pues es unico
+                        'referencia_pago' => $referencia_pago_clave . date('Ymd', strtotime($request->fecha_venta)) . $numero_pago_para_referencia . $id_venta, //se crea una referencia para saber a que pago pertenece
+                        'fecha_programada' => $fecha, //fecha de la venta
                         'conceptos_pagos_id' => 2, //3-pago unico //que concepto de pago es, segun los conceptos de pago, abono, enganche o liquidacion
-                        'monto_programado'   => $monto_abono,
-                        'operaciones_id'     => $operacion_id,
-                        'status'             => 1,
+                        'monto_programado' => $monto_abono,
+                        'operaciones_id' => $operacion_id,
+                        'status' => 1,
                     ]
                 );
             }
@@ -2430,22 +2386,22 @@ class CementerioController extends ApiController
         foreach ($resultado as $tipo_key => &$tipo) {
             foreach ($tipo['precios'] as $precio_key => &$precio) {
                 if ($precio['financiamiento'] == 1) {
-                    $precio['tipo_financiamiento']        = "Pago Único/Uso Inmediato";
+                    $precio['tipo_financiamiento'] = "Pago Único/Uso Inmediato";
                     $precio['tipo_financiamiento_ingles'] = "Spot Price";
                     $precio['pago_mensual']
-                        = 0;
+                    = 0;
                 } else {
-                    $precio['tipo_financiamiento']        = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
+                    $precio['tipo_financiamiento'] = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
                     $precio['tipo_financiamiento_ingles'] = $precio['financiamiento'] . "-Month Payment";
                     $precio['pago_mensual']
-                        = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
+                    = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
                 }
                 /**sacando los descuentos en caso de que tenga pronto pago */
                 if ($precio['descuento_pronto_pago_b'] == 1) {
-                    $precio['descuento_x_pago']       = ($precio['costo_neto'] - $precio['costo_neto_pronto_pago']) / $precio['financiamiento'];
+                    $precio['descuento_x_pago'] = ($precio['costo_neto'] - $precio['costo_neto_pronto_pago']) / $precio['financiamiento'];
                     $precio['porcentaje_pronto_pago'] = 100 - (($precio['costo_neto_financiamiento_normal'] * 100) / $precio['costo_neto']);
                 } else {
-                    $precio['descuento_x_pago']       = ' 0';
+                    $precio['descuento_x_pago'] = ' 0';
                     $precio['porcentaje_pronto_pago'] = ' 0';
                 }
             }
@@ -2476,45 +2432,45 @@ class CementerioController extends ApiController
 
         //validaciones directas sin condicionales
         $validaciones = [
-            'descripcion'               => 'required',
-            'contado_b.value'           => 'required|integer|min:0|max:1',
-            'financiamiento'            => '',
-            'pago_inicial'              => '',
-            'costo_neto'                => 'required|numeric|min:1',
+            'descripcion' => 'required',
+            'contado_b.value' => 'required|integer|min:0|max:1',
+            'financiamiento' => '',
+            'pago_inicial' => '',
+            'costo_neto' => 'required|numeric|min:1',
             'tipo_propiedades_id.value' => 'required',
         ];
 
         $mensaje_financiamiento = '';
-        $mensaje_pago_inicial   = '';
+        $mensaje_pago_inicial = '';
         /**validando si es a contado o credito */
         if ($request->contado_b['value'] == 1) {
             //es a contado
             $validaciones['financiamiento'] = 'required|integer|max:1';
-            $mensaje_financiamiento         = ' Este dato debe ser "1" Máximo';
+            $mensaje_financiamiento = ' Este dato debe ser "1" Máximo';
 
             /**forzando en pago inicial a ser igual al costo neto de la propiedad */
             $validaciones['pago_inicial'] = 'required|numeric|min:' . $request->costo_neto . '|max:' . $request->costo_neto;
-            $mensaje_pago_inicial         = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto), 2) . " máximo.";
+            $mensaje_pago_inicial = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto), 2) . " máximo.";
         } else {
             /**es a credito */
             $validaciones['financiamiento'] = 'required|integer|min:2|max:120';
-            $mensaje_financiamiento         = ' Este dato debe ser "2" Mínimo y "120" Máximo';
+            $mensaje_financiamiento = ' Este dato debe ser "2" Mínimo y "120" Máximo';
 
             /**se puede mantener el pago inicial por debajo del costo neto */
             $validaciones['pago_inicial'] = 'required|numeric|min:1|max:' . ($request->costo_neto * .7);
-            $mensaje_pago_inicial         = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto * .7), 2) . " máximo.";
+            $mensaje_pago_inicial = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto * .7), 2) . " máximo.";
         }
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
 
         $mensajes = [
-            'pago_inicial.min'   => $mensaje_pago_inicial,
-            'pago_inicial.max'   => $mensaje_pago_inicial,
+            'pago_inicial.min' => $mensaje_pago_inicial,
+            'pago_inicial.max' => $mensaje_pago_inicial,
             'financiamiento.min' => $mensaje_financiamiento,
-            'required'           => 'Ingrese este dato',
-            'numeric'            => 'Este dato debe ser un número',
-            'costo_neto.min'     => 'Esta cantidad debe ser mayor a cero',
-            'costo_neto.gte'     => 'Esta cantidad debe ser mayor o igual al costo neto de contado',
+            'required' => 'Ingrese este dato',
+            'numeric' => 'Este dato debe ser un número',
+            'costo_neto.min' => 'Esta cantidad debe ser mayor a cero',
+            'costo_neto.gte' => 'Esta cantidad debe ser mayor o igual al costo neto de contado',
         ];
         request()->validate(
             $validaciones,
@@ -2536,27 +2492,27 @@ class CementerioController extends ApiController
         }
 
         try {
-            $subtotal   = (float) (($request->costo_neto / (1 + config('globales.iva_decimal'))));
-            $iva        = $subtotal * (config('globales.iva_decimal'));
+            $subtotal = (float) (($request->costo_neto / (1 + config('globales.iva_decimal'))));
+            $iva = $subtotal * (config('globales.iva_decimal'));
             $costo_neto = $request->costo_neto;
             DB::beginTransaction();
             $id_precio = 0;
             $id_precio = DB::table('precios_propiedades')->insertGetId(
                 [
-                    'pago_inicial'                     => (float) $request->pago_inicial,
-                    'subtotal'                         => $subtotal,
-                    'impuestos'                        => $iva,
-                    'costo_neto'                       => $costo_neto,
+                    'pago_inicial' => (float) $request->pago_inicial,
+                    'subtotal' => $subtotal,
+                    'impuestos' => $iva,
+                    'costo_neto' => $costo_neto,
                     'costo_neto_financiamiento_normal' => $costo_neto,
-                    'descuento_pronto_pago_b'          => 0,
-                    'costo_neto_pronto_pago'           => $costo_neto,
-                    'tipo_propiedades_id'              => (int) ($request->tipo_propiedades_id['value']),
-                    'fecha_actualizacion'              => now(),
-                    'actualizo_id'                     => (int) $request->user()->id,
-                    'financiamiento'                   => (int) ($request->financiamiento),
-                    'contado_b'                        => (int) ($request->contado_b['value']),
-                    'descripcion'                      => $request->descripcion,
-                    'descripcion_ingles'               => $request->descripcion,
+                    'descuento_pronto_pago_b' => 0,
+                    'costo_neto_pronto_pago' => $costo_neto,
+                    'tipo_propiedades_id' => (int) ($request->tipo_propiedades_id['value']),
+                    'fecha_actualizacion' => now(),
+                    'actualizo_id' => (int) $request->user()->id,
+                    'financiamiento' => (int) ($request->financiamiento),
+                    'contado_b' => (int) ($request->contado_b['value']),
+                    'descripcion' => $request->descripcion,
+                    'descripcion_ingles' => $request->descripcion,
                 ]
             );
 
@@ -2575,46 +2531,46 @@ class CementerioController extends ApiController
 
         //validaciones directas sin condicionales
         $validaciones = [
-            'id_precio_modificar'       => 'required',
-            'descripcion'               => 'required',
-            'contado_b.value'           => 'required|integer|min:0|max:1',
-            'financiamiento'            => '',
-            'pago_inicial'              => '',
-            'costo_neto'                => 'required|numeric|min:1',
+            'id_precio_modificar' => 'required',
+            'descripcion' => 'required',
+            'contado_b.value' => 'required|integer|min:0|max:1',
+            'financiamiento' => '',
+            'pago_inicial' => '',
+            'costo_neto' => 'required|numeric|min:1',
             'tipo_propiedades_id.value' => 'required',
         ];
 
         $mensaje_financiamiento = '';
-        $mensaje_pago_inicial   = '';
+        $mensaje_pago_inicial = '';
         /**validando si es a contado o credito */
         if ($request->contado_b['value'] == 1) {
             //es a contado
             $validaciones['financiamiento'] = 'required|integer|max:1';
-            $mensaje_financiamiento         = ' Este dato debe ser "1" Máximo';
+            $mensaje_financiamiento = ' Este dato debe ser "1" Máximo';
 
             /**forzando en pago inicial a ser igual al costo neto de la propiedad */
             $validaciones['pago_inicial'] = 'required|numeric|min:' . $request->costo_neto . '|max:' . $request->costo_neto;
-            $mensaje_pago_inicial         = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto), 2) . " máximo.";
+            $mensaje_pago_inicial = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto), 2) . " máximo.";
         } else {
             /**es a credito */
             $validaciones['financiamiento'] = 'required|integer|min:2|max:64';
-            $mensaje_financiamiento         = ' Este dato debe ser "2" Mínimo y "64" Máximo';
+            $mensaje_financiamiento = ' Este dato debe ser "2" Mínimo y "64" Máximo';
 
             /**se puede mantener el pago inicial por debajo del costo neto */
             $validaciones['pago_inicial'] = 'required|numeric|min:1|max:' . ($request->costo_neto * .7);
-            $mensaje_pago_inicial         = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto * .7), 2) . " máximo.";
+            $mensaje_pago_inicial = 'Este valor debe ser "$ 1.00" Mínimo y $ ' . number_format(($request->costo_neto * .7), 2) . " máximo.";
         }
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
 
         $mensajes = [
-            'pago_inicial.min'   => $mensaje_pago_inicial,
-            'pago_inicial.max'   => $mensaje_pago_inicial,
+            'pago_inicial.min' => $mensaje_pago_inicial,
+            'pago_inicial.max' => $mensaje_pago_inicial,
             'financiamiento.min' => $mensaje_financiamiento,
-            'required'           => 'Ingrese este dato',
-            'numeric'            => 'Este dato debe ser un número',
-            'costo_neto.gte'     => 'Esta cantidad debe ser mayor o igual al costo neto de contado',
-            'costo_neto.min'     => 'Esta cantidad debe ser mayor a cero',
+            'required' => 'Ingrese este dato',
+            'numeric' => 'Este dato debe ser un número',
+            'costo_neto.gte' => 'Esta cantidad debe ser mayor o igual al costo neto de contado',
+            'costo_neto.min' => 'Esta cantidad debe ser mayor a cero',
         ];
         request()->validate(
             $validaciones,
@@ -2644,26 +2600,26 @@ class CementerioController extends ApiController
         }
 
         try {
-            $subtotal   = (float) (($request->costo_neto / (1 + config('globales.iva_decimal'))));
-            $iva        = $subtotal * (config('globales.iva_decimal'));
+            $subtotal = (float) (($request->costo_neto / (1 + config('globales.iva_decimal'))));
+            $iva = $subtotal * (config('globales.iva_decimal'));
             $costo_neto = $request->costo_neto;
             DB::beginTransaction();
             $res = DB::table('precios_propiedades')->where('id', $request->id_precio_modificar)->update(
                 [
-                    'pago_inicial'                     => (float) $request->pago_inicial,
-                    'subtotal'                         => $subtotal,
-                    'impuestos'                        => $iva,
-                    'costo_neto'                       => $costo_neto,
+                    'pago_inicial' => (float) $request->pago_inicial,
+                    'subtotal' => $subtotal,
+                    'impuestos' => $iva,
+                    'costo_neto' => $costo_neto,
                     'costo_neto_financiamiento_normal' => $costo_neto,
-                    'descuento_pronto_pago_b'          => 0,
-                    'costo_neto_pronto_pago'           => $costo_neto,
-                    'tipo_propiedades_id'              => (int) ($request->tipo_propiedades_id['value']),
-                    'fecha_actualizacion'              => now(),
-                    'actualizo_id'                     => (int) $request->user()->id,
-                    'financiamiento'                   => (int) ($request->financiamiento),
-                    'contado_b'                        => (int) ($request->contado_b['value']),
-                    'descripcion'                      => $request->descripcion,
-                    'descripcion_ingles'               => $request->descripcion,
+                    'descuento_pronto_pago_b' => 0,
+                    'costo_neto_pronto_pago' => $costo_neto,
+                    'tipo_propiedades_id' => (int) ($request->tipo_propiedades_id['value']),
+                    'fecha_actualizacion' => now(),
+                    'actualizo_id' => (int) $request->user()->id,
+                    'financiamiento' => (int) ($request->financiamiento),
+                    'contado_b' => (int) ($request->contado_b['value']),
+                    'descripcion' => $request->descripcion,
+                    'descripcion_ingles' => $request->descripcion,
                 ]
             );
             /**todo salio bien y se debe de guardar */
@@ -2736,8 +2692,8 @@ class CementerioController extends ApiController
                 $this->errorResponse('Es necesario un correo y un destinatario', 409);
             }
         }
-        $email_to        = $request->email_address;
-        $datos_request   = json_decode($request->request_parent[0], true);
+        $email_to = $request->email_address;
+        $datos_request = json_decode($request->request_parent[0], true);
         $financiamientos = $this->get_financiamientos();
 
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
@@ -2750,12 +2706,12 @@ class CementerioController extends ApiController
         //obtengo la informacion de esa venta
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('cementerios/planes_venta/reportes', ['empresa' => $empresa, 'financiamientos' => $financiamientos, 'id_tipo_propiedad' => $datos_request['id_tipo_propiedad'], 'idioma' => $idioma]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('cementerios/planes_venta/reportes', ['empresa' => $empresa, 'financiamientos' => $financiamientos, 'id_tipo_propiedad' => $datos_request['id_tipo_propiedad'], 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = __('cementerio/lista_precios.titulo_reporte') . '.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.planes_venta.footer', ['empresa' => $empresa]),
         ]);
 
@@ -2782,7 +2738,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 $request->destinatario,
                 __('cementerio/lista_precios.titulo_reporte'),
@@ -2802,7 +2758,7 @@ class CementerioController extends ApiController
         //id del conjunto de propieades
         $id_propiedad_tipo = $request->id_propiedad_tipo;
         return
-            Propiedades::where('propiedades.tipo_propiedades_id', '=', $id_propiedad_tipo)->get();
+        Propiedades::where('propiedades.tipo_propiedades_id', '=', $id_propiedad_tipo)->get();
     }
 
     //retorna los datos de columnas_filas para saber en que numero de lote inicia y acaba una fila de una terraza
@@ -2810,7 +2766,7 @@ class CementerioController extends ApiController
     {
         //id del conjunto de propieades
         $propiedades_id = $request->propiedades_id;
-        $fila           = $request->fila;
+        $fila = $request->fila;
         return DB::table('columnas_filas')->where('fila', $fila)->where('propiedades_id', $propiedades_id)->get();
     }
 
@@ -2829,7 +2785,7 @@ class CementerioController extends ApiController
         //creando los valores que necesito validar
         request()->validate(
             [
-                '*.precio_neto'      => [
+                '*.precio_neto' => [
                     'required',
                     'numeric',
                 ],
@@ -2838,20 +2794,20 @@ class CementerioController extends ApiController
                     'numeric',
                     'lte:*.precio_neto',
                 ],
-                '*.meses'            => [
+                '*.meses' => [
                     'required',
                     'integer',
                     'digits_between:1,2',
                 ],
             ],
             [
-                '*.precio_neto.required'      => 'ingrese este dato.',
-                '*.precio_neto.numeric'       => 'Ingrese una cantidad correcta.',
-                '*.enganche_inicial.lte'      => 'El pago inicial debe ser menor o igual al precio neto de la propiedad.',
+                '*.precio_neto.required' => 'ingrese este dato.',
+                '*.precio_neto.numeric' => 'Ingrese una cantidad correcta.',
+                '*.enganche_inicial.lte' => 'El pago inicial debe ser menor o igual al precio neto de la propiedad.',
                 '*.enganche_inicial.required' => 'ingrese este dato.',
-                '*.meses.numeric'             => 'ingrese un número de meses correcto.',
-                '*.meses.required'            => 'ingrese este dato.',
-                '*.meses.digits_between'      => 'ingrese este dato (2 dígitos máximo).',
+                '*.meses.numeric' => 'ingrese un número de meses correcto.',
+                '*.meses.required' => 'ingrese este dato.',
+                '*.meses.digits_between' => 'ingrese este dato (2 dígitos máximo).',
             ]
         );
 
@@ -2865,13 +2821,13 @@ class CementerioController extends ApiController
             for ($i = 0; $i < count($request->all()); $i++) {
                 DB::table('precios_propiedades')->insert(
                     [
-                        'precio_neto'         => $request[$i]['precio_neto'],
-                        'meses'               => $request[$i]['meses'],
-                        'enganche_inicial'    => $request[$i]['enganche_inicial'],
-                        'tipo_precios_id'     => $request[$i]['tipo_precios_id'],
+                        'precio_neto' => $request[$i]['precio_neto'],
+                        'meses' => $request[$i]['meses'],
+                        'enganche_inicial' => $request[$i]['enganche_inicial'],
+                        'tipo_precios_id' => $request[$i]['tipo_precios_id'],
                         'tipo_propiedades_id' => $request[0]['tipo_propiedades_id'],
-                        'fecha_hora'          => now(),
-                        'actualizo_id'        => $request->user()->id,
+                        'fecha_hora' => now(),
+                        'actualizo_id' => $request->user()->id,
                     ]
                 );
             }
@@ -2902,10 +2858,10 @@ class CementerioController extends ApiController
                         ELSE "Mujer"
                         END) AS genero_des')
         )
-            ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
+                ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
             //->where('roles_id', ">", 1)
-            ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
-            ->get());
+                ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
+                ->get());
     }
 
     //retorna que tipo de venta es de la propiedad, si es de uso inmediato o a futuro
@@ -2925,11 +2881,11 @@ class CementerioController extends ApiController
     public function get_ventas(Request $request, $id_venta = 'all', $paginated = false)
     {
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
-        $titular                  = $request->titular;
-        $fallecido                  = $request->fallecido;
-        $numero_control           = $request->numero_control;
-        $status                   = $request->status;
-        $fecha_operacion          = $request->fecha_operacion;
+        $titular = $request->titular;
+        $fallecido = $request->fallecido;
+        $numero_control = $request->numero_control;
+        $status = $request->status;
+        $fecha_operacion = $request->fecha_operacion;
 
         $resultado_query = Operaciones::with('pagosProgramados.pagados')
             ->with('cuota_cementerio_terreno.pagosProgramados.pagados')
@@ -2943,7 +2899,7 @@ class CementerioController extends ApiController
             ->with('registro:id,nombre')
             ->with('sepultados')
             ->where('empresa_operaciones_id', '=', 1)
-            /**solo ventas de cementerio */
+        /**solo ventas de cementerio */
             ->select(
                 /**venta operacion */
                 'operaciones.id as operacion_id',
@@ -3102,7 +3058,7 @@ class CementerioController extends ApiController
                 }
             })
 
-            //aqui filtro solo cuando es busqueda por ubicacion en raw
+        //aqui filtro solo cuando es busqueda por ubicacion en raw
             ->WhereHas(isset($request->ubicacion_raw) ? 'venta_terreno' : 'registro', function ($q) use ($request) {
                 if (isset($request->ubicacion_raw)) {
                     $q->where('ubicacion', $request->ubicacion_raw);
@@ -3118,10 +3074,20 @@ class CementerioController extends ApiController
         /*->*/
 
         //fin de filtrado por ubicacion
-
         $resultado_query = $resultado_query->where(function ($q) use ($status) {
-            if (trim($status) != '') {
-                $q->where('operaciones.status', '=', $status);
+            if (trim($status) != "") {
+                if ($status == 1) {
+                    //solo listo los servicios con adeudo
+                    $q->where('saldo', '>', 0);
+                } elseif ($status == 2) {
+                    //solo las pagadas
+                    $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
+                } elseif ($status == 3) {
+                    //solo las activas
+                    $q->where('operaciones.status', ">", 0);
+                } elseif ($status == 0) {
+                    $q->where('operaciones.status', 0);
+                }
             }
         })
             ->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
@@ -3133,10 +3099,10 @@ class CementerioController extends ApiController
         if ($paginated == 'paginated') {
             /**queire el resultado paginado */
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
-            $resultado       = &$resultado_query['data'];
+            $resultado = &$resultado_query['data'];
         } else {
             $resultado_query = $resultado_query->toArray();
-            $resultado       = &$resultado_query;
+            $resultado = &$resultado_query;
         }
         /**datos del cmeenterio para actualizar los valores de la ubicacion */
         $datos_cementerio = $this->get_cementerio();
@@ -3149,12 +3115,11 @@ class CementerioController extends ApiController
                 $sepultado['fecha_inhumacion_texto'] = fecha_abr($sepultado['fechahora_inhumacion']);
             }
 
-
             /**calculando el costo neto y descuento calcuado */
             /**aqui voy*/
             $tasa_iva_decimal = $venta['tasa_iva'] / 100;
 
-            $venta['costo_neto_calculado']     = round($venta['total'] + ($venta['descuento'] * (1 + $tasa_iva_decimal)), 2, PHP_ROUND_HALF_UP);
+            $venta['costo_neto_calculado'] = round($venta['total'] + ($venta['descuento'] * (1 + $tasa_iva_decimal)), 2, PHP_ROUND_HALF_UP);
             $venta['descuento_neto_calculado'] = round(($venta['descuento'] * (1 + $tasa_iva_decimal)), 2, PHP_ROUND_HALF_UP);
 
             /**DEFINIENDO EL STATUS DE LA VENTA*/
@@ -3198,12 +3163,12 @@ class CementerioController extends ApiController
             if ($venta['num_pagos_programados'] > 0) {
                 /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
                 /**recorriendo arreglo de pagos programados */
-                $vencidos                         = 0;
-                $pagos_programados_cubiertos      = 0;
+                $vencidos = 0;
+                $pagos_programados_cubiertos = 0;
                 $dias_vencido_primer_pago_vencido = '';
-                $pagos_vigentes                   = 0;
-                $pagos_cancelados                 = 0;
-                $pagos_realizados                 = 0;
+                $pagos_vigentes = 0;
+                $pagos_cancelados = 0;
+                $pagos_realizados = 0;
 
                 $arreglo_de_pagos_realizados = [];
                 /**guardo los dias que lleva vencido el pago vencido mas antiguo */
@@ -3227,13 +3192,13 @@ class CementerioController extends ApiController
                     /**aumento el pago programado vigente */
                     /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
                     /**montos segun su tipo de movimiento */
-                    $abonado_intereses       = 0;
-                    $abonado_capital         = 0;
-                    $descontado_pronto_pago  = 0;
-                    $descontado_capital      = 0;
+                    $abonado_intereses = 0;
+                    $abonado_capital = 0;
+                    $descontado_pronto_pago = 0;
+                    $descontado_capital = 0;
                     $complemento_cancelacion = 0;
-                    $total_cubierto          = 0;
-                    $fecha_ultimo_pago       = '';
+                    $total_cubierto = 0;
+                    $fecha_ultimo_pago = '';
 
                     foreach ($programado['pagados'] as $index_pagados => &$pagado) {
                         /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
@@ -3291,10 +3256,10 @@ class CementerioController extends ApiController
                     } //fin foreach pagado
 
                     /** al final del ciclo se actualizan los valores en el pago programado*/
-                    $programado['abonado_capital']           = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                    $programado['abonado_intereses']         = $abonado_intereses;
-                    $programado['descontado_pronto_pago']    = $descontado_pronto_pago;
-                    $programado['descontado_capital']        = $descontado_capital;
+                    $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                    $programado['abonado_intereses'] = $abonado_intereses;
+                    $programado['descontado_pronto_pago'] = $descontado_pronto_pago;
+                    $programado['descontado_capital'] = $descontado_capital;
                     $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
                     $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
@@ -3302,14 +3267,14 @@ class CementerioController extends ApiController
                     $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
                     /**asignando la fecha del pago que liquidado el pago programado */
                     if ($programado['saldo_neto'] <= 0) {
-                        $programado['fecha_ultimo_pago']     = $fecha_ultimo_pago;
+                        $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
                         $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
                     }
                     /**verificando el estado del pago programado*/
                     /**verificando si la fecha sigue vigente o esta vencida */
                     /**variables para controlar el incremento por intereses */
                     $dias_retrasados_del_pago = 0;
-                    $fecha_programada_pago    = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+                    $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
 
                     /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
                     $fecha_para_intereses = date('Y-m-d');
@@ -3321,7 +3286,7 @@ class CementerioController extends ApiController
 
                     $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
 
-                    $interes_generado                = 0;
+                    $interes_generado = 0;
                     $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
                     /**fin varables por intereses */
                     /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
@@ -3334,7 +3299,7 @@ class CementerioController extends ApiController
                             if ($dias_vencido_primer_pago_vencido == '') {
                                 $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
                             }
-                            $programado['fecha_a_pagar']     = date('Y-m-d');
+                            $programado['fecha_a_pagar'] = date('Y-m-d');
                             $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
                             /**
                              * Los intereses moratorios se calcularán
@@ -3356,28 +3321,28 @@ class CementerioController extends ApiController
                             /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                             $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
                             /**la fecha qui es mayor que la fecha programada del pago */
-                            $programado['status_pago']       = 0;
+                            $programado['status_pago'] = 0;
                             $programado['status_pago_texto'] = 'Vencido';
                             $vencidos++;
                             $programado['dias_vencido'] = $dias_retrasados_del_pago;
-                            $programado['intereses']    = $interes_generado;
+                            $programado['intereses'] = $interes_generado;
                         } else {
                             /**la fecha aun no vence */
-                            $programado['fecha_a_pagar']     = $programado['fecha_programada'];
-                            $programado['status_pago']       = 1;
+                            $programado['fecha_a_pagar'] = $programado['fecha_programada'];
+                            $programado['status_pago'] = 1;
                             $programado['status_pago_texto'] = 'Pendiente';
                         }
                     } else {
                         $pagos_programados_cubiertos++;
                         $programado['fecha_a_pagar'] = $pagado['fecha_pago'];
                         /**el pago programado ya fue cubierto */
-                        $programado['status_pago']       = 2;
+                        $programado['status_pago'] = 2;
                         $programado['status_pago_texto'] = 'Pagado';
                     }
 
                     /**monto con pronto pago de cada abono */
                     $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
-                    $programado['total_cubierto']    = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+                    $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
 
                     /**actualizando los totales de montos en la venta */
                     $venta['intereses'] += $interes_generado;
@@ -3393,23 +3358,19 @@ class CementerioController extends ApiController
                     /**verificado el monto que seria con pronnto pago  */
                     //} //fin foreach if status 1 programado
                 } //fin foreach programados
-                $venta['pagos_realizados']               = $pagos_realizados;
-                $venta['pagos_vigentes']                 = $pagos_vigentes;
+                $venta['pagos_realizados'] = $pagos_realizados;
+                $venta['pagos_vigentes'] = $pagos_vigentes;
                 $venta['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
-                $venta['pagos_cancelados']               = $pagos_cancelados;
-                $venta['pagos_programados_cubiertos']    = $pagos_programados_cubiertos;
-                $venta['pagos_vencidos']                 = $vencidos;
-                $venta['dias_vencidos']                  = $dias_vencido_primer_pago_vencido;
-
-
+                $venta['pagos_cancelados'] = $pagos_cancelados;
+                $venta['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
+                $venta['pagos_vencidos'] = $vencidos;
+                $venta['dias_vencidos'] = $dias_vencido_primer_pago_vencido;
 
                 /**areegloe de todos los pagos limpios(no repetidos) */
                 //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
             } else {
                 /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
             }
-
-
 
             /**incio pagos de cuotas */
             if (count($venta['cuota_cementerio_terreno']) > 0) {
@@ -3419,12 +3380,12 @@ class CementerioController extends ApiController
 
                     /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
                     /**recorriendo arreglo de pagos programados */
-                    $vencidos                         = 0;
-                    $pagos_programados_cubiertos      = 0;
+                    $vencidos = 0;
+                    $pagos_programados_cubiertos = 0;
                     $dias_vencido_primer_pago_vencido = '';
-                    $pagos_vigentes                   = 0;
-                    $pagos_cancelados                 = 0;
-                    $pagos_realizados                 = 0;
+                    $pagos_vigentes = 0;
+                    $pagos_cancelados = 0;
+                    $pagos_realizados = 0;
                     $arreglo_de_pagos_realizados = [];
                     /**guardo los dias que lleva vencido el pago vencido mas antiguo */
                     foreach ($cuota['pagos_programados'] as $index_programado => &$programado) {
@@ -3451,13 +3412,13 @@ class CementerioController extends ApiController
                         /**aumento el pago programado vigente */
                         /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
                         /**montos segun su tipo de movimiento */
-                        $abonado_intereses       = 0;
-                        $abonado_capital         = 0;
-                        $descontado_pronto_pago  = 0;
-                        $descontado_capital      = 0;
+                        $abonado_intereses = 0;
+                        $abonado_capital = 0;
+                        $descontado_pronto_pago = 0;
+                        $descontado_capital = 0;
                         $complemento_cancelacion = 0;
-                        $total_cubierto          = 0;
-                        $fecha_ultimo_pago       = '';
+                        $total_cubierto = 0;
+                        $fecha_ultimo_pago = '';
 
                         foreach ($programado['pagados'] as $index_pagados => &$pagado) {
 
@@ -3516,10 +3477,10 @@ class CementerioController extends ApiController
                         } //fin foreach pagado
 
                         /** al final del ciclo se actualizan los valores en el pago programado*/
-                        $programado['abonado_capital']           = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                        $programado['abonado_intereses']         = $abonado_intereses;
-                        $programado['descontado_pronto_pago']    = $descontado_pronto_pago;
-                        $programado['descontado_capital']        = $descontado_capital;
+                        $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                        $programado['abonado_intereses'] = $abonado_intereses;
+                        $programado['descontado_pronto_pago'] = $descontado_pronto_pago;
+                        $programado['descontado_capital'] = $descontado_capital;
                         $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
                         $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
@@ -3527,14 +3488,14 @@ class CementerioController extends ApiController
                         $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
                         /**asignando la fecha del pago que liquidado el pago programado */
                         if ($programado['saldo_neto'] <= 0) {
-                            $programado['fecha_ultimo_pago']     = $fecha_ultimo_pago;
+                            $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
                             $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
                         }
                         /**verificando el estado del pago programado*/
                         /**verificando si la fecha sigue vigente o esta vencida */
                         /**variables para controlar el incremento por intereses */
                         $dias_retrasados_del_pago = 0;
-                        $fecha_programada_pago    = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+                        $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
 
                         /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
                         $fecha_para_intereses = date('Y-m-d');
@@ -3546,7 +3507,7 @@ class CementerioController extends ApiController
 
                         $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
 
-                        $interes_generado                = 0;
+                        $interes_generado = 0;
                         $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
                         /**fin varables por intereses */
                         /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
@@ -3559,7 +3520,7 @@ class CementerioController extends ApiController
                                 if ($dias_vencido_primer_pago_vencido == '') {
                                     $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
                                 }
-                                $programado['fecha_a_pagar']     = date('Y-m-d');
+                                $programado['fecha_a_pagar'] = date('Y-m-d');
                                 $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
                                 /**
                                  * Los intereses moratorios se calcularán
@@ -3581,31 +3542,30 @@ class CementerioController extends ApiController
                                 /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                                 $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
                                 /**la fecha qui es mayor que la fecha programada del pago */
-                                $programado['status_pago']       = 0;
+                                $programado['status_pago'] = 0;
                                 $programado['status_pago_texto'] = 'Vencido';
                                 $vencidos++;
                                 $programado['dias_vencido'] = $dias_retrasados_del_pago;
-                                $programado['intereses']    = $interes_generado;
+                                $programado['intereses'] = $interes_generado;
                             } else {
                                 /**la fecha aun no vence */
-                                $programado['fecha_a_pagar']     = $programado['fecha_programada'];
-                                $programado['status_pago']       = 1;
+                                $programado['fecha_a_pagar'] = $programado['fecha_programada'];
+                                $programado['status_pago'] = 1;
                                 $programado['status_pago_texto'] = 'Pendiente';
                             }
                         } else {
                             $pagos_programados_cubiertos++;
                             $programado['fecha_a_pagar'] = $pagado['fecha_pago'];
                             /**el pago programado ya fue cubierto */
-                            $programado['status_pago']       = 2;
+                            $programado['status_pago'] = 2;
                             $programado['status_pago_texto'] = 'Pagado';
                         }
 
                         /**monto con pronto pago de cada abono */
                         $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
-                        $programado['total_cubierto']    = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+                        $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
 
                         /**actualizando los totales de montos en la venta */
-
 
                         /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
                         $venta['total_cubierto'] += $programado['total_cubierto'];
@@ -3621,16 +3581,6 @@ class CementerioController extends ApiController
             }
             /**fin pagos de cuotas */
 
-
-
-
-
-
-
-
-
-
-
             /**verificando el tipo de venta segun financiamiento*/
             if ($venta['venta_terreno']['tipo_financiamiento'] == 1) {
                 $venta['venta_terreno']['tipo_financiamiento_texto'] = 'Uso Inmediato';
@@ -3639,12 +3589,12 @@ class CementerioController extends ApiController
             }
             /**actualiznado ubicacion */
             $venta['venta_terreno']['ubicacion_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'];
-            $venta['venta_terreno']['area_nombre']     = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['area_nombre'];
-            $venta['venta_terreno']['tipo_texto']      = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['tipo_texto'];
-            $venta['venta_terreno']['fila_texto']      = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['fila_texto'];
-            $venta['venta_terreno']['lote_texto']      = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['lote_texto'];
+            $venta['venta_terreno']['area_nombre'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['area_nombre'];
+            $venta['venta_terreno']['tipo_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['tipo_texto'];
+            $venta['venta_terreno']['fila_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['fila_texto'];
+            $venta['venta_terreno']['lote_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['lote_texto'];
 
-            $venta['venta_terreno']['fecha_convenio_entrega_texto']      = $venta['venta_terreno']['fecha_registro_convenio'] != NULL ? fecha_abr($venta['venta_terreno']['fecha_registro_convenio']) : NULL;
+            $venta['venta_terreno']['fecha_convenio_entrega_texto'] = $venta['venta_terreno']['fecha_registro_convenio'] != null ? fecha_abr($venta['venta_terreno']['fecha_registro_convenio']) : null;
 
             /**agregando fila, lote, y tipo, por separado en valor numrico */
             $venta['venta_terreno']['fila_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[2]));
@@ -3664,19 +3614,19 @@ class CementerioController extends ApiController
          */
         $areas_nombres = [
             /**uniplex */
-            1  => 'a', 2   => 'b', 3   => 'd', 4   => 'e', 5   => 'm', 6   => 'n', 7   => 'ñ', 8   => 'o',
+            1 => 'a', 2 => 'b', 3 => 'd', 4 => 'e', 5 => 'm', 6 => 'n', 7 => 'ñ', 8 => 'o',
             /**duplex */
-            9  => 'c', 10  => 'f', 11  => 'g', 12  => 'h', 13  => 'i', 14  => 'j', 15  => 'k', 16  => 'l',
+            9 => 'c', 10 => 'f', 11 => 'g', 12 => 'h', 13 => 'i', 14 => 'j', 15 => 'k', 16 => 'l',
             /**nichos */
-            17 => '1', 18  => '2', 19  => '3', 20  => '4', 21  => '5', 22  => '6', 23  => '7', 24  => '8', 25  => '9', 26  => '10', 27 => '11', 28 => '12',
+            17 => '1', 18 => '2', 19 => '3', 20 => '4', 21 => '5', 22 => '6', 23 => '7', 24 => '8', 25 => '9', 26 => '10', 27 => '11', 28 => '12',
             /**terrazas */
-            29 => '1', 30  => '2', 31  => '3', 32  => '4', 33  => '5', 34  => '6', 35  => '7', 36  => '8', 37  => '9', 38  => '10', 39 => '11', 40 => '12', 41 => '13', 42 => '14', 43 => '15', 44 => '16', 45 => '17', 46 => '18',
+            29 => '1', 30 => '2', 31 => '3', 32 => '4', 33 => '5', 34 => '6', 35 => '7', 36 => '8', 37 => '9', 38 => '10', 39 => '11', 40 => '12', 41 => '13', 42 => '14', 43 => '15', 44 => '16', 45 => '17', 46 => '18',
             51 => '19', 52 => '20', 53 => '21', 54 => '22', 55 => '23', 56 => '24', 57 => '25', 58 => '26', 59 => '27', 60 => '28', 61 => '29', 62 => '30', 63 => '31', 64 => '32', 65 => '33', 66 => '34', 67 => '35', 68 => '36',
             69 => '37', 70 => '38', 71 => '39', 72 => '40', 73 => '41', 74 => '42', 75 => '43',
             /**duplex */
             47 => 's',
             /**triplex */
-            48 => 'p', 49  => 'r',
+            48 => 'p', 49 => 'r',
             /**cuadriplex sin terraza */
             50 => 'q',
             /**cuadriplex de mausoleo */
@@ -3693,10 +3643,10 @@ class CementerioController extends ApiController
         }
 
         /**se obtienen los parametros de la ubicacion */
-        $id_tipo      = explode("-", $dato)[0];
+        $id_tipo = explode("-", $dato)[0];
         $id_propiedad = explode("-", $dato)[1];
-        $fila         = explode("-", $dato)[2];
-        $lote         = explode("-", $dato)[3];
+        $fila = explode("-", $dato)[2];
+        $lote = explode("-", $dato)[3];
 
         /**se necesita crear un arregle con el abecedario para cuadrar las propiedades segun su fila "en alfabeto" */
         $alfabeto = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'ñ', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
@@ -3710,50 +3660,50 @@ class CementerioController extends ApiController
                 if ($propiedad['tipo_propiedades_id'] == 1) {
                     //uniplex
                     $ubicacion_texto .= "Uniplex " . $propiedad['propiedad_indicador'] . " Módulo " . $fila;
-                    $datos['tipo_texto']  = "uniplex";
-                    $datos['fila_texto']  = " Módulo " . $fila;
+                    $datos['tipo_texto'] = "uniplex";
+                    $datos['fila_texto'] = " Módulo " . $fila;
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
-                    $datos['lote_texto']  = "n/a";
+                    $datos['lote_texto'] = "n/a";
                 } else if ($propiedad['tipo_propiedades_id'] == 2) {
                     //duplex
                     $ubicacion_texto .= "Duplex " . $propiedad['propiedad_indicador'] . " Módulo " . $fila;
-                    $datos['tipo_texto']  = "duplex";
-                    $datos['fila_texto']  = " Módulo " . $fila;
-                    $datos['lote_texto']  = "n/a";
+                    $datos['tipo_texto'] = "duplex";
+                    $datos['fila_texto'] = " Módulo " . $fila;
+                    $datos['lote_texto'] = "n/a";
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
                 } else if ($propiedad['tipo_propiedades_id'] == 3) {
                     //nicho
                     $ubicacion_texto .= "Nichos - Columna " . $propiedad['propiedad_indicador'] . ", Fila " . $fila;
-                    $datos['tipo_texto']  = "nicho";
-                    $datos['fila_texto']  = $fila;
+                    $datos['tipo_texto'] = "nicho";
+                    $datos['fila_texto'] = $fila;
                     $datos['area_nombre'] = "Columna " . $areas_nombres[($id_propiedad)];
-                    $datos['lote_texto']  = "n/a";
+                    $datos['lote_texto'] = "n/a";
                 } else if ($propiedad['tipo_propiedades_id'] == 4) {
-                    $datos['lote_texto']  = $lote;
+                    $datos['lote_texto'] = $lote;
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
-                    $datos['tipo_texto']  = "terraza";
-                    $datos['fila_texto']  = strtoupper($alfabeto[$fila - 1]);
+                    $datos['tipo_texto'] = "terraza";
+                    $datos['fila_texto'] = strtoupper($alfabeto[$fila - 1]);
                     //cuadriplex
                     $ubicacion_texto .= "Terraza " . $propiedad['propiedad_indicador'] . ", Fila " . strtoupper($alfabeto[$fila - 1]) . " Lote " . $lote;
                 } else if ($propiedad['tipo_propiedades_id'] == 5) {
-                    $datos['lote_texto']  = "n/a";
+                    $datos['lote_texto'] = "n/a";
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
-                    $datos['tipo_texto']  = "triplex";
-                    $datos['fila_texto']  = " Módulo " . $fila;
+                    $datos['tipo_texto'] = "triplex";
+                    $datos['fila_texto'] = " Módulo " . $fila;
                     //triplex
                     $ubicacion_texto .= "Triplex " . $propiedad['propiedad_indicador'] . " Módulo " . $fila;
                 } else if ($propiedad['tipo_propiedades_id'] == 6) {
-                    $datos['lote_texto']  = $lote;
+                    $datos['lote_texto'] = $lote;
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
-                    $datos['tipo_texto']  = "cuadriplex";
-                    $datos['fila_texto']  = " Módulo " . $fila;
+                    $datos['tipo_texto'] = "cuadriplex";
+                    $datos['fila_texto'] = " Módulo " . $fila;
                     //cuadriplex sin terraza
                     $ubicacion_texto .= "cuadriplex " . $propiedad['propiedad_indicador'] . " Módulo " . $fila;
                 } else if ($propiedad['tipo_propiedades_id'] == 7) {
-                    $datos['lote_texto']  = $lote;
+                    $datos['lote_texto'] = $lote;
                     $datos['area_nombre'] = $areas_nombres[($id_propiedad)];
-                    $datos['tipo_texto']  = "Mausoleo";
-                    $datos['fila_texto']  = " Módulo " . $fila;
+                    $datos['tipo_texto'] = "Mausoleo";
+                    $datos['fila_texto'] = " Módulo " . $fila;
                     //cuadriplex de mausoleo
                     $ubicacion_texto .= "Mausoleo " . $propiedad['propiedad_indicador'] . " Módulo " . $fila;
                 }
@@ -3773,10 +3723,10 @@ class CementerioController extends ApiController
             $email_to = 'hector@gmail.com';
              */
             /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-            $email             = $request->email_send === 'true' ? true : false;
-            $email_to          = $request->email_address;
+            $email = $request->email_send === 'true' ? true : false;
+            $email_to = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
-            $id_venta          = $requestVentasList['venta_id'];
+            $id_venta = $requestVentasList['venta_id'];
 
             /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
              * por lo cual puede variar de paramtros degun la ncecesidad
@@ -3790,23 +3740,23 @@ class CementerioController extends ApiController
             }
 
             $get_funeraria = new EmpresaController();
-            $empresa       = $get_funeraria->get_empresa_data();
+            $empresa = $get_funeraria->get_empresa_data();
 
             $FirmasController = new FirmasController();
-            $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 7, 'por_area_firma');
-            $firma_gerente       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
+            $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 7, 'por_area_firma');
+            $firma_gerente = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
 
             $firmas = [
                 'cliente' => $firma_cliente['firma_path'],
-                'gerente' => $firma_gerente['firma_path']
+                'gerente' => $firma_gerente['firma_path'],
             ];
 
-            $pdf           = PDF::loadView('cementerios/acuse_cancelacion/acuse', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
+            $pdf = PDF::loadView('cementerios/acuse_cancelacion/acuse', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
             //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
             $name_pdf = "ACUSE DE CANCELACIÓN " . strtoupper($datos_venta['nombre']) . '.pdf';
 
             $pdf->setOptions([
-                'title'       => $name_pdf,
+                'title' => $name_pdf,
                 'footer-html' => view('cementerios.acuse_cancelacion.footer', ['empresa' => $empresa]),
             ]);
             if ($datos_venta['operacion_status'] != 0) {
@@ -3835,7 +3785,7 @@ class CementerioController extends ApiController
                  */
                 /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
                 $email_controller = new EmailController();
-                $enviar_email     = $email_controller->pdf_email(
+                $enviar_email = $email_controller->pdf_email(
                     $email_to,
                     strtoupper($datos_venta['nombre']),
                     'ACUSE DE CANCELACIÓN',
@@ -3855,10 +3805,10 @@ class CementerioController extends ApiController
     public function documento_titulo(Request $request)
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
@@ -3876,23 +3826,22 @@ class CementerioController extends ApiController
         }
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
         $FirmasController = new FirmasController();
-        $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 6, 'por_area_firma');
-        $firma_gerente       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
+        $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 6, 'por_area_firma');
+        $firma_gerente = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
 
         $firmas = [
             'cliente' => $firma_cliente['firma_path'],
-            'gerente' => $firma_gerente['firma_path']
+            'gerente' => $firma_gerente['firma_path'],
         ];
 
-
-        $pdf           = PDF::loadView('cementerios/titulo/titulo', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
+        $pdf = PDF::loadView('cementerios/titulo/titulo', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "FORMATO DE TITULO " . strtoupper($datos_venta['nombre']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.titulo.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -3921,7 +3870,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'FORMATO DE TITULO',
@@ -3938,10 +3887,10 @@ class CementerioController extends ApiController
     public function referencias_de_pago(Request $request, $id_pago = '')
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
@@ -3959,13 +3908,13 @@ class CementerioController extends ApiController
         }
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('cementerios/pagos/referencias', ['id_pago' => $id_pago, 'datos' => $datos_venta, 'empresa' => $empresa]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('cementerios/pagos/referencias', ['id_pago' => $id_pago, 'datos' => $datos_venta, 'empresa' => $empresa]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "REFERENCIA DE PAGOS TITULAR " . strtoupper($datos_venta['nombre']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.pagos.footer'),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -3994,7 +3943,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'REFERENCIAS DE PAGO CEMENTERIO',
@@ -4021,10 +3970,10 @@ class CementerioController extends ApiController
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         //obtengo la informacion de esa venta
         $datos_venta = $this->get_ventas($request, $id_venta, '')[0];
@@ -4039,28 +3988,25 @@ class CementerioController extends ApiController
         }*/
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         $FirmasController = new FirmasController();
-        $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 2, 'por_area_firma');
-        $firma_vendedor       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
-        $firma_gerente       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
+        $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 2, 'por_area_firma');
+        $firma_vendedor = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
+        $firma_gerente = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
 
         $firmas = [
             'cliente' => $firma_cliente['firma_path'],
             'vendedor' => $firma_vendedor['firma_path'],
-            'gerente' => $firma_gerente['firma_path']
+            'gerente' => $firma_gerente['firma_path'],
         ];
 
-
-
-
-        $pdf           = PDF::loadView('cementerios/convenio/documento_convenio', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
+        $pdf = PDF::loadView('cementerios/convenio/documento_convenio', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "CONVENIO TITULAR " . strtoupper($datos_venta['nombre']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.convenio.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -4088,7 +4034,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'COPIA DEL CONVENIO / CEMENTERIO AETERNUS',
@@ -4106,10 +4052,10 @@ class CementerioController extends ApiController
     public function documento_solicitud(Request $request)
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
@@ -4132,24 +4078,23 @@ class CementerioController extends ApiController
         }*/
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         $FirmasController = new FirmasController();
-        $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 1, 'por_area_firma');
-        $firma_vendedor       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
+        $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 1, 'por_area_firma');
+        $firma_vendedor = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
 
         $firmas = [
             'cliente' => $firma_cliente['firma_path'],
-            'vendedor' => $firma_vendedor['firma_path']
+            'vendedor' => $firma_vendedor['firma_path'],
         ];
-
 
         $pdf = PDF::loadView('cementerios/solicitud/documento_solicitud', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
 
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "SOLICITUD TITULAR " . strtoupper($datos_venta['nombre']) . '.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.solicitud.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -4178,7 +4123,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'SOLICITUD DE PROPIEDAD / CEMENTERIO AETERNUS',
@@ -4192,24 +4137,22 @@ class CementerioController extends ApiController
         }
     }
 
-
-
     /**pdf de los servicios que han usado esta propiedad */
     public function servicios_propiedad(Request $request)
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
         /*$id_venta = 210;
-         $email = false;
-         $email_to = 'hector@gmail.com';
-          */
+        $email = false;
+        $email_to = 'hector@gmail.com';
+         */
 
         //obtengo la informacion de esa venta
         $datos_venta = $this->get_ventas($request, $id_venta, '')[0];
@@ -4220,28 +4163,27 @@ class CementerioController extends ApiController
 
         /**verificando si el documento aplica para esta solictitud */
         /*if ($datos_venta['numero_solicitud_raw'] == null) {
-         return 0;
-         }*/
+        return 0;
+        }*/
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         $FirmasController = new FirmasController();
-        $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 1, 'por_area_firma');
-        $firma_vendedor       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
+        $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 1, 'por_area_firma');
+        $firma_vendedor = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_vendedor');
 
         $firmas = [
             'cliente' => $firma_cliente['firma_path'],
-            'vendedor' => $firma_vendedor['firma_path']
+            'vendedor' => $firma_vendedor['firma_path'],
         ];
-
 
         $pdf = PDF::loadView('cementerios/servicios_propiedad/documento', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
 
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "SERVICIOS POR PROPIEDAD | TITULAR " . strtoupper($datos_venta['nombre']) . '.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.servicios_propiedad.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -4270,7 +4212,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'SERVICIOS POR PROPIEDAD',
@@ -4289,13 +4231,13 @@ class CementerioController extends ApiController
     {
         try {
             $id_venta = 2;
-            $email    = false;
+            $email = false;
             $email_to = 'hector@gmail.com';
             /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-            $email             = $request->email_send === 'true' ? true : false;
-            $email_to          = $request->email_address;
+            $email = $request->email_send === 'true' ? true : false;
+            $email_to = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
-            $id_venta          = $requestVentasList['venta_id'];
+            $id_venta = $requestVentasList['venta_id'];
             /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
              * por lo cual puede variar de paramtros degun la ncecesidad
              */
@@ -4306,14 +4248,14 @@ class CementerioController extends ApiController
                 return $this->errorResponse('Error al cargar los datos.', 409);
             }
             $pagos_operacion = [];
-            $client          = new \GuzzleHttp\Client();
+            $client = new \GuzzleHttp\Client();
             try {
 
                 /**TRAYENDO EL TOKEN PARA CONSUMIR EL SERVICE */
                 $response = $client->request('POST', config('services.passport.login_endpoint'), [
                     'form_params' => [
-                        'grant_type'    => 'client_credentials',
-                        'client_id'     => config('services.passport.client_backend_id'),
+                        'grant_type' => 'client_credentials',
+                        'client_id' => config('services.passport.client_backend_id'),
                         'client_secret' => config('services.passport.client_backend_secret'),
                     ],
                 ]);
@@ -4323,14 +4265,14 @@ class CementerioController extends ApiController
                 }
                 $pagos_operacion =
                     json_decode($client->request(
-                        'GET',
-                        env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
-                        [
-                            'headers' => [
-                                'Authorization' => 'Bearer ' . $token,
-                            ],
-                        ]
-                    )->getBody(), true);
+                    'GET',
+                    env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
+                    [
+                        'headers' => [
+                            'Authorization' => 'Bearer ' . $token,
+                        ],
+                    ]
+                )->getBody(), true);
             } catch (\GuzzleHttp\Exception\BadResponseException $e) {
                 return $this->errorResponse('Ocurrió un error durante la petición. Por favor reintente.', $e->getCode());
             }
@@ -4341,12 +4283,12 @@ class CementerioController extends ApiController
             }*/
 
             $get_funeraria = new EmpresaController();
-            $empresa       = $get_funeraria->get_empresa_data();
-            $pdf           = PDF::loadView('cementerios/estado_cuenta/estado_cuenta', ['pagos_operacion' => $pagos_operacion, 'datos' => $datos_venta, 'empresa' => $empresa]);
+            $empresa = $get_funeraria->get_empresa_data();
+            $pdf = PDF::loadView('cementerios/estado_cuenta/estado_cuenta', ['pagos_operacion' => $pagos_operacion, 'datos' => $datos_venta, 'empresa' => $empresa]);
             //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
             $name_pdf = "ESTADO CUENTA " . strtoupper($datos_venta['nombre']) . '.pdf';
             $pdf->setOptions([
-                'title'       => $name_pdf,
+                'title' => $name_pdf,
                 'footer-html' => view('cementerios.estado_cuenta.footer', ['empresa' => $empresa]),
             ]);
             if ($datos_venta['operacion_status'] == 0) {
@@ -4376,7 +4318,7 @@ class CementerioController extends ApiController
                  */
                 /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
                 $email_controller = new EmailController();
-                $enviar_email     = $email_controller->pdf_email(
+                $enviar_email = $email_controller->pdf_email(
                     $email_to,
                     strtoupper($datos_venta['nombre']),
                     'ESTADO DE CUENTA / CEMENTERIO AETERNUS',
@@ -4406,10 +4348,10 @@ class CementerioController extends ApiController
         /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address;
         $requestVentasList = json_decode($request->request_parent[0], true);
-        $id_venta          = $requestVentasList['venta_id'];
+        $id_venta = $requestVentasList['venta_id'];
 
         //obtengo la informacion de esa venta
         $datos_venta = $this->get_ventas($request, $id_venta, '')[0];
@@ -4424,23 +4366,23 @@ class CementerioController extends ApiController
         }*/
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         $FirmasController = new FirmasController();
-        $firma_cliente       = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 6, 'por_area_firma');
-        $firma_gerente       = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
+        $firma_cliente = $FirmasController->get_firma_documento($datos_venta['operacion_id'], 6, 'por_area_firma');
+        $firma_gerente = $FirmasController->get_firma_documento($datos_venta['venta_terreno']['vendedor_id'], null, 'por_gerente');
 
         $firmas = [
             'cliente' => $firma_cliente['firma_path'],
-            'gerente' => $firma_gerente['firma_path']
+            'gerente' => $firma_gerente['firma_path'],
         ];
 
-        $pdf           = PDF::loadView('cementerios/reglamento_pago/reglamento', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
+        $pdf = PDF::loadView('cementerios/reglamento_pago/reglamento', ['datos' => $datos_venta, 'empresa' => $empresa, 'firmas' => $firmas]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "REGLAMENTO DE PAGO " . strtoupper($datos_venta['nombre']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('cementerios.reglamento_pago.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['operacion_status'] == 0) {
@@ -4467,7 +4409,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['nombre']),
                 'REGLAMENTO DE PAGO / CEMENTERIO AETERNUS',
@@ -4493,7 +4435,7 @@ class CementerioController extends ApiController
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
         $id_venta = 5;
-        $email    = false;
+        $email = false;
         $email_to = 'hector@gmail.com';
 
         //obtengo la informacion de esa venta
@@ -4505,12 +4447,12 @@ class CementerioController extends ApiController
         }*/
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('inventarios/cementerios/estado_cuenta/estado_cuenta', ['datos' => $datos_venta, 'empresa' => $empresa]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('inventarios/cementerios/estado_cuenta/estado_cuenta', ['datos' => $datos_venta, 'empresa' => $empresa]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $name_pdf = "ESTADO CUENTA " . strtoupper($datos_venta['cliente_nombre']) . '.pdf';
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('inventarios.cementerios.estado_cuenta.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_venta['status'] == 0) {
@@ -4540,7 +4482,7 @@ class CementerioController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 strtoupper($datos_venta['cliente_nombre']),
                 'ESTADO DE CUENTA / CEMENTERIO AETERNUS',

@@ -512,22 +512,26 @@ export default {
             mostrar: { label: "15", value: "15" },
             estado: { label: "Todas", value: "" },
             estadosOptions: [
-                {
-                    label: "Todas",
-                    value: ""
-                },
-                {
-                    label: "Por Pagar",
-                    value: "1"
-                },
-                {
-                    label: "Pagadas",
-                    value: "2"
-                },
-                {
-                    label: "Canceladas",
-                    value: "0"
-                }
+            {
+          label: "Todas",
+          value: "",
+        },
+        {
+          label: "Por Pagar",
+          value: "1",
+        },
+        {
+          label: "Pagadas",
+          value: "2",
+        },
+        {
+          label: "Activas",
+          value: "3",
+        },
+        {
+          label: "Canceladas",
+          value: "0",
+        },
             ],
             filtroEspecifico: { label: "Núm. Solicitud", value: "1" },
             filtrosEspecificos: [

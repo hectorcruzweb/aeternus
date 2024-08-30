@@ -373,8 +373,20 @@ export default {
           value: "",
         },
         {
-          label: "Activas",
+          label: "Por Pagar",
           value: "1",
+        },
+        {
+          label: "Pagadas",
+          value: "2",
+        },
+        {
+          label: "Activas",
+          value: "3",
+        },
+        {
+          label: "Sin Contrato",
+          value: "4",
         },
         {
           label: "Canceladas",

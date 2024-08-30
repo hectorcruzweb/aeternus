@@ -223,7 +223,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('funeraria/control_solicitud/{tipo_servicio}', 'FunerariaController@control_solicitud');
     Route::post('funeraria/control_contratos/{tipo_servicio}', 'FunerariaController@control_contratos');
     Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
-    Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}', 'FunerariaController@get_solicitudes_servicios');
+    
     Route::get('funeraria/autorizacion_cremacion', 'FunerariaController@autorizacion_cremacion');
     Route::get('funeraria/get_hoja_solicitud', 'FunerariaController@get_hoja_solicitud');
     Route::get('funeraria/hoja_preautorizacion', 'FunerariaController@hoja_preautorizacion');
@@ -300,8 +300,8 @@ Route::middleware(['client'])->group(function () {
     Route::get('checador/get_huellas_users', 'ChecadorController@get_huellas_users');
     Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
 });
-
-
+Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}/{actualizar_saldos?}', 'FunerariaController@get_solicitudes_servicios');
+Route::get('funeraria/actualizar_saldos_operacion/{empresa_operaciones_id?}', 'FunerariaController@actualizar_saldos_operacion');
 Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
 Route::get('pdfs', 'Usuarios\UsuariosController@pdfs');
 
