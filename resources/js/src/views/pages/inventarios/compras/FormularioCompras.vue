@@ -538,7 +538,7 @@
                                                                     this
                                                                         .validar_costo_incurrido_costo
                                                                 "
-                                                                maxlength="8"
+                                                                maxlength="12"
                                                                 type="text"
                                                                 class="w-full"
                                                                 placeholder=""
@@ -706,7 +706,7 @@
                                                         v-model="
                                                             form.pago_efectivo
                                                         "
-                                                        maxlength="8"
+                                                        maxlength="12"
                                                     />
                                                     <span
                                                         class="mensaje-requerido"
@@ -749,7 +749,7 @@
                                                         v-model="
                                                             form.pago_cheque
                                                         "
-                                                        maxlength="8"
+                                                        maxlength="12"
                                                     />
                                                     <span
                                                         class="mensaje-requerido"
@@ -792,7 +792,7 @@
                                                         v-model="
                                                             form.pago_tarjeta
                                                         "
-                                                        maxlength="8"
+                                                        maxlength="12"
                                                     />
                                                     <span
                                                         class="mensaje-requerido"
@@ -835,7 +835,7 @@
                                                         v-model="
                                                             form.pago_transferencia
                                                         "
-                                                        maxlength="8"
+                                                        maxlength="12"
                                                     />
                                                     <span
                                                         class="mensaje-requerido"
