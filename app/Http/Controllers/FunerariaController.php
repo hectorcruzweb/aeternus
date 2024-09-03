@@ -1268,6 +1268,7 @@ class FunerariaController extends ApiController
         /**solo ventas de planes funerarios */
             ->select(
                 /**venta operacion */
+                'operaciones.id',
                 'operaciones.id as operacion_id',
                 'antiguedad_operacion_id',
                 'empresa_operaciones_id',
@@ -1433,11 +1434,11 @@ class FunerariaController extends ApiController
                 if (trim($status) != "") {
                     if ($status == 1) {
                         //solo listo los servicios con adeudo
-                        $q->where('saldo', '>', 0);
+                        $q->where('saldo', '>', 0)->where("operaciones.status","=",1);
                     } elseif ($status == 2) {
                         //solo las pagadas
                         $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
-                    }  elseif ($status == 0) {
+                    } elseif ($status == 0) {
                         $q->where('operaciones.status', 0);
                     }
                 }
@@ -1614,7 +1615,7 @@ class FunerariaController extends ApiController
                     $programado['descontado_capital'] = $descontado_capital;
                     $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
-                    $saldo_pago_programado = round($programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion,2);
+                    $saldo_pago_programado = round($programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion, 2);
 
                     $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
                     /**asignando la fecha del pago que liquidado el pago programado */
@@ -3842,27 +3843,45 @@ class FunerariaController extends ApiController
 
     public function actualizar_saldos_operacion(Request $request, $empresa_operaciones_id = "")
     {
-        if (trim($empresa_operaciones_id)=="") {
+        if (trim($empresa_operaciones_id) == "") {
             return $this->errorResponse("Ingrese Bien las operaciones a actualizar", 409);
         }
         try {
             DB::beginTransaction();
-            $message="";
+            $message = "";
             if ($empresa_operaciones_id == 1) {
                 //Venta de Terrenos tipo empresa_operaciones_id = 1
                 $cementerio_controller = new CementerioController();
-               $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
+                $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
                 foreach ($ventas_propiedades as $key => $venta) {
                     DB::table('operaciones')->where("empresa_operaciones_id", 1)->where('id', $venta["operacion_id"])->update(
                         [
                             'status' => ($venta["operacion_status"] == 0) ? 0 : ($venta["saldo_neto"] > 0 ? 1 : 2),
-                            "saldo" => $venta["saldo_neto"]
+                            "saldo" => $venta["saldo_neto"],
                         ]
                     );
                 }
-                $message="Contratos Actualizados de Venta de Propieades " . count($ventas_propiedades);
-            }
-            elseif ($empresa_operaciones_id == 3) {
+                $message = "Contratos Actualizados de Venta de Propieades " . count($ventas_propiedades);
+            } elseif ($empresa_operaciones_id == 2) {
+                //Cuota de mantenimiento en cementerio empresa_operaciones_id = 2
+                $cementerio_controller = new CementerioController();
+                $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
+                $cuotas=0;
+                foreach ($ventas_propiedades as $key => $venta) {
+                    if(isset($venta["cuota_cementerio_terreno"])){
+                        foreach ($venta["cuota_cementerio_terreno"] as $cuota) {
+                            DB::table('operaciones')->where("empresa_operaciones_id", 2)->where('id', $cuota["operacion_id"])->update(
+                                [
+                                    'status' => ($cuota["status"] == 0) ? 0 : ($cuota["saldo"] > 0 ? 1 : 2),
+                                    "saldo" => $cuota["saldo"],
+                                ]
+                            );
+                            $cuotas++;
+                        }
+                    }
+                }
+                $message = "Cuotas Actualizados de Venta de Propieades " . $cuotas;
+            } elseif ($empresa_operaciones_id == 3) {
                 //Servicios Funerarios tipo empresa_operaciones_id = 3
                 $servicios_funerarios = $this->get_solicitudes_servicios($request, "all", false, 0, 0, 0, true);
                 foreach ($servicios_funerarios as $key => $servicio) {
@@ -3873,23 +3892,22 @@ class FunerariaController extends ApiController
                         ]
                     );
                 }
-                $message="Contratos Actualizados de Servicios Funerarios " . count($servicios_funerarios);
-            }
-            elseif ($empresa_operaciones_id == 4) {
-                 //Venta de planes a futuro tipo empresa_operaciones_id = 4
-                 $ventas_planes= $this->get_ventas($request, "all");
-                  foreach ($ventas_planes as $key => $venta) {
-                      DB::table('operaciones')->where("empresa_operaciones_id", 4)->where('id', $venta["operacion_id"])->update(
-                          [
-                              'status' => ($venta["operacion_status"] == 0) ? 0 : ($venta["saldo_neto"] > 0 ? 1 : 2),
-                              "saldo" => $venta["saldo_neto"]
-                          ]
-                      );
-                  }
-                  $message="Contratos Actualizados de Venta de Planes a Futuro " . count($ventas_planes);
+                $message = "Contratos Actualizados de Servicios Funerarios " . count($servicios_funerarios);
+            } elseif ($empresa_operaciones_id == 4) {
+                //Venta de planes a futuro tipo empresa_operaciones_id = 4
+                $ventas_planes = $this->get_ventas($request, "all");
+                foreach ($ventas_planes as $key => $venta) {
+                    DB::table('operaciones')->where("empresa_operaciones_id", 4)->where('id', $venta["operacion_id"])->update(
+                        [
+                            'status' => ($venta["operacion_status"] == 0) ? 0 : ($venta["saldo_neto"] > 0 ? 1 : 2),
+                            "saldo" => $venta["saldo_neto"],
+                        ]
+                    );
+                }
+                $message = "Contratos Actualizados de Venta de Planes a Futuro " . count($ventas_planes);
             }
             DB::commit();
-            return $this->successResponse($message,200);
+            return $this->successResponse($message, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;
@@ -4114,7 +4132,7 @@ class FunerariaController extends ApiController
             if ($status == 1) {
                 //solo listo los servicios con adeudo
                 $resultado_query = $resultado_query->WhereHas('operacion', function ($query) {
-                    $query->where('saldo', '>', 0);
+                    $query->where('saldo', '>', 0)->where("status",1);
                 });
             } elseif ($status == 2) {
                 //solo las pagadas
@@ -4124,7 +4142,7 @@ class FunerariaController extends ApiController
             } elseif ($status == 3) {
                 //solo las activas
                 $resultado_query = $resultado_query->where('status', ">", 0);
-            }elseif ($status == 4) {
+            } elseif ($status == 4) {
                 //solo sin contrato
                 $resultado_query = $resultado_query->orWhereDoesntHave('operacion')->where("status", "<>", 0);
             } elseif ($status == 0) {
@@ -6275,7 +6293,7 @@ class FunerariaController extends ApiController
         $email = false;
         $email_to = 'hector@gmail.com';
         $funeraria = new FunerariaController();
-        $request->request->add(['filtrar_solo_adeudos' => true]);
+        $request->request->add(['status' => 1]);
         $ventas = $funeraria->get_solicitudes_servicios($request, 'all', false);
 
         $get_funeraria = new EmpresaController();

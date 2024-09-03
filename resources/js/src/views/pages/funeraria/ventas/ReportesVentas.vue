@@ -714,7 +714,7 @@ export default {
                 let res = await pagos.consultar_pagos_operacion_id(
                     datos_request
                 );
-                this.pagos = res.data.data;
+                this.pagos = res.data;
                 this.$vs.loading.close();
             } catch (err) {
                 this.$vs.loading.close();

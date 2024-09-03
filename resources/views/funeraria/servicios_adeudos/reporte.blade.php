@@ -137,10 +137,8 @@
                     $saldo_neto = 0;
                     ?>
                     @foreach ($ventas as $index => $venta)
-                        @isset($venta['operacion'])
-                            @if ($venta['operacion']['saldo_neto'] > 0 && $venta['operacion']['operacion_status'] != 0)
                                 <?php
-                                $saldo_neto += $venta['operacion']['saldo_neto'];
+                                $saldo_neto += $venta['operacion']['saldo'];
                                 ?>
                                 <!--es de uso inmendiato-->
                                 <tr>
@@ -168,8 +166,6 @@
                                 <?php
                                 $index_r++;
                                 ?>
-                            @endif
-                        @endisset
                     @endforeach
                     <tr>
                         <td class="py-3 right" colspan="6"><span class="bold uppercase px-2">Totales :

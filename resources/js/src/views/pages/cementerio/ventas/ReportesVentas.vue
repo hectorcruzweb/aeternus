@@ -1,4 +1,4 @@
-<template >
+<template>
   <div class="centerx">
     <vs-popup
       class="forms-popup popup-80"
@@ -18,8 +18,10 @@
                 <h3>Documentos del contrato</h3>
               </template>
               <template slot="thead">
-                <vs-th class="w-1/5">#</vs-th>
+                <vs-th class="w-1/5"> #</vs-th>
+
                 <vs-th class="w-3/5">Documento</vs-th>
+
                 <vs-th class="w-1/5">Seleccionar Documento</vs-th>
               </template>
               <template>
@@ -31,9 +33,11 @@
                   <vs-td>
                     <span class="font-medium"> {{ index_documento + 1 }}</span>
                   </vs-td>
+
                   <vs-td>
                     <span class="">{{ documento.documento }}</span>
                   </vs-td>
+
                   <vs-td>
                     <div class="flex justify-center">
                       <img
@@ -43,6 +47,7 @@
                         @click="openFirmador(documento.documento_id)"
                         v-show="documento.firma"
                       />
+
                       <img
                         v-if="documento.tipo == 'pdf'"
                         class="cursor-pointer img-btn-24 mx-2"
@@ -51,12 +56,16 @@
                         @click="
                           openReporte(
                             documento.documento,
+
                             documento.url,
+
                             '',
+
                             ''
                           )
                         "
                       />
+
                       <img
                         v-else
                         class="cursor-pointer img-btn-24 mx-2"
@@ -65,8 +74,11 @@
                         @click="
                           openReporte(
                             documento.documento,
+
                             documento.url,
+
                             '',
+
                             ''
                           )
                         "
@@ -90,15 +102,24 @@
               <h3>Listado de Pagos programados</h3>
             </template>
             <template slot="thead">
-              <vs-th>#</vs-th>
+              <vs-th> #</vs-th>
+
               <vs-th>Referencia</vs-th>
+
               <vs-th>Fecha Programada</vs-th>
+
               <vs-th>Nueva Fecha de Pago</vs-th>
+
               <vs-th>Monto Pago</vs-th>
+
               <vs-th>Intereses Generados</vs-th>
+
               <vs-th>Restante a Pagar</vs-th>
+
               <vs-th>Concepto</vs-th>
+
               <vs-th>Estatus</vs-th>
+
               <vs-th>Pagar Recibo</vs-th>
             </template>
             <template>
@@ -117,6 +138,7 @@
                 >
                   <span class="">{{ programados.num_pago }}</span>
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
@@ -124,12 +146,14 @@
                 >
                   {{ programados.referencia_pago }}
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >{{ programados.fecha_programada_abr }}</vs-td
                 >
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
@@ -138,49 +162,58 @@
                   <span v-if="programados.saldo_neto > 0">
                     {{ programados.fecha_a_pagar_abr }}
                   </span>
+
                   <span v-else>{{ programados.fecha_ultimo_pago_abr }} </span>
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
-                  >$
-                  {{
-                    programados.monto_programado | numFormat("0,000.00")
-                  }}</vs-td
-                >
+                  >$ {{ programados.monto_programado | numFormat("0,000.00") }}
+                </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >$ {{ programados.intereses | numFormat("0,000.00") }}</vs-td
                 >
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >$ {{ programados.saldo_neto | numFormat("0,000.00") }}</vs-td
                 >
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >{{ programados.concepto_texto }}</vs-td
                 >
+
                 <vs-td>
                   <p v-if="programados.status_pago == 0">
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-danger"></span>
                   </p>
+
                   <p v-else-if="programados.status_pago == 1">
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-warning"></span>
                   </p>
+
                   <p v-else>
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-success"></span>
                   </p>
                 </vs-td>
+
                 <vs-td>
                   <div class="flex justify-center">
                     <img
@@ -190,6 +223,7 @@
                       title="Pagar Ficha"
                       @click="pagar(programados.referencia_pago)"
                     />
+
                     <img
                       v-else
                       class="cursor-pointer img-btn-20 mx-2"
@@ -198,10 +232,12 @@
                     />
                   </div>
                 </vs-td>
+
                 <!-- <template class="expand-user" slot="expand">
-                d
-              </template>
-              -->
+    
+                    d
+</template>
+    -->
               </vs-tr>
             </template>
           </vs-table>
@@ -217,15 +253,24 @@
               <h3>Cuotas de Mantenimiento</h3>
             </template>
             <template slot="thead">
-              <vs-th>#</vs-th>
+              <vs-th> #</vs-th>
+
               <vs-th>Referencia</vs-th>
+
               <vs-th>Periodo</vs-th>
+
               <vs-th>Fecha Programada</vs-th>
+
               <vs-th>Nueva Fecha de Pago</vs-th>
+
               <vs-th>Monto Pago</vs-th>
+
               <vs-th>Restante a Pagar</vs-th>
+
               <vs-th>Concepto</vs-th>
+
               <vs-th>Estatus</vs-th>
+
               <vs-th>Pagar Recibo</vs-th>
             </template>
             <template>
@@ -244,6 +289,7 @@
                 >
                   <span class="">{{ index_programado + 1 }}</span>
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
@@ -259,12 +305,14 @@
                 >
                   {{ programados.concepto_texto }}
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >{{ programados.fecha_programada_abr }}</vs-td
                 >
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
@@ -273,43 +321,51 @@
                   <span v-if="programados.saldo_neto > 0">
                     {{ programados.fecha_a_pagar_abr }}
                   </span>
+
                   <span v-else>{{ programados.fecha_ultimo_pago_abr }} </span>
                 </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
-                  >$
-                  {{
-                    programados.monto_programado | numFormat("0,000.00")
-                  }}</vs-td
-                >
+                  >$ {{ programados.monto_programado | numFormat("0,000.00") }}
+                </vs-td>
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >$ {{ programados.saldo_neto | numFormat("0,000.00") }}</vs-td
                 >
+
                 <vs-td
                   :class="[
                     programados.status_pago == 0 ? 'text-danger-900' : '',
                   ]"
                   >{{ programados.concepto_texto }}</vs-td
                 >
+
                 <vs-td>
                   <p v-if="programados.status_pago == 0">
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-danger"></span>
                   </p>
+
                   <p v-else-if="programados.status_pago == 1">
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-warning"></span>
                   </p>
+
                   <p v-else>
                     {{ programados.status_pago_texto }}
+
                     <span class="dot-success"></span>
                   </p>
                 </vs-td>
+
                 <vs-td>
                   <div
                     class="flex justify-center"
@@ -322,6 +378,7 @@
                       title="Pagar Ficha"
                       @click="pagar(programados.referencia_pago)"
                     />
+
                     <img
                       v-else
                       class="cursor-pointer img-btn-20 mx-2"
@@ -330,10 +387,12 @@
                     />
                   </div>
                 </vs-td>
+
                 <!-- <template class="expand-user" slot="expand">
-                d
-              </template>
-              -->
+    
+                    d
+</template>
+    -->
               </vs-tr>
             </template>
           </vs-table>
@@ -344,12 +403,18 @@
               <h3>Listado de Abonos Recibidos</h3>
             </template>
             <template slot="thead">
-              <vs-th>Clave</vs-th>
+              <vs-th> Clave</vs-th>
+
               <vs-th>Fecha Pago</vs-th>
+
               <vs-th>Total Pago</vs-th>
+
               <vs-th>Concepto</vs-th>
+
               <vs-th>Cobrador</vs-th>
+
               <vs-th>Estatus</vs-th>
+
               <vs-th>Consultar</vs-th>
             </template>
             <template>
@@ -361,17 +426,21 @@
                 <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
                   <span class="">{{ pago.id }}</span>
                 </vs-td>
+
                 <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
                   <span class="">{{ pago.fecha_pago_texto }}</span>
                 </vs-td>
+
                 <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
                   <span class=""
                     >$ {{ pago.total_pago | numFormat("0,000.00") }}</span
                   >
                 </vs-td>
+
                 <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
                   <span class="">{{ pago.movimientos_pagos_texto }}</span>
                 </vs-td>
+
                 <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
                   <span class="">{{ pago.cobrador.nombre }}</span>
                 </vs-td>
@@ -379,11 +448,13 @@
                 <vs-td>
                   <p v-if="pago.status == 0">
                     {{ pago.status_texto }}
+
                     <span class="dot-danger"></span>
                   </p>
 
                   <p v-else>
                     {{ pago.status_texto }}
+
                     <span class="dot-success"></span>
                   </p>
                 </vs-td>
@@ -397,8 +468,11 @@
                       @click="
                         openReporte(
                           'reporte de pago',
+
                           '/pagos/recibo_de_pago/',
+
                           pago.id,
+
                           'pago'
                         )
                       "
@@ -611,7 +685,7 @@ export default {
         await this.consultar_venta_id();
         if (this.operacion_id != "") {
           await this.consultar_pagos_operacion_id();
-          /**llamando el pago recien hecho */
+          //llamando el pago recien hecho
           this.openReporte(
             "reporte de pago",
             "/pagos/recibo_de_pago/",
@@ -666,7 +740,6 @@ export default {
         this.operacion_id = "";
         let res = await cementerio.consultar_venta_id(this.get_venta_id);
         this.datosVenta = res.data[0];
-
         this.operacion_id = this.datosVenta.operacion_id;
         this.pagos_programados_cuotas = [];
         if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
@@ -679,22 +752,22 @@ export default {
         /**aqui voy */
 
         /*if (this.datosVenta.pagos_programados.length > 0) {
-          //calculando el total de rows
-          this.funcion_reemplazada = [];
-          for (
-            let index = 0;
-            index < this.datosVenta.pagos_programados.length;
-            index++
-          ) {
-            this.$nextTick(() => {
-              this.funcion_reemplazada.push(this.$refs["row"][index].clicktd);
-              this.$refs["row"][index].clicktd = e => {};
-              this.$refs["row"][index].$el
-                .querySelector(".vs-icon")
-                .addEventListener("click", this.funcion_reemplazada[index]);
-            });
-          }
-        }
+  //calculando el total de rows
+  this.funcion_reemplazada = [];
+  for (
+    let index = 0;
+    index < this.datosVenta.pagos_programados.length;
+    index++
+  ) {
+    this.$nextTick(() => {
+      this.funcion_reemplazada.push(this.$refs["row"][index].clicktd);
+      this.$refs["row"][index].clicktd = e => {};
+      this.$refs["row"][index].$el
+        .querySelector(".vs-icon")
+        .addEventListener("click", this.funcion_reemplazada[index]);
+    });
+  }
+}
 */
 
         this.$vs.loading.close();
@@ -719,20 +792,24 @@ export default {
       try {
         this.pagos = [];
         let datos_request = { operacion_id: this.operacion_id };
-        let res = await pagos.consultar_pagos_operacion_id(datos_request);
-        this.pagos = res.data.data;
+        let res = await pagos.consultar_pagos_operacion_id(
+          datos_request,
+          false
+        );
+        this.pagos = res.data;
+        //agrego al arreglo de pagos los pagos realizados por concepto de mantenimiento.
 
+        datos_request = { operaciones_id: [] };
         if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
-          let datos_request = {
-            operacion_id: this.datosVenta.cuota_cementerio_terreno[0].id,
-          };
-          let res = await pagos.consultar_pagos_operacion_id(datos_request);
-
-          res.data.data.forEach((element) => {
-            element.movimientos_pagos_texto += " > Cuota de Mantto.";
-            this.pagos.push(element);
+          this.datosVenta.cuota_cementerio_terreno.forEach((cuota) => {
+            datos_request.operaciones_id.push(cuota.id);
           });
         }
+        res = await pagos.consultar_pagos_operacion_id(datos_request, false);
+        res.data.forEach((element) => {
+          element.movimientos_pagos_texto += " > Cuota de Mantto.";
+          this.pagos.push(element);
+        });
 
         this.$vs.loading.close();
       } catch (err) {

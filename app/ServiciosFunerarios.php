@@ -28,6 +28,7 @@ class ServiciosFunerarios extends Model
     public function operacion()
     {
         return $this->hasOne('App\Operaciones', 'servicios_funerarios_id', 'id')->select(
+            'operaciones.id',
             'id as operacion_id',
             'clientes_id',
             'subtotal',

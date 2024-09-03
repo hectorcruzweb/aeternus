@@ -35,8 +35,8 @@ export default {
         return axios.post(call, param);
     },
 
-    consultar_pagos_operacion_id(param) {
-        let service = "/pagos/get_pagos/all/paginated/false";
+    consultar_pagos_operacion_id(param,paginated="true") {
+        let service = "/pagos/get_pagos/all/"+paginated+"/false";
         return axios.get(service, {
             params: param
         });

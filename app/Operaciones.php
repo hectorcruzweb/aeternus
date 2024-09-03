@@ -9,8 +9,6 @@ class Operaciones extends Model
 {
     protected $table = 'operaciones';
 
-
-
     public function venta_terreno()
     {
         return $this->belongsTo('App\VentasTerrenos', 'ventas_terrenos_id', 'id')
@@ -39,7 +37,6 @@ class Operaciones extends Model
                 )
             );
     }
-
 
     public function servicio_funerario()
     {
@@ -75,7 +72,6 @@ class Operaciones extends Model
         );
     }
 
-
     public function cuota_cementerio()
     {
         return $this->belongsTo('App\Cuotas', 'cuotas_cementerio_id', 'id');
@@ -83,13 +79,13 @@ class Operaciones extends Model
 
     public function cuota_cementerio_terreno()
     {
-        return $this->hasMany('App\Operaciones', 'ventas_terrenos_id', 'ventas_terrenos_id')->select('*', 'operaciones.id as operacion_id')->where('empresa_operaciones_id', 2);
+        return $this->hasMany('App\Operaciones', 'ventas_terrenos_id', 'ventas_terrenos_id')->select("*","operaciones.id as operacion_id")->where('empresa_operaciones_id', 2);
     }
 
     /**la venta tiene uno o muchos pagos programados */
     public function pagosProgramados()
     {
-        return $this->hasMany('App\PagosProgramados', 'operaciones_id', 'operacion_id')
+        return $this->hasMany('App\PagosProgramados', 'operaciones_id', 'id')
             ->select(
                 '*',
                 DB::raw(
@@ -162,7 +158,6 @@ class Operaciones extends Model
         return $this->hasMany('App\Beneficiarios', 'operaciones_id', 'operacion_id');
         //return $this->hasMany('App\Comment', 'foreign_key', 'local_key');
     }
-
 
     public function usuarios_plan_futuro()
     {

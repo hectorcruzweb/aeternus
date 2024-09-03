@@ -1162,7 +1162,7 @@ class CementerioController extends ApiController
         /*  $id_cuota = 1;
         $email = false;
         $email_to = 'hector@gmail.com';
-         */
+         */ 
         $cuotas = $this->get_cuotas($request, 'all', false);
 
         //obtengo la informacion de esa cuota
@@ -2902,6 +2902,7 @@ class CementerioController extends ApiController
         /**solo ventas de cementerio */
             ->select(
                 /**venta operacion */
+                'operaciones.id',
                 'operaciones.id as operacion_id',
                 'antiguedad_operacion_id',
                 'empresa_operaciones_id',
@@ -2910,6 +2911,7 @@ class CementerioController extends ApiController
                 'descuento',
                 'impuestos',
                 'total',
+                'saldo',
                 'descuento_pronto_pago_b',
                 'costo_neto_pronto_pago',
                 DB::raw(
@@ -3078,7 +3080,7 @@ class CementerioController extends ApiController
             if (trim($status) != "") {
                 if ($status == 1) {
                     //solo listo los servicios con adeudo
-                    $q->where('saldo', '>', 0);
+                    $q->where('saldo', '>', 0)->where("operaciones.status","=",1);
                 } elseif ($status == 2) {
                     //solo las pagadas
                     $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
@@ -3283,9 +3285,7 @@ class CementerioController extends ApiController
                             $fecha_para_intereses = $venta['fecha_cancelacion_operacion'];
                         }
                     }
-
                     $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
-
                     $interes_generado = 0;
                     $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
                     /**fin varables por intereses */
@@ -3317,7 +3317,6 @@ class CementerioController extends ApiController
                                     $interes_generado -= $programado['abonado_intereses'];
                                 }
                             }
-
                             /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                             $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
                             /**la fecha qui es mayor que la fecha programada del pago */
@@ -3339,11 +3338,9 @@ class CementerioController extends ApiController
                         $programado['status_pago'] = 2;
                         $programado['status_pago_texto'] = 'Pagado';
                     }
-
                     /**monto con pronto pago de cada abono */
                     $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
                     $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
-
                     /**actualizando los totales de montos en la venta */
                     $venta['intereses'] += $interes_generado;
                     $venta['abonado_capital'] += $abonado_capital;
@@ -3352,7 +3349,6 @@ class CementerioController extends ApiController
                     $venta['descontado_capital'] += $descontado_capital;
                     $venta['complementado_cancelacion'] += $complemento_cancelacion;
                     $venta['saldo_neto'] += $saldo_pago_programado + $interes_generado;
-
                     /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
                     $venta['total_cubierto'] += $programado['total_cubierto'];
                     /**verificado el monto que seria con pronnto pago  */
@@ -3365,13 +3361,11 @@ class CementerioController extends ApiController
                 $venta['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
                 $venta['pagos_vencidos'] = $vencidos;
                 $venta['dias_vencidos'] = $dias_vencido_primer_pago_vencido;
-
                 /**areegloe de todos los pagos limpios(no repetidos) */
                 //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
             } else {
                 /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
             }
-
             /**incio pagos de cuotas */
             if (count($venta['cuota_cementerio_terreno']) > 0) {
                 foreach ($venta['cuota_cementerio_terreno'] as $key => &$cuota) {
@@ -3541,6 +3535,7 @@ class CementerioController extends ApiController
 
                                 /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                                 $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
+                                $cuota["saldo"]=$programado['saldo_neto'];
                                 /**la fecha qui es mayor que la fecha programada del pago */
                                 $programado['status_pago'] = 0;
                                 $programado['status_pago_texto'] = 'Vencido';
@@ -3576,8 +3571,6 @@ class CementerioController extends ApiController
                 }
                 /**areegloe de todos los pagos limpios(no repetidos) */
                 //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
-            } else {
-                /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
             }
             /**fin pagos de cuotas */
 
@@ -3593,9 +3586,7 @@ class CementerioController extends ApiController
             $venta['venta_terreno']['tipo_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['tipo_texto'];
             $venta['venta_terreno']['fila_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['fila_texto'];
             $venta['venta_terreno']['lote_texto'] = $this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio)['lote_texto'];
-
             $venta['venta_terreno']['fecha_convenio_entrega_texto'] = $venta['venta_terreno']['fecha_registro_convenio'] != null ? fecha_abr($venta['venta_terreno']['fecha_registro_convenio']) : null;
-
             /**agregando fila, lote, y tipo, por separado en valor numrico */
             $venta['venta_terreno']['fila_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[2]));
             $venta['venta_terreno']['lote_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[3]));

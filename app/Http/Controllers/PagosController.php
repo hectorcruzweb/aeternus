@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use PDF;
-use App\User;
-use App\Pagos;
-use Carbon\Carbon;
-use App\SATMonedas;
-use App\Operaciones;
-use App\SatFormasPago;
-use GuzzleHttp\Client;
-use App\VentasTerrenos;
-use App\PagosProgramados;
-use Illuminate\Http\Request;
-use PhpParser\Node\Stmt\TryCatch;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\FirmasController;
+use App\Operaciones;
+use App\Pagos;
+use App\PagosProgramados;
+use App\SatFormasPago;
+use App\SATMonedas;
 use App\ServiciosFunerarios;
+use App\User;
+use Carbon\Carbon;
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use PDF;
 
 class PagosController extends ApiController
 {
@@ -28,11 +26,11 @@ class PagosController extends ApiController
         /**puesto de venderor id 5 */
         /**obtiene los usuarios con puesto de cobrador */
         return $this->showAll(User::select('id', 'nombre')
-            ->join('usuarios_puestos', 'usuarios_puestos.usuarios_id', '=', 'usuarios.id')
-            ->where('roles_id', '>', 1)
-            ->where('puestos_id', '=', 5)
-            ->where('usuarios.status', '>', 0)
-            ->get());
+                ->join('usuarios_puestos', 'usuarios_puestos.usuarios_id', '=', 'usuarios.id')
+                ->where('roles_id', '>', 1)
+                ->where('puestos_id', '=', 5)
+                ->where('usuarios.status', '>', 0)
+                ->get());
     }
 
     public function get_formas_pago_sat()
@@ -46,7 +44,6 @@ class PagosController extends ApiController
         return $this->showAll(SATMonedas::get());
     }
 
-
     public function calcular_adeudo($referencia, $fecha = '', $multipago = 'false')
     {
         $request = new \Illuminate\Http\Request();
@@ -54,22 +51,20 @@ class PagosController extends ApiController
         $request->replace([
             'referencia' => $referencia,
             'multipago' => $multipago,
-            'fecha_pago' => $fecha
+            'fecha_pago' => $fecha,
         ]);
-
 
         $validaciones = [
             'referencia' => 'required',
             'multipago' => 'required',
-            'fecha_pago' => 'required|date_format:Y-m-d H:i'
+            'fecha_pago' => 'required|date_format:Y-m-d H:i',
         ];
-
 
         $mensajes = [
             'referencia.required' => 'Es necesario ingresar un número de referencia.',
             'multipago.required' => 'Indique la modalidad de pago.',
             'fecha_pago.required' => 'Debe ingresar una fecha de pago.',
-            'fecha_pago.date_format' => 'El formato de la fecha no es correcto(Y-m-d H:i).'
+            'fecha_pago.date_format' => 'El formato de la fecha no es correcto(Y-m-d H:i).',
         ];
         $request->validate(
             $validaciones,
@@ -85,6 +80,7 @@ class PagosController extends ApiController
         if (count($pago_programado)) {
             /**se ha encontrado la referencia y se procede a hacer los respectivos calculos */
             $resultado = Operaciones::select(
+                'operaciones.id',
                 'ventas_planes_id',
                 'ventas_terrenos_id',
                 'cuotas_cementerio_id',
@@ -130,8 +126,6 @@ class PagosController extends ApiController
                 ->where('operaciones.id', '=', $pago_programado[0]->operaciones_id)
                 ->get()->toArray();
 
-
-
             foreach ($resultado as $index_dato => &$dato) {
                 $dato['fecha_a_pagar'] = date('Y-m-d', strtotime($request->fecha_pago));
                 $dato['fecha_a_pagar_texto'] = fecha_abr(date('Y-m-d', strtotime($request->fecha_pago)));
@@ -165,16 +159,14 @@ class PagosController extends ApiController
                     $dato['operacion_texto'] = 'Venta en Gral.';
                 }
 
-
                 /**aqui se saca el porcentaje para ver cuanto seria el descuento por pago en cada pronto pago */
                 $porcentaje_descuento_pronto_pago = 0;
                 if ($dato['total'] > 0) {
                     $porcentaje_descuento_pronto_pago = ($dato['costo_neto_pronto_pago']) * 100 / $dato['total'];
                 }
 
-
                 /**recorriendo arreglo de pagos programados */
-                foreach ($dato['pagos_programados']  as $index_programado => &$programado) {
+                foreach ($dato['pagos_programados'] as $index_programado => &$programado) {
                     /**actualizando fecha de pago abre con helper de fechas */
                     $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
                     //if ($programado['status_pago'] != 2) {
@@ -195,8 +187,6 @@ class PagosController extends ApiController
                         }
                     }
 
-
-
                     /**aumento el pago programado vigente */
                     /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
                     /**montos segun su tipo de movimiento */
@@ -209,7 +199,7 @@ class PagosController extends ApiController
 
                     if (!empty($programado['pagados'])) {
                         $pago_total = 0;
-                        foreach ($programado['pagados']  as $index_pagados => &$pagado) {
+                        foreach ($programado['pagados'] as $index_pagados => &$pagado) {
                             if ($pagado['status'] == 1) {
                                 /**si esta activo el pago se toma en cuenta el monto de cada operacion */
                                 /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
@@ -222,10 +212,10 @@ class PagosController extends ApiController
                                      */
                                     $pago_total += $pagado['monto'];
                                     $abonado_capital += $pagado['pagos_cubiertos']['monto'];
-                                } else  if ($pagado['movimientos_pagos_id'] == 4) {
+                                } else if ($pagado['movimientos_pagos_id'] == 4) {
                                     /**fue descuento al capital */
                                     $descontado_capital += $pagado['pagos_cubiertos']['monto'];
-                                } else  if ($pagado['movimientos_pagos_id'] == 5) {
+                                } else if ($pagado['movimientos_pagos_id'] == 5) {
                                     /**fue complemento por cancelacion */
                                     $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
                                 } elseif ($pagado['movimientos_pagos_id'] == 2) {
@@ -253,15 +243,13 @@ class PagosController extends ApiController
 
                     /** al final del ciclo se actualizan los valores en el pago programado*/
                     $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                    $programado['abonado_intereses'] =   round($abonado_intereses, 2, PHP_ROUND_HALF_UP);
-                    $programado['descontado_pronto_pago'] =   round($descontado_pronto_pago, 2, PHP_ROUND_HALF_UP);
-                    $programado['descontado_capital'] =   round($descontado_capital, 2, PHP_ROUND_HALF_UP);
-                    $programado['complementado_cancelacion'] =   round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
+                    $programado['abonado_intereses'] = round($abonado_intereses, 2, PHP_ROUND_HALF_UP);
+                    $programado['descontado_pronto_pago'] = round($descontado_pronto_pago, 2, PHP_ROUND_HALF_UP);
+                    $programado['descontado_capital'] = round($descontado_capital, 2, PHP_ROUND_HALF_UP);
+                    $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
                     $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
                     $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
-
-
 
                     /**asignando la fecha del pago que liquidado el pago programado */
                     if ($programado['saldo_neto'] <= 0) {
@@ -274,7 +262,7 @@ class PagosController extends ApiController
                     $dias_retrasados_del_pago = 0;
                     $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
 
-                    $fecha_a_pagar = Carbon::createFromFormat('Y-m-d',  substr($request->fecha_pago, 0, 10));
+                    $fecha_a_pagar = Carbon::createFromFormat('Y-m-d', substr($request->fecha_pago, 0, 10));
                     $interes_generado = 0;
                     $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
                     /**fin varables por intereses */
@@ -317,7 +305,7 @@ class PagosController extends ApiController
                             $programado['status_pago_texto'] = 'Vencido';
 
                             $programado['dias_vencido'] = $dias_retrasados_del_pago;
-                            $programado['intereses'] =  $interes_generado;
+                            $programado['intereses'] = $interes_generado;
                         } else {
                             /**la fecha aun no vence */
                             $programado['status_pago'] = 1;
@@ -351,7 +339,7 @@ class PagosController extends ApiController
                     /**monto con pronto pago de cada abono */
 
                     $programado['monto_pronto_pago'] = round((($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100), 2, PHP_ROUND_HALF_UP);
-                    $programado['total_cubierto'] = $programado['abonado_capital'] +  $programado['descontado_pronto_pago'] + $programado['descontado_capital'] + $programado['complementado_cancelacion'];
+                    $programado['total_cubierto'] = $programado['abonado_capital'] + $programado['descontado_pronto_pago'] + $programado['descontado_capital'] + $programado['complementado_cancelacion'];
 
                     /**verificando el estado de la referencia que se desa consultar */
                     if ($programado['referencia_pago'] == $referencia) {
@@ -370,8 +358,6 @@ class PagosController extends ApiController
             return $this->errorResponse('No se ha encontrado el número de referencia solicitado.', 409);
         }
     }
-
-
 
     public function cancelar_pago(Request $request)
     {
@@ -407,7 +393,6 @@ class PagosController extends ApiController
             return $this->errorResponse('Este movimimiento ya ha sido cancelado previamente.', 409);
         }
 
-
         /**checando que la operacion del movimienrto a cancelar este vigente */
         if ($datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['status'] == 0) {
             return $this->errorResponse('Hemos detectado que la operación de este movimiento ya fue cancelada. No se puede cancelar este movimiento.', 409);
@@ -419,7 +404,7 @@ class PagosController extends ApiController
             DB::table('operaciones')->where('id', $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['id'])->update(
                 [
                     'status' => 1,
-                    'saldo'=>round($datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['saldo']+$datos_pago['referencias_cubiertas'][0]['monto'],2)
+                    'saldo' => round($datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['saldo'] + $datos_pago['referencias_cubiertas'][0]['monto'], 2),
                 ]
             );
             /** cambiando el estatus del pago/movimiento*/
@@ -433,7 +418,7 @@ class PagosController extends ApiController
                 ]
             );
             DB::commit();
-            return  $request->pago_id;
+            return $request->pago_id;
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;
@@ -458,9 +443,8 @@ class PagosController extends ApiController
             'cobrador.value' => 'required',
             'moneda.value' => 'required',
             'pago_con_cantidad' => '',
-            'cambio_pago' => ''
+            'cambio_pago' => '',
         ];
-
 
         if (isset($request->formaPago['value'])) {
             if ($request->formaPago['value'] == 1) {
@@ -512,13 +496,12 @@ class PagosController extends ApiController
             'descuento_pronto_pago.min' => 'La $ cantidad de Descuento por Pronto Pago debe ser mayor o igual a cero.',
             'total.required' => 'Ingrese la $ cantidad Total del Pago.',
             'total.numeric' => 'La $ cantidad Total del Pago debe ser un número valido.',
-            'total.min' => 'La $ cantidad Total del Pago debe ser mayor o igual a cero.'
+            'total.min' => 'La $ cantidad Total del Pago debe ser mayor o igual a cero.',
         ];
         request()->validate(
             $validaciones,
             $mensajes
         );
-
 
         foreach ($request->pagos_a_cubrir as $index_referencia => $referencia) {
             /**verificando que las fechas enviadas en los pagoa a cubrir y la seleccionada al calcular el adeudo coincidan */
@@ -542,111 +525,21 @@ class PagosController extends ApiController
             return $this->errorResponse('No se ha encontrado ninguna referencia de pago a cubrir.', 409);
         }
 
-        /**verificando que la operaicon no este cancelada */
-        $datos_operacion = $referencias_adeudos[0];
-        $datos_venta = [];
-        $cementerio_controller = new CementerioController();
-        /**verificando que tipo de operacion_empresa es */
-        if ($datos_operacion['empresa_operaciones_id'] == 1) {
-            /**es tipo de ventas de propiedades */
-            $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
-            if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
-                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
-                    [
-                        /**status de ya liquidada */
-                        'status' => 2
-                    ]
-                );
-                /**generando el numero de titulo de la venta de propiedad */
-                $cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
-            }
-        } else  if ($datos_operacion['empresa_operaciones_id'] == 2) {
-            //checando si la operacion a la que pertenece este pago de cuuota no ha sido cancelada
-            $venta_terreno = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
-            if($venta_terreno["operacion_status"]==0){
-                return $this->errorResponse("Error, la venta de propiedad al que pertenece este pago de cuota ha sido cancelada.", 409);
-            }
-            /**cuotas de mantenimiento en cementerio */
-            $cuotas_controller = new CementerioController();
-            $datos_venta = $cuotas_controller->get_cuotas($request, $datos_operacion['cuotas_cementerio_id'], '')[0];
-
-            if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
-                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
-                    [
-                        /**status de ya liquidada */
-                        'status' => 2
-                    ]
-                );
-            }
-        } else  if ($datos_operacion['empresa_operaciones_id'] == 4) {
-            /**venta de planes a futuro */
-            $funeraria_controller = new FunerariaController();
-            $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
-
-            if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
-                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
-                    [
-                        /**status de ya liquidada */
-                        'status' => 2
-                    ]
-                );
-                /**generando el numero de titulo de la venta de propiedad */
-                /**deshabilitando numero de titulo */
-                //$cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
-            }
-        } else  if ($datos_operacion['empresa_operaciones_id'] == 3) {
-            /**servicios funerarios */
-            $funeraria_controller = new FunerariaController();
-            $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_operacion['servicios_funerarios_id'], '')[0];
-            if (round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
-                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
-                    [
-                        /**status de ya liquidada */
-                        'status' => 2,
-                        "saldo"=>0
-                    ]
-                );
-            }
-             /**verificnado si la operacion no esta cancelada o pagada */
-            if ($datos_venta['operacion']['operacion_status'] == 0) {
-                return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
-            }
-        }
-
-        //mensajes de error para status de operaciones canceladas
-        if ($datos_operacion['empresa_operaciones_id'] == 2) {
-            /**cuota de cementerio */
-            /**verificnado si la operacion no esta cancelada o pagada */
-            if ($datos_venta['propiedades']['0']['status'] == 0) {
-                //operacion_status
-                return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
-            }
-        } else {
-            /**verificnado si la operacion no esta cancelada o pagada */
-            if ($datos_venta['operacion_status'] == 0) {
-                return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
-            }
-        }
-
         /**checar si el pago no esta siendo hecho antes de la fecha de la venta */
         if (date('Y-m-d', strtotime(substr($request->fecha_pago, 0, 10))) < date('Y-m-d', strtotime($referencias_adeudos[0]['fecha_operacion']))) {
             return $this->errorResponse('No se pueden registrar pagos con fecha anterior a la fecha de la venta/operación (' . $referencias_adeudos[0]['fecha_operacion_texto'] . ').', 409);
         }
 
         //operacion_id
-       
+
         /**se obtienen los valores actualizados con la fecha y cantidades a cubrir */
         /**cantidades enviadas por el usuario para procesar el pago */
-        $abono =  round(($request->abono), 2, PHP_ROUND_HALF_UP);
+        $abono = round(($request->abono), 2, PHP_ROUND_HALF_UP);
         $intereses = round($request->intereses, 2, PHP_ROUND_HALF_UP);
-        $descuento_pronto_pago =  round($request->descuento_pronto_pago, 2, PHP_ROUND_HALF_UP);
+        $descuento_pronto_pago = round($request->descuento_pronto_pago, 2, PHP_ROUND_HALF_UP);
         $total = round($request->total, 2, PHP_ROUND_HALF_UP);
         $pago_con_cantidad = round($request->pago_con_cantidad, 2, PHP_ROUND_HALF_UP);
-        $cambio_pago =  round($request->cambio_pago, 2, PHP_ROUND_HALF_UP);
+        $cambio_pago = round($request->cambio_pago, 2, PHP_ROUND_HALF_UP);
         $monto_pago_parent = $abono - $descuento_pronto_pago; //el pago parent ha registrar, el abono menos el descuento
         /**verificando que no haya descuento por pronyo pago ni intereses si la forma de pago es remision de deuda */
         if ($request->formaPago['value'] == 7) {
@@ -680,6 +573,87 @@ class PagosController extends ApiController
         try {
             DB::beginTransaction();
             try {
+
+                /**verificando que la operaicon no este cancelada */
+                $datos_operacion = $referencias_adeudos[0];
+                $datos_venta = [];
+                $cementerio_controller = new CementerioController();
+                $funeraria_controller = new FunerariaController();
+                /**verificando que tipo de operacion_empresa es */
+                if ($datos_operacion['empresa_operaciones_id'] == 1) {
+                    /**es tipo de ventas de propiedades */
+                    $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
+                    //verificando que no este cancelada
+                    if ($datos_venta['operacion_status'] == 0) {
+                        return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
+                    }
+                    if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                        /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                        DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                            [
+                                /**status de ya liquidada */
+                                'status' => 2,
+                                'saldo' => 0,
+                            ]
+                        );
+                        /**generando el numero de titulo de la venta de propiedad */
+                        $cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                    }
+                } else if ($datos_operacion['empresa_operaciones_id'] == 2) {
+                    //checando si la operacion a la que pertenece este pago de cuuota no ha sido cancelada
+                    $venta_terreno = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
+                    if ($venta_terreno["operacion_status"] == 0) {
+                        return $this->errorResponse("Error, la venta de propiedad al que pertenece este pago de cuota ha sido cancelada.", 409);
+                    }
+                    /**cuotas de mantenimiento en cementerio */
+                    $datos_venta = $cementerio_controller->get_cuotas($request, $datos_operacion['cuotas_cementerio_id'], '')[0];
+                    if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                        /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                        DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                            [
+                                /**status de ya liquidada */
+                                'status' => 2,
+                                'saldo' => 0,
+                            ]
+                        );
+                    }
+                } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
+                    /**servicios funerarios */
+                    $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_operacion['servicios_funerarios_id'], '')[0];
+                    /**verificnado si la operacion no esta cancelada o pagada */
+                    if ($datos_venta['operacion']['operacion_status'] == 0) {
+                        return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
+                    }
+                    if (round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                        /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                        DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
+                            [
+                                /**status de ya liquidada */
+                                'status' => 2,
+                                "saldo" => 0,
+                            ]
+                        );
+                    }
+
+                } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
+                    /**venta de planes a futuro */
+
+                    $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
+                    if ($datos_venta['operacion_status'] == 0) {
+                        return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
+                    }
+                    if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                        /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                        DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                            [
+                                /**status de ya liquidada */
+                                'status' => 2,
+                                'saldo' => 0,
+                            ]
+                        );
+                    }
+                }
+
                 foreach ($request->pagos_a_cubrir as $index_referencia => $referencia) {
                     $encontrada = false;
                     foreach ($referencias_adeudos[0]['pagos_programados'] as $index_programado => $programado) {
@@ -704,7 +678,7 @@ class PagosController extends ApiController
                                                     'referencia_pago' => $programado['referencia_pago'],
                                                     'pagos_programados_id' => $programado['id'],
                                                     'monto' => $intereses_a_cubrir,
-                                                    'movimientos_pagos_d' => 2 //abono a intereses
+                                                    'movimientos_pagos_d' => 2, //abono a intereses
                                                 ]);
                                                 /**se acaba el intereses_a_cubrir */
                                                 $intereses_a_cubrir = 0;
@@ -713,7 +687,7 @@ class PagosController extends ApiController
                                                     'referencia_pago' => $programado['referencia_pago'],
                                                     'pagos_programados_id' => $programado['id'],
                                                     'monto' => $programado['intereses'],
-                                                    'movimientos_pagos_d' => 2 //abono a intereses
+                                                    'movimientos_pagos_d' => 2, //abono a intereses
                                                 ]);
                                                 /**se puede asignar el 100 de intereses programados */
                                                 $intereses_a_cubrir -= $programado['intereses'];
@@ -730,7 +704,7 @@ class PagosController extends ApiController
                                                     'referencia_pago' => $programado['referencia_pago'],
                                                     'pagos_programados_id' => $programado['id'],
                                                     'monto' => $descuento_pronto_pago_a_cubrir,
-                                                    'movimientos_pagos_d' => 3 //descuento por pronto pago
+                                                    'movimientos_pagos_d' => 3, //descuento por pronto pago
                                                 ]);
                                                 /**se acaba el des$descuento_pronto_pago_a_cubrir */
                                                 $descuento_pronto_pago_a_cubrir = 0;
@@ -739,15 +713,13 @@ class PagosController extends ApiController
                                                     'referencia_pago' => $programado['referencia_pago'],
                                                     'pagos_programados_id' => $programado['id'],
                                                     'monto' => ($programado['descuento_pronto_pago']),
-                                                    'movimientos_pagos_d' => 3 //descuento por pronto pago
+                                                    'movimientos_pagos_d' => 3, //descuento por pronto pago
                                                 ]);
                                                 /**se puede asignar el 100 de descuento_pronto_pago */
                                                 $descuento_pronto_pago_a_cubrir -= $programado['descuento_pronto_pago'];
                                             }
                                         }
                                     } //fin if descuento_pronto_pago_a_cubrir > 0
-
-
 
                                     /**haciendo los arrays de pagos a distriburir */
                                     /**se puede verificar cantidad a pagar del abono */
@@ -767,7 +739,7 @@ class PagosController extends ApiController
                                                 'referencia_pago' => $programado['referencia_pago'],
                                                 'pagos_programados_id' => $programado['id'],
                                                 'monto' => round($abono_a_cubrir, 2, PHP_ROUND_HALF_UP),
-                                                'movimientos_pagos_d' => $id_tipo_movimiento
+                                                'movimientos_pagos_d' => $id_tipo_movimiento,
                                             ]);
                                             /**se acaba el abono_a_cubrir */
                                             $abono_a_cubrir = 0;
@@ -776,8 +748,8 @@ class PagosController extends ApiController
                                             array_push($array_abonos_cubrir, [
                                                 'referencia_pago' => $programado['referencia_pago'],
                                                 'pagos_programados_id' => $programado['id'],
-                                                'monto' =>  round($monto_con_descuento, 2, PHP_ROUND_HALF_UP),
-                                                'movimientos_pagos_d' => $id_tipo_movimiento
+                                                'monto' => round($monto_con_descuento, 2, PHP_ROUND_HALF_UP),
+                                                'movimientos_pagos_d' => $id_tipo_movimiento,
                                             ]);
                                             $abono_a_cubrir -= round($monto_con_descuento, 2, PHP_ROUND_HALF_UP);
                                         }
@@ -787,7 +759,6 @@ class PagosController extends ApiController
                             }
                         } //fin if referencia de pago
                     } //fin foreach de pagros programados
-
 
                     if ($encontrada == false) {
                         return $this->errorResponse('Ocurrió un error al guardar el pago, uno de los pagos que desea pagar (' . $referencia['referencia_pago'] . ') no fue econtontrado en la lista de posibles pagos a cubrir según la venta.', 409);
@@ -804,7 +775,6 @@ class PagosController extends ApiController
                 return $this->errorResponse('Hemos encontrado errores en el registro de este pago debido a que las cantidades ingresadas no cuadran según la operación que está realizando, por favor verifique que el descuento o interés que desea cobrar están en relación a los pagos que desea pagar. Por favor vuelva a intentar la operación.', 409);
             }
 
-
             //return $array_intereses_cubrir;
 
             /**antes de insertar el pago se debe de verificar que no existan pagos con fecha superior al pago que se va hacer,
@@ -817,12 +787,10 @@ class PagosController extends ApiController
                 ->where('pagos.fecha_pago', '>', $request->fecha_pago)
                 ->whereIn('pagos_pagos_programados.pagos_programados_id', $array_pagos_programados_id)->get();
 
-
             if (count($pago_despues_fecha_pago) > 0) {
                 return $this->errorResponse('Hemos detectado que hay pagos con fecha superior a la fecha de pago que desea registrar. No se puede registrar el pago con esta fecha debido a que ya fueron aplicadas las políticas de descuento e intereses en pagos con fechas anteriores.', 409);
             }
             $array_pagos_programados_id;
-
 
             $id_abono_capital = DB::table('pagos')->insertGetId(
                 [
@@ -841,7 +809,7 @@ class PagosController extends ApiController
                     'movimientos_pagos_id' => $id_tipo_movimiento,
                     'nota' => $request->nota,
                     'sat_monedas_id' => $request->moneda['value'],
-                    'tipo_cambio' => 1 //1 pesos,
+                    'tipo_cambio' => 1, //1 pesos,
                 ]
             );
 
@@ -852,12 +820,11 @@ class PagosController extends ApiController
                         'pagos_id' => $id_abono_capital,
                         'monto' => $pago['monto'],
                         'pagos_programados_id' => $pago['pagos_programados_id'],
-                        'movimientos_pagos_id' => $id_tipo_movimiento
+                        'movimientos_pagos_id' => $id_tipo_movimiento,
                     ]
                 );
             }
             /**fin de captura de pagos */
-
 
             /**guardando children de descuento e intereses */
             $id_descuento_pronto_pago = '';
@@ -877,7 +844,7 @@ class PagosController extends ApiController
                         'movimientos_pagos_id' => 3, //descuento pronto pago
                         'sat_monedas_id' => $request->moneda['value'],
                         'tipo_cambio' => 1, //1 pesos,
-                        'parent_pago_id' => $id_abono_capital
+                        'parent_pago_id' => $id_abono_capital,
                     ]
                 );
 
@@ -888,15 +855,13 @@ class PagosController extends ApiController
                             'pagos_id' => $id_descuento_pronto_pago,
                             'monto' => $descuento['monto'],
                             'pagos_programados_id' => round($descuento['pagos_programados_id'], 2, PHP_ROUND_HALF_UP),
-                            'movimientos_pagos_id' => 3  //descuento pronto pago
+                            'movimientos_pagos_id' => 3, //descuento pronto pago
                         ]
                     );
                 }
                 //return $array_descuento_a_cubrir;
                 /**fin de los de tipo descuento */
             }
-
-
 
             $id_intereses = '';
             if ($intereses > 0) {
@@ -915,7 +880,7 @@ class PagosController extends ApiController
                         'movimientos_pagos_id' => 2, //abono a intereses
                         'sat_monedas_id' => $request->moneda['value'],
                         'tipo_cambio' => 1, //1 pesos,
-                        'parent_pago_id' => $id_abono_capital
+                        'parent_pago_id' => $id_abono_capital,
                     ]
                 );
                 /**guardando los de tipo intereses */
@@ -925,7 +890,7 @@ class PagosController extends ApiController
                             'pagos_id' => $id_intereses,
                             'monto' => $interes['monto'],
                             'pagos_programados_id' => $interes['pagos_programados_id'],
-                            'movimientos_pagos_id' => 2 //abono a intereses
+                            'movimientos_pagos_id' => 2, //abono a intereses
                         ]
                     );
                 }
@@ -940,19 +905,47 @@ class PagosController extends ApiController
             if ($datos_operacion['empresa_operaciones_id'] == 1) {
                 /**es tipo de ventas de propiedades */
                 $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
+                if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                    /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                    DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                        [
+                            /**status de ya liquidada */
+                            'status' => 2,
+                            'saldo'=>0
+                        ]
+                    );
+                    /**generando el numero de titulo de la venta de propiedad */
+                    $cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                }else{
+                    DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                        [
+                            /**status de ya liquidada */
+                            'saldo'=>round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                        ]
+                    );
+                }
+            } else if ($datos_operacion['empresa_operaciones_id'] == 2) {
+                /**es tipo de ventas de propiedades */
+                $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
                 // return  $this->errorResponse(round($datos_venta['saldo_neto'], 2), 409);
                 if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
                     /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
                     DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
                         [
                             /**status de ya liquidada */
-                            'status' => 2
+                            'status' => 2,
+                            'saldo'=>0
                         ]
                     );
-                    /**generando el numero de titulo de la venta de propiedad */
-                    $cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                }else{
+                    DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                        [
+                            /**status de ya liquidada */
+                            'saldo'=>round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                        ]
+                    );
                 }
-            } else  if ($datos_operacion['empresa_operaciones_id'] == 4) {
+            } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
                 /**venta de planes a futuro */
                 $funeraria_controller = new FunerariaController();
                 $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
@@ -962,32 +955,42 @@ class PagosController extends ApiController
                     DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
                         [
                             /**status de ya liquidada */
-                            'status' => 2
+                            'status' => 2,
+                            'saldo'=>0
                         ]
                     );
-                    /**generando el numero de titulo de la venta de propiedad */
-                    /**deshabilitando numero de titulo */
-                    //$cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                }else{
+                    DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                        [
+                            /**status de ya liquidada */
+                            'saldo'=>round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                        ]
+                    );
                 }
-            } else  if ($datos_operacion['empresa_operaciones_id'] == 3) {
+            } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
                 /**servicios funerarios */
                 $funeraria_controller = new FunerariaController();
                 $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_operacion['servicios_funerarios_id'], '')[0];
-
                 if (round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
                     /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
                     DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
                         [
                             /**status de ya liquidada */
-                            'status' => 2
+                            'status' => 2,
+                            'saldo'=>0
                         ]
                     );
-                    /**generando el numero de titulo de la venta de propiedad */
-                    /**deshabilitando numero de titulo */
-                    //$cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                }
+                else {
+                    /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                    DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
+                        [
+                            /**status de ya liquidada */
+                            'saldo'=>round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                        ]
+                    );
                 }
             }
-
 
             return $id_abono_capital;
         } catch (\Throwable $th) {
@@ -996,7 +999,7 @@ class PagosController extends ApiController
         }
     }
 
-    public function get_pagos(Request $request, $id_pago = 'all', $paginated = false, $ver_sub_pagos = false)
+    public function get_pagos(Request $request, $id_pago = 'all', $paginated = false, $ver_sub_pagos = false,$array_operaciones=[])
     {
         try {
             $status = $request->status;
@@ -1066,14 +1069,18 @@ class PagosController extends ApiController
                     '(NULL) AS status_texto'
                 )
             )
-                // ->with(['referencias_cubiertas:id,referencia_pago,operaciones_id,monto_programado,fecha_programada,conceptos_pagos_id'])
+            // ->with(['referencias_cubiertas:id,referencia_pago,operaciones_id,monto_programado,fecha_programada,conceptos_pagos_id'])
                 ->whereHas('referencias_cubiertas', function ($q) {
                     //$q->where('referencia_pago', '=', '00120200101025');
                 })
                 ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
-                ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request) {
-                    if (($request->operacion_id)) {
+                ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request,$array_operaciones) {
+                    if (isset($request->operacion_id)) {
                         $q->where('id', '=', $request->operacion_id);
+                    }
+                    if (isset($request->operaciones_id)) {
+                        if(count($request->operaciones_id)>0)
+                        $q->whereIn('id', $request->operaciones_id);
                     }
                 })
                 ->with(['registro:id,nombre', 'sat_moneda', 'cobrador:id,nombre', 'cancelador:id,nombre', 'subpagos.referencias_cubiertas', 'forma_pago'])
@@ -1103,7 +1110,7 @@ class PagosController extends ApiController
                 ->orderBy('pagos.id', 'desc')
                 ->orderBy('movimientos_pagos_id', 'asc')
 
-                //->where('parent_pago_id', '<>', NULL)
+            //->where('parent_pago_id', '<>', NULL)
                 ->get();
             $resultado = array();
             if ($paginated == 'paginated') {
@@ -1228,17 +1235,13 @@ class PagosController extends ApiController
         }
     }
 
-
-
-
     public function recibo_de_pago(Request $request, $id_pago = '')
     {
 
         try {
 
-
             /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-            $email =  $request->email_send === 'true' ? true : false;
+            $email = $request->email_send === 'true' ? true : false;
             $email_to = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
             $id_pago = $requestVentasList['id_pago'];
@@ -1248,10 +1251,10 @@ class PagosController extends ApiController
              */
 
             /*
-        $id_pago = 3353;
-        $email = false;
-        $email_to = 'hector@gmail.com';
-*/
+            $id_pago = 3353;
+            $email = false;
+            $email_to = 'hector@gmail.com';
+             */
             //code...
             $datos_pago = $this->get_pagos($request, $id_pago, '', false)[0];
             if (empty($datos_pago)) {
@@ -1263,16 +1266,15 @@ class PagosController extends ApiController
             return $this->errorResponse('Error al cargar los datos.', 409);
         }
 
-
         $get_funeraria = new EmpresaController();
         $empresa = $get_funeraria->get_empresa_data();
 
         $FirmasController = new FirmasController();
-        $firma_cobrador       = $FirmasController->get_firma_documento($datos_pago['cobrador_id'], null, 'por_cobrador');
-        $cancelo       = $FirmasController->get_firma_documento($datos_pago['cancelo_id'], null, 'por_cobrador');
+        $firma_cobrador = $FirmasController->get_firma_documento($datos_pago['cobrador_id'], null, 'por_cobrador');
+        $cancelo = $FirmasController->get_firma_documento($datos_pago['cancelo_id'], null, 'por_cobrador');
         $firmas = [
             'cobrador' => $firma_cobrador['firma_path'],
-            'cancelo' => $cancelo['firma_path']
+            'cancelo' => $cancelo['firma_path'],
         ];
 
         //nombre del fallecido
@@ -1282,8 +1284,6 @@ class PagosController extends ApiController
             $res = ServiciosFunerarios::select('nombre_afectado')->where('id', $id_servicio_funerario)->get()->first();
             $fallecido = $res->nombre_afectado;
         }
-
-
 
         $pdf = PDF::loadView('pagos/recibo_pago', ['id_pago' => $id_pago, 'datos' => $datos_pago, 'empresa' => $empresa, 'firmas' => $firmas, 'fallecido' => $fallecido]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
@@ -1295,11 +1295,9 @@ class PagosController extends ApiController
         ]);
         if ($datos_pago['status'] == 0) {
             $pdf->setOptions([
-                'header-html' => view('pagos.header')
+                'header-html' => view('pagos.header'),
             ]);
         }
-
-
 
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('orientation', 'landscape');

@@ -199,6 +199,7 @@
                 <vs-th>Título</vs-th>
                 <vs-th>Ubicacion</vs-th>
                 <vs-th>Convenio</vs-th>
+                <vs-th>$ Saldo Venta</vs-th>
                 <vs-th>Estatus</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
@@ -263,6 +264,9 @@
                             />
                         </p>
                     </vs-td>
+                    <vs-td :data="data[indextr].saldo">
+                        $ {{ data[indextr].saldo | numFormat("0,000.00") }}
+                    </vs-td>
                     <vs-td :data="data[indextr].operacion_status">
                         <p v-if="data[indextr].operacion_status == 0">
                             {{ data[indextr].status_texto }}
@@ -277,6 +281,7 @@
                             <span class="dot-success"></span>
                         </p>
                     </vs-td>
+                    
 
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
