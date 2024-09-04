@@ -174,14 +174,22 @@
                   <div class="w-full px-2 size-small color-copy pt-2">
                     <span
                       class="font-medium uppercase"
-                      v-if="disponibilidad_terreno == 1"
+                      v-if="disponibilidad.disponibilidad_terreno == 1"
                     >
                       <span class="dot-success"></span>
                       Propiedad disponible para venta</span
                     >
                     <span class="uppercase font-medium" v-else>
-                      <span class="dot-danger"></span>
-                      Propiedad ya vendida</span
+                          <span class="dot-danger"></span>
+                      vendida a cliente (Titular): {{ disponibilidad.cliente }}
+                      <img
+                                class="cursor-pointer img-btn-28 mx-3"
+                                src="@assets/images/folder.svg"
+                                title="Expediente"
+                                @click="
+                                    openReportes=true;
+                                "
+                            /></span
                     >
                   </div>
                   <div class="w-full px-2 size-small color-copy pt-2">
@@ -1054,6 +1062,13 @@
       @closeBuscador="openBuscador = false"
       @retornoCliente="clienteSeleccionado"
     ></ClientesBuscador>
+    <ReportesVentas
+    :z_index="'z-index58k'"
+            :verAcuse="verAcuse"
+            :show="openReportes"
+            @closeListaReportes="closeListaReportes"
+            :id_venta="id_venta_ver"
+        ></ReportesVentas>
   </div>
 </template>
 <script>
@@ -1061,7 +1076,7 @@
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
-
+import ReportesVentas from "../ventas/ReportesVentas";
 import Mapa from "../Mapa";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 //componente de password
@@ -1084,6 +1099,7 @@ export default {
     ConfirmarDanger,
     ConfirmarAceptar,
     ClientesBuscador,
+    ReportesVentas
   },
   props: {
     show: {
@@ -1514,7 +1530,10 @@ export default {
   },
   data() {
     return {
-      disponibilidad_terreno: "",
+      openReportes :false,
+            verAcuse : false,
+          id_venta_ver:0,
+      disponibilidad:{disponibilidad_terreno:1,cliente:"",fecha_venta:""},
       configdateTimePicker: configdateTimePicker,
       verDisponibilidad: false,
       openBuscador: false,
@@ -1609,6 +1628,11 @@ export default {
     };
   },
   methods: {
+    closeListaReportes() {
+            this.openReportes = false;
+        },
+
+
     async get_disponibilidad() {
       try {
         let res = await cementerio.get_ventas({
@@ -1616,10 +1640,13 @@ export default {
         });
         if (res.data.data.length > 0) {
           /**ocupado */
-          this.disponibilidad_terreno = 0;
+          this.disponibilidad.disponibilidad_terreno = 0;
+          this.disponibilidad.cliente = res.data.data[0].nombre;
+          this.disponibilidad.fecha_operacion = res.data.data[0].fecha_operacion_texto;
+          this.id_venta_ver=res.data.data[0].id;
         } else {
           /**disponible para venta */
-          this.disponibilidad_terreno = 1;
+          this.disponibilidad.disponibilidad_terreno = 1;
         }
       } catch (error) {
         return error;
@@ -1636,6 +1663,7 @@ export default {
       this.$validator
         .validateAll()
         .then((result) => {
+       
           if (!result) {
             this.$vs.notify({
               title: "Error",

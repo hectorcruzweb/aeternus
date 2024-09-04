@@ -1,7 +1,7 @@
 <template>
   <div class="centerx">
     <vs-popup
-      class="forms-popup popup-80"
+     :class="['forms-popup popup-80', z_index]"
       title="expediente de venta en cementerio"
       :active.sync="showVentana"
       ref="lista_reportes"
@@ -501,6 +501,7 @@
       ></Firmas>
 
       <FormularioPagos
+      :z_index="'z-index58k'"
         :referencia="referencia"
         :show="verFormularioPagos"
         @closeVentana="closeFormularioPagos"
@@ -534,6 +535,11 @@ export default {
     id_venta: {
       type: Number,
       required: true,
+    },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index55k",
     },
   },
   watch: {

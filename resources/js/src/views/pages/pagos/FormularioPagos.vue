@@ -1,7 +1,7 @@
 <template >
   <div class="centerx">
     <vs-popup
-      :class="['forms-popup', !mostrar_datos_operacion ? 'popup-85' : '']"
+      :class="['forms-popup', !mostrar_datos_operacion ? 'popup-85' : '',z_index]"
       :fullscreen="mostrar_datos_operacion"
       close="cancelar"
       :title="'control de cobranza'"
@@ -749,7 +749,7 @@
       :accion="accionNombre"
     ></Password>
     <ConfirmarDanger
-      :z_index="'z-index58k'"
+      :z_index="'z-index59k'"
       :show="openConfirmarSinPassword"
       :callback-on-success="callBackConfirmar"
       @closeVerificar="openConfirmarSinPassword = false"
@@ -758,7 +758,7 @@
     ></ConfirmarDanger>
 
     <ConfirmarAceptar
-      :z_index="'z-index58k'"
+      :z_index="'z-index59k'"
       :show="openConfirmarAceptar"
       :callback-on-success="callBackConfirmarAceptar"
       @closeVerificar="openConfirmarAceptar = false"
@@ -798,6 +798,11 @@ export default {
       type: String,
       required: false,
       default: "",
+    },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index55k",
     },
   },
   watch: {

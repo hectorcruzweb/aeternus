@@ -2,7 +2,7 @@
   <div class="centerx">
     <vs-popup
       :title="HeaderNombre"
-      class="forms-popup popup-50"
+      :class="['forms-popup popup-50',z_index]"
       :active.sync="showChecker"
       ref="formulario"
     >
@@ -134,6 +134,11 @@ export default {
       type: Array,
       required: true,
       default: {},
+    },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index59k",
     },
   },
   components: {

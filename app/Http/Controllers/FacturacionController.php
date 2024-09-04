@@ -1808,7 +1808,7 @@ class FacturacionController extends ApiController
             if (isset($cfdi['servicios_funerarios'])) {
                 //tiene operaciones asociadas
                 foreach ($cfdi['servicios_funerarios'] as &$servicio) {
-                    if (!is_null($servicio['operacion_factura'])) {
+                    if (count($servicio['operacion_factura'])>0) {
                         if ($servicio['operacion_factura'][0]['empresa_operaciones_id'] == 3) {
                             //es tipo servicio funerario
                             $servicio['operacion_factura'][0]['servicio_funerario']['fecha_defuncion_texto'] = fecha_abr($servicio['operacion_factura'][0]['servicio_funerario']['fechahora_defuncion']);
