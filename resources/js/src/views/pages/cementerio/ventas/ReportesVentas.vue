@@ -745,6 +745,7 @@ export default {
       try {
         this.operacion_id = "";
         let res = await cementerio.consultar_venta_id(this.get_venta_id);
+        console.log("🚀 ~ consultar_venta_id ~ res:", res)
         this.datosVenta = res.data[0];
         this.operacion_id = this.datosVenta.operacion_id;
         this.pagos_programados_cuotas = [];

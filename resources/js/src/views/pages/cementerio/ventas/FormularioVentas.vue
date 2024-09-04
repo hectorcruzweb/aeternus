@@ -1643,7 +1643,7 @@ export default {
           this.disponibilidad.disponibilidad_terreno = 0;
           this.disponibilidad.cliente = res.data.data[0].nombre;
           this.disponibilidad.fecha_operacion = res.data.data[0].fecha_operacion_texto;
-          this.id_venta_ver=res.data.data[0].id;
+          this.id_venta_ver=res.data.data[0].ventas_terrenos_id;
         } else {
           /**disponible para venta */
           this.disponibilidad.disponibilidad_terreno = 1;
@@ -1663,7 +1663,6 @@ export default {
       this.$validator
         .validateAll()
         .then((result) => {
-       
           if (!result) {
             this.$vs.notify({
               title: "Error",
