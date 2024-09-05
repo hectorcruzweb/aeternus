@@ -999,8 +999,14 @@ class PagosController extends ApiController
         }
     }
 
-    public function get_pagos(Request $request, $id_pago = 'all', $paginated = false, $ver_sub_pagos = false,$array_operaciones=[])
+    public function get_pagos(Request $request, $id_pago = 'all', $paginated = false, $ver_sub_pagos = false)
     {
+       /* if (isset($request->operacion_id)) {
+            return $this->errorResponse($request->operacion_id, 409);
+        }else
+        if (isset($request->operaciones_id)) {
+            return $this->errorResponse($request->operaciones_id, 409);
+        }*/
         try {
             $status = $request->status;
             $fecha_pago = $request->fecha_pago;
@@ -1074,12 +1080,13 @@ class PagosController extends ApiController
                     //$q->where('referencia_pago', '=', '00120200101025');
                 })
                 ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
-                ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request,$array_operaciones) {
+                ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request) {
                     if (isset($request->operacion_id)) {
+                        if($request->operacion_id!=null)
                         $q->where('id', '=', $request->operacion_id);
-                    }
+                    }else
                     if (isset($request->operaciones_id)) {
-                        if(count($request->operaciones_id)>0)
+                        if($request->operaciones_id!=null)
                         $q->whereIn('id', $request->operaciones_id);
                     }
                 })

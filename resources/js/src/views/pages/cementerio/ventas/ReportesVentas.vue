@@ -745,7 +745,6 @@ export default {
       try {
         this.operacion_id = "";
         let res = await cementerio.consultar_venta_id(this.get_venta_id);
-        console.log("🚀 ~ consultar_venta_id ~ res:", res)
         this.datosVenta = res.data[0];
         this.operacion_id = this.datosVenta.operacion_id;
         this.pagos_programados_cuotas = [];
@@ -805,19 +804,20 @@ export default {
         );
         this.pagos = res.data;
         //agrego al arreglo de pagos los pagos realizados por concepto de mantenimiento.
-
+        datos_request={};
         datos_request = { operaciones_id: [] };
         if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
           this.datosVenta.cuota_cementerio_terreno.forEach((cuota) => {
             datos_request.operaciones_id.push(cuota.id);
           });
-        }
-        res = await pagos.consultar_pagos_operacion_id(datos_request, false);
-        res.data.forEach((element) => {
+          res = await pagos.consultar_pagos_operacion_id(datos_request, false);
+        if(res.data.length>0){
+          res.data.forEach((element) => {
           element.movimientos_pagos_texto += " > Cuota de Mantto.";
           this.pagos.push(element);
         });
-
+        }
+        }
         this.$vs.loading.close();
       } catch (err) {
         this.$vs.loading.close();
