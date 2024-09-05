@@ -3111,10 +3111,11 @@ class FunerariaController extends ApiController
                         'descuento' => 0,
                         'impuestos' => $impuestos,
                         'total' => $total,
+                        'saldo'=>$total,
                         'tasa_iva' => $request->tasa_iva,
                         'antiguedad_operacion_id' => 1,
                         'registro_id' => (int) $request->user()->id,
-                        'status' => 1,
+                        'status' => 1
                     ]
                 );
                 /**se registra el movimiento en el inventario */
@@ -3784,6 +3785,7 @@ class FunerariaController extends ApiController
                     'impuestos' => $impuestos,
                     'total' => $total,
                     'tasa_iva' => $request->tasa_iva,
+                    'saldo'=>$total
                 ]
             );
 
