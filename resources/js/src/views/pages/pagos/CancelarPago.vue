@@ -1,7 +1,7 @@
 <template >
   <div class="centerx">
     <vs-popup
-      class="forms-popup popup-50"
+      :class="['forms-popup popup-50',z_index]"
       title="Cancelar Movimientos de Cobranza"
       :active.sync="showVentana"
       ref="cancelar_pago"
@@ -59,7 +59,12 @@
                             <div
                               class="w-full text-center font-medium color-black-900 uppercase"
                             >
-                              Cantidad cubierta de capital hasta la fecha:
+                            
+                              Saldo de la Operación Hasta la Fecha: {{
+                                     saldo_operacion
+                                        | numFormat("0,000.00")
+                                    }}
+                                    Pesos mxn:
                             </div>
                             <div
                               class="w-full text-center font-medium color-black-700 uppercase pt-2"
@@ -169,7 +174,7 @@
             color="danger"
             @click="acceptAlert()"
           >
-            <span>Cancelar Contrato</span>
+            <span>Cancelar Pago</span>
           </vs-button>
         </div>
       </div>
@@ -182,7 +187,7 @@
       ></Password>
 
       <ConfirmarDanger
-        :z_index="'z-index58k'"
+        :z_index="'z-index59k'"
         :show="openConfirmarSinPassword"
         :callback-on-success="callBackConfirmar"
         @closeVerificar="openConfirmarSinPassword = false"
@@ -213,6 +218,11 @@ export default {
       required: true,
       default: 0,
     },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index55k",
+    },
   },
   watch: {
     show: function (newValue, oldValue) {
@@ -231,6 +241,7 @@ export default {
           try {
             let res = await pagos.get_pago_id(this.getPagoId);
             this.datosPago = res.data[0];
+            this.saldo_operacion=this.datosPago.referencias_cubiertas[0].operacion_del_pago.saldo
             this.$vs.loading.close();
           } catch (err) {
             this.$vs.loading.close();
@@ -295,6 +306,7 @@ export default {
       openConfirmar: false,
       errores: [],
       datosPago: [],
+      saldo_operacion:0,
       motivos: [
         {
           label: "A PETICIÓN DEL CLIENTE",

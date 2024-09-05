@@ -1,7 +1,7 @@
 <template>
   <div class="centerx">
     <vs-popup
-     :class="['forms-popup popup-80', z_index]"
+      :class="['forms-popup popup-80', z_index]"
       title="expediente de venta en cementerio"
       :active.sync="showVentana"
       ref="lista_reportes"
@@ -460,7 +460,7 @@
                 </vs-td>
 
                 <vs-td>
-                  <div class="flex justify-center">
+                  <div class="flex justify-center py-1">
                     <img
                       class="cursor-pointer img-btn-24 mx-2"
                       src="@assets/images/pdf.svg"
@@ -476,6 +476,13 @@
                           'pago'
                         )
                       "
+                    />
+                    <img
+                      v-if="pago.status == 1"
+                      class="img-btn-20 mx-2"
+                      src="@assets/images/cancel.svg"
+                      title="Cancelar Movimiento"
+                      @click="cancelarPago(pago.id)"
                     />
                   </div>
                 </vs-td>
@@ -499,9 +506,15 @@
         :tipo="'operacion'"
         @closeFirmas="openFirmas = false"
       ></Firmas>
-
+      <CancelarPago
+        :z_index="'z-index58k'"
+        :show="openCancelar"
+        @closeCancelarPago="closeCancelarPago"
+        @retorno_pago="retorno_pago"
+        :id_pago="id_pago"
+      ></CancelarPago>
       <FormularioPagos
-      :z_index="'z-index58k'"
+        :z_index="'z-index58k'"
         :referencia="referencia"
         :show="verFormularioPagos"
         @closeVentana="closeFormularioPagos"
@@ -511,6 +524,7 @@
   </div>
 </template>
 <script>
+import CancelarPago from "@pages/pagos/CancelarPago";
 import Reporteador from "@pages/Reporteador";
 import Firmas from "@pages/Firmas";
 import cementerio from "@services/cementerio";
@@ -521,6 +535,7 @@ export default {
     Reporteador,
     FormularioPagos,
     Firmas,
+    CancelarPago,
   },
   props: {
     verAcuse: {
@@ -599,6 +614,8 @@ export default {
   },
   data() {
     return {
+      openCancelar: false,
+      verFormularioPagos: false,
       referencia: "",
       documentos: [
         {
@@ -675,9 +692,51 @@ export default {
       operacion_id: "",
       pagos: [],
       pagos_programados_cuotas: [],
+      id_pago: "",
     };
   },
   methods: {
+    cancelarPago(id_pago) {
+      this.id_pago = id_pago;
+      this.openCancelar = true;
+    },
+    closeFormularioPagos() {
+      this.verFormularioPagos = false;
+    },
+    retorno_pago(dato) {
+      this.openCancelar = false;
+      this.$vs.loading();
+      (async () => {
+        try {
+          await this.consultar_venta_id();
+          await this.consultar_pagos_operacion_id();
+          this.openReporte(
+            "reporte de pago",
+            "/pagos/recibo_de_pago/",
+            dato,
+            "pago"
+          );
+          this.$vs.loading.close();
+        } catch (error) {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Error",
+            text: "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+            position: "bottom-right",
+            time: "9000",
+          });
+        }
+      })();
+    },
+    closeCancelarPago(dato) {
+      this.openCancelar = false;
+      (async () => {
+        await this.get_data(this.actual);
+      })();
+    },
     openFirmador(id_documento) {
       this.id_documento = id_documento;
       this.openFirmas = true;
@@ -804,19 +863,19 @@ export default {
         );
         this.pagos = res.data;
         //agrego al arreglo de pagos los pagos realizados por concepto de mantenimiento.
-        datos_request={};
+        datos_request = {};
         datos_request = { operaciones_id: [] };
         if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
           this.datosVenta.cuota_cementerio_terreno.forEach((cuota) => {
             datos_request.operaciones_id.push(cuota.id);
           });
           res = await pagos.consultar_pagos_operacion_id(datos_request, false);
-        if(res.data.length>0){
-          res.data.forEach((element) => {
-          element.movimientos_pagos_texto += " > Cuota de Mantto.";
-          this.pagos.push(element);
-        });
-        }
+          if (res.data.length > 0) {
+            res.data.forEach((element) => {
+              element.movimientos_pagos_texto =element.tipo_operacion_texto ;
+              this.pagos.push(element);
+            });
+          }
         }
         this.$vs.loading.close();
       } catch (err) {

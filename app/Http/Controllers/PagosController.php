@@ -365,7 +365,6 @@ class PagosController extends ApiController
         $validaciones = [
             'pago_id' => 'required',
             'motivo.value' => 'required',
-
         ];
 
         $mensajes = [
@@ -400,11 +399,56 @@ class PagosController extends ApiController
 
         try {
             DB::beginTransaction();
+            $datos_venta=[];
+            $datos_operacion = [];
+            $cementerio_controller = new CementerioController();
+            $funeraria_controller = new FunerariaController();
+            $empresa_operaciones_id= $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'];
+            $saldo_tabla_operaciones=0;
+            if ( $empresa_operaciones_id == 1) {
+                /**es tipo de ventas de propiedades */
+                $datos_venta = $cementerio_controller->get_ventas($request, $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['ventas_terrenos_id'], '')[0];
+                //verificando que no este cancelada
+                if ($datos_venta['operacion_status'] == 0) {
+                    return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                }
+                $saldo_tabla_operaciones=$datos_venta["saldo_neto"];
+            } else if ( $empresa_operaciones_id == 2) {
+                $operacion_id= $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['id'];
+                //checando si la operacion a la que pertenece este pago de cuuota no ha sido cancelada
+                 $venta_terreno = $cementerio_controller->get_ventas($request, $datos_pago['referencias_cubiertas'][0]["operacion_del_pago"]["ventas_terrenos_id"], '')[0];
+                 if ($venta_terreno["operacion_status"] == 0) {
+                    return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                 }
+                 foreach ($venta_terreno["cuota_cementerio_terreno"] as $key => $operacion_cuota) {
+                   if($operacion_cuota["id"]==$operacion_id){
+                        $saldo_tabla_operaciones=$operacion_cuota["pagos_programados"][0]["saldo_neto"];
+                        break;
+                   }
+                 }
+                //return $this->errorResponse($saldo_tabla_operaciones+$datos_pago['referencias_cubiertas'][0]['monto'], 409);
+            } else if ( $empresa_operaciones_id == 3) {
+                /**servicios funerarios */
+                $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['servicios_funerarios_id'], '')[0];
+                /**verificnado si la operacion no esta cancelada o pagada */
+                if ($datos_venta['operacion']['operacion_status'] == 0) {
+                    return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                }
+                $saldo_tabla_operaciones=$datos_venta['operacion']["saldo_neto"];
+            } else if ( $empresa_operaciones_id == 4) {
+                /**venta de planes a futuro */
+                $datos_venta = $funeraria_controller->get_ventas($request, $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['ventas_planes_id'], '')[0];
+                //verificando que no este cancelada
+                if ($datos_venta['operacion_status'] == 0) {
+                    return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                }
+                $saldo_tabla_operaciones=$datos_venta["saldo_neto"];
+            }
             /** cambiando el estatus de la operacion*/
             DB::table('operaciones')->where('id', $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['id'])->update(
                 [
                     'status' => 1,
-                    'saldo' => round($datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['saldo'] + $datos_pago['referencias_cubiertas'][0]['monto'], 2),
+                    'saldo' => round($saldo_tabla_operaciones + $datos_pago['monto_pago'], 2)
                 ]
             );
             /** cambiando el estatus del pago/movimiento*/
@@ -524,7 +568,7 @@ class PagosController extends ApiController
             /**no hay pagoa a cubrir */
             return $this->errorResponse('No se ha encontrado ninguna referencia de pago a cubrir.', 409);
         }
-
+       
         /**checar si el pago no esta siendo hecho antes de la fecha de la venta */
         if (date('Y-m-d', strtotime(substr($request->fecha_pago, 0, 10))) < date('Y-m-d', strtotime($referencias_adeudos[0]['fecha_operacion']))) {
             return $this->errorResponse('No se pueden registrar pagos con fecha anterior a la fecha de la venta/operación (' . $referencias_adeudos[0]['fecha_operacion_texto'] . ').', 409);
@@ -573,12 +617,13 @@ class PagosController extends ApiController
         try {
             DB::beginTransaction();
             try {
-
                 /**verificando que la operaicon no este cancelada */
                 $datos_operacion = $referencias_adeudos[0];
                 $datos_venta = [];
                 $cementerio_controller = new CementerioController();
                 $funeraria_controller = new FunerariaController();
+                //con este indicador decido si hago el commit antes de llegar a registrar el pago, porque ya este pagada esa opeacion
+                $commit=false;
                 /**verificando que tipo de operacion_empresa es */
                 if ($datos_operacion['empresa_operaciones_id'] == 1) {
                     /**es tipo de ventas de propiedades */
@@ -598,6 +643,7 @@ class PagosController extends ApiController
                         );
                         /**generando el numero de titulo de la venta de propiedad */
                         $cementerio_controller->generarNumeroTitulo($datos_operacion['operacion_id'], true);
+                        $commit=true;
                     }
                 } else if ($datos_operacion['empresa_operaciones_id'] == 2) {
                     //checando si la operacion a la que pertenece este pago de cuuota no ha sido cancelada
@@ -606,16 +652,17 @@ class PagosController extends ApiController
                         return $this->errorResponse("Error, la venta de propiedad al que pertenece este pago de cuota ha sido cancelada.", 409);
                     }
                     /**cuotas de mantenimiento en cementerio */
-                    $datos_venta = $cementerio_controller->get_cuotas($request, $datos_operacion['cuotas_cementerio_id'], '')[0];
-                    if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                    //buscamos la cuota en cuestion para ver su saldo
+                    if ($datos_operacion['pagos_programados'][0]["saldo_neto"] <= 0) {
                         /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                        DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                        DB::table('operaciones')->where('id', $datos_operacion['operacion_id'])->update(
                             [
                                 /**status de ya liquidada */
                                 'status' => 2,
                                 'saldo' => 0,
                             ]
                         );
+                        $commit=true;
                     }
                 } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
                     /**servicios funerarios */
@@ -633,11 +680,11 @@ class PagosController extends ApiController
                                 "saldo" => 0,
                             ]
                         );
+                        $commit=true;
                     }
 
                 } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
                     /**venta de planes a futuro */
-
                     $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
                     if ($datos_venta['operacion_status'] == 0) {
                         return $this->errorResponse('No se puede proceder con el pago, debido a que la operación afectada ha sido cancelada.', 409);
@@ -651,7 +698,12 @@ class PagosController extends ApiController
                                 'saldo' => 0,
                             ]
                         );
+                        $commit=true;
                     }
+                }
+                if($commit){
+                    DB::commit();
+                    return $this->errorResponse('Esta operación ya está pagada, no se puede seguir agregando más pagos.', 409);
                 }
 
                 foreach ($request->pagos_a_cubrir as $index_referencia => $referencia) {
@@ -925,10 +977,11 @@ class PagosController extends ApiController
                     );
                 }
             } else if ($datos_operacion['empresa_operaciones_id'] == 2) {
+                //una vez aplicado el pago recalculo el total para guardar el saldo nuevo de dicha operacion
+                $datos_operacion = $this->calcular_adeudo($request->referencia, $request->fecha_pago, 'false')[0];
                 /**es tipo de ventas de propiedades */
-                $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['ventas_terrenos_id'], '')[0];
-                // return  $this->errorResponse(round($datos_venta['saldo_neto'], 2), 409);
-                if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
+                $datos_venta = $cementerio_controller->get_ventas($request, $datos_operacion['cuotas_cementerio_id'], '')[0];
+                if ($datos_operacion['pagos_programados'][0]["saldo_neto"] <= 0) {
                     /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
                     DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
                         [
@@ -938,10 +991,10 @@ class PagosController extends ApiController
                         ]
                     );
                 }else{
-                    DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
+                    DB::table('operaciones')->where('id', $datos_operacion['operacion_id'])->update(
                         [
                             /**status de ya liquidada */
-                            'saldo'=>round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                            'saldo'=>$datos_operacion['pagos_programados'][0]["saldo_neto"]
                         ]
                     );
                 }
@@ -949,7 +1002,6 @@ class PagosController extends ApiController
                 /**venta de planes a futuro */
                 $funeraria_controller = new FunerariaController();
                 $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
-
                 if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
                     /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
                     DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
@@ -1079,7 +1131,8 @@ class PagosController extends ApiController
                 ->whereHas('referencias_cubiertas', function ($q) {
                     //$q->where('referencia_pago', '=', '00120200101025');
                 })
-                ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
+                ->with('referencias_cubiertas.operacion_del_pago.cuota_cementerio:id,descripcion')
+                ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,cuotas_cementerio_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
                 ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request) {
                     if (isset($request->operacion_id)) {
                         if($request->operacion_id!=null)
@@ -1220,7 +1273,7 @@ class PagosController extends ApiController
                     $pago['tipo_operacion_texto'] = 'VENTA DE TERRENOS';
                 } else if ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 2) {
                     /**es tipo de SERVICIO DE MANTENIMIENTO ANUAL EN CEMENTERIO. */
-                    $pago['tipo_operacion_texto'] = 'CUOTA DE MTTO. EN CEMENTERIO.';
+                        $pago['tipo_operacion_texto'] = strtoupper('CUOTA DE MTTO. EN CEMENTERIO: '.$pago['referencias_cubiertas'][0]['operacion_del_pago']['cuota_cementerio']["descripcion"]);
                 } elseif ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 3) {
                     /**es tipo de  SERVICIOS FUNERARIOS */
                     $pago['tipo_operacion_texto'] = 'SERVICIOS FUNERARIOS';

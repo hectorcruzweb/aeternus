@@ -2886,7 +2886,6 @@ class CementerioController extends ApiController
         $numero_control = $request->numero_control;
         $status = $request->status;
         $fecha_operacion = $request->fecha_operacion;
-
         $resultado_query = Operaciones::with('pagosProgramados.pagados')
             ->with('cuota_cementerio_terreno.pagosProgramados.pagados')
             ->with('cuota_cementerio_terreno.cuota_cementerio:id,descripcion,status')

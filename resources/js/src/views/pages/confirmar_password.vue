@@ -70,7 +70,7 @@ export default {
     z_index: {
       type: String,
       required: false,
-      default: "z-index55k",
+      default: "z-index58k",
     },
   },
   watch: {
