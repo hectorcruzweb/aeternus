@@ -734,7 +734,7 @@ export default {
     closeCancelarPago(dato) {
       this.openCancelar = false;
       (async () => {
-        await this.get_data(this.actual);
+        await this.consultar_pagos_operacion_id();
       })();
     },
     openFirmador(id_documento) {
