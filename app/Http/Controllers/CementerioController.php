@@ -151,12 +151,12 @@ class CementerioController extends ApiController
             }
 
             /**se hace el insert masivo en la base de datos de las operaciones con los clientes que apliquen para la fecha de la cuota segun la fecha compra */
-            $select = 'SELECT 2,' . $id_cuota . ',' . $tasa_iva . ',' . $subtotal . ',' . $descuento . ',' . $impuestos . ',' . $total . ',' . '0,ventas_terrenos_id,1,clientes_id,' . '"' . now() . '"' . ',' . '"' . $request->fecha_inicio . '"' . ',' . (int) $request->user()->id . ',' . (int) $request->user()->id . ',1,0,' . $total . ' from operaciones where empresa_operaciones_id =1 and status <>0 and fecha_operacion <=' . '"' . $request->fecha_inicio . '"';
+            $select = 'SELECT 2,' . $id_cuota . ',' . $tasa_iva . ',' . $subtotal . ',' . $descuento . ',' . $impuestos . ',' . $total . ',' . $total . ',' . '0,ventas_terrenos_id,1,clientes_id,' . '"' . now() . '"' . ',' . '"' . $request->fecha_inicio . '"' . ',' . (int) $request->user()->id . ',' . (int) $request->user()->id . ',1,0,' . $total . ' from operaciones where empresa_operaciones_id =1 and status <>0 and fecha_operacion <=' . '"' . $request->fecha_inicio . '"';
             /**una vez registrada la cuota debemos asignar las cuotas a pagar a los clientes con propieades en el cementerio
              * Para ello debemos obtener todas las operaciones que son de tipo venta de propiedad 'empresa_operaciones_id  => 1'
              */
             //return DB::select(DB::raw($select));
-            DB::table('operaciones')->insertUsing(['empresa_operaciones_id', 'cuotas_cementerio_id', 'tasa_iva', 'subtotal', 'descuento', 'impuestos', 'total', 'descuento_pronto_pago_b', 'ventas_terrenos_id', 'financiamiento', 'clientes_id', 'fecha_registro', 'fecha_operacion', 'registro_id', 'modifico_id', 'status', 'aplica_devolucion_b', 'costo_neto_pronto_pago'], $select);
+            DB::table('operaciones')->insertUsing(['empresa_operaciones_id', 'cuotas_cementerio_id', 'tasa_iva', 'subtotal', 'descuento', 'impuestos', 'total', 'saldo', 'descuento_pronto_pago_b', 'ventas_terrenos_id', 'financiamiento', 'clientes_id', 'fecha_registro', 'fecha_operacion', 'registro_id', 'modifico_id', 'status', 'aplica_devolucion_b', 'costo_neto_pronto_pago'], $select);
             $operaciones_a_programar_pagos = Operaciones::select('id', 'ventas_terrenos_id', 'clientes_id', 'cuotas_cementerio_id')->where('empresa_operaciones_id', 2)->where('cuotas_cementerio_id', $id_cuota)->get()->toArray();
 
             /**se hace la inserccion de pagos programados en la base de datos */
@@ -1162,7 +1162,7 @@ class CementerioController extends ApiController
         /*  $id_cuota = 1;
         $email = false;
         $email_to = 'hector@gmail.com';
-         */ 
+         */
         $cuotas = $this->get_cuotas($request, 'all', false);
 
         //obtengo la informacion de esa cuota
@@ -1872,6 +1872,7 @@ class CementerioController extends ApiController
                         'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
                         'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
                         'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
                         'descuento_pronto_pago_b' => 1,
                         'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
                         'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],
@@ -2009,6 +2010,7 @@ class CementerioController extends ApiController
                         'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
                         'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
                         'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
                         'descuento_pronto_pago_b' => 1,
                         'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
                         'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],
@@ -3079,7 +3081,7 @@ class CementerioController extends ApiController
             if (trim($status) != "") {
                 if ($status == 1) {
                     //solo listo los servicios con adeudo
-                    $q->where('saldo', '>', 0)->where("operaciones.status","=",1);
+                    $q->where('saldo', '>', 0)->where("operaciones.status", "=", 1);
                 } elseif ($status == 2) {
                     //solo las pagadas
                     $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
@@ -3534,7 +3536,7 @@ class CementerioController extends ApiController
 
                                 /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
                                 $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
-                                $cuota["saldo"]=$programado['saldo_neto'];
+                                $cuota["saldo"] = $programado['saldo_neto'];
                                 /**la fecha qui es mayor que la fecha programada del pago */
                                 $programado['status_pago'] = 0;
                                 $programado['status_pago_texto'] = 'Vencido';

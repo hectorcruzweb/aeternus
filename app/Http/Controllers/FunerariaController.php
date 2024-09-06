@@ -1098,6 +1098,7 @@ class FunerariaController extends ApiController
                         'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
                         'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
                         'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
                         'descuento_pronto_pago_b' => 1,
                         'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
                         'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],
@@ -1188,6 +1189,7 @@ class FunerariaController extends ApiController
                         'descuento' => round($descuento_real_para_impuestos, 2, PHP_ROUND_HALF_UP),
                         'impuestos' => round($iva, 2, PHP_ROUND_HALF_UP),
                         'total' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($total_pagar, 2, PHP_ROUND_HALF_UP),
                         'descuento_pronto_pago_b' => 1,
                         'costo_neto_pronto_pago' => round($total_pagar, 2, PHP_ROUND_HALF_UP), //paso este dato por defecto pues no se utiliza en la practica
                         'antiguedad_operacion_id' => (int) $request->ventaAntiguedad['value'],

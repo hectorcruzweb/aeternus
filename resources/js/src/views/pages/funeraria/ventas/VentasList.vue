@@ -504,7 +504,6 @@ export default {
 
       try {
         let res = await planes.get_ventas(this.serverOptions);
-        console.log("🚀 ~ get_data ~ res:", res)
         if (res.data.data) {
           this.ventas = res.data.data;
           this.total = res.data.last_page;
