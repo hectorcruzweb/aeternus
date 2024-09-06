@@ -1277,6 +1277,7 @@ class FunerariaController extends ApiController
                 'descuento',
                 'impuestos',
                 'total',
+                'saldo',
                 'descuento_pronto_pago_b',
                 'costo_neto_pronto_pago',
                 DB::raw(

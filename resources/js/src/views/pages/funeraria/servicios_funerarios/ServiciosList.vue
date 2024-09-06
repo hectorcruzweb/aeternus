@@ -113,7 +113,7 @@
         <vs-th>Fallecido</vs-th>
         <vs-th>Tipo Servicio</vs-th>
         <vs-th>Fecha</vs-th>
-
+        <vs-th>$ Saldo</vs-th>
         <vs-th>Estatus</vs-th>
         <vs-th>Acciones</vs-th>
       </template>
@@ -133,7 +133,12 @@
               {{ data[indextr].fecha_solicitud_texto }}
             </span>
           </vs-td>
-
+          <vs-td :data="data[indextr].saldo" v-if="data[indextr].operacion">
+            $ {{ data[indextr].operacion.saldo | numFormat("0,000.00") }}
+          </vs-td>
+          <vs-td :data="data[indextr].saldo" v-else>
+            $ {{ 0.00 | numFormat("0,000.00") }}
+          </vs-td>
           <vs-td>
             <p v-if="data[indextr].status_texto == 'Cancelada'">
               {{ data[indextr].status_texto }}

@@ -173,12 +173,12 @@ Route::middleware(['auth:api'])->group(function () {
 
     /**rutas de pagos */
     Route::get('pagos/calcular_adeudo/{referencia}/{fecha_pago}/{multipago?}', 'PagosController@calcular_adeudo');
-    Route::post('pagos/guardar_pago', 'PagosController@guardar_pago');
+    Route::post('pagos/guardar_pago', 'PagosController@guardar_pago')->middleware('permiso:20,57');
     Route::get('pagos/get_formas_pago_sat', 'PagosController@get_formas_pago_sat');
     Route::get('pagos/get_monedas_sat', 'PagosController@get_monedas_sat');
     Route::get('pagos/get_cobradores', 'PagosController@get_cobradores');
     Route::get('pagos/recibo_de_pago/{id_pago?}', 'PagosController@recibo_de_pago');
-    Route::post('pagos/cancelar_pago', 'PagosController@cancelar_pago');
+    Route::post('pagos/cancelar_pago', 'PagosController@cancelar_pago')->middleware('permiso:20,58');
     /**fin de rutas de pagos */
 
     /**proveedores */

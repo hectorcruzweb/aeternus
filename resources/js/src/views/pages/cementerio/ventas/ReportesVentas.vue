@@ -468,11 +468,8 @@
                       @click="
                         openReporte(
                           'reporte de pago',
-
                           '/pagos/recibo_de_pago/',
-
                           pago.id,
-
                           'pago'
                         )
                       "

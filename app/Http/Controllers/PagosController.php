@@ -961,7 +961,7 @@ class PagosController extends ApiController
                     [
                         /**status de ya liquidada o de pendiente de pago si tiene saldo pendiente*/
                         'status' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
-                        'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
                     ]
                 );
                 if (round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0) {
@@ -977,7 +977,7 @@ class PagosController extends ApiController
                     [
                         /**status de ya liquidada o de pendiente de pago si tiene saldo pendiente*/
                         'status' => $datos_operacion['pagos_programados'][0]["saldo_neto"] <= 0 ? 2 : 1,
-                        'saldo' => $datos_operacion['pagos_programados'][0]["saldo_neto"],
+                        'saldo' => $datos_operacion['pagos_programados'][0]["saldo_neto"]
                     ]
                 );
             } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
@@ -988,7 +988,7 @@ class PagosController extends ApiController
                     [
                         /**status de ya liquidada o de pendiente de pago si tiene saldo pendiente*/
                         'status' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
-                        'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP),
+                        'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
                     ]
                 );
             } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
@@ -1000,7 +1000,7 @@ class PagosController extends ApiController
                     [
                         /**status de ya liquidada */
                         'status' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
-                        'saldo' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0,
+                        'saldo' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP)
                     ]
                 );
             }
