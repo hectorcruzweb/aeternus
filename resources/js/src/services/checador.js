@@ -19,6 +19,7 @@ export default {
             param.fecha_inicio = "";
             param.fecha_fin = "";
         }
+        service += "/" + param.area;
         return axios.get(service, {
             cancelToken: new CancelToken(c => {
                 self.cancel = c;

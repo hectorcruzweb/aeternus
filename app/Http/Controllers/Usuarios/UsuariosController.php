@@ -30,44 +30,53 @@ class UsuariosController extends ApiController
         $status = $request->status;
         $rol_id = $request->rol_id;
         $nombre = $request->nombre;
-        return $this->showAllPaginated(
-            User::select(
-                'usuarios.id as id_user',
-                'nombre',
-                'email',
-                'genero',
-                'imagen',
-                'telefono',
-                'fecha_alta',
-                'roles_id',
-                'usuarios.status as estado',
-                'rol',
-                DB::raw('(CASE
-                        WHEN usuarios.genero = "1" THEN "Hombre"
-                        ELSE "Mujer"
-                        END) AS genero_des')
-            )
-                ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
-                //->where('roles_id', ">", 1)
-                ->where(function ($q) use ($status) {
-                    if ($status != '') {
-                        $q->where('usuarios.status', $status);
-                    }
-                })
-                ->where(function ($q) use ($rol_id) {
-                    if ($rol_id != '') {
-                        $q->where('usuarios.roles_id', $rol_id);
-                    }
-                })
-                ->where(function ($q) use ($nombre) {
-                    if ($nombre != '') {
-                        $q->where('usuarios.nombre', 'like', '%' . $nombre . '%');
-                    }
-                })
-                ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
-                ->orderBy("estado", "desc")
-                ->get()
-        );
+        $area = $request->area;
+        $resultado_query = User::select(
+            'usuarios.id as id_user',
+            'nombre',
+            'email',
+            'genero',
+            'imagen',
+            'telefono',
+            'fecha_alta',
+            'roles_id',
+            'usuarios.status as estado',
+            'rol',
+            DB::raw('(CASE
+            WHEN usuarios.genero = "1" THEN "Hombre"
+            ELSE "Mujer"
+            END) AS genero_des'),
+            'cementerio_funeraria_filtro',
+            DB::raw('(CASE
+            WHEN usuarios.cementerio_funeraria_filtro = "1" THEN "Funeraria"
+            ELSE "Cementerio"
+            END) AS area_des')
+        )
+            ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
+            //->where('roles_id', ">", 1)
+            ->where(function ($q) use ($status) {
+                if ($status != '') {
+                    $q->where('usuarios.status', $status);
+                }
+            })
+            ->where(function ($q) use ($rol_id) {
+                if ($rol_id != '') {
+                    $q->where('usuarios.roles_id', $rol_id);
+                }
+            })
+            ->where(function ($q) use ($nombre) {
+                if ($nombre != '') {
+                    $q->where('usuarios.nombre', 'like', '%' . $nombre . '%');
+                }
+            })
+            ->where('usuarios.roles_id', '>', '1'); //no muestro super usuarios
+        if ($area != "" && $area > 0) {
+            $resultado_query = $resultado_query->where("cementerio_funeraria_filtro", "=", $area);
+        }
+
+        $resultado_query = $resultado_query->orderBy("estado", "desc")
+            ->get();
+        return $this->showAllPaginated($resultado_query);
     }
 
     public function login_usuario(Request $request)
@@ -84,11 +93,11 @@ class UsuariosController extends ApiController
                 try {
                     $response = $client->request('POST', config('services.passport.login_endpoint'), [
                         'form_params' => [
-                            'grant_type'    => 'password',
-                            'client_id'     => config('services.passport.client_id'),
+                            'grant_type' => 'password',
+                            'client_id' => config('services.passport.client_id'),
                             'client_secret' => config('services.passport.client_secret'),
-                            'username'      => $request->username,
-                            'password'      => $request->password,
+                            'username' => $request->username,
+                            'password' => $request->password,
                         ],
                     ]);
                     return $response->getBody();
@@ -115,9 +124,9 @@ class UsuariosController extends ApiController
         try {
             $response = $client->request('POST', config('services.passport.login_endpoint'), [
                 'form_params' => [
-                    'grant_type'    => 'refresh_token',
+                    'grant_type' => 'refresh_token',
                     'refresh_token' => $request->refresh_token,
-                    'client_id'     => config('services.passport.client_id'),
+                    'client_id' => config('services.passport.client_id'),
                     'client_secret' => config('services.passport.client_secret'),
                 ],
             ]);
@@ -153,23 +162,23 @@ class UsuariosController extends ApiController
 
             //haciendo las secciones que involucra este usuario
             $secciones_detectadas = [];
-            $seccion              = 0;
+            $seccion = 0;
             foreach ($resultado as $key) {
                 if ($seccion == 0) {
                     //acaba de empezar el ciclo
                     $seccion = $key->secciones_id;
                     //primer push
                     array_push($secciones_detectadas, [
-                        'id'          => $key->secciones_id,
-                        'seccion'     => $key->seccion,
+                        'id' => $key->secciones_id,
+                        'seccion' => $key->seccion,
                         'iconseccion' => $key->iconseccion,
                     ]);
                 } else {
                     if ($key->secciones_id != $seccion) {
                         $seccion = $key->secciones_id;
                         array_push($secciones_detectadas, [
-                            'id'          => $key->secciones_id,
-                            'seccion'     => $key->seccion,
+                            'id' => $key->secciones_id,
+                            'seccion' => $key->seccion,
                             'iconseccion' => $key->iconseccion,
                         ]);
                     }
@@ -191,8 +200,8 @@ class UsuariosController extends ApiController
             //armando el menu
             foreach ($secciones_detectadas as $seccion) {
                 //recorriendo cada seccion
-                $modulos               = [];
-                $grupos                = [];
+                $modulos = [];
+                $grupos = [];
                 $modulos_ids_agregados = [];
                 foreach ($grupos_modulos_todos as $grupo) {
                     //aqui checo cuales grupos pertenecen a que seccion
@@ -208,13 +217,13 @@ class UsuariosController extends ApiController
                                     /**verificando si esta disponible para el resto de usuarios o solo para el superusuario */
                                     if ($agrupados->mod_status == 1 || $request->user()->id == 1) {
                                         array_push($grupos, [
-                                            'status'       => $agrupados->mod_status,
-                                            'id'           => $grupo->id,
-                                            'url'          => $grupo->url,
-                                            'name'         => $grupo->modulo,
-                                            'slug'         => $grupo->modulo,
+                                            'status' => $agrupados->mod_status,
+                                            'id' => $grupo->id,
+                                            'url' => $grupo->url,
+                                            'name' => $grupo->modulo,
+                                            'slug' => $grupo->modulo,
                                             'secciones_id' => $grupo->secciones_id,
-                                            'icon'         => $grupo->icon,
+                                            'icon' => $grupo->icon,
                                         ]);
                                     }
                                     //se agrega a los modulos que ya fueron agregados al menue
@@ -235,13 +244,13 @@ class UsuariosController extends ApiController
                                     /**verificando si esta disponible para el resto de usuarios o solo para el superusuario */
                                     if ($agrupados->mod_status == 1 || $request->user()->id == 1) {
                                         array_push($modulos, [
-                                            'status'       => $agrupados->mod_status,
-                                            'id'           => $agrupados->modulo_id,
-                                            'url'          => $agrupados->url,
-                                            'name'         => $agrupados->modulo,
-                                            'slug'         => $agrupados->modulo,
+                                            'status' => $agrupados->mod_status,
+                                            'id' => $agrupados->modulo_id,
+                                            'url' => $agrupados->url,
+                                            'name' => $agrupados->modulo,
+                                            'slug' => $agrupados->modulo,
                                             'secciones_id' => $agrupados->secciones_id,
-                                            'icon'         => $agrupados->moduloicon,
+                                            'icon' => $agrupados->moduloicon,
                                         ]);
                                     }
                                     //se agregan a esta lista pqra que no vuelvan a ser tomados en cuenta
@@ -255,12 +264,12 @@ class UsuariosController extends ApiController
 
                             if (count($modulos) > 0) {
                                 array_push($grupos, [
-                                    'id'           => $grupo->id,
-                                    'url'          => null,
-                                    'name'         => $grupo->modulo,
-                                    'icon'         => $grupo->icon,
+                                    'id' => $grupo->id,
+                                    'url' => null,
+                                    'name' => $grupo->modulo,
+                                    'icon' => $grupo->icon,
                                     'secciones_id' => $grupo->secciones_id,
-                                    'submenu'      => $modulos,
+                                    'submenu' => $modulos,
                                 ]);
                             }
                         }
@@ -269,8 +278,8 @@ class UsuariosController extends ApiController
                 //se crea el menu perteneciente a la seccion en cola
                 array_push($menu, [
                     'header' => $seccion['seccion'],
-                    'icon'   => $seccion['iconseccion'],
-                    'items'  => $grupos,
+                    'icon' => $seccion['iconseccion'],
+                    'items' => $grupos,
                 ]);
             }
 
@@ -302,7 +311,12 @@ class UsuariosController extends ApiController
                     DB::raw('(CASE
                         WHEN usuarios.genero = "1" THEN "Hombre"
                         ELSE "Mujer"
-                        END) AS genero_des')
+                        END) AS genero_des'),
+                    'cementerio_funeraria_filtro',
+                    DB::raw('(CASE
+                        WHEN usuarios.cementerio_funeraria_filtro = "1" THEN "Funeraria"
+                        ELSE "Cementerio"
+                        END) AS area_des')
                 )
                 ->join('roles', 'usuarios.roles_id', '=', 'roles.id')
                 ->where('usuarios.id', '=', $request->user()->id)
@@ -339,7 +353,12 @@ class UsuariosController extends ApiController
             DB::raw('(CASE
                         WHEN usuarios.genero = "1" THEN "Hombre"
                         ELSE "Mujer"
-                        END) AS genero_des')
+                        END) AS genero_des'),
+            'cementerio_funeraria_filtro',
+            DB::raw('(CASE
+                        WHEN usuarios.cementerio_funeraria_filtro = "1" THEN "Funeraria"
+                        ELSE "Cementerio"
+                        END) AS area_des')
         )
             ->with('puestos')
             ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
@@ -401,25 +420,27 @@ class UsuariosController extends ApiController
     {
         request()->validate(
             [
-                'rol_id'   => 'required',
-                'genero'   => 'required',
-                'nombre'   => 'required',
-                'puestos'  => 'required',
-                'usuario'  => 'required|email|unique:usuarios,email',
+                'rol_id' => 'required',
+                'genero' => 'required',
+                'nombre' => 'required',
+                'puestos' => 'required',
+                'usuario' => 'required|email|unique:usuarios,email',
                 'password' => 'required',
-                'repetir'  => 'required|same:password',
+                'repetir' => 'required|same:password',
+                'area' => 'required'
             ],
             [
-                'puestos.required'  => 'Debe seleccionar al menos un puesto para este empleado.',
-                'genero.required'   => 'Ingrese el género del usuario.',
-                'rol_id.required'   => 'Ingrese el rol del usuario.',
-                'nombre.required'   => 'Ingrese el nombre del usuario.',
-                'usuario.required'  => 'Ingrese el email del usuario.',
-                'usuario.email'     => 'El email debe ser un correo válido.',
+                'puestos.required' => 'Debe seleccionar al menos un puesto para este empleado.',
+                'area.required' => 'Ingrese el área del usuario.',
+                'genero.required' => 'Ingrese el género del usuario.',
+                'rol_id.required' => 'Ingrese el rol del usuario.',
+                'nombre.required' => 'Ingrese el nombre del usuario.',
+                'usuario.required' => 'Ingrese el email del usuario.',
+                'usuario.email' => 'El email debe ser un correo válido.',
                 'password.required' => 'debe ingresar una contraseña.',
-                'repetir.required'  => 'debe confirmar la contraseña.',
-                'repetir.same'      => 'Las contraseñas no coinciden.',
-                'unique'            => 'Este nombre de usuario ya ha sido registrado.',
+                'repetir.required' => 'debe confirmar la contraseña.',
+                'repetir.same' => 'Las contraseñas no coinciden.',
+                'unique' => 'Este nombre de usuario ya ha sido registrado.',
             ]
         );
 
@@ -428,19 +449,20 @@ class UsuariosController extends ApiController
 
             $id_user = DB::table('usuarios')->insertGetId(
                 [
-                    'roles_id'        => $request->rol_id,
-                    'genero'          => $request->genero,
-                    'nombre'          => $request->nombre,
-                    'email'           => $request->usuario,
-                    'password'        => Hash::make($request->password),
-                    'domicilio'       => $request->direccion,
-                    'telefono'        => $request->telefono,
-                    'celular'         => $request->celular,
+                    'roles_id' => $request->rol_id,
+                    'genero' => $request->genero,
+                    'cementerio_funeraria_filtro' => $request->area,
+                    'nombre' => $request->nombre,
+                    'email' => $request->usuario,
+                    'password' => Hash::make($request->password),
+                    'domicilio' => $request->direccion,
+                    'telefono' => $request->telefono,
+                    'celular' => $request->celular,
                     'nombre_contacto' => $request->nombre_contacto,
-                    'tel_contacto'    => $request->tel_contacto,
-                    'parentesco'      => $request->parentesco_contacto,
+                    'tel_contacto' => $request->tel_contacto,
+                    'parentesco' => $request->parentesco_contacto,
                     'firma_path' => trim($request->firma) != '' ? 'capturada' : null,
-                    'created_at'      => now(),
+                    'created_at' => now(),
                 ]
             );
 
@@ -462,7 +484,7 @@ class UsuariosController extends ApiController
                 DB::table('usuarios_puestos')->insert(
                     [
                         'usuarios_id' => $id_user,
-                        'puestos_id'  => $puesto,
+                        'puestos_id' => $puesto,
                     ]
                 );
             }
@@ -480,29 +502,31 @@ class UsuariosController extends ApiController
         $user_id = $request->user_id;
         request()->validate(
             [
-                'rol_id'   => 'required',
-                'genero'   => 'required',
-                'puestos'  => 'required',
-                'nombre'   => 'required',
-                'usuario'  => [
+                'rol_id' => 'required',
+                'genero' => 'required',
+                'area' => 'required',
+                'puestos' => 'required',
+                'nombre' => 'required',
+                'usuario' => [
                     'required',
                     'email',
                     Rule::unique('usuarios', 'email')->ignore($user_id),
                 ],
                 'password' => 'required',
-                'repetir'  => 'required|same:password',
+                'repetir' => 'required|same:password',
             ],
             [
-                'puestos.required'  => 'Debe seleccionar al menos un puesto para este empleado.',
-                'genero.required'   => 'Ingrese el género del usuario.',
-                'rol_id.required'   => 'Ingrese el rol del usuario.',
-                'nombre.required'   => 'Ingrese el nombre del usuario.',
-                'usuario.required'  => 'Ingrese el email del usuario.',
-                'usuario.email'     => 'El email debe ser un correo válido.',
+                'puestos.required' => 'Debe seleccionar al menos un puesto para este empleado.',
+                'genero.required' => 'Ingrese el género del usuario.',
+                'area.required' => 'Ingrese el área del usuario.',
+                'rol_id.required' => 'Ingrese el rol del usuario.',
+                'nombre.required' => 'Ingrese el nombre del usuario.',
+                'usuario.required' => 'Ingrese el email del usuario.',
+                'usuario.email' => 'El email debe ser un correo válido.',
                 'password.required' => 'debe ingresar una contraseña.',
-                'repetir.required'  => 'debe confirmar la contraseña.',
-                'repetir.same'      => 'Las contraseñas no coinciden.',
-                'unique'            => 'Este nombre de usuario ya ha sido registrado.',
+                'repetir.required' => 'debe confirmar la contraseña.',
+                'repetir.same' => 'Las contraseñas no coinciden.',
+                'unique' => 'Este nombre de usuario ya ha sido registrado.',
             ]
         );
 
@@ -532,17 +556,18 @@ class UsuariosController extends ApiController
             if ($request->password == 'nochanges') {
                 DB::table('usuarios')->where('id', $user_id)->update(
                     [
-                        'roles_id'        => $request->rol_id,
-                        'genero'          => $request->genero,
-                        'nombre'          => $request->nombre,
-                        'email'           => $request->usuario,
-                        'domicilio'       => $request->direccion,
-                        'telefono'        => $request->telefono,
-                        'celular'         => $request->celular,
+                        'roles_id' => $request->rol_id,
+                        'genero' => $request->genero,
+                        'cementerio_funeraria_filtro' => $request->area,
+                        'nombre' => $request->nombre,
+                        'email' => $request->usuario,
+                        'domicilio' => $request->direccion,
+                        'telefono' => $request->telefono,
+                        'celular' => $request->celular,
                         'nombre_contacto' => $request->nombre_contacto,
-                        'tel_contacto'    => $request->tel_contacto,
-                        'parentesco'      => $request->parentesco_contacto,
-                        'updated_at'      => now(),
+                        'tel_contacto' => $request->tel_contacto,
+                        'parentesco' => $request->parentesco_contacto,
+                        'updated_at' => now(),
                         'firma_path' => $firma
                     ]
                 );
@@ -550,18 +575,19 @@ class UsuariosController extends ApiController
                 //con cambio de contraseñas
                 DB::table('usuarios')->where('id', $user_id)->update(
                     [
-                        'roles_id'        => $request->rol_id,
-                        'genero'          => $request->genero,
-                        'nombre'          => $request->nombre,
-                        'email'           => $request->usuario,
-                        'password'        => Hash::make($request->password),
-                        'domicilio'       => $request->direccion,
-                        'telefono'        => $request->telefono,
-                        'celular'         => $request->celular,
+                        'roles_id' => $request->rol_id,
+                        'genero' => $request->genero,
+                        'cementerio_funeraria_filtro' => $request->area,
+                        'nombre' => $request->nombre,
+                        'email' => $request->usuario,
+                        'password' => Hash::make($request->password),
+                        'domicilio' => $request->direccion,
+                        'telefono' => $request->telefono,
+                        'celular' => $request->celular,
                         'nombre_contacto' => $request->nombre_contacto,
-                        'tel_contacto'    => $request->tel_contacto,
-                        'parentesco'      => $request->parentesco_contacto,
-                        'updated_at'      => now(),
+                        'tel_contacto' => $request->tel_contacto,
+                        'parentesco' => $request->parentesco_contacto,
+                        'updated_at' => now(),
                         'firma_path' => $firma
                     ]
                 );
@@ -585,7 +611,7 @@ class UsuariosController extends ApiController
                 DB::table('usuarios_puestos')->insert(
                     [
                         'usuarios_id' => $user_id,
-                        'puestos_id'  => $puesto,
+                        'puestos_id' => $puesto,
                     ]
                 );
             }
@@ -602,11 +628,11 @@ class UsuariosController extends ApiController
     public function actualizar_perfil(Request $request)
     {
         $id_usuario = $request->user()->id;
-        $usuario    = User::where('id', $id_usuario)->get()->first();
+        $usuario = User::where('id', $id_usuario)->get()->first();
 
         request()->validate(
             [
-                'password'        => 'same:repetirPassword',
+                'password' => 'same:repetirPassword',
                 'repetirPassword' => 'same:password',
             ],
             [
@@ -617,8 +643,8 @@ class UsuariosController extends ApiController
 
         return DB::table('usuarios')->where('id', $id_usuario)->update(
             [
-                'password'   => trim($request->password) === '' ? $usuario->password : Hash::make($request->password),
-                'imagen'     => trim($request->imagen) === '' ? $usuario->imagen : $request->imagen,
+                'password' => trim($request->password) === '' ? $usuario->password : Hash::make($request->password),
+                'imagen' => trim($request->imagen) === '' ? $usuario->imagen : $request->imagen,
                 'updated_at' => now(),
             ]
         );
@@ -683,6 +709,7 @@ class UsuariosController extends ApiController
                         WHEN usuarios.genero = "1" THEN "Hombre"
                         ELSE "Mujer"
                         END) AS genero_des'),
+            'cementerio_funeraria_filtro',
             DB::raw('(CASE
                         WHEN usuarios.status = "1" THEN "Activo"
                         ELSE "Sin acceso"
@@ -709,11 +736,11 @@ class UsuariosController extends ApiController
             ->get();
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
-        $pdf           = PDF::loadView('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+        $empresa = $get_funeraria->get_empresa_data();
+        $pdf = PDF::loadView('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
         $pdf->setOptions([
-            'title'       => 'Reporte de Usuarios',
+            'title' => 'Reporte de Usuarios',
             'footer-html' => view('footer'),
             'header-html' => view('header'),
         ]);

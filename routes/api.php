@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -15,11 +13,9 @@ use Illuminate\Http\Request;
 
 /**en pruebas */
 
-
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
 /**rutas de modulo en proceso */
-
 
 /**rutas publicas_ entran sin token */
 Route::get('funeraria/get_planes/{solo_a_futuro?}/{id_plan?}', 'FunerariaController@get_planes');
@@ -38,7 +34,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('firmas/get_firma/{operacion_id?}/{area_id?}/{tipo?}', 'FirmasController@get_firma');
 
     Route::get('pagos/get_pagos/{id_pago?}/{paginated?}/{ver_subpagos?}', 'PagosController@get_pagos');
-
 
     Route::post('logout_usuario', 'Usuarios\UsuariosController@logout_usuario');
     /**RUTA PARA OBTENER LOS PUESTOS DISPONIBLEN EN LA EMPRESA */
@@ -168,8 +163,6 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/get_servicios_adeudos', 'FunerariaController@get_servicios_adeudos');
     Route::get('funeraria/get_abonos_vencidos_planes_funerarios', 'FunerariaController@get_abonos_vencidos_planes_funerarios');
     Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
-    
-
 
     /**rutas de pagos */
     Route::get('pagos/calcular_adeudo/{referencia}/{fecha_pago}/{multipago?}', 'PagosController@calcular_adeudo');
@@ -209,7 +202,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('inventario/get_categorias', 'InventarioController@get_categorias');
     Route::get('inventario/get_unidades', 'InventarioController@get_unidades');
     Route::get('inventario/get_sat_unidades', 'InventarioController@get_sat_unidades');
-
+    Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
     Route::post('inventario/control_compras/{tipo?}', 'InventarioController@control_compras');
     Route::post('inventario/cancelar_compra', 'InventarioController@cancelar_compra');
     Route::get('inventario/get_compras/{id_compra?}/{paginated?}/', 'InventarioController@get_compras');
@@ -223,7 +216,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('funeraria/control_solicitud/{tipo_servicio}', 'FunerariaController@control_solicitud');
     Route::post('funeraria/control_contratos/{tipo_servicio}', 'FunerariaController@control_contratos');
     Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
-    
+
     Route::get('funeraria/autorizacion_cremacion', 'FunerariaController@autorizacion_cremacion');
     Route::get('funeraria/get_hoja_solicitud', 'FunerariaController@get_hoja_solicitud');
     Route::get('funeraria/hoja_preautorizacion', 'FunerariaController@hoja_preautorizacion');
@@ -282,14 +275,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro')->middleware(['permiso:23,67']);
     Route::post('/checador/guardar_dias_descanso', 'ChecadorController@guardar_dias_descanso')->middleware(['permiso:23,69']);
     Route::get('checador/lista_registros/{fecha_inicio?}/{fecha_fin?}/{empleado_id?}', 'ChecadorController@lista_registros')->middleware(['permiso:23,68']);
-    Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
+    Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/{area_filtro?}', 'ChecadorController@get_registros_checador');
     Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
     Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
     Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
     Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 });
-
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {
     Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');
@@ -298,11 +290,11 @@ Route::middleware(['client'])->group(function () {
     Route::post('checador/guardarRegistro', 'ChecadorController@guardarRegistro');
     Route::get('checador/get_user_list_huellas/{usuarios_id?}', 'ChecadorController@get_user_list_huellas');
     Route::get('checador/get_huellas_users', 'ChecadorController@get_huellas_users');
-    Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/', 'ChecadorController@get_registros_checador');
+    Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/{area_filtro?}', 'ChecadorController@get_registros_checador');
 });
 
 Route::get('funeraria/actualizar_saldos_operacion/{empresa_operaciones_id?}', 'FunerariaController@actualizar_saldos_operacion');
-Route::get('inventarios/cementerio/documento_ubicacion_terreno', 'CementerioController@documento_ubicacion_terreno');
+
 Route::get('pdfs', 'Usuarios\UsuariosController@pdfs');
 
 //RUTA DEL LOGUIN

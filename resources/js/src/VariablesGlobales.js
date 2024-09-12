@@ -89,6 +89,34 @@ export const generosOptions = [
     }
 ];
 
+export const areasOptions = [
+    {
+        label: "Funeraria",
+        value: "1"
+    },
+    {
+        label: "Cementerio",
+        value: "2"
+    }
+];
+
+export const areasOptionsTodas = [
+    {
+        label: "Ambas",
+        value: ""
+    },
+    {
+        label: "Funeraria",
+        value: "1"
+    },
+    {
+        label: "Cementerio",
+        value: "2"
+    }
+];
+
+
+
 //variables para poder crear las filas de las terrazas por nombre de letra
 export const alfabeto = [
     "A",
