@@ -27,7 +27,7 @@ let colors = {
 // CONFIGS
 const themeConfig = {
     disableCustomizer: true, // options[Boolean] : true, false(default)
-    disableThemeTour: true, // options[Boolean] : true, false(default)
+    disableThemeTour: false, // options[Boolean] : true, false(default)
     footerType: "static", // options[String]  : static(default) / sticky / hidden
     hideScrollToTop: true, // options[Boolean] : true, false(default)
     mainLayoutType: "vertical", // options[String]  : vertical(default) / horizontal
@@ -35,7 +35,7 @@ const themeConfig = {
     navbarType: "floating", // options[String]  : floating(default) / static / sticky / hidden
     routerTransition: "none", // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)
     rtl: false, // options[Boolean] : true, false(default)
-    sidebarCollapsed: false, // options[Boolean] : true, false(default)
+    sidebarCollapsed: true, // options[Boolean] : true, false(default)
     theme: "light", // options[String]  : "light"(default), "dark", "semi-dark"
 
     // Not required yet - WIP

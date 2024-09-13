@@ -3,6 +3,7 @@
 /* -------------------------------------------------------------------------- */
 .vs-con-table {
     border-collapse: collapse;
+    border-radius: 0;
 }
 
 .tabla-datos {
@@ -27,6 +28,7 @@
     padding: 4px 0px 4px 0px !important;
 
     @extend .bg-dark-50;
+
     h3 {
         text-transform: capitalize !important;
         @extend .font-medium, .h5;
@@ -74,9 +76,11 @@
 
 .vs-table--td {
     @extend .size-small;
+
     span {
         text-transform: uppercase !important;
     }
+
     text-align: center !important;
     padding: 3.5px !important;
 }

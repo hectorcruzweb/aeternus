@@ -3,19 +3,32 @@
     min-width: 100px !important;
     text-align: center !important;
 }
+
+.vs-con-input .input-text {
+    border-radius: 0 !important;
+}
+
 .input-text {
+
+    input[type=text],
+    .vs__dropdown-toggle {
+        border-radius: 0 !important;
+    }
+
     padding-top: 0.25rem !important;
     padding-bottom: 0.25rem !important;
-    & > label {
+
+    &>label {
         padding: 0.25rem 0 0.25rem 0;
         @extend .size-small, .color-copy, .font-medium;
         text-transform: uppercase !important;
+
         span {
             @extend .color-danger-900;
         }
     }
 
-    & > span {
+    &>span {
         padding: 0.25rem 0 0.25rem 0;
         @extend .color-danger-900, .size-smaller;
     }

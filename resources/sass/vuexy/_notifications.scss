@@ -1,4 +1,6 @@
 .notificaciones {
+    border-radius: 0;
+
     .filling {
         background: $white !important;
     }
@@ -21,8 +23,10 @@
         }
 
         @extend .notificaciones;
+
         &.activeNoti:active {
             pointer-events: none;
+
             .content-noti:active::after {
                 pointer-events: all;
             }

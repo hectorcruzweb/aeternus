@@ -4,9 +4,14 @@
     .vs-popup--header {
         display: none !important;
     }
+
     .vs-popup {
         max-width: 440px !important;
         max-height: 440px !important;
+    }
+
+    .vs-dialog {
+        border-radius: 0 !important;
     }
 
     .vs-dialog .vs-dialog-header {
@@ -32,12 +37,14 @@
 
 /*heighs del form segun su break-points*/
 @media (max-width: 1200px) {
+
     /*para los forms que no son fullscreen*/
     .forms-popup {
         &:not(&.fullscreen) {
             .vs-popup {
                 height: 100%;
             }
+
             .vs-popup--content {
                 height: 80%;
             }
@@ -49,6 +56,7 @@
     .vs-popup--content {
         height: 80%;
     }
+
     @media (min-width: 576px) {
         .vs-popup--content {
             height: 82%;
@@ -73,7 +81,11 @@
         }
     }
 }
+
 /*heighs del form segun su break-points*/
+.vs-popup {
+    border-radius: 0;
+}
 
 .forms-popup .vs-popup {
     border-radius: 0px !important;
@@ -121,6 +133,7 @@
     &:not(:first-child) {
         margin-top: 2rem;
     }
+
     &:first-child {
         margin-top: 0.5rem;
     }
@@ -143,9 +156,11 @@
 .bottom-buttons-section {
     padding: 1.5rem;
     text-align: right;
+
     .text-advice {
         padding: 0 0 1rem 0;
         @extend .size-base, .color-copy;
+
         .ojo-advice {
             @extend .font-medium, .color-danger-900;
         }
@@ -252,6 +267,7 @@
 
 .popup-90 .vs-popup {
     width: 100% !important;
+
     @media (min-width: 992px) {
         width: 95% !important;
     }
@@ -263,6 +279,7 @@
 
 .popup-95 .vs-popup {
     width: 100% !important;
+
     @media (min-width: 1200px) {
         width: 95% !important;
     }
@@ -275,10 +292,11 @@
         @extend .theme-background;
 
         .vs-popup--content {
-            & > div {
+            &>div {
                 .tab-content {
                     // height: 100vh !important;
                     padding: 1.5rem 1.25rem 1.5rem 1.25rem;
+
                     @media (min-width: 1200px) {
                         //    height: 82vh !important;
                     }
