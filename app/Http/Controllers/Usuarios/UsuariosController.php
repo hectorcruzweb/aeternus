@@ -151,6 +151,7 @@ class UsuariosController extends ApiController
                 ->join('modulos', 'permisos.modulos_id', '=', 'modulos.id')
                 ->join('secciones', 'secciones.id', '=', 'modulos.secciones_id')
                 ->where('usuarios.id', '=', $request->user()->id)
+                ->where("modulos.id", "<>", 8)
                 ->whereNotIn('modulos.id', [14, 18])
                 //->where('usuarios.roles_id', '=', $request->user()->roles_id)
                 ->orderBy('secciones.id', 'asc')
