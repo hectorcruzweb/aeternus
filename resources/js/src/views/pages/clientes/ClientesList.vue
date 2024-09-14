@@ -14,82 +14,45 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
 <template>
     <div>
         <div class="w-full text-right">
-            <vs-button
-                class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-                color="primary"
-                @click="formulario('agregar')"
-            >
+            <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
+                @click="formulario('agregar')">
                 <span>Registrar Cliente</span>
             </vs-button>
         </div>
 
         <div class="pt-6 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card
-                title="Filtros de selección"
-                refresh-content-action
-                @refresh="reset"
-                :collapse-action="false"
-            >
+            <vx-card title="Filtros de selección" refresh-content-action @refresh="reset" :collapse-action="false">
                 <div class="flex flex-wrap">
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
                         <div class="w-full input-text pb-2">
                             <label class="">Mostrar</label>
-                            <v-select
-                                :options="mostrarOptions"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="mostrar"
-                                class="sm:mb-0"
-                            />
+                            <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="mostrar" class="sm:mb-0" />
                         </div>
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
                         <div class="w-full input-text pb-2">
                             <label class="">Estado</label>
-                            <v-select
-                                :options="estadosOptions"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="estado"
-                                class="md:mb-0"
-                            />
+                            <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="estado" class="md:mb-0" />
                         </div>
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
                         <div class="w-full input-text pb-2">
                             <label class="">Filtrar Específico</label>
-                            <v-select
-                                :options="filtrosEspecificos"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="filtroEspecifico"
-                                class="md:mb-0"
-                            />
+                            <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="filtroEspecifico" class="md:mb-0" />
                         </div>
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
                         <div class="w-full input-text pb-2">
                             <label class="">{{
                                 this.filtroEspecifico.label
-                            }}</label>
+                                }}</label>
 
-                            <vs-input
-                                class="w-full"
-                                icon="search"
-                                maxlength="75"
-                                placeholder="Filtrar por dato específico"
-                                v-model="serverOptions.numero_control"
-                                v-on:keyup.enter="get_data(1)"
-                                v-on:blur="get_data(1, 'blur')"
-                            />
+                            <vs-input class="w-full" icon="search" maxlength="75"
+                                placeholder="Filtrar por dato específico" v-model="serverOptions.numero_control"
+                                v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
                         </div>
                     </div>
                 </div>
@@ -97,27 +60,16 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                 <div class="flex flex-wrap">
                     <div class="w-full px-2 py-4">
                         <h3 class="size-base">
-                            <feather-icon
-                                icon="UserIcon"
-                                class="mr-2"
-                                svgClasses="w-5 h-5"
-                            />Filtrar por Nombre del Cliente
+                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
+                            Cliente
                         </h3>
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2">
                         <div class="w-full input-text">
                             <label class="">Nombre del Cliente</label>
-                            <vs-input
-                                class="w-full"
-                                icon="search"
-                                placeholder="Filtrar por Nombre del Cliente"
-                                v-model="serverOptions.cliente"
-                                v-on:keyup.enter="get_data(1)"
-                                v-on:blur="get_data(1, 'blur')"
-                                maxlength="75"
-                            />
+                            <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Cliente"
+                                v-model="serverOptions.cliente" v-on:keyup.enter="get_data(1)"
+                                v-on:blur="get_data(1, 'blur')" maxlength="75" />
                         </div>
                     </div>
                 </div>
@@ -125,16 +77,8 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         </div>
 
         <br />
-        <vs-table
-            :sst="true"
-            @search="handleSearch"
-            @change-page="handleChangePage"
-            @sort="handleSort"
-            :max-items="serverOptions.per_page.value"
-            :data="clientes"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
+        <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
+            :max-items="serverOptions.per_page.value" :data="clientes" noDataText="0 Resultados" class="tabla-datos">
             <template slot="header">
                 <h3>Listado de Clientes Registrados</h3>
             </template>
@@ -154,10 +98,10 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">{{
                         data[indextr].nombre
-                    }}</vs-td>
+                        }}</vs-td>
                     <vs-td :data="data[indextr].direccion">{{
                         data[indextr].direccion
-                    }}</vs-td>
+                        }}</vs-td>
                     <vs-td :data="data[indextr].celular">
                         {{ data[indextr].celular }}
                     </vs-td>
@@ -170,94 +114,52 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </vs-td>
                     <vs-td :data="data[indextr].servicios_gratis">
                         <div class="flex justify-center">
-                            <img
-                                v-if="data[indextr].servicios_gratis > 0"
-                                class="img-btn-24 mx-2"
-                                src="@assets/images/free_yes.svg"
+                            <img v-if="data[indextr].servicios_gratis > 0" class="img-btn-24 mx-2"
+                                src="@assets/images/free_yes.svg" title="Ver servicios gratis de este cliente"
+                                @click="verServiciosGratis(data[indextr])" />
+                            <img v-else class="img-btn-24 mx-2" src="@assets/images/free_no.svg"
                                 title="Ver servicios gratis de este cliente"
-                                @click="verServiciosGratis(data[indextr])"
-                            />
-                            <img
-                                v-else
-                                class="img-btn-24 mx-2"
-                                src="@assets/images/free_no.svg"
-                                title="Ver servicios gratis de este cliente"
-                                @click="verServiciosGratis(data[indextr])"
-                            />
+                                @click="verServiciosGratis(data[indextr])" />
                         </div>
                     </vs-td>
                     <vs-td :data="data[indextr].id_user">
                         <div class="flex justify-center">
-                            <img
-                                class="cursor-pointer img-btn-18 mx-2"
-                                src="@assets/images/edit.svg"
-                                title="Modificar"
-                                @click="openModificar(data[indextr].id)"
-                            />
-                            <img
-                                v-if="data[indextr].status == 1"
-                                class="img-btn-24 mx-2"
-                                src="@assets/images/switchon.svg"
-                                title="Deshabilitar"
-                                @click="
+                            <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/edit.svg" title="Modificar"
+                                @click="openModificar(data[indextr].id)" />
+                            <img v-if="data[indextr].status == 1" class="img-btn-24 mx-2"
+                                src="@assets/images/switchon.svg" title="Deshabilitar" @click="
                                     deleteCliente(
                                         data[indextr].id,
                                         data[indextr].nombre
                                     )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="img-btn-24 mx-2"
-                                src="@assets/images/switchoff.svg"
-                                title="Habilitar"
+                                    " />
+                            <img v-else class="img-btn-24 mx-2" src="@assets/images/switchoff.svg" title="Habilitar"
                                 @click="
                                     altaCliente(
                                         data[indextr].id,
                                         data[indextr].nombre
                                     )
-                                "
-                            />
+                                    " />
                         </div>
                     </vs-td>
                 </vs-tr>
             </template>
         </vs-table>
         <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
         <pre ref="pre"></pre>
 
-        <Password
-            :show="openStatus"
-            :callback-on-success="callback"
-            @closeVerificar="closeStatus"
-            :accion="accionNombre"
-        ></Password>
-        <Reporteador
-            :header="'consultar reporte de venta'"
-            :show="openReportesLista"
-            :listadereportes="ListaReportes"
-            :request="request"
-            @closeReportes="openReportesLista = false"
-        ></Reporteador>
-        <FormularioClientes
-            :id_cliente="id_cliente_modificar"
-            :tipo="tipoFormulario"
-            :show="verFormularioClientes"
-            @closeVentana="verFormularioClientes = false"
-            @retornar_id="retorno_id"
-        ></FormularioClientes>
-        <ServiciosGratis
-            :show="openServiciosGratis"
-            :datos="datosCliente"
-            @closeServiciosGratis="closeEntregarConvenio"
-        ></ServiciosGratis>
+        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+            :accion="accionNombre">
+        </Password>
+        <Reporteador :header="'consultar reporte de venta'" :show="openReportesLista" :listadereportes="ListaReportes"
+            :request="request" @closeReportes="openReportesLista = false"></Reporteador>
+        <FormularioClientes :id_cliente="id_cliente_modificar" :tipo="tipoFormulario" :show="verFormularioClientes"
+            @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id"></FormularioClientes>
+        <ServiciosGratis :show="openServiciosGratis" :datos="datosCliente"
+            @closeServiciosGratis="closeEntregarConvenio">
+        </ServiciosGratis>
     </div>
 </template>
 
@@ -286,13 +188,13 @@ export default {
         ServiciosGratis
     },
     watch: {
-        actual: function(newValue, oldValue) {
+        actual: function (newValue, oldValue) {
             this.get_data(this.actual);
         },
-        mostrar: function(newValue, oldValue) {
+        mostrar: function (newValue, oldValue) {
             this.get_data(1);
         },
-        estado: function(newVal, previousVal) {
+        estado: function (newVal, previousVal) {
             this.get_data(1);
         }
     },
@@ -454,9 +356,9 @@ export default {
                     }
                 });
         },
-        handleSearch(searching) {},
-        handleChangePage(page) {},
-        handleSort(key, active) {},
+        handleSearch(searching) { },
+        handleChangePage(page) { },
+        handleSort(key, active) { },
 
         //eliminar usuario logicamente
 

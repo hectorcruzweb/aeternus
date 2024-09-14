@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+            <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
                 @click="verFormulario('agregar')">
                 <span>Registrar Usuario</span>
             </vs-button>
