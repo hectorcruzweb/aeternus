@@ -151,6 +151,6 @@ class ServiciosFunerarios extends Model
 
     public function servicio_exhumado()
     {
-        return $this->hasMany('App\ServiciosFunerarios','servicios_funerarios_exhumado_id','id');
+        return $this->hasMany('App\ServiciosFunerarios', 'servicios_funerarios_exhumado_id', 'id');
     }
 }

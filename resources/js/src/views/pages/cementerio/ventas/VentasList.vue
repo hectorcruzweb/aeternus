@@ -417,7 +417,7 @@ export default {
             this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
 
             try {
-                let res = await cementerio.get_ventas(this.serverOptions);
+                let res = await cementerio.get_ventas(this.serverOptions, true);
                 if (res.data.data) {
                     this.ventas = res.data.data;
                     this.total = res.data.last_page;

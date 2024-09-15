@@ -1133,8 +1133,7 @@ class FunerariaController extends ApiController
                 /**captura de pagos */
                 /**fin de captura de pagos */
             }
-            /**fin if servicio tipo agregar */
-            else {
+            /**fin if servicio tipo agregar */ else {
                 /**es modificar */
                 DB::table('ventas_planes')->where('id', '=', $request->id_venta)->update(
                     [
@@ -1238,7 +1237,7 @@ class FunerariaController extends ApiController
 
             DB::commit();
             return
-            $tipo_servicio == 'agregar' ? $id_venta : $request->id_venta;
+                $tipo_servicio == 'agregar' ? $id_venta : $request->id_venta;
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;
@@ -1250,172 +1249,175 @@ class FunerariaController extends ApiController
     /**obtiene todas las ventas para el paginado de ventas de cementerio */
     public function get_ventas(Request $request, $id_venta = 'all', $paginated = false)
     {
+        $light = $request->light;
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
         $titular = $request->titular;
         $numero_control = $request->numero_control;
         $status = $request->status;
         $fecha_operacion = $request->fecha_operacion;
 
-        $resultado_query = Operaciones::with('pagosProgramados.pagados')
-            ->with('venta_plan.vendedor')
-            ->with('venta_plan.conceptos_originales')
-            ->with('venta_plan.conceptos_originales')
-            ->with('beneficiarios')
-            ->with('AjustesPoliticas')
-            ->with('cancelador:id,nombre')
-            ->with('registro:id,nombre')
-            ->with('venta_plan.entrego_convenio')
-            ->with('usuarios_plan_futuro:ventas_planes_id,nombre_afectado,id')
-            ->where('empresa_operaciones_id', '=', 4)
-        /**solo ventas de planes funerarios */
-            ->select(
-                /**venta operacion */
-                'operaciones.id',
-                'operaciones.id as operacion_id',
-                'antiguedad_operacion_id',
-                'empresa_operaciones_id',
-                'subtotal',
-                'tasa_iva',
-                'descuento',
-                'impuestos',
-                'total',
-                'saldo',
-                'descuento_pronto_pago_b',
-                'costo_neto_pronto_pago',
-                DB::raw(
-                    '(NULL) AS costo_neto_calculado'
-                ),
-                DB::raw(
-                    '(NULL) AS descuento_neto_calculado'
-                ),
-                DB::raw(
-                    '(0) AS status_usado_b'
-                ),
-                DB::raw(
-                    '(NULL) AS status_usado_b_texto'
-                ),
-                'numero_solicitud',
-                'numero_convenio',
-                'numero_titulo',
-                'titular_sustituto',
-                'parentesco_titular_sustituto',
-                'telefono_titular_sustituto',
-                'ventas_planes_id',
-                'financiamiento',
-                'aplica_devolucion_b',
-                'costo_neto_financiamiento_normal',
-                'comision_venta_neto',
-                'operaciones.status as operacion_status',
-                'clientes.id as cliente_id',
-                'clientes.nombre',
-                'clientes.direccion',
-                'clientes.ciudad',
-                'clientes.estado',
-                'clientes.telefono',
-                'clientes.celular',
-                'clientes.telefono_extra',
-                'clientes.rfc',
-                'clientes.email',
-                'clientes.fecha_nac',
-                DB::raw(
-                    'DATE(operaciones.fecha_operacion) as fecha_operacion'
-                ),
-                DB::raw(
-                    'DATE(operaciones.fecha_cancelacion) as fecha_cancelacion_operacion'
-                ),
-                DB::raw(
-                    '(NULL) as fecha_operacion_texto'
-                ),
-                'operaciones.nota',
-                /**fin de datos de  operacion */
-                DB::raw(
-                    '(0) AS tipo_financimiento_texto'
-                ),
-                DB::raw(
-                    '(0) AS num_pagos_programados'
-                ),
-                DB::raw(
-                    '(0) AS num_pagos_programados_vigentes'
-                ),
-                DB::raw(
-                    '(0) AS intereses'
-                ),
-                DB::raw(
-                    '(0) AS total_cubierto'
-                ),
-                DB::raw(
-                    '(0) AS abonado_capital'
-                ),
-                DB::raw(
-                    '(0) AS abonado_intereses'
-                ),
-                DB::raw(
-                    '(0) AS descontado_pronto_pago'
-                ),
-                DB::raw(
-                    '(0) AS descontado_capital'
-                ),
-                DB::raw(
-                    '(0) AS complementado_cancelacion'
-                ),
-                DB::raw(
-                    '(0) AS saldo_neto'
-                ),
-                DB::raw(
-                    '(0) AS pagos_vencidos'
-                ),
-                DB::raw(
-                    '(0) AS dias_vencidos'
-                ),
-                DB::raw(
-                    '(0) AS pagos_programados_cubiertos'
-                ),
-                DB::raw(
-                    '(0) AS pagos_realizados'
-                ),
-                DB::raw(
-                    '(0) AS pagos_vigentes'
-                ),
-                DB::raw(
-                    '(0) AS pagos_cancelados'
-                ),
-                DB::raw(
-                    '(CASE
+        $resultado_query = Operaciones::select(
+            /**venta operacion */
+            'operaciones.id',
+            'operaciones.id as operacion_id',
+            'antiguedad_operacion_id',
+            'empresa_operaciones_id',
+            'subtotal',
+            'tasa_iva',
+            'descuento',
+            'impuestos',
+            'total',
+            'saldo',
+            'descuento_pronto_pago_b',
+            'costo_neto_pronto_pago',
+            DB::raw(
+                '(NULL) AS costo_neto_calculado'
+            ),
+            DB::raw(
+                '(NULL) AS descuento_neto_calculado'
+            ),
+            DB::raw(
+                '(0) AS status_usado_b'
+            ),
+            DB::raw(
+                '(NULL) AS status_usado_b_texto'
+            ),
+            'numero_solicitud',
+            'numero_convenio',
+            'numero_titulo',
+            'titular_sustituto',
+            'parentesco_titular_sustituto',
+            'telefono_titular_sustituto',
+            'ventas_planes_id',
+            'financiamiento',
+            'aplica_devolucion_b',
+            'costo_neto_financiamiento_normal',
+            'comision_venta_neto',
+            'operaciones.status as operacion_status',
+            'clientes.id as cliente_id',
+            'clientes.nombre',
+            'clientes.direccion',
+            'clientes.ciudad',
+            'clientes.estado',
+            'clientes.telefono',
+            'clientes.celular',
+            'clientes.telefono_extra',
+            'clientes.rfc',
+            'clientes.email',
+            'clientes.fecha_nac',
+            DB::raw(
+                'DATE(operaciones.fecha_operacion) as fecha_operacion'
+            ),
+            DB::raw(
+                'DATE(operaciones.fecha_cancelacion) as fecha_cancelacion_operacion'
+            ),
+            DB::raw(
+                '(NULL) as fecha_operacion_texto'
+            ),
+            'operaciones.nota',
+            /**fin de datos de  operacion */
+            DB::raw(
+                '(0) AS tipo_financimiento_texto'
+            ),
+            DB::raw(
+                '(0) AS num_pagos_programados'
+            ),
+            DB::raw(
+                '(0) AS num_pagos_programados_vigentes'
+            ),
+            DB::raw(
+                '(0) AS intereses'
+            ),
+            DB::raw(
+                '(0) AS total_cubierto'
+            ),
+            DB::raw(
+                '(0) AS abonado_capital'
+            ),
+            DB::raw(
+                '(0) AS abonado_intereses'
+            ),
+            DB::raw(
+                '(0) AS descontado_pronto_pago'
+            ),
+            DB::raw(
+                '(0) AS descontado_capital'
+            ),
+            DB::raw(
+                '(0) AS complementado_cancelacion'
+            ),
+            DB::raw(
+                '(0) AS saldo_neto'
+            ),
+            DB::raw(
+                '(0) AS pagos_vencidos'
+            ),
+            DB::raw(
+                '(0) AS dias_vencidos'
+            ),
+            DB::raw(
+                '(0) AS pagos_programados_cubiertos'
+            ),
+            DB::raw(
+                '(0) AS pagos_realizados'
+            ),
+            DB::raw(
+                '(0) AS pagos_vigentes'
+            ),
+            DB::raw(
+                '(0) AS pagos_cancelados'
+            ),
+            DB::raw(
+                '(CASE
                         WHEN operaciones.numero_solicitud <> "" THEN operaciones.numero_solicitud
                         ELSE "N/A"
                         END) AS numero_solicitud_texto'
-                ),
-                DB::raw(
-                    '(CASE
+            ),
+            DB::raw(
+                '(CASE
                         WHEN operaciones.numero_titulo <> "" THEN operaciones.numero_titulo
                         ELSE "Pendiente"
                         END) AS numero_titulo_texto'
-                ),
-                DB::raw(
-                    '(NULL) AS status_texto'
-                ),
-                /*DB::raw(
-            '(NULL) AS pagos_realizados_arreglo'
-            ),*/
-                'operaciones.registro_id',
-                'operaciones.cancelo_id',
-                'operaciones.modifico_id',
-                'operaciones.nota_cancelacion',
-                'operaciones.motivos_cancelacion_id',
-                'operaciones.cantidad_a_regresar_cancelacion',
-                DB::raw(
-                    '(NULL) AS motivos_cancelacion_texto'
-                )
+            ),
+            DB::raw(
+                '(NULL) AS status_texto'
+            ),
+            /*DB::raw(
+        '(NULL) AS pagos_realizados_arreglo'
+        ),*/
+            'operaciones.registro_id',
+            'operaciones.cancelo_id',
+            'operaciones.modifico_id',
+            'operaciones.nota_cancelacion',
+            'operaciones.motivos_cancelacion_id',
+            'operaciones.cantidad_a_regresar_cancelacion',
+            DB::raw(
+                '(NULL) AS motivos_cancelacion_texto'
             )
-            ->where(function ($q) use ($id_venta) {
-                if (trim($id_venta) == 'all' || $id_venta > 0) {
-                    if (trim($id_venta) == 'all') {
-                        $q->where('operaciones.ventas_planes_id', '>', $id_venta);
-                    } else if ($id_venta > 0) {
-                        $q->where('operaciones.ventas_planes_id', '=', $id_venta);
-                    }
+        )->with("venta_plan");
+
+        if (!isset($light)) {
+            $resultado_query = $resultado_query->with('pagosProgramados.pagados')
+                ->with('venta_plan.vendedor')
+                ->with('venta_plan.conceptos_originales')
+                ->with('beneficiarios')
+                ->with('AjustesPoliticas')
+                ->with('cancelador:id,nombre')
+                ->with('registro:id,nombre')
+                ->with('venta_plan.entrego_convenio')
+                ->with('usuarios_plan_futuro:ventas_planes_id,nombre_afectado,id');
+        }
+        $resultado_query = $resultado_query->where('empresa_operaciones_id', '=', 4);
+        /**solo ventas de planes funerarios */
+        $resultado_query = $resultado_query->where(function ($q) use ($id_venta) {
+            if (trim($id_venta) == 'all' || $id_venta > 0) {
+                if (trim($id_venta) == 'all') {
+                    $q->where('operaciones.ventas_planes_id', '>', $id_venta);
+                } else if ($id_venta > 0) {
+                    $q->where('operaciones.ventas_planes_id', '=', $id_venta);
                 }
-            })
+            }
+        })
             ->where(function ($q) use ($numero_control, $filtro_especifico_opcion) {
                 if (trim($numero_control) != '') {
                     if ($filtro_especifico_opcion == 1) {
@@ -1437,7 +1439,7 @@ class FunerariaController extends ApiController
                 if (trim($status) != "") {
                     if ($status == 1) {
                         //solo listo los servicios con adeudo
-                        $q->where('saldo', '>', 0)->where("operaciones.status","=",1);
+                        $q->where('saldo', '>', 0)->where("operaciones.status", "=", 1);
                     } elseif ($status == 2) {
                         //solo las pagadas
                         $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
@@ -1514,217 +1516,294 @@ class FunerariaController extends ApiController
                     . $venta['financiamiento'] . ' Mes(s)';
             }
 
-            $venta['num_pagos_programados'] = count($venta['pagos_programados']);
-            $num_pagos_programados_vigentes = 0;
-            if ($venta['num_pagos_programados'] > 0) {
-                /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
-                /**recorriendo arreglo de pagos programados */
-                $vencidos = 0;
-                $pagos_programados_cubiertos = 0;
-                $dias_vencido_primer_pago_vencido = '';
-                $pagos_vigentes = 0;
-                $pagos_cancelados = 0;
-                $pagos_realizados = 0;
+            if (!isset($light)) {
+                $venta['num_pagos_programados'] = count($venta['pagos_programados']);
+                $num_pagos_programados_vigentes = 0;
+                if ($venta['num_pagos_programados'] > 0) {
+                    /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
+                    /**recorriendo arreglo de pagos programados */
+                    $vencidos = 0;
+                    $pagos_programados_cubiertos = 0;
+                    $dias_vencido_primer_pago_vencido = '';
+                    $pagos_vigentes = 0;
+                    $pagos_cancelados = 0;
+                    $pagos_realizados = 0;
 
-                $arreglo_de_pagos_realizados = [];
-                /**guardo los dias que lleva vencido el pago vencido mas antiguo */
-                foreach ($venta['pagos_programados'] as $index_programado => &$programado) {
-                    /**actualizando el concepto del pago */
-                    if ($programado['conceptos_pagos_id'] == 1) {
-                        $programado['concepto_texto'] = 'Enganche';
-                    } elseif ($programado['conceptos_pagos_id'] == 2) {
-                        $programado['concepto_texto'] = 'Abono';
-                    } else {
-                        $programado['concepto_texto'] = 'Pago Único';
-                    }
-
-                    /**actualizando fecha de pago abre con helper de fechas */
-                    $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
-
-                    //if ($programado['status'] == 1) {
-                    if ($programado['status'] == 1) {
-                        $num_pagos_programados_vigentes++;
-                    }
-                    /**aumento el pago programado vigente */
-                    /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
-                    /**montos segun su tipo de movimiento */
-                    $abonado_intereses = 0;
-                    $abonado_capital = 0;
-                    $descontado_pronto_pago = 0;
-                    $descontado_capital = 0;
-                    $complemento_cancelacion = 0;
-                    $total_cubierto = 0;
-                    $fecha_ultimo_pago = '';
-
-                    foreach ($programado['pagados'] as $index_pagados => &$pagado) {
-                        /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
-                        array_push(
-                            $arreglo_de_pagos_realizados,
-                            $pagado
-                        );
-
-                        if ($pagado['status'] == 1) {
-                            /**si esta activo el pago se toma en cuenta el monto de cada operacion */
-                            /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
-                             * son los que van incluidos dentro de un parent) */
-                            // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                            /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
-                            if ($pagado['movimientos_pagos_id'] == 1) {
-                                /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
-                                 * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
-                                 */
-                                // $pago_total += $pagado['monto'];
-                                $abonado_capital += $pagado['pagos_cubiertos']['monto'];
-                            } else if ($pagado['movimientos_pagos_id'] == 4) {
-                                /**fue descuento al capital */
-                                $descontado_capital += $pagado['pagos_cubiertos']['monto'];
-                            } else if ($pagado['movimientos_pagos_id'] == 5) {
-                                /**fue complemento por cancelacion */
-                                $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
-                            } else if ($pagado['movimientos_pagos_id'] == 2) {
-                                /**es tipo interes */
-                                if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
-                                    /**es abono de intereses */
-                                    $abonado_intereses += $pagado['pagos_cubiertos']['monto'];
-                                    //$pago_total += $pagado['monto'];
-                                }
-                            } else if ($pagado['movimientos_pagos_id'] == 3) {
-                                if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
-                                    /**es descuento por pronto pago */
-                                    $descontado_pronto_pago += $pagado['pagos_cubiertos']['monto'];
-                                    //$pago_total += $pagado['monto'];
-                                }
-                            }
-
-                            /**fecha en que se realizo el ultimo pago */
-                            $fecha_ultimo_pago = $pagado['fecha_pago'];
-                            // }
-                            $pagos_vigentes++;
-                        } //fin if pago status=1
-                        else {
-                            if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                                $pagos_cancelados++;
-                            }
-                        }
-                        if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                            $pagos_realizados++;
-                        }
-                    } //fin foreach pagado
-
-                    /** al final del ciclo se actualizan los valores en el pago programado*/
-                    $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                    $programado['abonado_intereses'] = $abonado_intereses;
-                    $programado['descontado_pronto_pago'] = $descontado_pronto_pago;
-                    $programado['descontado_capital'] = $descontado_capital;
-                    $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
-
-                    $saldo_pago_programado = round($programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion, 2);
-
-                    $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
-                    /**asignando la fecha del pago que liquidado el pago programado */
-                    if ($programado['saldo_neto'] <= 0) {
-                        $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
-                        $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
-                    }
-                    /**verificando el estado del pago programado*/
-                    /**verificando si la fecha sigue vigente o esta vencida */
-                    /**variables para controlar el incremento por intereses */
-                    $dias_retrasados_del_pago = 0;
-                    $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
-
-                    /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
-                    $fecha_para_intereses = date('Y-m-d');
-                    if ($venta['operacion_status'] == 0) {
-                        if (trim($venta['fecha_cancelacion_operacion']) != '') {
-                            $fecha_para_intereses = $venta['fecha_cancelacion_operacion'];
-                        }
-                    }
-
-                    $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
-
-                    $interes_generado = 0;
-                    $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
-                    /**fin varables por intereses */
-                    /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
-                    if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
-                        /**tiene todavia saldo que pagar, se debe verificar si el pago esta vencido para generarle los intereses correspondientes */
-                        if (date('Y-m-d', strtotime($programado['fecha_programada'])) < date('Y-m-d')) {
-                            /**esto me dara los dias que se retraso en el el pago la persona, que debe coincidir la suma de los * intereses cobrados */
-
-                            $dias_retrasados_del_pago = $fecha_programada_pago->diffInDays($fecha_hoy);
-                            if ($dias_vencido_primer_pago_vencido == '') {
-                                $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
-                            }
-                            $programado['fecha_a_pagar'] = date('Y-m-d');
-                            $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
-                            /**
-                             * Los intereses moratorios se calcularán
-                             * multiplicando el monto de lo que adeude el contratante por la tasa de interés anual,
-                             * dividida entre 365, este resultado se multiplica por el número de días transcurridos entre la fecha de pago que debió
-                             * ser hecho y la fecha que el contratante
-                             * liquide el adeudo.
-                             **/
-                            /**aplicando intereses solo a abonos */
-                            $interes_generado = 0;
-                            if ($programado['conceptos_pagos_id'] == 2) {
-                                $interes_generado = round(((($programado['monto_programado'] * ($venta['ajustes_politicas']['tasa_fija_anual'] / 12)) / 365) * $dias_retrasados_del_pago), 0, PHP_ROUND_HALF_UP);
-                                if ($interes_generado > 0) {
-                                    /**esto siginifica que la fecha de pago seria mayor o igual a la fecha en que se hizo el ultimo abono a intereses */
-                                    $interes_generado -= $programado['abonado_intereses'];
-                                }
-                            }
-
-                            /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
-                            $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
-                            /**la fecha qui es mayor que la fecha programada del pago */
-                            $programado['status_pago'] = 0;
-                            $programado['status_pago_texto'] = 'Vencido';
-                            $vencidos++;
-                            $programado['dias_vencido'] = $dias_retrasados_del_pago;
-                            $programado['intereses'] = $interes_generado;
+                    $arreglo_de_pagos_realizados = [];
+                    /**guardo los dias que lleva vencido el pago vencido mas antiguo */
+                    foreach ($venta['pagos_programados'] as $index_programado => &$programado) {
+                        /**actualizando el concepto del pago */
+                        if ($programado['conceptos_pagos_id'] == 1) {
+                            $programado['concepto_texto'] = 'Enganche';
+                        } elseif ($programado['conceptos_pagos_id'] == 2) {
+                            $programado['concepto_texto'] = 'Abono';
                         } else {
-                            /**la fecha aun no vence */
-                            $programado['fecha_a_pagar'] = $programado['fecha_programada'];
-                            $programado['status_pago'] = 1;
-                            $programado['status_pago_texto'] = 'Pendiente';
+                            $programado['concepto_texto'] = 'Pago Único';
                         }
-                    } else {
-                        $pagos_programados_cubiertos++;
-                        $programado['fecha_a_pagar'] = $fecha_ultimo_pago;
-                        /**el pago programado ya fue cubierto */
-                        $programado['status_pago'] = 2;
-                        $programado['status_pago_texto'] = 'Pagado';
+
+                        /**actualizando fecha de pago abre con helper de fechas */
+                        $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
+
+                        //if ($programado['status'] == 1) {
+                        if ($programado['status'] == 1) {
+                            $num_pagos_programados_vigentes++;
+                        }
+                        /**aumento el pago programado vigente */
+                        /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
+                        /**montos segun su tipo de movimiento */
+                        $abonado_intereses = 0;
+                        $abonado_capital = 0;
+                        $descontado_pronto_pago = 0;
+                        $descontado_capital = 0;
+                        $complemento_cancelacion = 0;
+                        $total_cubierto = 0;
+                        $fecha_ultimo_pago = '';
+
+                        foreach ($programado['pagados'] as $index_pagados => &$pagado) {
+                            /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
+                            array_push(
+                                $arreglo_de_pagos_realizados,
+                                $pagado
+                            );
+
+                            if ($pagado['status'] == 1) {
+                                /**si esta activo el pago se toma en cuenta el monto de cada operacion */
+                                /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
+                                 * son los que van incluidos dentro de un parent) */
+                                // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
+                                if ($pagado['movimientos_pagos_id'] == 1) {
+                                    /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
+                                     * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
+                                     */
+                                    // $pago_total += $pagado['monto'];
+                                    $abonado_capital += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 4) {
+                                    /**fue descuento al capital */
+                                    $descontado_capital += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 5) {
+                                    /**fue complemento por cancelacion */
+                                    $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 2) {
+                                    /**es tipo interes */
+                                    if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                        /**es abono de intereses */
+                                        $abonado_intereses += $pagado['pagos_cubiertos']['monto'];
+                                        //$pago_total += $pagado['monto'];
+                                    }
+                                } else if ($pagado['movimientos_pagos_id'] == 3) {
+                                    if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                        /**es descuento por pronto pago */
+                                        $descontado_pronto_pago += $pagado['pagos_cubiertos']['monto'];
+                                        //$pago_total += $pagado['monto'];
+                                    }
+                                }
+
+                                /**fecha en que se realizo el ultimo pago */
+                                $fecha_ultimo_pago = $pagado['fecha_pago'];
+                                // }
+                                $pagos_vigentes++;
+                            } //fin if pago status=1
+                            else {
+                                if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                    $pagos_cancelados++;
+                                }
+                            }
+                            if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                $pagos_realizados++;
+                            }
+                        } //fin foreach pagado
+
+                        /** al final del ciclo se actualizan los valores en el pago programado*/
+                        $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                        $programado['abonado_intereses'] = $abonado_intereses;
+                        $programado['descontado_pronto_pago'] = $descontado_pronto_pago;
+                        $programado['descontado_capital'] = $descontado_capital;
+                        $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
+
+                        $saldo_pago_programado = round($programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion, 2);
+
+                        $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
+                        /**asignando la fecha del pago que liquidado el pago programado */
+                        if ($programado['saldo_neto'] <= 0) {
+                            $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
+                            $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
+                        }
+                        /**verificando el estado del pago programado*/
+                        /**verificando si la fecha sigue vigente o esta vencida */
+                        /**variables para controlar el incremento por intereses */
+                        $dias_retrasados_del_pago = 0;
+                        $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+
+                        /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
+                        $fecha_para_intereses = date('Y-m-d');
+                        if ($venta['operacion_status'] == 0) {
+                            if (trim($venta['fecha_cancelacion_operacion']) != '') {
+                                $fecha_para_intereses = $venta['fecha_cancelacion_operacion'];
+                            }
+                        }
+
+                        $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
+
+                        $interes_generado = 0;
+                        $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
+                        /**fin varables por intereses */
+                        /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
+                        if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
+                            /**tiene todavia saldo que pagar, se debe verificar si el pago esta vencido para generarle los intereses correspondientes */
+                            if (date('Y-m-d', strtotime($programado['fecha_programada'])) < date('Y-m-d')) {
+                                /**esto me dara los dias que se retraso en el el pago la persona, que debe coincidir la suma de los * intereses cobrados */
+
+                                $dias_retrasados_del_pago = $fecha_programada_pago->diffInDays($fecha_hoy);
+                                if ($dias_vencido_primer_pago_vencido == '') {
+                                    $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
+                                }
+                                $programado['fecha_a_pagar'] = date('Y-m-d');
+                                $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
+                                /**
+                                 * Los intereses moratorios se calcularán
+                                 * multiplicando el monto de lo que adeude el contratante por la tasa de interés anual,
+                                 * dividida entre 365, este resultado se multiplica por el número de días transcurridos entre la fecha de pago que debió
+                                 * ser hecho y la fecha que el contratante
+                                 * liquide el adeudo.
+                                 **/
+                                /**aplicando intereses solo a abonos */
+                                $interes_generado = 0;
+                                if ($programado['conceptos_pagos_id'] == 2) {
+                                    $interes_generado = round(((($programado['monto_programado'] * ($venta['ajustes_politicas']['tasa_fija_anual'] / 12)) / 365) * $dias_retrasados_del_pago), 0, PHP_ROUND_HALF_UP);
+                                    if ($interes_generado > 0) {
+                                        /**esto siginifica que la fecha de pago seria mayor o igual a la fecha en que se hizo el ultimo abono a intereses */
+                                        $interes_generado -= $programado['abonado_intereses'];
+                                    }
+                                }
+
+                                /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
+                                $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
+                                /**la fecha qui es mayor que la fecha programada del pago */
+                                $programado['status_pago'] = 0;
+                                $programado['status_pago_texto'] = 'Vencido';
+                                $vencidos++;
+                                $programado['dias_vencido'] = $dias_retrasados_del_pago;
+                                $programado['intereses'] = $interes_generado;
+                            } else {
+                                /**la fecha aun no vence */
+                                $programado['fecha_a_pagar'] = $programado['fecha_programada'];
+                                $programado['status_pago'] = 1;
+                                $programado['status_pago_texto'] = 'Pendiente';
+                            }
+                        } else {
+                            $pagos_programados_cubiertos++;
+                            $programado['fecha_a_pagar'] = $fecha_ultimo_pago;
+                            /**el pago programado ya fue cubierto */
+                            $programado['status_pago'] = 2;
+                            $programado['status_pago_texto'] = 'Pagado';
+                        }
+
+                        /**monto con pronto pago de cada abono */
+                        $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
+                        $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+
+                        /**actualizando los totales de montos en la venta */
+                        $venta['intereses'] += $interes_generado;
+                        $venta['abonado_capital'] += $abonado_capital;
+                        $venta['abonado_intereses'] += $abonado_intereses;
+                        $venta['descontado_pronto_pago'] += $descontado_pronto_pago;
+                        $venta['descontado_capital'] += $descontado_capital;
+                        $venta['complementado_cancelacion'] += $complemento_cancelacion;
+                        $venta['saldo_neto'] += $saldo_pago_programado + $interes_generado;
+
+                        /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
+                        $venta['total_cubierto'] += $programado['total_cubierto'];
+                        /**verificado el monto que seria con pronnto pago  */
+                        //} //fin foreach if status 1 programado
+                    } //fin foreach programados
+                    $venta['pagos_realizados'] = $pagos_realizados;
+                    $venta['pagos_vigentes'] = $pagos_vigentes;
+                    $venta['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
+                    $venta['pagos_cancelados'] = $pagos_cancelados;
+                    $venta['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
+                    $venta['pagos_vencidos'] = $vencidos;
+                    $venta['dias_vencidos'] = $dias_vencido_primer_pago_vencido;
+                    /**areegloe de todos los pagos limpios(no repetidos) */
+                    //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
+                } else {
+                    /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
+                }
+                $venta['venta_plan']['fecha_convenio_entrega_texto'] = $venta['venta_plan']['fecha_registro_convenio'] != null ? fecha_abr($venta['venta_plan']['fecha_registro_convenio']) : null;
+
+                /**agregando los conceptos originales del plan */
+                $secciones = [
+                    [
+                        'seccion' => 'incluye',
+                        'seccion_ingles' => 'include',
+                        'conceptos' => [],
+                    ],
+                    [
+                        'seccion' => 'inhumacion',
+                        'seccion_ingles' => 'inhumation',
+                        'conceptos' => [],
+                    ],
+                    [
+                        'seccion' => 'cremacion',
+                        'seccion_ingles' => 'cremation',
+                        'conceptos' => [],
+                    ],
+                    [
+                        'seccion' => 'velacion',
+                        'seccion_ingles' => 'wakefulness',
+                        'conceptos' => [],
+                    ],
+                ];
+                foreach ($venta['venta_plan']['conceptos_originales'] as $key_seccion => $seccion) {
+                    /**agregando los conceptos segun su seccion */
+                    if ($seccion['seccion_id'] == 1) {
+                        /**incluye */
+                        array_push(
+                            $secciones[0]['conceptos'],
+                            [
+                                'concepto' => $seccion['concepto'],
+                                'concepto_ingles' => $seccion['concepto_ingles'],
+                                'aplicar_en' => 'plan funerario',
+                                'seccion' => 'incluye',
+                            ]
+                        );
+                    } elseif ($seccion['seccion_id'] == 2) {
+                        /**inhumacion */
+                        array_push(
+                            $secciones[1]['conceptos'],
+                            [
+                                'concepto' => $seccion['concepto'],
+                                'concepto_ingles' => $seccion['concepto_ingles'],
+                                'aplicar_en' => 'caso de inhumación',
+                                'seccion' => 'inhumacion',
+                            ]
+                        );
+                    } elseif ($seccion['seccion_id'] == 3) {
+                        /**cremacion */
+                        array_push(
+                            $secciones[2]['conceptos'],
+                            [
+                                'concepto' => $seccion['concepto'],
+                                'concepto_ingles' => $seccion['concepto_ingles'],
+                                'aplicar_en' => 'caso de cremación',
+                                'seccion' => 'cremacion',
+                            ]
+                        );
+                    } elseif ($seccion['seccion_id'] == 4) {
+                        /**velacion */
+                        array_push(
+                            $secciones[3]['conceptos'],
+                            [
+                                'concepto' => $seccion['concepto'],
+                                'concepto_ingles' => $seccion['concepto_ingles'],
+                                'aplicar_en' => 'caso de velación',
+                                'seccion' => 'velacion',
+                            ]
+                        );
                     }
-
-                    /**monto con pronto pago de cada abono */
-                    $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
-                    $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
-
-                    /**actualizando los totales de montos en la venta */
-                    $venta['intereses'] += $interes_generado;
-                    $venta['abonado_capital'] += $abonado_capital;
-                    $venta['abonado_intereses'] += $abonado_intereses;
-                    $venta['descontado_pronto_pago'] += $descontado_pronto_pago;
-                    $venta['descontado_capital'] += $descontado_capital;
-                    $venta['complementado_cancelacion'] += $complemento_cancelacion;
-                    $venta['saldo_neto'] += $saldo_pago_programado + $interes_generado;
-
-                    /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
-                    $venta['total_cubierto'] += $programado['total_cubierto'];
-                    /**verificado el monto que seria con pronnto pago  */
-                    //} //fin foreach if status 1 programado
-                } //fin foreach programados
-                $venta['pagos_realizados'] = $pagos_realizados;
-                $venta['pagos_vigentes'] = $pagos_vigentes;
-                $venta['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
-                $venta['pagos_cancelados'] = $pagos_cancelados;
-                $venta['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
-                $venta['pagos_vencidos'] = $vencidos;
-                $venta['dias_vencidos'] = $dias_vencido_primer_pago_vencido;
-                /**areegloe de todos los pagos limpios(no repetidos) */
-                //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
-            } else {
-                /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
+                }
+                /**push al array padre */
+                $venta['venta_plan']['secciones_original'] = $secciones;
             }
 
             /**verificando el tipo de venta segun financiamiento*/
@@ -1734,81 +1813,7 @@ class FunerariaController extends ApiController
                 $venta['venta_plan']['tipo_financiamiento_texto'] = 'A Futuro';
             }
 
-            $venta['venta_plan']['fecha_convenio_entrega_texto'] = $venta['venta_plan']['fecha_registro_convenio'] != null ? fecha_abr($venta['venta_plan']['fecha_registro_convenio']) : null;
 
-            /**agregando los conceptos originales del plan */
-            $secciones = [
-                [
-                    'seccion' => 'incluye',
-                    'seccion_ingles' => 'include',
-                    'conceptos' => [],
-                ],
-                [
-                    'seccion' => 'inhumacion',
-                    'seccion_ingles' => 'inhumation',
-                    'conceptos' => [],
-                ],
-                [
-                    'seccion' => 'cremacion',
-                    'seccion_ingles' => 'cremation',
-                    'conceptos' => [],
-                ],
-                [
-                    'seccion' => 'velacion',
-                    'seccion_ingles' => 'wakefulness',
-                    'conceptos' => [],
-                ],
-            ];
-            foreach ($venta['venta_plan']['conceptos_originales'] as $key_seccion => $seccion) {
-                /**agregando los conceptos segun su seccion */
-                if ($seccion['seccion_id'] == 1) {
-                    /**incluye */
-                    array_push(
-                        $secciones[0]['conceptos'],
-                        [
-                            'concepto' => $seccion['concepto'],
-                            'concepto_ingles' => $seccion['concepto_ingles'],
-                            'aplicar_en' => 'plan funerario',
-                            'seccion' => 'incluye',
-                        ]
-                    );
-                } elseif ($seccion['seccion_id'] == 2) {
-                    /**inhumacion */
-                    array_push(
-                        $secciones[1]['conceptos'],
-                        [
-                            'concepto' => $seccion['concepto'],
-                            'concepto_ingles' => $seccion['concepto_ingles'],
-                            'aplicar_en' => 'caso de inhumación',
-                            'seccion' => 'inhumacion',
-                        ]
-                    );
-                } elseif ($seccion['seccion_id'] == 3) {
-                    /**cremacion */
-                    array_push(
-                        $secciones[2]['conceptos'],
-                        [
-                            'concepto' => $seccion['concepto'],
-                            'concepto_ingles' => $seccion['concepto_ingles'],
-                            'aplicar_en' => 'caso de cremación',
-                            'seccion' => 'cremacion',
-                        ]
-                    );
-                } elseif ($seccion['seccion_id'] == 4) {
-                    /**velacion */
-                    array_push(
-                        $secciones[3]['conceptos'],
-                        [
-                            'concepto' => $seccion['concepto'],
-                            'concepto_ingles' => $seccion['concepto_ingles'],
-                            'aplicar_en' => 'caso de velación',
-                            'seccion' => 'velacion',
-                        ]
-                    );
-                }
-            }
-            /**push al array padre */
-            $venta['venta_plan']['secciones_original'] = $secciones;
         } //fin foreach venta
 
         return $resultado_query;
@@ -2130,14 +2135,14 @@ class FunerariaController extends ApiController
                 }
                 $pagos_operacion =
                     json_decode($client->request(
-                    'GET',
-                    env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
-                    [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $token,
-                        ],
-                    ]
-                )->getBody(), true);
+                        'GET',
+                        env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
+                        [
+                            'headers' => [
+                                'Authorization' => 'Bearer ' . $token,
+                            ],
+                        ]
+                    )->getBody(), true);
             } catch (\GuzzleHttp\Exception\BadResponseException $e) {
                 return $this->errorResponse('Ocurrió un error durante la petición. Por favor reintente.', $e->getCode());
             }
@@ -3114,7 +3119,7 @@ class FunerariaController extends ApiController
                         'descuento' => 0,
                         'impuestos' => $impuestos,
                         'total' => $total,
-                        'saldo'=>$total,
+                        'saldo' => $total,
                         'tasa_iva' => $request->tasa_iva,
                         'antiguedad_operacion_id' => 1,
                         'registro_id' => (int) $request->user()->id,
@@ -3751,10 +3756,10 @@ class FunerariaController extends ApiController
                 $res = DB::table('inventario')
                     ->where('articulos_id', '=', $dato['articulos_id'])
                     ->where('lotes_id', '=', $dato['lotes_id'])->update(
-                    [
-                        'existencia' => $dato['existencia'],
-                    ]
-                );
+                        [
+                            'existencia' => $dato['existencia'],
+                        ]
+                    );
             }
 
             //return $this->errorResponse($datos, 409);
@@ -3788,7 +3793,7 @@ class FunerariaController extends ApiController
                     'impuestos' => $impuestos,
                     'total' => $total,
                     'tasa_iva' => $request->tasa_iva,
-                    'saldo'=>$total-$datos_solicitud['operacion']['total_cubierto']//el nuevo total menos lo que ya esta pagado hasta la fecha
+                    'saldo' => $total - $datos_solicitud['operacion']['total_cubierto']//el nuevo total menos lo que ya esta pagado hasta la fecha
                 ]
             );
 
@@ -3871,9 +3876,9 @@ class FunerariaController extends ApiController
                 //Cuota de mantenimiento en cementerio empresa_operaciones_id = 2
                 $cementerio_controller = new CementerioController();
                 $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
-                $cuotas=0;
+                $cuotas = 0;
                 foreach ($ventas_propiedades as $key => $venta) {
-                    if(isset($venta["cuota_cementerio_terreno"])){
+                    if (isset($venta["cuota_cementerio_terreno"])) {
                         foreach ($venta["cuota_cementerio_terreno"] as $cuota) {
                             DB::table('operaciones')->where("empresa_operaciones_id", 2)->where('id', $cuota["operacion_id"])->update(
                                 [
@@ -3922,6 +3927,7 @@ class FunerariaController extends ApiController
     /**obtiene los servicios funerarios */
     public function get_solicitudes_servicios(Request $request, $id_servicio = 'all', $paginated = false, $uso_plan_funerario_futuro = 0, $uso_terreno_id = 0, $unir_lotes_cantidad = 0, $actualizar_saldos = false)
     {
+        $light = $request->light;
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
         $fallecido = $request->fallecido;
         $numero_control = $request->numero_control;
@@ -4115,21 +4121,26 @@ class FunerariaController extends ApiController
             'preparador',
             'tipos_contratante_id',
             'status'
-        )
-            ->with("estado_cuerpo")
-            ->with('registro:id,nombre')
-            ->with('nacionalidad')
-            ->with('escolaridad')
-            ->with('recogio:id,nombre')
-            ->with('estado_civil')
-            ->with('terreno')
-            ->with('titulo')
-            ->with('materialrentado')
-            ->with('operacion.movimientoinventario.articulosserviciofunerario')
-            ->with('operacion.pagosProgramados.pagados')
-            ->with('operacion.cliente')
-            ->with('operacion.cancelador')
-            ->with('servicio_exhumado:servicios_funerarios_exhumado_id,id,status');
+        )->with("operacion");
+
+        if (!isset($light)) {
+            $resultado_query = $resultado_query->with("estado_cuerpo")
+                ->with('registro:id,nombre')
+                ->with('nacionalidad')
+                ->with('escolaridad')
+                ->with('recogio:id,nombre')
+                ->with('estado_civil')
+                ->with('terreno')
+                ->with('titulo')
+                ->with('materialrentado')
+                ->with('operacion.movimientoinventario.articulosserviciofunerario')
+                ->with('operacion.pagosProgramados.pagados')
+                ->with('operacion.cliente')
+                ->with('operacion.cancelador')
+                ->with('servicio_exhumado:servicios_funerarios_exhumado_id,id,status');
+        }
+
+
         if ($actualizar_saldos == true) {
             $resultado_query = $resultado_query->WhereHas('operacion');
         }
@@ -4137,7 +4148,7 @@ class FunerariaController extends ApiController
             if ($status == 1) {
                 //solo listo los servicios con adeudo
                 $resultado_query = $resultado_query->WhereHas('operacion', function ($query) {
-                    $query->where('saldo', '>', 0)->where("status",1);
+                    $query->where('saldo', '>', 0)->where("status", 1);
                 });
             } elseif ($status == 2) {
                 //solo las pagadas
@@ -4183,8 +4194,8 @@ class FunerariaController extends ApiController
                     }
                 }
             })
-        //->join('operaciones', 'operaciones.servicios_funerarios_id', '=', 'servicios_funerarios.id')
-        //->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
+            //->join('operaciones', 'operaciones.servicios_funerarios_id', '=', 'servicios_funerarios.id')
+            //->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
             ->where('nombre_afectado', 'like', '%' . $fallecido . '%')
             ->orderBy('servicios_funerarios.id', 'desc')
             ->get();
@@ -4199,167 +4210,12 @@ class FunerariaController extends ApiController
             $resultado_query = $resultado_query->toArray();
             $resultado = &$resultado_query;
         }
-
-        /**traigo el inventario para llenar los datos de los conceptos del contrato */
-        $articulos = Articulos::with('categoria')->with('tipo_articulo')->get();
+        if (!isset($light)) {
+            /**traigo el inventario para llenar los datos de los conceptos del contrato */
+            $articulos = Articulos::with('categoria')->with('tipo_articulo')->get();
+        }
 
         foreach ($resultado as $index_venta => &$solicitud) {
-
-            $conceptos_resumidos = [];
-            $articulos_servicios_recorridos = [];
-            if (isset($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'])) {
-                /**actualizo los datos del arreglo de articulos */
-
-                foreach ($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_articulo => &$articulo) {
-
-                    if (in_array($index_articulo, $articulos_servicios_recorridos)) {
-                        /**me brinco al siguiente */
-                        continue;
-                    }
-
-                    foreach ($articulos as $index_inventario => $inventario) {
-                        if ($articulo['articulos_id'] == $inventario['id']) {
-                            $articulo['descripcion'] = $inventario['descripcion'];
-                            $articulo['categoria'] = $inventario['categoria']['categoria'];
-                            $articulo['tipo'] = $inventario['tipo_articulo']['tipo'];
-                            $articulo['codigo_barras'] = $inventario['codigo_barras'];
-                            /**importa para cuando es con plan funerario a futuro  */
-                            if ($solicitud['plan_funerario_futuro_b'] == 1 && $solicitud['ventas_planes_id'] > 0) {
-                                if ($articulo['plan_b'] == 1) {
-                                    $articulo['subtotal'] = 0;
-                                    $articulo['descuento'] = 0;
-                                    $articulo['impuestos'] = 0;
-                                    $articulo['costo_neto'] = 0;
-                                    $articulo['importe'] = 0;
-                                } else {
-                                    if ($articulo['descuento_b'] == 1) {
-                                        //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
-                                        if ($articulo['costo_neto_normal'] >= $articulo['costo_neto_descuento']) {
-                                            /**si se puede aplicar descuento */
-                                            if ($articulo['facturable_b'] == 1) {
-
-                                                /**se desglosa el IVA */
-                                                $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                                $articulo['impuestos'] = round(((($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                                $articulo['descuento'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) - ($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))))), 2, PHP_ROUND_HALF_UP);
-                                                $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
-                                                $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                            } else {
-                                                /**no grava IVA */
-                                                $articulo['subtotal'] = $articulo['costo_neto_normal'];
-                                                $articulo['impuestos'] = 0;
-                                                $articulo['descuento'] = $articulo['costo_neto_normal'] - $articulo['costo_neto_descuento'];
-                                                $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
-                                                $articulo['importe'] = $articulo['costo_neto'] * $articulo['cantidad'];
-                                            }
-                                        } else {
-                                            /**no se puede proceder por que el precio de descuento no es correcto */
-                                            return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
-                                        }
-                                    } else {
-                                        /**fueron puros precios sin descuento */
-                                        if ($articulo['facturable_b'] == 1) {
-                                            $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                            $articulo['impuestos'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                            $articulo['descuento'] = 0;
-                                            $articulo['costo_neto'] = $articulo['costo_neto_normal'];
-                                            $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                        } else {
-                                            /**no grava IVA */
-                                            $articulo['subtotal'] = $articulo['costo_neto_normal'];
-                                            $articulo['impuestos'] = 0;
-                                            $articulo['descuento'] = 0;
-                                            $articulo['costo_neto'] = $articulo['costo_neto_normal'];
-                                            $articulo['importe'] =
-                                                round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                        }
-                                    }
-                                }
-                            } else {
-                                /**es con plan funerario de uso inmediato o sin plan */
-                                if ($articulo['descuento_b'] == 1) {
-                                    //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
-                                    if ($articulo['costo_neto_normal'] >= $articulo['costo_neto_descuento']) {
-                                        /**si se puede aplicar descuento */
-                                        if ($articulo['facturable_b'] == 1) {
-
-                                            /**se desglosa el IVA */
-                                            $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                            $articulo['impuestos'] = round(((($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                            $articulo['descuento'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) - ($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))))), 2, PHP_ROUND_HALF_UP);
-                                            $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
-                                            $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                        } else {
-                                            /**no grava IVA */
-                                            $articulo['subtotal'] = $articulo['costo_neto_normal'];
-                                            $articulo['impuestos'] = 0;
-                                            $articulo['descuento'] = $articulo['costo_neto_normal'] - $articulo['costo_neto_descuento'];
-                                            $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
-                                            $articulo['importe'] = $articulo['costo_neto'] * $articulo['cantidad'];
-                                        }
-                                    } else {
-                                        /**no se puede proceder por que el precio de descuento no es correcto */
-                                        return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
-                                    }
-                                } else {
-                                    /**fueron puros precios sin descuento */
-                                    if ($articulo['facturable_b'] == 1) {
-                                        $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                        $articulo['impuestos'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
-                                        $articulo['descuento'] = 0;
-                                        $articulo['costo_neto'] = $articulo['costo_neto_normal'];
-                                        $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                    } else {
-                                        /**no grava IVA */
-                                        $articulo['subtotal'] = $articulo['costo_neto_normal'];
-                                        $articulo['impuestos'] = 0;
-                                        $articulo['descuento'] = 0;
-                                        $articulo['costo_neto'] = $articulo['costo_neto_normal'];
-                                        $articulo['importe'] =
-                                            round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
-                                    }
-                                }
-                            }
-
-                            if ($inventario['tipo_articulos_id'] == 2) {
-                                $articulo['lotes_id'] = 'N/A';
-                            }
-                        }
-                    }
-
-                    /**aqui reviso si el articulo está repetido, para crear una sola cantidad en vez de varios */
-                    $encontrado = false;
-                    $cantidad_total = 0;
-                    $row_copiar = [];
-                    foreach ($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index => $articulo_index) {
-                        if (
-                            $articulo_index['articulos_id'] == $articulo['articulos_id']
-                            && $articulo_index['costo_neto_normal'] == $articulo['costo_neto_normal']
-                            && $articulo_index['costo_neto_descuento'] == $articulo['costo_neto_descuento']
-                            && $articulo_index['plan_b'] == $articulo['plan_b']
-                            && $articulo_index['descuento_b'] == $articulo['descuento_b']
-                            && $articulo_index['facturable_b'] == $articulo['facturable_b']
-                        ) {
-                            $row_copiar = $articulo;
-                            $encontrado = true;
-                            $cantidad_total += $articulo_index['cantidad'];
-                            if ($unir_lotes_cantidad) {
-                                array_push($articulos_servicios_recorridos, $index);
-                            }
-                        }
-                    }
-                    if ($encontrado) {
-                        $row_copiar['cantidad'] = $cantidad_total;
-                        array_push($conceptos_resumidos, $row_copiar);
-                    }
-                }
-                if ($unir_lotes_cantidad) {
-                    $solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] = $conceptos_resumidos;
-                }
-            }
-
-            $requestEmpty = new \Illuminate\Http\Request();
-            $requestEmpty->replace(['sample' => 'sample']);
 
             /**definiendo si fue por llamada la solicitud */
 
@@ -4407,263 +4263,439 @@ class FunerariaController extends ApiController
                 $solicitud['atencion_medica_texto'] = 'SI';
             }
 
-            /**agregando la ubicacion del servicio cuando es en el cementerio de la empresa, id 1(cementerio aeternus) */
-            $cementerio_controller = new CementerioController();
-            $datos_cementerio = $cementerio_controller->get_cementerio();
-            /**verificando que tipo de operacion_empresa es */
-            if ($solicitud['inhumacion_b'] == 1 && $solicitud['cementerios_servicio_id'] == 1) {
-                if (!is_null($solicitud['terreno'])) {
-                    $datos_venta_propiedad = $cementerio_controller->get_ventas($requestEmpty, $solicitud['terreno']['ventas_terrenos_id'], '')[0];
-                    $solicitud['terreno']['status_operacion'] = $datos_venta_propiedad['operacion_status'];
-                    $solicitud['terreno']['saldo_neto'] = $datos_venta_propiedad['saldo_neto'];
-                    $solicitud['terreno']['status_operacion_texto'] = $datos_venta_propiedad['status_texto'];
-                    $solicitud['terreno']['ubicacion_servicio'] = strtoupper($cementerio_controller->ubicacion_texto($solicitud['terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . '(' . $datos_venta_propiedad['venta_terreno']['tipo_propiedad']['tipo'] . ' convenio ' . $datos_venta_propiedad['numero_convenio'] . ')');
-                }
-            }
+            if (!isset($light)) {
+                $conceptos_resumidos = [];
+                $articulos_servicios_recorridos = [];
+                if (isset($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'])) {
+                    /**actualizo los datos del arreglo de articulos */
 
-            /**verificando si la operacion esta lleva anexado un plan funerario de venta a futuro para usar */
-            if ($solicitud['plan_funerario_futuro_b'] == 1 && trim($solicitud['ventas_planes_id']) != '') {
-                /**cargar los datos de la venta de este plan para mandar al frontend */
-                $datos_plan = $this->get_ventas($requestEmpty, $solicitud['ventas_planes_id'])[0];
-                $solicitud['plan_funerario_futuro'] = strtoupper($datos_plan['venta_plan']['nombre_original'] . '(' . $datos_plan['numero_convenio'] . ')');
-                $solicitud['plan_funerario_secciones_originales'] = $datos_plan['venta_plan']['secciones_original'];
-                $solicitud['nombre_titular_plan_funerario_futuro'] = $datos_plan['nombre'];
-                $solicitud['plan_funerario_futuro_status'] = $datos_plan['operacion_status'];
-                $solicitud['plan_funerario_futuro_status_texto'] = $datos_plan['status_texto'];
-                $solicitud['plan_funerario_futuro_fecha_venta_texto'] = $datos_plan['fecha_operacion_texto'];
-                $solicitud['plan_funerario_futuro_saldo_restante'] = $datos_plan['saldo_neto'];
-            } else {
-                /**verificnado si tiene un plan de servicios de uso inmediato */
-                if ($solicitud['plan_funerario_inmediato_b'] == 1 && trim($solicitud['planes_funerarios_id']) != '') {
-                    /**si lo tiene y se debe de cargar la lista de conceptos que tiene ese plan funerario */
-                    $conceptos = PlanConceptosServicioOriginal::where('servicios_funerarios_id', $solicitud['id'])->get();
-                    /**agregando los conceptos originales del plan */
-                    $secciones = [
-                        [
-                            'seccion' => 'incluye',
-                            'seccion_ingles' => 'include',
-                            'conceptos' => [],
-                        ],
-                        [
-                            'seccion' => 'inhumacion',
-                            'seccion_ingles' => 'inhumation',
-                            'conceptos' => [],
-                        ],
-                        [
-                            'seccion' => 'cremacion',
-                            'seccion_ingles' => 'cremation',
-                            'conceptos' => [],
-                        ],
-                        [
-                            'seccion' => 'velacion',
-                            'seccion_ingles' => 'wakefulness',
-                            'conceptos' => [],
-                        ],
-                    ];
-                    foreach ($conceptos as $key_seccion => $seccion) {
-                        /**agregando los conceptos segun su seccion */
-                        if ($seccion['seccion_id'] == 1) {
-                            /**incluye */
-                            array_push(
-                                $secciones[0]['conceptos'],
-                                [
-                                    'concepto' => $seccion['concepto'],
-                                    'concepto_ingles' => $seccion['concepto_ingles'],
-                                    'aplicar_en' => 'plan funerario',
-                                    'seccion' => 'incluye',
-                                ]
-                            );
-                        } elseif ($seccion['seccion_id'] == 2) {
-                            /**inhumacion */
-                            array_push(
-                                $secciones[1]['conceptos'],
-                                [
-                                    'concepto' => $seccion['concepto'],
-                                    'concepto_ingles' => $seccion['concepto_ingles'],
-                                    'aplicar_en' => 'caso de inhumación',
-                                    'seccion' => 'inhumacion',
-                                ]
-                            );
-                        } elseif ($seccion['seccion_id'] == 3) {
-                            /**cremacion */
-                            array_push(
-                                $secciones[2]['conceptos'],
-                                [
-                                    'concepto' => $seccion['concepto'],
-                                    'concepto_ingles' => $seccion['concepto_ingles'],
-                                    'aplicar_en' => 'caso de cremación',
-                                    'seccion' => 'cremacion',
-                                ]
-                            );
-                        } elseif ($seccion['seccion_id'] == 4) {
-                            /**velacion */
-                            array_push(
-                                $secciones[3]['conceptos'],
-                                [
-                                    'concepto' => $seccion['concepto'],
-                                    'concepto_ingles' => $seccion['concepto_ingles'],
-                                    'aplicar_en' => 'caso de velación',
-                                    'seccion' => 'velacion',
-                                ]
-                            );
-                        }
-                    }
-                    /**push al array padre */
-                    $venta['venta_plan']['secciones_original'] = $secciones;
+                    foreach ($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_articulo => &$articulo) {
 
-                    $solicitud['plan_funerario_secciones_originales'] = $secciones;
-                }
-            }
-
-            if (isset($solicitud['operacion'])) {
-                $solicitud['operacion']['num_pagos_programados'] = count($solicitud['operacion']['pagos_programados']);
-                $num_pagos_programados_vigentes = 0;
-                if ($solicitud['operacion']['num_pagos_programados'] > 0) {
-                    /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
-                    /**recorriendo arreglo de pagos programados */
-                    $pagos_programados_cubiertos = 0;
-                    $pagos_vigentes = 0;
-                    $pagos_cancelados = 0;
-                    $pagos_realizados = 0;
-
-                    $solicitud['operacion']['fecha_operacion_texto'] = fecha_abr($solicitud['operacion']['fecha_operacion']);
-
-                    $arreglo_de_pagos_realizados = [];
-
-                    /**guardo los dias que lleva vencido el pago vencido mas antiguo */
-                    foreach ($solicitud['operacion']['pagos_programados'] as $index_programado => &$programado) {
-                        /**actualizando el concepto del pago */
-                        if ($programado['conceptos_pagos_id'] == 1) {
-                            $programado['concepto_texto'] = 'Enganche';
-                        } elseif ($programado['conceptos_pagos_id'] == 2) {
-                            $programado['concepto_texto'] = 'Abono';
-                        } else {
-                            $programado['concepto_texto'] = 'Pago Único';
+                        if (in_array($index_articulo, $articulos_servicios_recorridos)) {
+                            /**me brinco al siguiente */
+                            continue;
                         }
 
-                        /**actualizando fecha de pago abre con helper de fechas */
-                        $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
+                        foreach ($articulos as $index_inventario => $inventario) {
+                            if ($articulo['articulos_id'] == $inventario['id']) {
+                                $articulo['descripcion'] = $inventario['descripcion'];
+                                $articulo['categoria'] = $inventario['categoria']['categoria'];
+                                $articulo['tipo'] = $inventario['tipo_articulo']['tipo'];
+                                $articulo['codigo_barras'] = $inventario['codigo_barras'];
+                                /**importa para cuando es con plan funerario a futuro  */
+                                if ($solicitud['plan_funerario_futuro_b'] == 1 && $solicitud['ventas_planes_id'] > 0) {
+                                    if ($articulo['plan_b'] == 1) {
+                                        $articulo['subtotal'] = 0;
+                                        $articulo['descuento'] = 0;
+                                        $articulo['impuestos'] = 0;
+                                        $articulo['costo_neto'] = 0;
+                                        $articulo['importe'] = 0;
+                                    } else {
+                                        if ($articulo['descuento_b'] == 1) {
+                                            //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
+                                            if ($articulo['costo_neto_normal'] >= $articulo['costo_neto_descuento']) {
+                                                /**si se puede aplicar descuento */
+                                                if ($articulo['facturable_b'] == 1) {
 
-                        //if ($programado['status'] == 1) {
-                        if ($programado['status'] == 1) {
-                            $num_pagos_programados_vigentes++;
-                        }
-                        /**aumento el pago programado vigente */
-                        /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
-                        /**montos segun su tipo de movimiento */
-                        $abonado_capital = 0;
-                        $descontado_pronto_pago = 0;
-                        $descontado_capital = 0;
-                        $complemento_cancelacion = 0;
-                        $total_cubierto = 0;
-                        $fecha_ultimo_pago = '';
+                                                    /**se desglosa el IVA */
+                                                    $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                    $articulo['impuestos'] = round(((($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                    $articulo['descuento'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) - ($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))))), 2, PHP_ROUND_HALF_UP);
+                                                    $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
+                                                    $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                                } else {
+                                                    /**no grava IVA */
+                                                    $articulo['subtotal'] = $articulo['costo_neto_normal'];
+                                                    $articulo['impuestos'] = 0;
+                                                    $articulo['descuento'] = $articulo['costo_neto_normal'] - $articulo['costo_neto_descuento'];
+                                                    $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
+                                                    $articulo['importe'] = $articulo['costo_neto'] * $articulo['cantidad'];
+                                                }
+                                            } else {
+                                                /**no se puede proceder por que el precio de descuento no es correcto */
+                                                return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
+                                            }
+                                        } else {
+                                            /**fueron puros precios sin descuento */
+                                            if ($articulo['facturable_b'] == 1) {
+                                                $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                $articulo['impuestos'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                $articulo['descuento'] = 0;
+                                                $articulo['costo_neto'] = $articulo['costo_neto_normal'];
+                                                $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                            } else {
+                                                /**no grava IVA */
+                                                $articulo['subtotal'] = $articulo['costo_neto_normal'];
+                                                $articulo['impuestos'] = 0;
+                                                $articulo['descuento'] = 0;
+                                                $articulo['costo_neto'] = $articulo['costo_neto_normal'];
+                                                $articulo['importe'] =
+                                                    round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    /**es con plan funerario de uso inmediato o sin plan */
+                                    if ($articulo['descuento_b'] == 1) {
+                                        //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
+                                        if ($articulo['costo_neto_normal'] >= $articulo['costo_neto_descuento']) {
+                                            /**si se puede aplicar descuento */
+                                            if ($articulo['facturable_b'] == 1) {
 
-                        foreach ($programado['pagados'] as $index_pagados => &$pagado) {
-                            /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
-                            array_push(
-                                $arreglo_de_pagos_realizados,
-                                $pagado
-                            );
-
-                            if ($pagado['status'] == 1) {
-                                /**si esta activo el pago se toma en cuenta el monto de cada operacion */
-                                /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
-                                 * son los que van incluidos dentro de un parent) */
-                                // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                                /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
-                                if ($pagado['movimientos_pagos_id'] == 1) {
-                                    /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
-                                     * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
-                                     */
-                                    // $pago_total += $pagado['monto'];
-                                    $abonado_capital += $pagado['pagos_cubiertos']['monto'];
-                                } else if ($pagado['movimientos_pagos_id'] == 4) {
-                                    /**fue descuento al capital */
-                                    $descontado_capital += $pagado['pagos_cubiertos']['monto'];
-                                } else if ($pagado['movimientos_pagos_id'] == 5) {
-                                    /**fue complemento por cancelacion */
-                                    $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
+                                                /**se desglosa el IVA */
+                                                $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                $articulo['impuestos'] = round(((($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                                $articulo['descuento'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) - ($articulo['costo_neto_descuento'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))))), 2, PHP_ROUND_HALF_UP);
+                                                $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
+                                                $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                            } else {
+                                                /**no grava IVA */
+                                                $articulo['subtotal'] = $articulo['costo_neto_normal'];
+                                                $articulo['impuestos'] = 0;
+                                                $articulo['descuento'] = $articulo['costo_neto_normal'] - $articulo['costo_neto_descuento'];
+                                                $articulo['costo_neto'] = $articulo['costo_neto_descuento'];
+                                                $articulo['importe'] = $articulo['costo_neto'] * $articulo['cantidad'];
+                                            }
+                                        } else {
+                                            /**no se puede proceder por que el precio de descuento no es correcto */
+                                            return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
+                                        }
+                                    } else {
+                                        /**fueron puros precios sin descuento */
+                                        if ($articulo['facturable_b'] == 1) {
+                                            $articulo['subtotal'] = round((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                            $articulo['impuestos'] = round(((($articulo['costo_neto_normal'] / (1 + ($solicitud['operacion']['tasa_iva'] / 100))) * (($solicitud['operacion']['tasa_iva'] / 100)))), 2, PHP_ROUND_HALF_UP);
+                                            $articulo['descuento'] = 0;
+                                            $articulo['costo_neto'] = $articulo['costo_neto_normal'];
+                                            $articulo['importe'] = round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                        } else {
+                                            /**no grava IVA */
+                                            $articulo['subtotal'] = $articulo['costo_neto_normal'];
+                                            $articulo['impuestos'] = 0;
+                                            $articulo['descuento'] = 0;
+                                            $articulo['costo_neto'] = $articulo['costo_neto_normal'];
+                                            $articulo['importe'] =
+                                                round($articulo['costo_neto'] * $articulo['cantidad'], 2, PHP_ROUND_HALF_UP);
+                                        }
+                                    }
                                 }
 
-                                /**fecha en que se realizo el ultimo pago */
-                                $fecha_ultimo_pago = $pagado['fecha_pago'];
-                                // }
-                                $pagos_vigentes++;
-                            } //fin if pago status=1
-                            else {
+                                if ($inventario['tipo_articulos_id'] == 2) {
+                                    $articulo['lotes_id'] = 'N/A';
+                                }
+                            }
+                        }
+
+                        /**aqui reviso si el articulo está repetido, para crear una sola cantidad en vez de varios */
+                        $encontrado = false;
+                        $cantidad_total = 0;
+                        $row_copiar = [];
+                        foreach ($solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index => $articulo_index) {
+                            if (
+                                $articulo_index['articulos_id'] == $articulo['articulos_id']
+                                && $articulo_index['costo_neto_normal'] == $articulo['costo_neto_normal']
+                                && $articulo_index['costo_neto_descuento'] == $articulo['costo_neto_descuento']
+                                && $articulo_index['plan_b'] == $articulo['plan_b']
+                                && $articulo_index['descuento_b'] == $articulo['descuento_b']
+                                && $articulo_index['facturable_b'] == $articulo['facturable_b']
+                            ) {
+                                $row_copiar = $articulo;
+                                $encontrado = true;
+                                $cantidad_total += $articulo_index['cantidad'];
+                                if ($unir_lotes_cantidad) {
+                                    array_push($articulos_servicios_recorridos, $index);
+                                }
+                            }
+                        }
+                        if ($encontrado) {
+                            $row_copiar['cantidad'] = $cantidad_total;
+                            array_push($conceptos_resumidos, $row_copiar);
+                        }
+                    }
+                    if ($unir_lotes_cantidad) {
+                        $solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] = $conceptos_resumidos;
+                    }
+                }
+
+                $requestEmpty = new \Illuminate\Http\Request();
+                $requestEmpty->replace(['sample' => 'sample']);
+
+
+                /**agregando la ubicacion del servicio cuando es en el cementerio de la empresa, id 1(cementerio aeternus) */
+                $cementerio_controller = new CementerioController();
+                $datos_cementerio = $cementerio_controller->get_cementerio();
+                /**verificando que tipo de operacion_empresa es */
+                if ($solicitud['inhumacion_b'] == 1 && $solicitud['cementerios_servicio_id'] == 1) {
+                    if (!is_null($solicitud['terreno'])) {
+                        $datos_venta_propiedad = $cementerio_controller->get_ventas($requestEmpty, $solicitud['terreno']['ventas_terrenos_id'], '')[0];
+                        $solicitud['terreno']['status_operacion'] = $datos_venta_propiedad['operacion_status'];
+                        $solicitud['terreno']['saldo_neto'] = $datos_venta_propiedad['saldo_neto'];
+                        $solicitud['terreno']['status_operacion_texto'] = $datos_venta_propiedad['status_texto'];
+                        $solicitud['terreno']['ubicacion_servicio'] = strtoupper($cementerio_controller->ubicacion_texto($solicitud['terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . '(' . $datos_venta_propiedad['venta_terreno']['tipo_propiedad']['tipo'] . ' convenio ' . $datos_venta_propiedad['numero_convenio'] . ')');
+                    }
+                }
+
+                /**verificando si la operacion esta lleva anexado un plan funerario de venta a futuro para usar */
+                if ($solicitud['plan_funerario_futuro_b'] == 1 && trim($solicitud['ventas_planes_id']) != '') {
+                    /**cargar los datos de la venta de este plan para mandar al frontend */
+                    $datos_plan = $this->get_ventas($requestEmpty, $solicitud['ventas_planes_id'])[0];
+                    $solicitud['plan_funerario_futuro'] = strtoupper($datos_plan['venta_plan']['nombre_original'] . '(' . $datos_plan['numero_convenio'] . ')');
+                    $solicitud['plan_funerario_secciones_originales'] = $datos_plan['venta_plan']['secciones_original'];
+                    $solicitud['nombre_titular_plan_funerario_futuro'] = $datos_plan['nombre'];
+                    $solicitud['plan_funerario_futuro_status'] = $datos_plan['operacion_status'];
+                    $solicitud['plan_funerario_futuro_status_texto'] = $datos_plan['status_texto'];
+                    $solicitud['plan_funerario_futuro_fecha_venta_texto'] = $datos_plan['fecha_operacion_texto'];
+                    $solicitud['plan_funerario_futuro_saldo_restante'] = $datos_plan['saldo_neto'];
+                } else {
+                    /**verificnado si tiene un plan de servicios de uso inmediato */
+                    if ($solicitud['plan_funerario_inmediato_b'] == 1 && trim($solicitud['planes_funerarios_id']) != '') {
+                        /**si lo tiene y se debe de cargar la lista de conceptos que tiene ese plan funerario */
+                        $conceptos = PlanConceptosServicioOriginal::where('servicios_funerarios_id', $solicitud['id'])->get();
+                        /**agregando los conceptos originales del plan */
+                        $secciones = [
+                            [
+                                'seccion' => 'incluye',
+                                'seccion_ingles' => 'include',
+                                'conceptos' => [],
+                            ],
+                            [
+                                'seccion' => 'inhumacion',
+                                'seccion_ingles' => 'inhumation',
+                                'conceptos' => [],
+                            ],
+                            [
+                                'seccion' => 'cremacion',
+                                'seccion_ingles' => 'cremation',
+                                'conceptos' => [],
+                            ],
+                            [
+                                'seccion' => 'velacion',
+                                'seccion_ingles' => 'wakefulness',
+                                'conceptos' => [],
+                            ],
+                        ];
+                        foreach ($conceptos as $key_seccion => $seccion) {
+                            /**agregando los conceptos segun su seccion */
+                            if ($seccion['seccion_id'] == 1) {
+                                /**incluye */
+                                array_push(
+                                    $secciones[0]['conceptos'],
+                                    [
+                                        'concepto' => $seccion['concepto'],
+                                        'concepto_ingles' => $seccion['concepto_ingles'],
+                                        'aplicar_en' => 'plan funerario',
+                                        'seccion' => 'incluye',
+                                    ]
+                                );
+                            } elseif ($seccion['seccion_id'] == 2) {
+                                /**inhumacion */
+                                array_push(
+                                    $secciones[1]['conceptos'],
+                                    [
+                                        'concepto' => $seccion['concepto'],
+                                        'concepto_ingles' => $seccion['concepto_ingles'],
+                                        'aplicar_en' => 'caso de inhumación',
+                                        'seccion' => 'inhumacion',
+                                    ]
+                                );
+                            } elseif ($seccion['seccion_id'] == 3) {
+                                /**cremacion */
+                                array_push(
+                                    $secciones[2]['conceptos'],
+                                    [
+                                        'concepto' => $seccion['concepto'],
+                                        'concepto_ingles' => $seccion['concepto_ingles'],
+                                        'aplicar_en' => 'caso de cremación',
+                                        'seccion' => 'cremacion',
+                                    ]
+                                );
+                            } elseif ($seccion['seccion_id'] == 4) {
+                                /**velacion */
+                                array_push(
+                                    $secciones[3]['conceptos'],
+                                    [
+                                        'concepto' => $seccion['concepto'],
+                                        'concepto_ingles' => $seccion['concepto_ingles'],
+                                        'aplicar_en' => 'caso de velación',
+                                        'seccion' => 'velacion',
+                                    ]
+                                );
+                            }
+                        }
+                        /**push al array padre */
+                        $venta['venta_plan']['secciones_original'] = $secciones;
+
+                        $solicitud['plan_funerario_secciones_originales'] = $secciones;
+                    }
+                }
+
+                if (isset($solicitud['operacion'])) {
+                    $solicitud['operacion']['num_pagos_programados'] = count($solicitud['operacion']['pagos_programados']);
+                    $num_pagos_programados_vigentes = 0;
+                    if ($solicitud['operacion']['num_pagos_programados'] > 0) {
+                        /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
+                        /**recorriendo arreglo de pagos programados */
+                        $pagos_programados_cubiertos = 0;
+                        $pagos_vigentes = 0;
+                        $pagos_cancelados = 0;
+                        $pagos_realizados = 0;
+
+                        $solicitud['operacion']['fecha_operacion_texto'] = fecha_abr($solicitud['operacion']['fecha_operacion']);
+
+                        $arreglo_de_pagos_realizados = [];
+
+                        /**guardo los dias que lleva vencido el pago vencido mas antiguo */
+                        foreach ($solicitud['operacion']['pagos_programados'] as $index_programado => &$programado) {
+                            /**actualizando el concepto del pago */
+                            if ($programado['conceptos_pagos_id'] == 1) {
+                                $programado['concepto_texto'] = 'Enganche';
+                            } elseif ($programado['conceptos_pagos_id'] == 2) {
+                                $programado['concepto_texto'] = 'Abono';
+                            } else {
+                                $programado['concepto_texto'] = 'Pago Único';
+                            }
+
+                            /**actualizando fecha de pago abre con helper de fechas */
+                            $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
+
+                            //if ($programado['status'] == 1) {
+                            if ($programado['status'] == 1) {
+                                $num_pagos_programados_vigentes++;
+                            }
+                            /**aumento el pago programado vigente */
+                            /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
+                            /**montos segun su tipo de movimiento */
+                            $abonado_capital = 0;
+                            $descontado_pronto_pago = 0;
+                            $descontado_capital = 0;
+                            $complemento_cancelacion = 0;
+                            $total_cubierto = 0;
+                            $fecha_ultimo_pago = '';
+
+                            foreach ($programado['pagados'] as $index_pagados => &$pagado) {
+                                /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
+                                array_push(
+                                    $arreglo_de_pagos_realizados,
+                                    $pagado
+                                );
+
+                                if ($pagado['status'] == 1) {
+                                    /**si esta activo el pago se toma en cuenta el monto de cada operacion */
+                                    /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
+                                     * son los que van incluidos dentro de un parent) */
+                                    // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                    /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
+                                    if ($pagado['movimientos_pagos_id'] == 1) {
+                                        /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
+                                         * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
+                                         */
+                                        // $pago_total += $pagado['monto'];
+                                        $abonado_capital += $pagado['pagos_cubiertos']['monto'];
+                                    } else if ($pagado['movimientos_pagos_id'] == 4) {
+                                        /**fue descuento al capital */
+                                        $descontado_capital += $pagado['pagos_cubiertos']['monto'];
+                                    } else if ($pagado['movimientos_pagos_id'] == 5) {
+                                        /**fue complemento por cancelacion */
+                                        $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
+                                    }
+
+                                    /**fecha en que se realizo el ultimo pago */
+                                    $fecha_ultimo_pago = $pagado['fecha_pago'];
+                                    // }
+                                    $pagos_vigentes++;
+                                } //fin if pago status=1
+                                else {
+                                    if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                        $pagos_cancelados++;
+                                    }
+                                }
                                 if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                                    $pagos_cancelados++;
+                                    $pagos_realizados++;
+                                }
+                            } //fin foreach pagado
+
+                            /** al final del ciclo se actualizan los valores en el pago programado*/
+                            $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                            $programado['descontado_capital'] = $descontado_capital;
+                            $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
+
+                            $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
+
+                            $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
+                            /**asignando la fecha del pago que liquidado el pago programado */
+                            if ($programado['saldo_neto'] <= 0) {
+                                $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
+                                $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
+                            }
+                            /**verificando el estado del pago programado*/
+                            /**verificando si la fecha sigue vigente o esta vencida */
+                            /**variables para controlar el incremento por intereses */
+                            $dias_retrasados_del_pago = 0;
+                            $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+
+                            /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
+                            if ($solicitud['operacion']['operacion_status'] == 0) {
+                                if (trim($solicitud['operacion']['fecha_cancelacion_operacion']) != '') {
+                                    $fecha_para_intereses = $solicitud['operacion']['fecha_cancelacion_operacion'];
                                 }
                             }
-                            if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
-                                $pagos_realizados++;
+
+                            $interes_generado = 0;
+                            $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
+                            /**fin varables por intereses */
+                            /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
+                            if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
+                                $programado['fecha_a_pagar'] = $programado['fecha_programada'];
+                                $programado['status_pago'] = 1;
+                                $programado['status_pago_texto'] = 'Pendiente';
+                            } else {
+                                $pagos_programados_cubiertos++;
+                                $programado['fecha_a_pagar']
+                                    = $fecha_ultimo_pago;
+                                /**el pago programado ya fue cubierto */
+                                $programado['status_pago'] = 2;
+                                $programado['status_pago_texto'] = 'Pagado';
                             }
-                        } //fin foreach pagado
 
-                        /** al final del ciclo se actualizan los valores en el pago programado*/
-                        $programado['abonado_capital'] = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
-                        $programado['descontado_capital'] = $descontado_capital;
-                        $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
-
-                        $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
-
-                        $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
-                        /**asignando la fecha del pago que liquidado el pago programado */
-                        if ($programado['saldo_neto'] <= 0) {
-                            $programado['fecha_ultimo_pago'] = $fecha_ultimo_pago;
-                            $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
+                            /**monto con pronto pago de cada abono */
+                            $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+                            /**actualizando los totales de montos en la venta */
+                            $solicitud['operacion']['abonado_capital'] += $abonado_capital;
+                            $solicitud['operacion']['descontado_capital'] += $descontado_capital;
+                            $solicitud['operacion']['complementado_cancelacion'] += $complemento_cancelacion;
+                            $solicitud['operacion']['saldo_neto'] += $saldo_pago_programado + $interes_generado;
+                            /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
+                            $solicitud['operacion']['total_cubierto'] += $programado['total_cubierto'];
                         }
-                        /**verificando el estado del pago programado*/
-                        /**verificando si la fecha sigue vigente o esta vencida */
-                        /**variables para controlar el incremento por intereses */
-                        $dias_retrasados_del_pago = 0;
-                        $fecha_programada_pago = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
-
-                        /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
-                        if ($solicitud['operacion']['operacion_status'] == 0) {
-                            if (trim($solicitud['operacion']['fecha_cancelacion_operacion']) != '') {
-                                $fecha_para_intereses = $solicitud['operacion']['fecha_cancelacion_operacion'];
-                            }
-                        }
-
-                        $interes_generado = 0;
-                        $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
-                        /**fin varables por intereses */
-                        /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
-                        if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
-                            $programado['fecha_a_pagar'] = $programado['fecha_programada'];
-                            $programado['status_pago'] = 1;
-                            $programado['status_pago_texto'] = 'Pendiente';
-                        } else {
-                            $pagos_programados_cubiertos++;
-                            $programado['fecha_a_pagar']
-                            = $fecha_ultimo_pago;
-                            /**el pago programado ya fue cubierto */
-                            $programado['status_pago'] = 2;
-                            $programado['status_pago_texto'] = 'Pagado';
-                        }
-
-                        /**monto con pronto pago de cada abono */
-                        $programado['total_cubierto'] = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
-                        /**actualizando los totales de montos en la venta */
-                        $solicitud['operacion']['abonado_capital'] += $abonado_capital;
-                        $solicitud['operacion']['descontado_capital'] += $descontado_capital;
-                        $solicitud['operacion']['complementado_cancelacion'] += $complemento_cancelacion;
-                        $solicitud['operacion']['saldo_neto'] += $saldo_pago_programado + $interes_generado;
-                        /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
-                        $solicitud['operacion']['total_cubierto'] += $programado['total_cubierto'];
+                        $solicitud['operacion']['pagos_realizados'] = $pagos_realizados;
+                        $solicitud['operacion']['pagos_vigentes'] = $pagos_vigentes;
+                        $solicitud['operacion']['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
+                        $solicitud['operacion']['pagos_cancelados'] = $pagos_cancelados;
+                        $solicitud['operacion']['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
+                        /**areegloe de todos los pagos limpios(no repetidos) */
+                        //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
                     }
-                    $solicitud['operacion']['pagos_realizados'] = $pagos_realizados;
-                    $solicitud['operacion']['pagos_vigentes'] = $pagos_vigentes;
-                    $solicitud['operacion']['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
-                    $solicitud['operacion']['pagos_cancelados'] = $pagos_cancelados;
-                    $solicitud['operacion']['pagos_programados_cubiertos'] = $pagos_programados_cubiertos;
-                    /**areegloe de todos los pagos limpios(no repetidos) */
-                    //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
                 }
+                $solicitud['permite_exhumar_b'] = 1;
+                $solicitud['exhumado_b'] = 0;
+                /**revisando si este servicio pérmite exhumar */
+                if ($solicitud['cementerios_servicio_id'] == 1 && $solicitud['status_b'] != 0) {
+                    /**solo para cementerio aeternus */
+                    if (!is_null($solicitud['servicio_exhumado'])) {
+                        foreach ($solicitud['servicio_exhumado'] as $exhumado) {
+                            if ($exhumado['status'] == 1) {
+                                $solicitud['permite_exhumar_b'] = 0;
+                                $solicitud['exhumado_b'] = 1;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    $solicitud['permite_exhumar_b'] = 0;
+                }
+                unset($solicitud['servicio_exhumado']);
             }
-
-            if (isset($solicitud['operacion']['saldo_neto'])) {
+            if (isset($solicitud['operacion']['saldo'])) {
                 /**DEFINIENDO EL STATUS DE LA OPERACION*/
                 if ($solicitud['operacion']['status'] == 0) {
                     $solicitud['operacion']['status_texto'] = 'Cancelada';
@@ -4681,7 +4713,7 @@ class FunerariaController extends ApiController
                     }
                     /**actualizando el motivo de cancelacion */
                     /**actualizando el motivo de cancelacion */
-                } elseif ($solicitud['operacion']['saldo_neto'] == 0) {
+                } elseif ($solicitud['operacion']['saldo'] == 0) {
                     $solicitud['operacion']['status_texto'] = 'Pagada';
                     $solicitud['status_texto'] = 'Pagada';
                 } else {
@@ -4699,24 +4731,7 @@ class FunerariaController extends ApiController
                 }
             }
 
-            $solicitud['permite_exhumar_b'] = 1;
-            $solicitud['exhumado_b'] = 0;
-            /**revisando si este servicio pérmite exhumar */
-            if ($solicitud['cementerios_servicio_id'] == 1 && $solicitud['status_b'] != 0) {
-                /**solo para cementerio aeternus */
-                if (!is_null($solicitud['servicio_exhumado'])) {
-                    foreach ($solicitud['servicio_exhumado'] as $exhumado) {
-                        if ($exhumado['status'] == 1) {
-                            $solicitud['permite_exhumar_b'] = 0;
-                            $solicitud['exhumado_b'] = 1;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                $solicitud['permite_exhumar_b'] = 0;
-            }
-            unset($solicitud['servicio_exhumado']);
+
         } //fin foreach venta
 
         return $resultado_query;
@@ -4834,10 +4849,10 @@ class FunerariaController extends ApiController
                     'articulos_id',
                     $detalle['articulos_id']
                 )->update(
-                    [
-                        'existencia' => $suma,
-                    ]
-                );
+                        [
+                            'existencia' => $suma,
+                        ]
+                    );
             }
 
             // return $this->errorResponse($detalle_inventario,409);
@@ -6100,11 +6115,13 @@ class FunerariaController extends ApiController
                 '(NULL) AS existencia'
             )
         )
-            ->with(['inventario' => function ($q) use ($solo_con_existencia) {
-                if ($solo_con_existencia != 0) {
-                    $q->where('existencia', '>', 0);
+            ->with([
+                'inventario' => function ($q) use ($solo_con_existencia) {
+                    if ($solo_con_existencia != 0) {
+                        $q->where('existencia', '>', 0);
+                    }
                 }
-            }])
+            ])
 
             ->with('categoria')
             ->with('tipo_articulo')

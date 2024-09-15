@@ -75,7 +75,7 @@ export default {
     },
 
     /**get las ventas para el paginado de ventas */
-    get_ventas(param) {
+    get_ventas(param, light = false) {
         let service = "/funeraria/get_ventas/all/paginated";
         if (param.filtro_especifico_opcion == 3) {
             /**es de tipo de id venta */
@@ -86,6 +86,9 @@ export default {
                     param.numero_control.trim() +
                     "/paginated";
             }
+        }
+        if (light == true) {
+            service += "?light=true";
         }
         return axios.get(service, {
             cancelToken: new CancelToken(c => {

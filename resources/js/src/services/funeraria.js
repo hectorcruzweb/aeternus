@@ -20,13 +20,17 @@ export default {
         return axios.post(call, param);
     },
 
-    modificar_contrato(param,tipo_servicio) {
-        let call = "/funeraria/control_contratos/"+tipo_servicio;
+    modificar_contrato(param, tipo_servicio) {
+        let call = "/funeraria/control_contratos/" + tipo_servicio;
         return axios.post(call, param);
     },
 
-    get_solicitudes_servicios(param) {
-        return axios.get("/funeraria/get_solicitudes_servicios/all/paginated", {
+    get_solicitudes_servicios(param, light = false) {
+        let service = "/funeraria/get_solicitudes_servicios/all/paginated";
+        if (light == true) {
+            service += "?light=true";
+        }
+        return axios.get(service, {
             cancelToken: new CancelToken(c => {
                 self.cancel = c;
             }),
@@ -53,7 +57,7 @@ export default {
 
 
     get_solicitudes_servicios_id(param) {
-        return axios.get("/funeraria/get_solicitudes_servicios/" + param+'/0/0/0/1', {
+        return axios.get("/funeraria/get_solicitudes_servicios/" + param + '/0/0/0/1', {
             cancelToken: new CancelToken(c => {
                 self.cancel = c;
             }),
@@ -147,7 +151,7 @@ export default {
         });
     },
 
-     get_inventario_servicios_codigos(param) {
+    get_inventario_servicios_codigos(param) {
         return axios.get("/funeraria/get_inventario/all/0/0/0", {
             cancelToken: new CancelToken(c => {
                 self.cancel = c;

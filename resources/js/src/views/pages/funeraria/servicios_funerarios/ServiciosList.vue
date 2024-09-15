@@ -366,7 +366,7 @@ export default {
             this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
 
             try {
-                let res = await funeraria.get_solicitudes_servicios(this.serverOptions);
+                let res = await funeraria.get_solicitudes_servicios(this.serverOptions, true);
                 if (res.data.data) {
                     this.ventas = res.data.data;
                     this.total = res.data.last_page;

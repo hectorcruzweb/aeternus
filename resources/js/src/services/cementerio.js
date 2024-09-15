@@ -23,7 +23,7 @@ export default {
         return axios.post(call, datos);
     },
 
-    
+
 
     actualizar_status_convenio(datos) {
         let call = "/cementerio/actualizar_status_convenio";
@@ -243,7 +243,7 @@ export default {
         });
     },
     /**get las ventas para el paginado de ventas */
-    get_ventas(param) {
+    get_ventas(param, light = false) {
         let service = "/cementerio/get_ventas/all/paginated";
         if (param.filtro_especifico_opcion == 4) {
             /**es de tipo de id venta */
@@ -254,6 +254,9 @@ export default {
                     param.numero_control.trim() +
                     "/paginated";
             }
+        }
+        if (light == true) {
+            service += "?light=true";
         }
         return axios.get(service, {
             cancelToken: new CancelToken(c => {
