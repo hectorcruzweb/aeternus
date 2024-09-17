@@ -220,13 +220,9 @@ export default {
             this.$vs.loading();
             this.verPaginado = false;
             this.serverOptions.page = page;
-            let request = {
-                nombre: this.serverOptions.nombre,
-                area: this.area.value
-            };
-
+            this.serverOptions.area = this.area.value;
             checador
-                .get_empleados_paginados(request)
+                .get_empleados_paginados(this.serverOptions)
                 .then((res) => {
                     this.registros = res.data.data;
                     this.total = res.data.last_page;
