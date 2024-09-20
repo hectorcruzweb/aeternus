@@ -70,7 +70,7 @@ class FacturacionController extends ApiController
 
         foreach ($datos as $key => &$dato) {
             $dato['clave_original'] = $dato['clave'];
-            $dato['clave']          = $dato['descripcion'] . ' (' . $dato['clave'] . ')';
+            $dato['clave'] = $dato['descripcion'] . ' (' . $dato['clave'] . ')';
         }
         return $datos;
     }
@@ -115,33 +115,33 @@ class FacturacionController extends ApiController
         /**los diferentes tipos de operaciones que maneja la empresa */
         $datos = [
             [
-                'id'    => 1,
-                'tipo'  => 'Venta de terrenos',
+                'id' => 1,
+                'tipo' => 'Venta de terrenos',
                 'ver_b' => 1,
             ],
             [
-                'id'    => 2,
-                'tipo'  => 'Mantenimiento en cementerio',
+                'id' => 2,
+                'tipo' => 'Mantenimiento en cementerio',
                 'ver_b' => 1,
             ],
             [
-                'id'    => 3,
-                'tipo'  => 'Servicios funerarios',
+                'id' => 3,
+                'tipo' => 'Servicios funerarios',
                 'ver_b' => 1,
             ],
             [
-                'id'    => 4,
-                'tipo'  => 'Venta de plan funerario a futuro',
+                'id' => 4,
+                'tipo' => 'Venta de plan funerario a futuro',
                 'ver_b' => 1,
             ],
             [
-                'id'    => 5,
-                'tipo'  => 'Servicios con extremidadades',
+                'id' => 5,
+                'tipo' => 'Servicios con extremidadades',
                 'ver_b' => 0,
             ],
             [
-                'id'    => 6,
-                'tipo'  => 'Ventas en general',
+                'id' => 6,
+                'tipo' => 'Ventas en general',
                 'ver_b' => 0,
             ],
         ];
@@ -162,10 +162,10 @@ class FacturacionController extends ApiController
      */
     public function get_operaciones(Request $request, $id_operacion_local = 'all', $paginated = false)
     {
-        $cliente           = $request->cliente;
-        $numero_control    = $request->numero_control;
-        $fecha_inicio      = $request->fecha_inicio;
-        $fecha_fin         = $request->fecha_fin;
+        $cliente = $request->cliente;
+        $numero_control = $request->numero_control;
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
         $tipo_operacion_id = $request->tipo_operacion_id;
 
         $resultado_query = Operaciones::select(
@@ -174,6 +174,7 @@ class FacturacionController extends ApiController
             'tasa_iva',
             'descuento',
             'total',
+            'operaciones.id',
             'operaciones.id as operacion_id',
             'clientes.id as cliente_id',
             'clientes.nombre',
@@ -233,10 +234,10 @@ class FacturacionController extends ApiController
         if ($paginated == 'paginated') {
             /**queire el resultado paginado */
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
-            $resultado       = &$resultado_query['data'];
+            $resultado = &$resultado_query['data'];
         } else {
             $resultado_query = $resultado_query->toArray();
-            $resultado       = &$resultado_query;
+            $resultado = &$resultado_query;
         }
 
         $tipos_de_operaciones = $this->get_empresa_tipo_operaciones();
@@ -269,15 +270,15 @@ class FacturacionController extends ApiController
                         if ($concepto['facturable_b'] == 1) {
                             /**solo los que  */
                             array_push($conceptos, [
-                                'clave_sat'             => ['value' => $concepto['sat_producto_servicio_id'], 'label' => $concepto['sat_producto_servicio_descripcion'] . ' (' . $concepto['sat_producto_servicio_clave'] . ')'],
-                                'unidad_sat'            => ['value' => $concepto['sat_unidad_id'], 'label' => $concepto['sat_unidad'] . ' (' . $concepto['sat_unidad_clave'] . ')'],
-                                "cantidad"              => $concepto['cantidad'],
-                                "descripcion"           => $concepto['articulo_descripcion'],
-                                'descuento_b'           => $concepto['descuento_b'] == 1 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
-                                'modifica_b'            => 0,
+                                'clave_sat' => ['value' => $concepto['sat_producto_servicio_id'], 'label' => $concepto['sat_producto_servicio_descripcion'] . ' (' . $concepto['sat_producto_servicio_clave'] . ')'],
+                                'unidad_sat' => ['value' => $concepto['sat_unidad_id'], 'label' => $concepto['sat_unidad'] . ' (' . $concepto['sat_unidad_clave'] . ')'],
+                                "cantidad" => $concepto['cantidad'],
+                                "descripcion" => $concepto['articulo_descripcion'],
+                                'descuento_b' => $concepto['descuento_b'] == 1 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+                                'modifica_b' => 0,
                                 'concepto_operacion_id' => $operacion['operacion_id'],
-                                'precio_neto'           => $concepto['costo_neto_normal'],
-                                'precio_descuento'      => $concepto['costo_neto_descuento'],
+                                'precio_neto' => $concepto['costo_neto_normal'],
+                                'precio_descuento' => $concepto['costo_neto_descuento'],
                             ]);
                         }
                     }
@@ -285,41 +286,41 @@ class FacturacionController extends ApiController
             } elseif ($operacion['empresa_operaciones_id'] == 1) {
                 /**es venta de terrenos */
                 array_push($conceptos, [
-                    'clave_sat'             => ['value' => 5, 'label' => 'Productos de entierro o tumbas (48131500)'],
-                    'unidad_sat'            => ['value' => 2, 'label' => 'Pieza (H87)'],
-                    "cantidad"              => 1,
-                    "descripcion"           => 'Espacio en cementerio (Ubicación ' . $cementerio_controller->ubicacion_texto($operacion['venta_terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . ')',
-                    'descuento_b'           => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
-                    'modifica_b'            => 0,
+                    'clave_sat' => ['value' => 5, 'label' => 'Productos de entierro o tumbas (48131500)'],
+                    'unidad_sat' => ['value' => 2, 'label' => 'Pieza (H87)'],
+                    "cantidad" => 1,
+                    "descripcion" => 'Espacio en cementerio (Ubicación ' . $cementerio_controller->ubicacion_texto($operacion['venta_terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . ')',
+                    'descuento_b' => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+                    'modifica_b' => 0,
                     'concepto_operacion_id' => $operacion['operacion_id'],
-                    'precio_neto'           => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
-                    'precio_descuento'      => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
+                    'precio_neto' => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
+                    'precio_descuento' => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
                 ]);
             } elseif ($operacion['empresa_operaciones_id'] == 2) {
                 /**Mantenimiento de terrenos */
                 array_push($conceptos, [
-                    'clave_sat'              => ['value' => 2, 'label' => 'Servicios funerarios y asociados (85171500)'],
-                    'unidad_sat'             => ['value' => 1, 'label' => 'Unidad de servicio (E48)'],
-                    "cantidad"              => 1,
-                    "descripcion"           => 'Cuota de mantenimiento (Ubicación ' . $cementerio_controller->ubicacion_texto($operacion['venta_terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . ') Periodo ' . fecha_abr($operacion['fecha_operacion']),
-                    'descuento_b'           => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
-                    'modifica_b'            => 1,
+                    'clave_sat' => ['value' => 2, 'label' => 'Servicios funerarios y asociados (85171500)'],
+                    'unidad_sat' => ['value' => 1, 'label' => 'Unidad de servicio (E48)'],
+                    "cantidad" => 1,
+                    "descripcion" => 'Cuota de mantenimiento (Ubicación ' . $cementerio_controller->ubicacion_texto($operacion['venta_terreno']['ubicacion'], $datos_cementerio)['ubicacion_texto'] . ') Periodo ' . fecha_abr($operacion['fecha_operacion']),
+                    'descuento_b' => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+                    'modifica_b' => 1,
                     'concepto_operacion_id' => $operacion['operacion_id'],
-                    'precio_neto'           => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
-                    'precio_descuento'      => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
+                    'precio_neto' => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
+                    'precio_descuento' => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
                 ]);
             } elseif ($operacion['empresa_operaciones_id'] == 4) {
                 /**es venta de planes funerarios */
                 array_push($conceptos, [
-                    'clave_sat'             => ['value' => 2, 'label' => 'Servicios funerarios y asociados (85171500)'],
-                    'unidad_sat'            => ['value' => 1, 'label' => 'Unidad de servicio (E48)'],
-                    "cantidad"              => 1,
-                    "descripcion"           => 'Plan Funerario a Futuro / ' . $operacion['venta_plan']['nombre_original'],
-                    'descuento_b'           => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
-                    'modifica_b'            => 1,
+                    'clave_sat' => ['value' => 2, 'label' => 'Servicios funerarios y asociados (85171500)'],
+                    'unidad_sat' => ['value' => 1, 'label' => 'Unidad de servicio (E48)'],
+                    "cantidad" => 1,
+                    "descripcion" => 'Plan Funerario a Futuro / ' . $operacion['venta_plan']['nombre_original'],
+                    'descuento_b' => $operacion['descuento'] > 0 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+                    'modifica_b' => 1,
                     'concepto_operacion_id' => $operacion['operacion_id'],
-                    'precio_neto'           => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
-                    'precio_descuento'      => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
+                    'precio_neto' => $operacion['descuento'] > 0 ? round((($operacion['subtotal']) * (1 + ($operacion['tasa_iva'] / 100))), 2, PHP_ROUND_HALF_UP) : $operacion['total'],
+                    'precio_descuento' => $operacion['descuento'] > 0 ? $operacion['total'] : 0,
                 ]);
             }
 
@@ -330,6 +331,7 @@ class FacturacionController extends ApiController
             unset($operacion['movimiento_operacion_inventario']);
             unset($operacion['venta_plan']);
             unset($operacion['venta_terreno']);
+
         }
 
         return $resultado_query;
@@ -364,14 +366,14 @@ class FacturacionController extends ApiController
         $datos_funeraria = Funeraria::first();
 
         /**checabndo que tipo de comprobante es */
-        $subtotal                       = 0.0;
-        $descuento                      = 0.0;
-        $iva_trasladado                 = 0.0;
-        $total                          = 0.0;
-        $serie                          = '';
+        $subtotal = 0.0;
+        $descuento = 0.0;
+        $iva_trasladado = 0.0;
+        $total = 0.0;
+        $serie = '';
         $claves_productos_servicios_sat = $this->get_claves_productos_sat();
-        $get_sat_unidades               = $this->get_sat_unidades();
-        $tasa_iva                       = number_format((float) round($request->tasa_iva / 100, 2), 6, '.', '');
+        $get_sat_unidades = $this->get_sat_unidades();
+        $tasa_iva = number_format((float) round($request->tasa_iva / 100, 2), 6, '.', '');
 
         /**NODO INICIAL DE CONCEPTOS */
         $conceptos['cfdi:Concepto'] = [];
@@ -399,11 +401,11 @@ class FacturacionController extends ApiController
             foreach ($request->conceptos as $key => $concepto) {
                 //cargo la clave del sat
                 $esta_clave_sat = false;
-                $clave_sat      = '';
+                $clave_sat = '';
                 foreach ($claves_productos_servicios_sat as $key => $clave) {
                     if ($clave->id == $concepto['clave_sat']['value']) {
                         $esta_clave_sat = true;
-                        $clave_sat      = $clave['clave_original'];
+                        $clave_sat = $clave['clave_original'];
                         break;
                     }
                 }
@@ -412,12 +414,12 @@ class FacturacionController extends ApiController
                 }
                 //cargo la unidad
                 $esta_clave_unidad = false;
-                $clave_unidad      = '';
+                $clave_unidad = '';
 
                 foreach ($get_sat_unidades as $key => $clave) {
                     if ($clave->id == $concepto['unidad_sat']['value']) {
                         $esta_clave_unidad = true;
-                        $clave_unidad      = $clave['clave_original'];
+                        $clave_unidad = $clave['clave_original'];
                         break;
                     }
                 }
@@ -426,9 +428,9 @@ class FacturacionController extends ApiController
                     return 'No se encontró la clave de unidad del Sat.';
                 }
 
-                $ValorUnitarioPrecioNeto      = round((float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100))), 2, PHP_ROUND_HALF_UP);
+                $ValorUnitarioPrecioNeto = round((float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100))), 2, PHP_ROUND_HALF_UP);
                 $ValorUnitarioPrecioDescuento = round((float) $concepto['precio_descuento'] / (1 + ($request->tasa_iva / 100)), 2, PHP_ROUND_HALF_UP);
-                $descuento_concepto           = $concepto['descuento_b']['value'] == 1 ? round(($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento), 2) : 0;
+                $descuento_concepto = $concepto['descuento_b']['value'] == 1 ? round(($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento), 2) : 0;
 
                 $subtotal += $ValorUnitarioPrecioNeto * $concepto['cantidad'];
                 $descuento += $descuento_concepto * $concepto['cantidad'];
@@ -438,29 +440,29 @@ class FacturacionController extends ApiController
                 array_push(
                     $conceptos['cfdi:Concepto'],
                     [
-                        '_attributes'    =>
-                        [
-                            'Cantidad'      => $concepto['cantidad'],
-                            'ClaveProdServ' => trim($clave_sat),
-                            'ClaveUnidad'   => $clave_unidad,
-                            'Descripcion'   => trim(($concepto['descripcion'])),
-                            'Importe'       => number_format((float) round($concepto['cantidad'] * $ValorUnitarioPrecioNeto, 2), 2, '.', ''),
-                            'ValorUnitario' => number_format((float) round($ValorUnitarioPrecioNeto, 2), 2, '.', ''),
-                            'Descuento'     => number_format((float) round($descuento_concepto * $concepto['cantidad'], 2), 2, '.', ''),
-                            'ObjetoImp'     => '02',
-                            /* 
-                                01	No objeto de impuesto.	19/10/2021
-                                02	Sí objeto de impuesto.	19/10/2021
-                                03	Sí objeto del impuesto y no obligado al desglose.
-                            */
-                        ],
+                        '_attributes' =>
+                            [
+                                'Cantidad' => $concepto['cantidad'],
+                                'ClaveProdServ' => trim($clave_sat),
+                                'ClaveUnidad' => $clave_unidad,
+                                'Descripcion' => trim(($concepto['descripcion'])),
+                                'Importe' => number_format((float) round($concepto['cantidad'] * $ValorUnitarioPrecioNeto, 2), 2, '.', ''),
+                                'ValorUnitario' => number_format((float) round($ValorUnitarioPrecioNeto, 2), 2, '.', ''),
+                                'Descuento' => number_format((float) round($descuento_concepto * $concepto['cantidad'], 2), 2, '.', ''),
+                                'ObjetoImp' => '02',
+                                /*
+                                    01	No objeto de impuesto.	19/10/2021
+                                    02	Sí objeto de impuesto.	19/10/2021
+                                    03	Sí objeto del impuesto y no obligado al desglose.
+                                */
+                            ],
                         'cfdi:Impuestos' => [
                             'cfdi:Traslados' => [
                                 'cfdi:Traslado' => [
                                     '_attributes' => [
-                                        'Base'       => number_format((float) round(($ValorUnitarioPrecioNeto - $descuento_concepto) * $concepto['cantidad'], 2), 2, '.', ''),
-                                        'Importe'    => number_format((float) round((($ValorUnitarioPrecioNeto - $descuento_concepto) * $concepto['cantidad']) * $tasa_iva, 2), 2, '.', ''),
-                                        'Impuesto'   => "002", //IVA
+                                        'Base' => number_format((float) round(($ValorUnitarioPrecioNeto - $descuento_concepto) * $concepto['cantidad'], 2), 2, '.', ''),
+                                        'Importe' => number_format((float) round((($ValorUnitarioPrecioNeto - $descuento_concepto) * $concepto['cantidad']) * $tasa_iva, 2), 2, '.', ''),
+                                        'Impuesto' => "002", //IVA
                                         'TasaOCuota' => $tasa_iva,
                                         'TipoFactor' => "Tasa",
                                     ],
@@ -480,21 +482,21 @@ class FacturacionController extends ApiController
             $serie = 'P';
 
             foreach ($request->cfdis_a_pagar as $key => $cfdi) {
-                $total +=  $cfdi['monto_pago'];
+                $total += $cfdi['monto_pago'];
             }
             array_push(
                 $conceptos['cfdi:Concepto'],
                 [
                     '_attributes' =>
-                    [
-                        'Cantidad'      => 1,
-                        'ClaveProdServ' => '84111506',
-                        'ClaveUnidad'   => 'ACT',
-                        'Descripcion'   => 'Pago',
-                        'Importe'       => 0.0,
-                        'ObjetoImp' => '01',
-                        'ValorUnitario' => 0.0,
-                    ],
+                        [
+                            'Cantidad' => 1,
+                            'ClaveProdServ' => '84111506',
+                            'ClaveUnidad' => 'ACT',
+                            'Descripcion' => 'Pago',
+                            'Importe' => 0.0,
+                            'ObjetoImp' => '01',
+                            'ValorUnitario' => 0.0,
+                        ],
                 ]
             );
             /**agregago los pagos relacionados */
@@ -534,33 +536,33 @@ class FacturacionController extends ApiController
             ],
             */
             'cfdi:CfdiRelacionados' => $request->array_cfdis_a_relacionar_xml,
-            'cfdi:Emisor'           => [
+            'cfdi:Emisor' => [
                 '_attributes' => [
                     'RegimenFiscal' => '601',
-                    'Rfc'           => ENV('APP_ENV') == 'local' ? 'EWE1709045U0' : strtoupper($datos_funeraria['rfc']),
-                    'Nombre'        => ENV('APP_ENV') == 'local' ? 'ESCUELA WILSON ESQUIVEL' : strtoupper($datos_funeraria['razon_social']),
+                    'Rfc' => ENV('APP_ENV') == 'local' ? 'EWE1709045U0' : strtoupper($datos_funeraria['rfc']),
+                    'Nombre' => ENV('APP_ENV') == 'local' ? 'ESCUELA WILSON ESQUIVEL' : strtoupper($datos_funeraria['razon_social']),
                 ],
             ],
-            'cfdi:Receptor'         => [
+            'cfdi:Receptor' => [
                 '_attributes' => [
-                    'Rfc'     => ENV('APP_ENV') == 'local' ? 'XEXX010101000' : strtoupper($request->rfc),
-                    'Nombre'  => ENV('APP_ENV') == 'local' ? 'público en general' : strtoupper($request->razon_social),
+                    'Rfc' => ENV('APP_ENV') == 'local' ? 'XEXX010101000' : strtoupper($request->rfc),
+                    'Nombre' => ENV('APP_ENV') == 'local' ? 'público en general' : strtoupper($request->razon_social),
                     'UsoCFDI' => $request->tipo_comprobante['value'] == '5' ? 'CP01' : $uso_cfdi['clave'],
                     'RegimenFiscalReceptor' => $RegimenFiscalReceptor,
                     'DomicilioFiscalReceptor' => $DomicilioFiscalReceptor, //codigo postal del emisor
                 ],
             ],
-            'cfdi:Conceptos'        => $conceptos,
-            'cfdi:Impuestos'        => [
-                '_attributes'    => [
+            'cfdi:Conceptos' => $conceptos,
+            'cfdi:Impuestos' => [
+                '_attributes' => [
                     'TotalImpuestosTrasladados' => number_format((float) round($iva_trasladado, 2), 2, '.', ''),
                 ],
                 'cfdi:Traslados' => [
                     'cfdi:Traslado' => [
                         '_attributes' => [
-                            'Base'    =>  $total_base_impuestos,
-                            'Importe'    => number_format((float) round($iva_trasladado, 2), 2, '.', ''),
-                            'Impuesto'   => "002",
+                            'Base' => $total_base_impuestos,
+                            'Importe' => number_format((float) round($iva_trasladado, 2), 2, '.', ''),
+                            'Impuesto' => "002",
                             'TasaOCuota' => $tasa_iva,
                             'TipoFactor' => "Tasa",
                         ],
@@ -568,22 +570,22 @@ class FacturacionController extends ApiController
                 ],
             ],
             //aqui traba
-            'cfdi:Complemento'      => [
+            'cfdi:Complemento' => [
                 'pago20:Pagos' => [
                     '_attributes' => [
                         'Version' => '2.0',
                     ],
                     'pago20:Totales' => [
-                        '_attributes'             => [
-                            'MontoTotalPagos'    => number_format((float) round($total, 2), 2, '.', '')
+                        '_attributes' => [
+                            'MontoTotalPagos' => number_format((float) round($total, 2), 2, '.', '')
                         ]
                     ],
                     'pago20:Pago' => [
-                        '_attributes'             => [
-                            'FechaPago'    => $request->fecha_pago . 'T12:00:00',
+                        '_attributes' => [
+                            'FechaPago' => $request->fecha_pago . 'T12:00:00',
                             'FormaDePagoP' => $forma_pago['clave'],
-                            'MonedaP'      => 'MXN',
-                            'Monto'        => number_format((float) round($total, 2), 2, '.', ''),
+                            'MonedaP' => 'MXN',
+                            'Monto' => number_format((float) round($total, 2), 2, '.', ''),
                             'TipoCambioP' => '1'
                         ],
                         'pago20:DoctoRelacionado' => $request->array_cfdis_a_pagar_xml
@@ -597,42 +599,42 @@ class FacturacionController extends ApiController
         $numero_serie = 0;
         if ($request->tipo_comprobante['value'] == 1) {
             $schema_location = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
-            $numero_serie    = Cfdis::where('sat_tipo_comprobante_id', '=', 1)->count();
+            $numero_serie = Cfdis::where('sat_tipo_comprobante_id', '=', 1)->count();
         } else if ($request->tipo_comprobante['value'] == 2) {
             $schema_location = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
-            $numero_serie    = Cfdis::where('sat_tipo_comprobante_id', '=', 2)->count();
+            $numero_serie = Cfdis::where('sat_tipo_comprobante_id', '=', 2)->count();
         } else {
             if ($request->tipo_comprobante['value'] == 5) {
-                $numero_serie    = Cfdis::where('sat_tipo_comprobante_id', '=', 5)->count();
+                $numero_serie = Cfdis::where('sat_tipo_comprobante_id', '=', 5)->count();
                 $schema_location = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd http://www.sat.gob.mx/Pagos20 http://www.sat.gob.mx/sitio_internet/cfd/Pagos/Pagos20.xsd';
             }
         }
         $comprobante = [
-            'xmlns:cfdi'         => 'http://www.sat.gob.mx/cfd/4',
-            'xmlns:xsi'          => 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns:pago20'       => 'http://www.sat.gob.mx/Pagos20',
-            'Certificado'        => '',
-            'Fecha'              => str_replace(" ", "T", date("Y-m-d H:i:s")),
-            'Folio'              => $folio_para_asignar,
-            'FormaPago'          => $forma_pago['clave'],
-            'LugarExpedicion'    => $datos_funeraria['cp'],
-            'MetodoPago'         => $metodo_pago['clave'],
-            'Moneda'             => $request->tipo_comprobante['value'] != '5' ? "MXN" : 'XXX',
-            'NoCertificado'      => '',
-            'Sello'              => '',
-            'Serie'              => $serie . ($numero_serie),
-            'SubTotal'           => $request->tipo_comprobante['value'] != '5' ? number_format((float) round($subtotal, 2), 2, '.', '') : '0',
-            'Descuento'          => number_format((float) round($descuento, 2), 2, '.', ''),
-            'TipoCambio'         => '1',
-            'TipoDeComprobante'  => $tipo_comprobante['clave'],
-            'Total'              => $request->tipo_comprobante['value'] != '5' ? number_format((float) round($total, 2), 2, '.', '') : '0',
-            'Version'            => '4.0',
+            'xmlns:cfdi' => 'http://www.sat.gob.mx/cfd/4',
+            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+            'xmlns:pago20' => 'http://www.sat.gob.mx/Pagos20',
+            'Certificado' => '',
+            'Fecha' => str_replace(" ", "T", date("Y-m-d H:i:s")),
+            'Folio' => $folio_para_asignar,
+            'FormaPago' => $forma_pago['clave'],
+            'LugarExpedicion' => $datos_funeraria['cp'],
+            'MetodoPago' => $metodo_pago['clave'],
+            'Moneda' => $request->tipo_comprobante['value'] != '5' ? "MXN" : 'XXX',
+            'NoCertificado' => '',
+            'Sello' => '',
+            'Serie' => $serie . ($numero_serie),
+            'SubTotal' => $request->tipo_comprobante['value'] != '5' ? number_format((float) round($subtotal, 2), 2, '.', '') : '0',
+            'Descuento' => number_format((float) round($descuento, 2), 2, '.', ''),
+            'TipoCambio' => '1',
+            'TipoDeComprobante' => $tipo_comprobante['clave'],
+            'Total' => $request->tipo_comprobante['value'] != '5' ? number_format((float) round($total, 2), 2, '.', '') : '0',
+            'Version' => '4.0',
             'xsi:schemaLocation' => $schema_location,
             'Exportacion' => '01' //No aplica
             /*
-            “Exportacion” y se pretende incorporar un catálogo de operaciones para considerar si 
-            se trata de una exportación definitiva (02), 
-            temporal (03) 
+            “Exportacion” y se pretende incorporar un catálogo de operaciones para considerar si
+            se trata de una exportación definitiva (02),
+            temporal (03)
             o no se trata de este tipo de operaciones (01).
         */
         ];
@@ -660,7 +662,7 @@ class FacturacionController extends ApiController
 
         $result = ArrayToXml::convert($array, [
             'rootElementName' => 'cfdi:Comprobante',
-            '_attributes'     => $comprobante,
+            '_attributes' => $comprobante,
         ], true, 'UTF-8');
 
         //$nombre_temporal = rand(0, 100000) . '.xml';
@@ -669,9 +671,9 @@ class FacturacionController extends ApiController
         Storage::disk('cfdis')->put($nombre_temporal, $result);
 
         $arreglo_de_datos_a_retornar['nombre_xml'] = $nombre_temporal;
-        $arreglo_de_datos_a_retornar['subtotal']   = $subtotal;
-        $arreglo_de_datos_a_retornar['descuento']  = $descuento;
-        $arreglo_de_datos_a_retornar['total']      = $total;
+        $arreglo_de_datos_a_retornar['subtotal'] = $subtotal;
+        $arreglo_de_datos_a_retornar['descuento'] = $descuento;
+        $arreglo_de_datos_a_retornar['total'] = $total;
 
         return $arreglo_de_datos_a_retornar;
     }
@@ -680,29 +682,29 @@ class FacturacionController extends ApiController
     {
         $validaciones = [
             /**validacion de datos para el cfdi */
-            'id_cliente'               => 'required|integer|min:1',
-            'cliente'                  => 'required',
-            'tipo_rfc.value'           => 'required',
-            'rfc'                      => '',
-            'razon_social'             => '',
-            'direccion_fiscal'         => '',
-            'sat_pais.value'           => 'required',
-            'tipo_comprobante.value'   => 'required',
-            'metodo_pago.value'        => 'required',
-            'forma_pago.value'         => 'required',
-            'fecha_pago'               => '',
-            'uso_cfdi.value'           => 'required',
-            'tipo_relacion.value'      => '',
-            'cfdis_relacionados'       => '',
+            'id_cliente' => 'required|integer|min:1',
+            'cliente' => 'required',
+            'tipo_rfc.value' => 'required',
+            'rfc' => '',
+            'razon_social' => '',
+            'direccion_fiscal' => '',
+            'sat_pais.value' => 'required',
+            'tipo_comprobante.value' => 'required',
+            'metodo_pago.value' => 'required',
+            'forma_pago.value' => 'required',
+            'fecha_pago' => '',
+            'uso_cfdi.value' => 'required',
+            'tipo_relacion.value' => '',
+            'cfdis_relacionados' => '',
             'operaciones_relacionadas' => '',
-            'conceptos'                => '',
-            'tasa_iva'                 => 'required|numeric|min:16|max:16',
+            'conceptos' => '',
+            'tasa_iva' => 'required|numeric|min:16|max:16',
         ];
 
         /**VALIDACIONES CONDICIONADAS RESPECTO AL TIPO DE RFC*/
         if ($request->tipo_rfc['value'] == 1) {
             /**ocupa rfc que lo escriban, minimo 12 caracteres */
-            $validaciones['rfc']          = 'required|min:12';
+            $validaciones['rfc'] = 'required|min:12';
             $validaciones['razon_social'] = 'required';
             /**asigando pais por defecto mexico id 151 */
             $request->merge([
@@ -752,11 +754,11 @@ class FacturacionController extends ApiController
         }
         /**MENSAJES DE LAS VALIDACIONES*/
         $mensajes = [
-            'integer'  => 'Ingrese un número entero',
-            'numeric'  => 'Ingrese un valor numérico',
+            'integer' => 'Ingrese un número entero',
+            'numeric' => 'Ingrese un valor numérico',
             'required' => 'Dato obligatorio',
-            'min'      => "Este valor debe ser mínimo :min",
-            'max'      => "Este valor debe ser máximo :max",
+            'min' => "Este valor debe ser mínimo :min",
+            'max' => "Este valor debe ser máximo :max",
         ];
 
         /**obtenermos el folio para asignar al cfdi */
@@ -783,7 +785,7 @@ class FacturacionController extends ApiController
         } else {
             return $this->errorResponse('el tipo de comprobante no es válido', 409);
         }
-        
+
         /**procede con las validaciones y se hace la insercion de la transanccion en la base de datos */
         $datos_funeraria = Funeraria::first();
         /**COMENZANDO A GUARDAR EL CFDI EN LA BASE DE DATOS */
@@ -792,40 +794,40 @@ class FacturacionController extends ApiController
             /**GUARDAMOS LA INFO INICIAL DEL  */
             $folio_para_asignar = DB::table('cfdis')->insertGetId(
                 [
-                    'uuid'                        => null,
-                    'tasa_iva'                    => $request->tasa_iva,
-                    'clientes_id'                 => $request->id_cliente,
-                    'serie'                       => null,
-                    'fecha'                       => null,
-                    'sat_formas_pago_id'          => $request->forma_pago['value'],
-                    'subtotal'                    => 0,
-                    'descuento'                   => 0,
-                    'fecha_pago'                  => $request->tipo_comprobante['value'] == 5 ? $request->fecha_pago : null,
-                    'sat_monedas_id'              => 1, //peso mxn
-                    'tipo_cambio'                 => 1,
-                    'total'                       => 0,
-                    'sat_tipo_comprobante_id'     => $request->tipo_comprobante['value'],
-                    'sat_metodos_pago_id'         => $request->metodo_pago['value'],
-                    'rfc_emisor'                  => ENV('APP_ENV') == 'local' ? 'EWE1709045U0' : strtoupper($datos_funeraria['rfc']),
-                    'nombre_emisor'               => $datos_funeraria->nombre_comercial,
-                    'sat_regimenes_id'            => 1, //personas morales
-                    'sat_pais_id'                 => $request->sat_pais['value'],
-                    'rfc_receptor'                => $request->rfc,
-                    'nombre_receptor'             => $request->razon_social,
-                    'residencia_fiscal_receptor'  => $request->direccion_fiscal,
-                    'sat_usos_cfdi_id'            => $request->uso_cfdi['value'],
-                    'fecha_timbrado'              => null,
-                    'rfc_proveedor_certificado'   => null,
-                    'fecha_registro'              => now(),
-                    'nota'                        => $request->nota,
-                    'timbro_id'                   => (int) $request->user()->id,
-                    'num_operacion'               => null,
-                    'rfc_emisor_cta_ordenante'    => null,
-                    'nombre_banco_ordenante'      => null,
+                    'uuid' => null,
+                    'tasa_iva' => $request->tasa_iva,
+                    'clientes_id' => $request->id_cliente,
+                    'serie' => null,
+                    'fecha' => null,
+                    'sat_formas_pago_id' => $request->forma_pago['value'],
+                    'subtotal' => 0,
+                    'descuento' => 0,
+                    'fecha_pago' => $request->tipo_comprobante['value'] == 5 ? $request->fecha_pago : null,
+                    'sat_monedas_id' => 1, //peso mxn
+                    'tipo_cambio' => 1,
+                    'total' => 0,
+                    'sat_tipo_comprobante_id' => $request->tipo_comprobante['value'],
+                    'sat_metodos_pago_id' => $request->metodo_pago['value'],
+                    'rfc_emisor' => ENV('APP_ENV') == 'local' ? 'EWE1709045U0' : strtoupper($datos_funeraria['rfc']),
+                    'nombre_emisor' => $datos_funeraria->nombre_comercial,
+                    'sat_regimenes_id' => 1, //personas morales
+                    'sat_pais_id' => $request->sat_pais['value'],
+                    'rfc_receptor' => $request->rfc,
+                    'nombre_receptor' => $request->razon_social,
+                    'residencia_fiscal_receptor' => $request->direccion_fiscal,
+                    'sat_usos_cfdi_id' => $request->uso_cfdi['value'],
+                    'fecha_timbrado' => null,
+                    'rfc_proveedor_certificado' => null,
+                    'fecha_registro' => now(),
+                    'nota' => $request->nota,
+                    'timbro_id' => (int) $request->user()->id,
+                    'num_operacion' => null,
+                    'rfc_emisor_cta_ordenante' => null,
+                    'nombre_banco_ordenante' => null,
                     'rfc_emisor_cta_beneficiario' => null,
-                    'cta_beneficiario'            => null,
-                    'tipos_cadena_pago_clave'     => null,
-                    'sat_tipo_relacion_id'        => $request->tipo_relacion['value'],
+                    'cta_beneficiario' => null,
+                    'tipos_cadena_pago_clave' => null,
+                    'sat_tipo_relacion_id' => $request->tipo_relacion['value'],
                 ]
             );
 
@@ -842,7 +844,7 @@ class FacturacionController extends ApiController
                             //return $this->errorResponse($operacion['operacion_id'], 409);
                             DB::table('cfdis_operaciones')->insert(
                                 [
-                                    'cfdis_id'       => $folio_para_asignar,
+                                    'cfdis_id' => $folio_para_asignar,
                                     'operaciones_id' => $operacion['operacion_id'],
                                 ]
                             );
@@ -856,23 +858,23 @@ class FacturacionController extends ApiController
                         /**tiene conceptos */
                         foreach ($request->conceptos as $key => $concepto) {
                             //return $this->errorResponse($concepto['clave_sat']['value'], 409);
-                            $ValorUnitarioPrecioNeto      = (float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100)));
+                            $ValorUnitarioPrecioNeto = (float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100)));
                             $ValorUnitarioPrecioDescuento = $concepto['precio_descuento'] / (1 + ($request->tasa_iva / 100));
-                            $descuento_concepto           = $concepto['descuento_b']['value'] == 1 ? ($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento) : 0;
-                            $valor_unitario_real          = $concepto['descuento_b']['value'] == 1 ? $ValorUnitarioPrecioDescuento : $ValorUnitarioPrecioNeto;
+                            $descuento_concepto = $concepto['descuento_b']['value'] == 1 ? ($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento) : 0;
+                            $valor_unitario_real = $concepto['descuento_b']['value'] == 1 ? $ValorUnitarioPrecioDescuento : $ValorUnitarioPrecioNeto;
                             DB::table('conceptos_cfdi')->insert(
                                 [
                                     'sat_productos_servicios_id' => $concepto['clave_sat']['value'],
-                                    'cantidad'                   => $concepto['cantidad'],
-                                    'descripcion'                => $concepto['descripcion'],
-                                    'valor_unitario'             => $valor_unitario_real,
-                                    'importe'                    => $valor_unitario_real * $concepto['cantidad'],
-                                    'descuento'                  => $descuento_concepto,
-                                    'sat_unidades_id'            => $concepto['unidad_sat']['value'],
-                                    'concepto_operacion_id'      => $concepto['concepto_operacion_id'],
-                                    'cfdis_id'                   => $folio_para_asignar,
-                                    'concepto_operacion_ver_b'   => $concepto['concepto_operacion_ver_b'],
-                                    'modifica_b'                 => $concepto['modifica_b'],
+                                    'cantidad' => $concepto['cantidad'],
+                                    'descripcion' => $concepto['descripcion'],
+                                    'valor_unitario' => $valor_unitario_real,
+                                    'importe' => $valor_unitario_real * $concepto['cantidad'],
+                                    'descuento' => $descuento_concepto,
+                                    'sat_unidades_id' => $concepto['unidad_sat']['value'],
+                                    'concepto_operacion_id' => $concepto['concepto_operacion_id'],
+                                    'cfdis_id' => $folio_para_asignar,
+                                    'concepto_operacion_ver_b' => $concepto['concepto_operacion_ver_b'],
+                                    'modifica_b' => $concepto['modifica_b'],
                                 ]
                             );
                         }
@@ -888,7 +890,7 @@ class FacturacionController extends ApiController
                 }
             } else if ($request->tipo_comprobante['value'] == '5') {
                 /**ES DE TIPO PAGO, REVISANDO QUE LOS CFDIS A PAGAR SEAN DE TIPO PAGO, QUE ESTEN VIGENTES Y EL MONTO SEA VALIDO */
-                $cfdis_a_pagar          = [];
+                $cfdis_a_pagar = [];
                 $total_comprobante_pago = 0;
                 if (isset($request->cfdis_a_pagar)) {
                     if (count($request->cfdis_a_pagar) > 0) {
@@ -935,7 +937,7 @@ class FacturacionController extends ApiController
                         foreach ($cfdis_de_bd as $key => $cfdi_bd) {
                             if ($cfdi_bd['sat_tipo_comprobante_id'] == 1 && $cfdi_bd['sat_metodos_pago_id'] == 2) {
                                 /**se procede con el pago, al ser un cfdi de tipo ingreso y ppd */
-                                $total_pagado       = 0;
+                                $total_pagado = 0;
                                 $numero_parcialidad = 1;
                                 foreach ($cfdi_bd['pagos_asociados'] as $key_pago => $pago) {
                                     if ($pago['status'] == 1) {
@@ -951,10 +953,10 @@ class FacturacionController extends ApiController
                                 foreach ($cfdi_bd['egresos_asociados'] as $key_egreso => $egreso) {
                                     if ($egreso['status'] == 1) {
                                         /**pago activo */
-                                        $total_egresado += round($egreso['monto_relacion'],2);
+                                        $total_egresado += round($egreso['monto_relacion'], 2);
                                     }
                                 }
-                               
+
                                 foreach ($request->cfdis_a_pagar as $key_pagar => $cfdi_pagar) {
                                     if ($cfdi_pagar['id'] == $cfdi_bd['id']) {
                                         /**valido qie el rfc del receptor es igual al rfc del cfdi a pagar */
@@ -965,20 +967,20 @@ class FacturacionController extends ApiController
                                         if ($cfdi_pagar['monto_pago'] > 0) {
                                             $importe_saldo_anterior = round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2);
                                             $importe_saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $total_egresado - $cfdi_pagar['monto_pago'], 2);
-                                            
+
                                             /**validando que el monto a abonar sea menor o igual al total menos el total pagado y egresado */
-                                            if (round($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado,2) <= round($cfdi_bd['total'],2)) {
+                                            if (round($total_pagado + $cfdi_pagar['monto_pago'] + $total_egresado, 2) <= round($cfdi_bd['total'], 2)) {
                                                 /**procede la relacion del cfdi para pago */
                                                 DB::table('cfdis_tipo_relacion')->insert(
                                                     [
                                                         'importe_saldo_anterior' => $importe_saldo_anterior,
                                                         'importe_saldo_insoluto' => $importe_saldo_insoluto,
-                                                        'numero_parcialidad'     => $numero_parcialidad,
-                                                        'sat_metodos_pago_id'    => $cfdi_bd['sat_metodos_pago_id'],
-                                                        'monto_relacion'         => $cfdi_pagar['monto_pago'],
-                                                        'tipo_relacion_id'       => 2, //pago
-                                                        'cfdis_id_relacionado'   => $cfdi_bd['id'],
-                                                        'cfdis_id'               => $folio_para_asignar,
+                                                        'numero_parcialidad' => $numero_parcialidad,
+                                                        'sat_metodos_pago_id' => $cfdi_bd['sat_metodos_pago_id'],
+                                                        'monto_relacion' => $cfdi_pagar['monto_pago'],
+                                                        'tipo_relacion_id' => 2, //pago
+                                                        'cfdis_id_relacionado' => $cfdi_bd['id'],
+                                                        'cfdis_id' => $folio_para_asignar,
                                                     ]
                                                 );
                                                 $metodo_pago = MetodosPago::where('id', '=', $cfdi_bd['sat_metodos_pago_id'])->first();
@@ -986,19 +988,19 @@ class FacturacionController extends ApiController
                                                     $this->regresar_bd_folio();
                                                     return $this->errorResponse('No se encontró el método de pago que se está utilizando.', 409);
                                                 }
-                                               $saldo_insoluto=round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado,2);
-                                              
-                                               //return $this->errorResponse($cfdi_bd['total']."-".$total_pagado."-".$cfdi_pagar['monto_pago']."-". $total_egresado."=".$saldo_insoluto, 409);
-                                               array_push($array_cfdis_a_pagar_xml, [
+                                                $saldo_insoluto = round($cfdi_bd['total'] - $total_pagado - $cfdi_pagar['monto_pago'] - $total_egresado, 2);
+
+                                                //return $this->errorResponse($cfdi_bd['total']."-".$total_pagado."-".$cfdi_pagar['monto_pago']."-". $total_egresado."=".$saldo_insoluto, 409);
+                                                array_push($array_cfdis_a_pagar_xml, [
                                                     '_attributes' => [
                                                         'EquivalenciaDR' => "1",
-                                                        'Folio'            => $cfdi_bd['id'],
-                                                        'IdDocumento'      => $cfdi_bd['uuid'],
-                                                        'ImpPagado'        => round($cfdi_pagar['monto_pago'],2),
-                                                        'ImpSaldoAnt'      => round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2),
-                                                        'ImpSaldoInsoluto' => $saldo_insoluto==-0?0:$saldo_insoluto,
-                                                        'MonedaDR'         => "MXN",
-                                                        'NumParcialidad'   => $numero_parcialidad,
+                                                        'Folio' => $cfdi_bd['id'],
+                                                        'IdDocumento' => $cfdi_bd['uuid'],
+                                                        'ImpPagado' => round($cfdi_pagar['monto_pago'], 2),
+                                                        'ImpSaldoAnt' => round($cfdi_bd['total'] - $total_pagado - $total_egresado, 2),
+                                                        'ImpSaldoInsoluto' => $saldo_insoluto == -0 ? 0 : $saldo_insoluto,
+                                                        'MonedaDR' => "MXN",
+                                                        'NumParcialidad' => $numero_parcialidad,
                                                         'ObjetoImpDR' => '01'
                                                     ],
                                                 ]);
@@ -1074,23 +1076,23 @@ class FacturacionController extends ApiController
                                             /**tiene conceptos */
                                             foreach ($request->conceptos as $key => $concepto) {
                                                 //return $this->errorResponse($concepto['clave_sat']['value'], 409);
-                                                $ValorUnitarioPrecioNeto      = (float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100)));
+                                                $ValorUnitarioPrecioNeto = (float) ($concepto['precio_neto'] / (1 + ($request->tasa_iva / 100)));
                                                 $ValorUnitarioPrecioDescuento = $concepto['precio_descuento'] / (1 + ($request->tasa_iva / 100));
-                                                $descuento_concepto           = $concepto['descuento_b']['value'] == 1 ? ($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento) : 0;
-                                                $valor_unitario_real          = $concepto['descuento_b']['value'] == 1 ? $ValorUnitarioPrecioDescuento : $ValorUnitarioPrecioNeto;
+                                                $descuento_concepto = $concepto['descuento_b']['value'] == 1 ? ($ValorUnitarioPrecioNeto - $ValorUnitarioPrecioDescuento) : 0;
+                                                $valor_unitario_real = $concepto['descuento_b']['value'] == 1 ? $ValorUnitarioPrecioDescuento : $ValorUnitarioPrecioNeto;
                                                 DB::table('conceptos_cfdi')->insert(
                                                     [
                                                         'sat_productos_servicios_id' => $concepto['clave_sat']['value'],
-                                                        'cantidad'                   => $concepto['cantidad'],
-                                                        'descripcion'                => $concepto['descripcion'],
-                                                        'valor_unitario'             => $valor_unitario_real,
-                                                        'importe'                    => $valor_unitario_real * $concepto['cantidad'],
-                                                        'descuento'                  => $descuento_concepto,
-                                                        'sat_unidades_id'            => $concepto['unidad_sat']['value'],
-                                                        'concepto_operacion_id'      => $concepto['concepto_operacion_id'],
-                                                        'cfdis_id'                   => $folio_para_asignar,
-                                                        'concepto_operacion_ver_b'   => $concepto['concepto_operacion_ver_b'],
-                                                        'modifica_b'                 => $concepto['modifica_b'],
+                                                        'cantidad' => $concepto['cantidad'],
+                                                        'descripcion' => $concepto['descripcion'],
+                                                        'valor_unitario' => $valor_unitario_real,
+                                                        'importe' => $valor_unitario_real * $concepto['cantidad'],
+                                                        'descuento' => $descuento_concepto,
+                                                        'sat_unidades_id' => $concepto['unidad_sat']['value'],
+                                                        'concepto_operacion_id' => $concepto['concepto_operacion_id'],
+                                                        'cfdis_id' => $folio_para_asignar,
+                                                        'concepto_operacion_ver_b' => $concepto['concepto_operacion_ver_b'],
+                                                        'modifica_b' => $concepto['modifica_b'],
                                                     ]
                                                 );
                                                 $total_a_egresar += (float) $concepto['precio_neto'];
@@ -1146,7 +1148,7 @@ class FacturacionController extends ApiController
                     }
 
                     $array_cfdis_a_relacionar_xml = [
-                        '_attributes'          => [
+                        '_attributes' => [
                             'TipoRelacion' => $tipo_relacion['clave'],
                         ],
                         'cfdi:CfdiRelacionado' => [],
@@ -1175,11 +1177,11 @@ class FacturacionController extends ApiController
                             /**guardamos en la base de datos */
                             DB::table('cfdis_tipo_relacion')->insert(
                                 [
-                                    'cfdis_id'             => $folio_para_asignar,
+                                    'cfdis_id' => $folio_para_asignar,
                                     'cfdis_id_relacionado' => $cfdi_relacionado['id'],
-                                    'tipo_relacion_id'     => $request->tipo_comprobante['value'] == 1 || $request->tipo_comprobante['value'] == 5 ? 1 : 3, //de tipo relacion sat
-                                    'sat_metodos_pago_id'  => $cfdi_relacionado['sat_metodos_pago_id'],
-                                    'monto_relacion'       => $request->tipo_comprobante['value'] == 1 || $request->tipo_comprobante['value'] == null ? 1 : $total_a_egresar, //de tipo relacion sat
+                                    'tipo_relacion_id' => $request->tipo_comprobante['value'] == 1 || $request->tipo_comprobante['value'] == 5 ? 1 : 3, //de tipo relacion sat
+                                    'sat_metodos_pago_id' => $cfdi_relacionado['sat_metodos_pago_id'],
+                                    'monto_relacion' => $request->tipo_comprobante['value'] == 1 || $request->tipo_comprobante['value'] == null ? 1 : $total_a_egresar, //de tipo relacion sat
                                 ]
                             );
                             /**agregamos al array que mandaremos al generar el xml */
@@ -1200,7 +1202,7 @@ class FacturacionController extends ApiController
                     ]);
                 }
             }
-            
+
             header('Content-type: text/html; charset=utf-8');
             try {
                 set_time_limit(0);
@@ -1221,24 +1223,24 @@ class FacturacionController extends ApiController
 
                 /* carga archivo xml */
                 $storage_disk_credentials = ENV('STORAGE_DISK_CREDENTIALS');
-                $storage_disk_xmls        = ENV('STORAGE_DISK_XML');
+                $storage_disk_xmls = ENV('STORAGE_DISK_XML');
 
 
                 /**datos */
-                $certificado_path     = '';
-                $key_path             = '';
-                $usuario              = '';
-                $password             = '';
-                $root_path_cer        = '';
-                $root_path_key        = '';
+                $certificado_path = '';
+                $key_path = '';
+                $usuario = '';
+                $password = '';
+                $root_path_cer = '';
+                $root_path_key = '';
                 $credentials_password = '';
                 if (ENV('APP_ENV') == 'local') {
-                    $certificado_path     = ENV('CER_PAC');
-                    $key_path             = ENV('KEY_PAC');
-                    $usuario              = ENV('USER_PAC_DEV');
-                    $password             = ENV('PASSWORD_PAC_DEV');
-                    $root_path_cer        = ENV('ROOT_CER_DEV');
-                    $root_path_key        = ENV('ROOT_KEY_DEV');
+                    $certificado_path = ENV('CER_PAC');
+                    $key_path = ENV('KEY_PAC');
+                    $usuario = ENV('USER_PAC_DEV');
+                    $password = ENV('PASSWORD_PAC_DEV');
+                    $root_path_cer = ENV('ROOT_CER_DEV');
+                    $root_path_key = ENV('ROOT_KEY_DEV');
                     $credentials_password = ENV('PASSWORD_LLAVES');
                 } else {
                     $facturacion_datos_sistema = Facturacion::First();
@@ -1247,28 +1249,28 @@ class FacturacionController extends ApiController
                         /**no procede */
                         return $this->errorResponse("no se han capturado los certificados digitales de facturación", 409);
                     }
-                    $certificado_path     = $facturacion_datos_sistema->cerFile; //sistema
-                    $key_path             = $facturacion_datos_sistema->keyFile; //sistema
-                    $usuario              = ENV('USER_PAC_PROD');
-                    $password             = ENV('PASSWORD_PAC_PROD');
-                    $root_path_cer        = ENV('ROOT_CER_PROD');
-                    $root_path_key        = ENV('ROOT_KEY_PROD');
+                    $certificado_path = $facturacion_datos_sistema->cerFile; //sistema
+                    $key_path = $facturacion_datos_sistema->keyFile; //sistema
+                    $usuario = ENV('USER_PAC_PROD');
+                    $password = ENV('PASSWORD_PAC_PROD');
+                    $root_path_cer = ENV('ROOT_CER_PROD');
+                    $root_path_key = ENV('ROOT_KEY_PROD');
                     $credentials_password = $facturacion_datos_sistema->password;
                 }
                 $contenido_xml_a_timbrar = Storage::disk($storage_disk_xmls)->path($xml_a_timbrar['nombre_xml']);
                 /**mandamos llamar la clase del PAC*/
                 $clienteFD = new ClienteFormasDigitales($contenido_xml_a_timbrar);
                 /* se le pasan los datos de acceso */
-                $autentica           = new Autenticar();
-                $autentica->usuario  = $usuario;
+                $autentica = new Autenticar();
+                $autentica->usuario = $usuario;
                 $autentica->password = $password;
-                $parametros          = new Parametros();
+                $parametros = new Parametros();
                 $parametros->accesos = $autentica;
                 //$this->errorResponse($clienteFD->sellarXML($certFile, $keyFile), 409);
                 /**SE MANDA SELLAR EL XML */
 
                 $datos_credenciales = [
-                    'disk'     => $storage_disk_credentials,
+                    'disk' => $storage_disk_credentials,
                     'cer_name' => $certificado_path,
                     'key_name' => $key_path,
                     'cer_root' => $root_path_cer,
@@ -1279,11 +1281,11 @@ class FacturacionController extends ApiController
                     $clienteFD->crear_pem_files($datos_credenciales);
                 }
                 $certFile = Storage::disk($storage_disk_credentials)->path($root_path_cer . $certificado_path);
-                $keyFile  = Storage::disk($storage_disk_credentials)->path($root_path_key . $key_path . '.pem');
+                $keyFile = Storage::disk($storage_disk_credentials)->path($root_path_key . $key_path . '.pem');
                 $clienteFD->sellarXML($certFile, $keyFile);
-                $retorno_del_sellado     = $clienteFD->sellarXML($certFile, $keyFile);
+                $retorno_del_sellado = $clienteFD->sellarXML($certFile, $keyFile);
                 $parametros->comprobante = $retorno_del_sellado['xml'];
-                $cadena_original_cfdi    = $retorno_del_sellado['cadena_original'];
+                $cadena_original_cfdi = $retorno_del_sellado['cadena_original'];
                 /* se manda el xml a TIMBRAR */
                 $responseTimbre = $clienteFD->timbrar($parametros);
                 if (isset($responseTimbre->acuseCFDI->error)) {
@@ -1301,7 +1303,7 @@ class FacturacionController extends ApiController
                     /**se actualiza el xml */
                     Storage::disk($storage_disk_xmls)->put($xml_a_timbrar['nombre_xml'], $responseTimbre->acuseCFDI->xmlTimbrado);
                     $xml_timbrado_file = Storage::disk($storage_disk_xmls)->get($xml_a_timbrar['nombre_xml']);
-                    $xml_timbrado      = $this->leer_xml($folio_para_asignar);
+                    $xml_timbrado = $this->leer_xml($folio_para_asignar);
 
                     $total = 0;
                     if ($request->tipo_comprobante['value'] == '1') {
@@ -1318,23 +1320,23 @@ class FacturacionController extends ApiController
                     }
                     DB::table('cfdis')->where('id', '=', $folio_para_asignar)->update(
                         [
-                            'uuid'                        => $xml_timbrado['Complemento']['TimbreFiscalDigital']['UUID'],
-                            'version'                     => $xml_timbrado['Comprobante']['Version'],
-                            'serie'                       => $xml_timbrado['Comprobante']['Serie'],
-                            'fecha'                       => $xml_timbrado['Comprobante']['Fecha'],
-                            'subtotal'                    => $xml_timbrado['Comprobante']['SubTotal'],
-                            'descuento'                   => $xml_timbrado['Comprobante']['Descuento'],
-                            'total'                       => $total,
-                            'fecha_timbrado'              => $xml_timbrado['Complemento']['TimbreFiscalDigital']['FechaTimbrado'],
-                            'rfc_proveedor_certificado'   => $xml_timbrado['Complemento']['TimbreFiscalDigital']['RfcProvCertif'],
-                            'num_operacion'               => null,
-                            'rfc_emisor_cta_ordenante'    => null,
-                            'nombre_banco_ordenante'      => null,
+                            'uuid' => $xml_timbrado['Complemento']['TimbreFiscalDigital']['UUID'],
+                            'version' => $xml_timbrado['Comprobante']['Version'],
+                            'serie' => $xml_timbrado['Comprobante']['Serie'],
+                            'fecha' => $xml_timbrado['Comprobante']['Fecha'],
+                            'subtotal' => $xml_timbrado['Comprobante']['SubTotal'],
+                            'descuento' => $xml_timbrado['Comprobante']['Descuento'],
+                            'total' => $total,
+                            'fecha_timbrado' => $xml_timbrado['Complemento']['TimbreFiscalDigital']['FechaTimbrado'],
+                            'rfc_proveedor_certificado' => $xml_timbrado['Complemento']['TimbreFiscalDigital']['RfcProvCertif'],
+                            'num_operacion' => null,
+                            'rfc_emisor_cta_ordenante' => null,
+                            'nombre_banco_ordenante' => null,
                             'rfc_emisor_cta_beneficiario' => null,
-                            'cta_beneficiario'            => null,
-                            'tipos_cadena_pago_clave'     => null,
-                            'cadena_original'             => $cadena_original_cfdi,
-                            'xml_timbrado'                => $xml_timbrado_file,
+                            'cta_beneficiario' => null,
+                            'tipos_cadena_pago_clave' => null,
+                            'cadena_original' => $cadena_original_cfdi,
+                            'xml_timbrado' => $xml_timbrado_file,
                         ]
                     );
                     DB::commit();
@@ -1344,7 +1346,7 @@ class FacturacionController extends ApiController
                 }
             } catch (SoapFault $e) {
                 $this->regresar_bd_folio();
-                print("Auth Error:::: $e");
+                print ("Auth Error:::: $e");
             }
             /**SE MANDA REGISTRAR LA TRANSACCIOEN LA BASE DE DATOS */
         } catch (\Throwable $th) {
@@ -1373,7 +1375,7 @@ class FacturacionController extends ApiController
         if (trim($folio_xml) == '') {
             return $this->errorResponse('Debe especificar una ruta del archivo .xml', 409);
         } else {
-            $id_folio_cfdi     = $folio_xml;
+            $id_folio_cfdi = $folio_xml;
             $storage_disk_xmls = ENV('STORAGE_DISK_XML');
             $cfdi = Cfdis::with('timbro')->with('cliente')->where('id', '=', $id_folio_cfdi)->first();
             if (isset($cfdi->xml_timbrado)) {
@@ -1381,7 +1383,7 @@ class FacturacionController extends ApiController
                 Storage::disk($storage_disk_xmls)->put($folio_xml . '.xml', ($cfdi->xml_timbrado));
             }
             /* carga archivo xml */
-            $folio_xml         = Storage::disk($storage_disk_xmls)->path($folio_xml . '.xml');
+            $folio_xml = Storage::disk($storage_disk_xmls)->path($folio_xml . '.xml');
         }
 
         /**se trae la informacion del cfdi de la bd */
@@ -1408,19 +1410,19 @@ class FacturacionController extends ApiController
         $xml->registerXPathNamespace('pago20', 'http://www.sat.gob.mx/Pagos');
 
         $comprobante = $xml->xpath('//cfdi:Comprobante')[0];
-        $emisor      = $xml->xpath('//cfdi:Emisor')[0];
-        $receptor    = $xml->xpath('//cfdi:Receptor')[0];
+        $emisor = $xml->xpath('//cfdi:Emisor')[0];
+        $receptor = $xml->xpath('//cfdi:Receptor')[0];
 
-        $relacionados      = $xml->xpath('//cfdi:CfdiRelacionados');
+        $relacionados = $xml->xpath('//cfdi:CfdiRelacionados');
         $CfdisRelacionados = [];
         if (isset($relacionados[0])) {
             $tipo_relacion = TiposRelacion::where('clave', '=', (string) $relacionados[0]['TipoRelacion'])->first();
             if (is_null($tipo_relacion)) {
                 return $this->errorResponse('No se encontró el tipo de relación que se está utilizando en el xml.', 409);
             }
-            $CfdisRelacionados['TipoRelacion']      = (string) $relacionados[0]['TipoRelacion'];
+            $CfdisRelacionados['TipoRelacion'] = (string) $relacionados[0]['TipoRelacion'];
             $CfdisRelacionados['TipoRelacionTexto'] = $tipo_relacion['tipo'];
-            $CfdisRelacionados['CfdiRelacionado']   = [];
+            $CfdisRelacionados['CfdiRelacionado'] = [];
 
             foreach ($xml->xpath('//cfdi:CfdiRelacionados//cfdi:CfdiRelacionado') as $relacionado) {
                 array_push($CfdisRelacionados['CfdiRelacionado'], [
@@ -1430,7 +1432,7 @@ class FacturacionController extends ApiController
         }
 
         /**determinando el regimen */
-        $regimen  = SATRegimenes::select('regimen')->where('clave', (string) $emisor['RegimenFiscal'])->first();
+        $regimen = SATRegimenes::select('regimen')->where('clave', (string) $emisor['RegimenFiscal'])->first();
         $uso_cfdi = SatUsosCfdi::select('uso')->where('clave', (string) $receptor['UsoCFDI'])->first();
         $RegimenFiscalReceptor = SatRegimenes::select('regimen')->where('clave', (string) $receptor['RegimenFiscalReceptor'])->first();
 
@@ -1446,22 +1448,22 @@ class FacturacionController extends ApiController
             $descuento = !empty((string) $concepto['Descuento']) ? (string) $concepto['Descuento'] : 0;
 
             array_push($traslado, [
-                'Base'       => number_format((float) round(((string) $concepto['ValorUnitario'] - ($descuento / $concepto['Cantidad'])) * ((string) $concepto['Cantidad']), 2), 2, '.', ''),
-                'Importe'    => number_format((float) round((((string) $concepto['ValorUnitario'] - ($descuento / $concepto['Cantidad'])) * (string) $concepto['Cantidad']) * .16, 2), 2, '.', ''),
-                'Impuesto'   => '002',
+                'Base' => number_format((float) round(((string) $concepto['ValorUnitario'] - ($descuento / $concepto['Cantidad'])) * ((string) $concepto['Cantidad']), 2), 2, '.', ''),
+                'Importe' => number_format((float) round((((string) $concepto['ValorUnitario'] - ($descuento / $concepto['Cantidad'])) * (string) $concepto['Cantidad']) * .16, 2), 2, '.', ''),
+                'Impuesto' => '002',
                 'TasaOCuota' => $tasa_iva,
                 'TipoFactor' => 'Tasa',
             ]);
 
             array_push($conceptos, [
                 'ClaveProdServ' => trim((string) $concepto['ClaveProdServ']),
-                'ClaveUnidad'   => (string) $concepto['ClaveUnidad'],
-                'Importe'       => (string) $concepto['Importe'],
-                'Cantidad'      => (string) $concepto['Cantidad'],
-                'Descripcion'   => (string) $concepto['Descripcion'],
+                'ClaveUnidad' => (string) $concepto['ClaveUnidad'],
+                'Importe' => (string) $concepto['Importe'],
+                'Cantidad' => (string) $concepto['Cantidad'],
+                'Descripcion' => (string) $concepto['Descripcion'],
                 'ValorUnitario' => (string) $concepto['ValorUnitario'],
-                'Descuento'     => $descuento,
-                'Impuestos'     => [
+                'Descuento' => $descuento,
+                'Impuestos' => [
                     'Traslados' => $traslado,
                 ],
             ]);
@@ -1470,55 +1472,55 @@ class FacturacionController extends ApiController
         $ultimo_nodo_de_impuestos = count($xml->xpath('//cfdi:Comprobante//cfdi:Impuestos//cfdi:Traslados//cfdi:Traslado'));
 
         /**impuestos trasladados */
-        $impuestos_trasladados       = [];
+        $impuestos_trasladados = [];
         $total_impuestos_trasladados = 0;
 
         /**verificando si tiene nodos de Impuestos Traslados */
         if ($ultimo_nodo_de_impuestos > 0) {
-            $impuestos                   = $xml->xpath('//cfdi:Comprobante//cfdi:Impuestos//cfdi:Traslados//cfdi:Traslado')[$ultimo_nodo_de_impuestos - 1];
+            $impuestos = $xml->xpath('//cfdi:Comprobante//cfdi:Impuestos//cfdi:Traslados//cfdi:Traslado')[$ultimo_nodo_de_impuestos - 1];
             $total_impuestos_trasladados = (string) $impuestos['Importe'];
             array_push($impuestos_trasladados, [
-                'Importe'    => (string) $impuestos['Importe'],
-                'Impuesto'   => "002",
+                'Importe' => (string) $impuestos['Importe'],
+                'Impuesto' => "002",
                 'TasaOCuota' => $tasa_iva,
                 'TipoFactor' => "Tasa",
             ]);
         }
 
-        $complemento                     = $xml->xpath('//tfd:TimbreFiscalDigital')[0];
+        $complemento = $xml->xpath('//tfd:TimbreFiscalDigital')[0];
         $ultimos_ocho_digitos_sello_cfdi = $newstring = substr((string) $comprobante['Sello'], -8);
 
         $cadena_codigo_qr = "https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=" . (string) $complemento['UUID'] . "&tt=" . (string) $comprobante['Total'] . "&re=" . (string) $emisor['Rfc'] . "&rr=" . (string) $receptor['Rfc'] . "&fe=" . $ultimos_ocho_digitos_sello_cfdi;
-        $codigo_qr        = DNS2D::getBarcodeHTML($cadena_codigo_qr, 'QRCODE', 3, 3);
+        $codigo_qr = DNS2D::getBarcodeHTML($cadena_codigo_qr, 'QRCODE', 3, 3);
 
         /**DATOS DEL NODO DE PAGOS */
-        $pago_arreglo               = [];
+        $pago_arreglo = [];
         $documentos_pagados_arreglo = [];
 
-        $forma_pago  = null;
+        $forma_pago = null;
         $metodo_pago = MetodosPago::where('clave', '=', (string) $comprobante['TipoDeComprobante'] == 'I' ? (string) $comprobante['MetodoPago'] : 'PUE')->first();
 
         $tipo_comprobante = '';
         if ((string) $comprobante['TipoDeComprobante'] == 'I') {
             $tipo_comprobante = 'Ingreso';
-            $schema_location  = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
+            $schema_location = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
             /**obteniendo claves de los catalogos */
             $forma_pago = SatFormasPago::where('clave', '=', (string) $comprobante['FormaPago'])->first();
         } else if ((string) $comprobante['TipoDeComprobante'] == 'E') {
             $tipo_comprobante = 'Egreso';
-            $schema_location  = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
-            $forma_pago       = SatFormasPago::where('clave', '=', (string) $comprobante['FormaPago'])->first();
+            $schema_location = 'http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd';
+            $forma_pago = SatFormasPago::where('clave', '=', (string) $comprobante['FormaPago'])->first();
         } else {
             if ((string) $comprobante['TipoDeComprobante'] == 'P') {
                 $tipo_comprobante = 'Pago';
                 if (isset($xml->xpath('//pago20:Pago')[0])) {
-                    $pago         = $xml->xpath('//pago20:Pago')[0]->attributes();
-                    $forma_pago   = SatFormasPago::where('clave', '=', (string) $pago['FormaDePagoP'])->first();
+                    $pago = $xml->xpath('//pago20:Pago')[0]->attributes();
+                    $forma_pago = SatFormasPago::where('clave', '=', (string) $pago['FormaDePagoP'])->first();
                     $pago_arreglo = [
-                        'FechaPago'    => fecha_abr((string) $pago['FechaPago']),
+                        'FechaPago' => fecha_abr((string) $pago['FechaPago']),
                         'FormaDePagoP' => $forma_pago['forma'] . ' (' . (string) $pago['FormaDePagoP'] . ')',
-                        'MonedaP'      => (string) $pago['MonedaP'],
-                        'Monto'        => (string) $pago['Monto'],
+                        'MonedaP' => (string) $pago['MonedaP'],
+                        'Monto' => (string) $pago['Monto'],
                     ];
 
                     if (!isset($xml->xpath('//pago20:DoctoRelacionado')[0])) {
@@ -1530,13 +1532,13 @@ class FacturacionController extends ApiController
                         array_push(
                             $documentos_pagados_arreglo,
                             [
-                                'Folio'            => (string) $docto_relacionado['Folio'],
-                                'IdDocumento'      => (string) $docto_relacionado['IdDocumento'],
-                                'ImpPagado'        => (string) $docto_relacionado['ImpPagado'],
-                                'ImpSaldoAnt'      => (string) $docto_relacionado['ImpSaldoAnt'],
+                                'Folio' => (string) $docto_relacionado['Folio'],
+                                'IdDocumento' => (string) $docto_relacionado['IdDocumento'],
+                                'ImpPagado' => (string) $docto_relacionado['ImpPagado'],
+                                'ImpSaldoAnt' => (string) $docto_relacionado['ImpSaldoAnt'],
                                 'ImpSaldoInsoluto' => (string) $docto_relacionado['ImpSaldoInsoluto'],
-                                'MonedaDR'         => (string) $docto_relacionado['MonedaDR'],
-                                'NumParcialidad'   => (string) $docto_relacionado['NumParcialidad'],
+                                'MonedaDR' => (string) $docto_relacionado['MonedaDR'],
+                                'NumParcialidad' => (string) $docto_relacionado['NumParcialidad'],
                             ]
                         );
                     }
@@ -1555,75 +1557,75 @@ class FacturacionController extends ApiController
 
         /**se crea el arreglo con la informacion del xml */
         $comprobante_cfdi = [
-            'Sistema'           => [
-                'total_letra'         => numeros_a_letras($cfdi['sat_tipo_comprobante_id'] != 5 ? (string) $comprobante['Total'] : (string) $pago['Monto']),
-                'cliente_id'          => $cfdi['cliente']['id'],
-                'cliente_nombre'      => $cfdi['cliente']['nombre'],
-                'cliente_direccion'   => trim($cfdi['cliente']['direccion_fiscal']) != '' ? $cfdi['cliente']['direccion_fiscal'] : 'N/A',
-                'cliente_email'       => $cfdi['cliente']['email'],
-                'cliente_telefono'    => $cfdi['cliente']['celular'],
-                'timbro_nombre'       => $cfdi['timbro']['nombre'],
+            'Sistema' => [
+                'total_letra' => numeros_a_letras($cfdi['sat_tipo_comprobante_id'] != 5 ? (string) $comprobante['Total'] : (string) $pago['Monto']),
+                'cliente_id' => $cfdi['cliente']['id'],
+                'cliente_nombre' => $cfdi['cliente']['nombre'],
+                'cliente_direccion' => trim($cfdi['cliente']['direccion_fiscal']) != '' ? $cfdi['cliente']['direccion_fiscal'] : 'N/A',
+                'cliente_email' => $cfdi['cliente']['email'],
+                'cliente_telefono' => $cfdi['cliente']['celular'],
+                'timbro_nombre' => $cfdi['timbro']['nombre'],
                 'tipo_comprobante_id' => $cfdi['sat_tipo_comprobante_id'],
             ],
-            'Comprobante'       => [
-                'xmlns:cfdi'         => 'http://www.sat.gob.mx/cfd/4',
-                'xmlns:xsi'          => 'http://www.w3.org/2001/XMLSchema-instance',
-                'xmlns:pago20'       => 'http://www.sat.gob.mx/Pagos',
-                'Certificado'        => (string) $comprobante['Certificado'],
-                'Fecha'              => (string) $comprobante['Fecha'],
-                'FechaTexto'         => fecha_abr((string) $comprobante['Fecha']),
-                'Folio'              => (string) $comprobante['Folio'],
-                'FormaPago'          => $comprobante['FormaPago'] . ' (' . $forma_pago['forma'] . ')',
-                'LugarExpedicion'    => (string) $comprobante['LugarExpedicion'],
-                'MetodoPago'         => $metodo_pago['clave'] . ' (' . $metodo_pago['metodo'] . ')',
-                'Moneda'             => (string) $comprobante['Moneda'],
-                'NoCertificado'      => (string) $comprobante['NoCertificado'],
-                'Sello'              => (string) $comprobante['Sello'],
-                'Serie'              => (string) $comprobante['Serie'],
-                'SubTotal'           => (string) $comprobante['SubTotal'],
-                'Descuento'          => !empty((string) $comprobante['Descuento']) ? (string) $comprobante['Descuento'] : 0,
-                'TipoCambio'         => (string) $comprobante['TipoCambio'],
-                'TipoDeComprobante'  => (string) $comprobante['TipoDeComprobante'] . ' (' . $tipo_comprobante . ')',
-                'Total'              => (string) $comprobante['Total'],
-                'Version'            => (string) $comprobante['Version'],
+            'Comprobante' => [
+                'xmlns:cfdi' => 'http://www.sat.gob.mx/cfd/4',
+                'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+                'xmlns:pago20' => 'http://www.sat.gob.mx/Pagos',
+                'Certificado' => (string) $comprobante['Certificado'],
+                'Fecha' => (string) $comprobante['Fecha'],
+                'FechaTexto' => fecha_abr((string) $comprobante['Fecha']),
+                'Folio' => (string) $comprobante['Folio'],
+                'FormaPago' => $comprobante['FormaPago'] . ' (' . $forma_pago['forma'] . ')',
+                'LugarExpedicion' => (string) $comprobante['LugarExpedicion'],
+                'MetodoPago' => $metodo_pago['clave'] . ' (' . $metodo_pago['metodo'] . ')',
+                'Moneda' => (string) $comprobante['Moneda'],
+                'NoCertificado' => (string) $comprobante['NoCertificado'],
+                'Sello' => (string) $comprobante['Sello'],
+                'Serie' => (string) $comprobante['Serie'],
+                'SubTotal' => (string) $comprobante['SubTotal'],
+                'Descuento' => !empty((string) $comprobante['Descuento']) ? (string) $comprobante['Descuento'] : 0,
+                'TipoCambio' => (string) $comprobante['TipoCambio'],
+                'TipoDeComprobante' => (string) $comprobante['TipoDeComprobante'] . ' (' . $tipo_comprobante . ')',
+                'Total' => (string) $comprobante['Total'],
+                'Version' => (string) $comprobante['Version'],
                 'xsi:schemaLocation' => $schema_location,
             ],
             'CfdisRelacionados' => $CfdisRelacionados,
-            'Emisor'            => [
-                'Rfc'           => (string) $emisor['Rfc'],
-                'Nombre'        => (string) $emisor['Nombre'],
+            'Emisor' => [
+                'Rfc' => (string) $emisor['Rfc'],
+                'Nombre' => (string) $emisor['Nombre'],
                 'RegimenFiscal' => $regimen != null ? (string) $emisor['RegimenFiscal'] . ' (' . $regimen['regimen'] . ')' : '',
             ],
-            'Receptor'          => [
-                'Rfc'     => (string) $receptor['Rfc'],
-                'Nombre'  => (string) $receptor['Nombre'],
+            'Receptor' => [
+                'Rfc' => (string) $receptor['Rfc'],
+                'Nombre' => (string) $receptor['Nombre'],
                 'UsoCFDI' => $uso_cfdi != null ? (string) $receptor['UsoCFDI'] . ' (' . $uso_cfdi['uso'] . ')' : '',
                 'RegimenFiscalReceptor' => $RegimenFiscalReceptor != null ? (string) $receptor['RegimenFiscalReceptor'] . ' (' . $RegimenFiscalReceptor['regimen'] . ')' : '',
-                'DomicilioFiscalReceptor'     => (string) $receptor['DomicilioFiscalReceptor']
+                'DomicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor']
             ],
-            'Conceptos'         => $conceptos,
-            'Impuestos'         => [
+            'Conceptos' => $conceptos,
+            'Impuestos' => [
                 'TotalImpuestosTrasladados' => $total_impuestos_trasladados,
-                'Traslados'                 => [
+                'Traslados' => [
                     'Traslado' => $impuestos_trasladados,
                 ],
             ],
-            'Complemento'       => [
+            'Complemento' => [
                 'TimbreFiscalDigital' => [
-                    'xmlns:tfd'          => 'http://www.sat.gob.mx/TimbreFiscalDigital',
-                    'xmlns:xsi'          => 'http://www.w3.org/2001/XMLSchema-instance',
-                    'FechaTimbrado'      => (string) $complemento['FechaTimbrado'],
-                    'NoCertificadoSAT'   => (string) $complemento['NoCertificadoSAT'],
-                    'RfcProvCertif'      => (string) $complemento['RfcProvCertif'],
-                    'SelloCFD'           => (string) $complemento['SelloCFD'],
-                    'SelloSAT'           => (string) $complemento['SelloSAT'],
-                    'UUID'               => (string) $complemento['UUID'],
-                    'Version'            => (string) $complemento['Version'],
+                    'xmlns:tfd' => 'http://www.sat.gob.mx/TimbreFiscalDigital',
+                    'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+                    'FechaTimbrado' => (string) $complemento['FechaTimbrado'],
+                    'NoCertificadoSAT' => (string) $complemento['NoCertificadoSAT'],
+                    'RfcProvCertif' => (string) $complemento['RfcProvCertif'],
+                    'SelloCFD' => (string) $complemento['SelloCFD'],
+                    'SelloSAT' => (string) $complemento['SelloSAT'],
+                    'UUID' => (string) $complemento['UUID'],
+                    'Version' => (string) $complemento['Version'],
                     'xsi:schemaLocation' => 'http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd',
                 ],
             ],
-            'CadenaOriginal'    => $cfdi->cadena_original,
-            'CodigoQr'          => $codigo_qr,
+            'CadenaOriginal' => $cfdi->cadena_original,
+            'CodigoQr' => $codigo_qr,
         ];
 
         /**removiendo el nodo de $CfdisRelacionados en cado de no llevar documentos relaciondos*/
@@ -1638,7 +1640,7 @@ class FacturacionController extends ApiController
             //unset($comprobante_cfdi['Comprobante']['TipoCambio']);
             unset($comprobante_cfdi['Impuestos']);
             unset($comprobante_cfdi['Conceptos'][0]['Impuestos']);
-            $comprobante_cfdi['Complemento']['Pago']                     = $pago_arreglo;
+            $comprobante_cfdi['Complemento']['Pago'] = $pago_arreglo;
             $comprobante_cfdi['Complemento']['Pago']['DoctoRelacionado'] = $documentos_pagados_arreglo;
             /**agregando el nodo del pago */
         } else {
@@ -1651,13 +1653,13 @@ class FacturacionController extends ApiController
 
     public function get_cfdis_timbrados(Request $request, $folio_id = 'all', $paginated = false, $metodo_pago_id = 'all', $tipo_comprobante_id = 'all')
     {
-        $cliente             = $request->cliente;
-        $rfc                 = $request->rfc;
-        $numero_control      = isset($request->numero_control) ? $request->numero_control : $folio_id;
-        $metodo_pago_id      = isset($request->metodo_pago['value']) ? $request->metodo_pago['value'] : $metodo_pago_id;
+        $cliente = $request->cliente;
+        $rfc = $request->rfc;
+        $numero_control = isset($request->numero_control) ? $request->numero_control : $folio_id;
+        $metodo_pago_id = isset($request->metodo_pago['value']) ? $request->metodo_pago['value'] : $metodo_pago_id;
         $tipo_comprobante_id = isset($request->tipo_comprobante_id) ? $request->tipo_comprobante_id : $tipo_comprobante_id;
-        $fecha_inicio        = $request->fecha_inicio;
-        $fecha_fin           = $request->fecha_fin;
+        $fecha_inicio = $request->fecha_inicio;
+        $fecha_fin = $request->fecha_fin;
         //$tipo_operacion_id   = $request->tipo_operacion_id;
         $status = $request->status;
 
@@ -1791,16 +1793,16 @@ class FacturacionController extends ApiController
         if ($paginated == 'paginated') {
             /**queire el resultado paginado */
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
-            $resultado       = &$resultado_query['data'];
+            $resultado = &$resultado_query['data'];
         } else {
             $resultado_query = $resultado_query->toArray();
-            $resultado       = &$resultado_query;
+            $resultado = &$resultado_query;
         }
 
-        $formas_pago  = SatFormasPago::select('*')->get();
+        $formas_pago = SatFormasPago::select('*')->get();
         $metodos_pago = MetodosPago::select('*')->get();
-        $sat_paises   = SatPais::select('*')->get();
-        $sat_usos     = SatUsosCfdi::select('*')->get();
+        $sat_paises = SatPais::select('*')->get();
+        $sat_usos = SatUsosCfdi::select('*')->get();
 
         foreach ($resultado as $index_cfdi => &$cfdi) {
             //datos del servicio funerario
@@ -1808,7 +1810,7 @@ class FacturacionController extends ApiController
             if (isset($cfdi['servicios_funerarios'])) {
                 //tiene operaciones asociadas
                 foreach ($cfdi['servicios_funerarios'] as &$servicio) {
-                    if (count($servicio['operacion_factura'])>0) {
+                    if (count($servicio['operacion_factura']) > 0) {
                         if ($servicio['operacion_factura'][0]['empresa_operaciones_id'] == 3) {
                             //es tipo servicio funerario
                             $servicio['operacion_factura'][0]['servicio_funerario']['fecha_defuncion_texto'] = fecha_abr($servicio['operacion_factura'][0]['servicio_funerario']['fechahora_defuncion']);
@@ -1842,8 +1844,8 @@ class FacturacionController extends ApiController
 
                 if ($cfdi['sat_metodos_pago_id'] == 1) {
                     /**pue */
-                    $cfdi['total_pagado']     = $cfdi['total'];
-                    $cfdi['saldo_cfdi']       = 0;
+                    $cfdi['total_pagado'] = $cfdi['total'];
+                    $cfdi['saldo_cfdi'] = 0;
                     $cfdi['maximo_a_egresar'] = round($cfdi['total'] - $total_egresado);
                     /**aunque tenga egresos asociados el documento quedo liquidado */
                 } else {
@@ -1854,8 +1856,8 @@ class FacturacionController extends ApiController
                             $pagado += $pago['monto_relacion'];
                         }
                     }
-                    $cfdi['total_pagado']     = round($pagado,2);
-                    $cfdi['saldo_cfdi']       = $cfdi['total'] - $cfdi['total_pagado'] - $cfdi['total_egresos'];
+                    $cfdi['total_pagado'] = round($pagado, 2);
+                    $cfdi['saldo_cfdi'] = $cfdi['total'] - $cfdi['total_pagado'] - $cfdi['total_egresos'];
                     $cfdi['maximo_a_egresar'] = $cfdi['total'] - $cfdi['total_pagado'] - $total_egresado;
 
                     if ($cfdi['status'] == 1) {
@@ -1907,7 +1909,7 @@ class FacturacionController extends ApiController
             /**cliente */
             if (isset($cfdi['cliente'])) {
                 $cfdi['cliente_nombre'] = $cfdi['cliente']['nombre'];
-                $cfdi['cliente_email']  = $cfdi['cliente']['email'];
+                $cfdi['cliente_email'] = $cfdi['cliente']['email'];
             }
 
             $cfdi['fecha_timbrado_texto'] = fecha_abr($cfdi['fecha_timbrado']);
@@ -1932,10 +1934,10 @@ class FacturacionController extends ApiController
          */
         if (isset($request->request_parent)) {
             $status_actualizado = null;
-            $email             = $request->email_send === 'true' ? true : false;
-            $email_to          = $request->email_address;
+            $email = $request->email_send === 'true' ? true : false;
+            $email_to = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
-            $folio_id          = $requestVentasList['folio_id'];
+            $folio_id = $requestVentasList['folio_id'];
             try {
                 //code...
                 //actualizamos cfdis en caso de que este en produccion
@@ -1959,7 +1961,7 @@ class FacturacionController extends ApiController
             }
         } else {
             $folio_id = $folio;
-            $email    = false;
+            $email = false;
             $email_to = 'hector@gmail.com';
         }
 
@@ -1980,7 +1982,7 @@ class FacturacionController extends ApiController
         }
 
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         /**determinando que tipo de formato se va utilizar */
 
@@ -1994,11 +1996,11 @@ class FacturacionController extends ApiController
             $documento = 'facturacion/cfdi/cfdi_pago';
         }
 
-        $pdf      = PDF::loadView($documento, ['datos' => $datos, 'cfdi' => $cfdi, 'empresa' => $empresa]);
+        $pdf = PDF::loadView($documento, ['datos' => $datos, 'cfdi' => $cfdi, 'empresa' => $empresa]);
         $name_pdf = "FACTURA FOLIO " . strtoupper($datos['Comprobante']['Folio']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('facturacion.cfdi.footer', ['empresa' => $empresa]),
         ]);
         if ($cfdi['status'] == 0) {
@@ -2035,7 +2037,7 @@ class FacturacionController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 'Facturas Aeternus',
                 "FACTURA FOLIO " . strtoupper($datos['Comprobante']['Folio']),
@@ -2074,7 +2076,7 @@ class FacturacionController extends ApiController
 
         $zipfile1 = 'zip.txt';
 
-        $xml      = $folio . '.xml';
+        $xml = $folio . '.xml';
         $path_xml = Storage::disk('cfdis')->path($xml);
 
         $request->merge([
@@ -2107,30 +2109,30 @@ class FacturacionController extends ApiController
         }
         // dd($cfdi);
         /**datos para la consulta */
-        $comprobante              = new Comprobante();
+        $comprobante = new Comprobante();
         $cfdi = Cfdis::with('timbro')->with('cliente')->where('id', '=', $folio)->first();
         //dd($cfdi);
-        $comprobante->rfcEmisor   = $cfdi->rfc_emisor;
+        $comprobante->rfcEmisor = $cfdi->rfc_emisor;
         $comprobante->rfcReceptor = $cfdi->rfc_receptor;
-        $comprobante->uuid        = $cfdi['uuid'];
-        $comprobante->totalCFDI   = $cfdi['sat_tipo_comprobante_id'] != 5 ? (string)sprintf('%g', floatval($cfdi->total)) : "0";
-        $comprobante->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
+        $comprobante->uuid = $cfdi['uuid'];
+        $comprobante->totalCFDI = $cfdi['sat_tipo_comprobante_id'] != 5 ? (string) sprintf('%g', floatval($cfdi->total)) : "0";
+        $comprobante->selloCFDI = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
         $url_cancelar = '';
         if (ENV('APP_ENV') == 'local') {
-            $usuario      = ENV('USER_PAC_DEV');
-            $password     = ENV('PASSWORD_PAC_DEV');
+            $usuario = ENV('USER_PAC_DEV');
+            $password = ENV('PASSWORD_PAC_DEV');
             $url_cancelar = ENV('WEB_SERVICE_CONSULTA_DEVELOP');
         } else {
-            $usuario      = ENV('USER_PAC_PROD');
-            $password     = ENV('PASSWORD_PAC_PROD');
+            $usuario = ENV('USER_PAC_PROD');
+            $password = ENV('PASSWORD_PAC_PROD');
             $url_cancelar = ENV('WEB_SERVICE_CONSULTA_PRODUCTION');
         }
-        $autentica           = new Autenticar();
-        $autentica->usuario  = $usuario;
+        $autentica = new Autenticar();
+        $autentica->usuario = $usuario;
         $autentica->password = $password;
         $comprobante->accesos = $autentica;
-        $client              = new SoapClient($url_cancelar);
-        $result              = $client->ConsultarEstatusCFDI_2($comprobante);
+        $client = new SoapClient($url_cancelar);
+        $result = $client->ConsultarEstatusCFDI_2($comprobante);
         /**determinando status segun el resultado de la respuesta del sat */
         /**
          * codigoEstatus
@@ -2163,8 +2165,8 @@ class FacturacionController extends ApiController
                 $fecha_cancelacion = date("Y-m-d H:i:s");
                 DB::table('cfdis')->where('id', '=', $folio)->update(
                     [
-                        'status'            => 0,
-                        'cancelo_id'        => (int) $request->user()->id,
+                        'status' => 0,
+                        'cancelo_id' => (int) $request->user()->id,
                         'fecha_cancelacion' => $fecha_cancelacion,
                     ]
                 );
@@ -2172,7 +2174,7 @@ class FacturacionController extends ApiController
                 /**se actualiza la base de datos */
                 DB::table('cfdis')->where('id', '=', $folio)->update(
                     [
-                        'status'            => 3,
+                        'status' => 3,
                         'fecha_cancelacion' => null,
                     ]
                 );
@@ -2180,8 +2182,8 @@ class FacturacionController extends ApiController
                 //esta vigente el cfdi
                 DB::table('cfdis')->where('id', '=', $folio)->update(
                     [
-                        'status'            => 1,
-                        'cancelo_id'        => null,
+                        'status' => 1,
+                        'cancelo_id' => null,
                         'fecha_cancelacion' => null,
                         'acuse_cancelacion' => null,
                     ]
@@ -2190,11 +2192,11 @@ class FacturacionController extends ApiController
         } else {
             return $this->errorResponse('CFDI no encontrado en la base de datos del SAT.', 409);
         }
-        $retorno['codigoEstatus']      = $result->return->codigoEstatus;
-        $retorno['esCancelable']       = $result->return->esCancelable;
-        $retorno['estado']             = $result->return->estado;
+        $retorno['codigoEstatus'] = $result->return->codigoEstatus;
+        $retorno['esCancelable'] = $result->return->esCancelable;
+        $retorno['estado'] = $result->return->estado;
         $retorno['estatusCancelacion'] = $result->return->estatusCancelacion;
-        $retorno['uuid']               = $comprobante->uuid;
+        $retorno['uuid'] = $comprobante->uuid;
         return $retorno;
     }
 
@@ -2207,9 +2209,9 @@ class FacturacionController extends ApiController
 
         /**MENSAJES DE LAS VALIDACIONES*/
         $mensajes = [
-            'integer'  => 'Ingrese un número entero',
+            'integer' => 'Ingrese un número entero',
             'required' => 'Dato obligatorio',
-            'min'      => "Este valor debe ser mínimo :min",
+            'min' => "Este valor debe ser mínimo :min",
         ];
 
         /**VALIDANDO LOS DATOS */
@@ -2264,9 +2266,9 @@ class FacturacionController extends ApiController
 
         $fecha_cancelacion = date("Y-m-d H:i:s");
         /**datos para la consulta */
-        $parametros            = new Parametros();
+        $parametros = new Parametros();
         $parametros->rfcEmisor = trim($cfdi->rfc_emisor);
-        $parametros->fecha     = str_replace(" ", "T", $fecha_cancelacion);
+        $parametros->fecha = str_replace(" ", "T", $fecha_cancelacion);
         //folios de cancelacion
         $folio1 = new wsFolio();
         $folio1->uuid = $cfdi['uuid'];
@@ -2278,16 +2280,16 @@ class FacturacionController extends ApiController
         $folios = new wsFolios();
         $folios->folio = $folio1;
         $parametros->folios = $folios;
-        $parametros->SelloCFD     = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
+        $parametros->SelloCFD = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
         if (ENV('APP_ENV') == 'local') {
-            $certificado_path     = ENV('CER_PAC');
-            $key_path             = ENV('KEY_PAC');
-            $usuario              = ENV('USER_PAC_DEV');
-            $password             = ENV('PASSWORD_PAC_DEV');
-            $root_path_cer        = ENV('ROOT_CER_DEV');
-            $root_path_key        = ENV('ROOT_KEY_DEV');
+            $certificado_path = ENV('CER_PAC');
+            $key_path = ENV('KEY_PAC');
+            $usuario = ENV('USER_PAC_DEV');
+            $password = ENV('PASSWORD_PAC_DEV');
+            $root_path_cer = ENV('ROOT_CER_DEV');
+            $root_path_key = ENV('ROOT_KEY_DEV');
             $credentials_password = ENV('PASSWORD_LLAVES');
-            $url_cancelar         = ENV('WEB_SERVICE_CANCELACION_DEVELOP');
+            $url_cancelar = ENV('WEB_SERVICE_CANCELACION_DEVELOP');
         } else {
             $facturacion_datos_sistema = Facturacion::First();
             /**data from DB */
@@ -2295,29 +2297,29 @@ class FacturacionController extends ApiController
                 /**no procede */
                 return $this->errorResponse("no se han capturado los certificados digitales de facturación", 409);
             }
-            $certificado_path     = $facturacion_datos_sistema->cerFile; //sistema
-            $key_path             = $facturacion_datos_sistema->keyFile; //sistema
-            $usuario              = ENV('USER_PAC_PROD');
-            $password             = ENV('PASSWORD_PAC_PROD');
-            $root_path_cer        = ENV('ROOT_CER_PROD');
-            $root_path_key        = ENV('ROOT_KEY_PROD');
+            $certificado_path = $facturacion_datos_sistema->cerFile; //sistema
+            $key_path = $facturacion_datos_sistema->keyFile; //sistema
+            $usuario = ENV('USER_PAC_PROD');
+            $password = ENV('PASSWORD_PAC_PROD');
+            $root_path_cer = ENV('ROOT_CER_PROD');
+            $root_path_key = ENV('ROOT_KEY_PROD');
             $credentials_password = $facturacion_datos_sistema->password;
-            $url_cancelar         = ENV('WEB_SERVICE_CANCELACION_PRODUCTION');
+            $url_cancelar = ENV('WEB_SERVICE_CANCELACION_PRODUCTION');
         }
 
         $storage_disk_credentials = ENV('STORAGE_DISK_CREDENTIALS');
         //aqui trabajo
         $certFile = Storage::disk($storage_disk_credentials)->path($root_path_cer . $certificado_path);
-        $keyFile  = Storage::disk($storage_disk_credentials)->path($root_path_key . $key_path);
-        $parametros->publicKey  = file_get_contents($certFile);
+        $keyFile = Storage::disk($storage_disk_credentials)->path($root_path_key . $key_path);
+        $parametros->publicKey = file_get_contents($certFile);
         $parametros->privateKey = file_get_contents($keyFile);
-        $parametros->password   = $credentials_password;
-        $autentica           = new Autenticar();
-        $autentica->usuario  = $usuario;
+        $parametros->password = $credentials_password;
+        $autentica = new Autenticar();
+        $autentica->usuario = $usuario;
         $autentica->password = $password;
         $parametros->accesos = $autentica;
-        $client              = new SoapClient($url_cancelar, array('trace' => 1));
-        $result              = $client->Cancelacion40_1($parametros);
+        $client = new SoapClient($url_cancelar, array('trace' => 1));
+        $result = $client->Cancelacion40_1($parametros);
         //return $this->errorResponse($result, 409);
         //return $result;
         if (isset($result->return->acuse)) {
@@ -2333,8 +2335,8 @@ class FacturacionController extends ApiController
                 //se guarda acuse en la bd
                 DB::table('cfdis')->where('id', '=', $request->id)->update(
                     [
-                        'status'            => 0,
-                        'cancelo_id'        => (int) $request->user()->id,
+                        'status' => 0,
+                        'cancelo_id' => (int) $request->user()->id,
                         'fecha_cancelacion' => $fecha_cancelacion,
                         'acuse_cancelacion' => $result->return->acuse
                     ]
@@ -2358,13 +2360,13 @@ class FacturacionController extends ApiController
          * por lo cual puede variar de paramtros degun la ncecesidad
          */
         if (isset($request->request_parent)) {
-            $email             = $request->email_send === 'true' ? true : false;
-            $email_to          = $request->email_address;
+            $email = $request->email_send === 'true' ? true : false;
+            $email_to = $request->email_address;
             $requestVentasList = json_decode($request->request_parent[0], true);
-            $folio_id          = $requestVentasList['folio_id'];
+            $folio_id = $requestVentasList['folio_id'];
         } else {
             $folio_id = $folio;
-            $email    = false;
+            $email = false;
             $email_to = 'hector@gmail.com';
         }
 
@@ -2379,12 +2381,12 @@ class FacturacionController extends ApiController
             }
             //dd($checando_cfdi);
         } else {
-            //los datos se pasan vacios pues no hay datos rales que mostrar 
-            $checando_cfdi['codigoEstatus']      = 'S: Comprobante obtenido satisfactoriamente';
-            $checando_cfdi['esCancelable']       = 'Cancelable sin Aceptación';
-            $checando_cfdi['estado']             = 'Cancelado';
+            //los datos se pasan vacios pues no hay datos rales que mostrar
+            $checando_cfdi['codigoEstatus'] = 'S: Comprobante obtenido satisfactoriamente';
+            $checando_cfdi['esCancelable'] = 'Cancelable sin Aceptación';
+            $checando_cfdi['estado'] = 'Cancelado';
             $checando_cfdi['estatusCancelacion'] = 'Cancelado sin aceptación';
-            $checando_cfdi['uuid']               = '';
+            $checando_cfdi['uuid'] = '';
         }
 
         $cfdi = Cfdis::where('id', $folio_id)->first();
@@ -2401,16 +2403,16 @@ class FacturacionController extends ApiController
             return $this->errorResponse('Error al cargar los datos del xml.', 409);
         }
         $get_funeraria = new EmpresaController();
-        $empresa       = $get_funeraria->get_empresa_data();
+        $empresa = $get_funeraria->get_empresa_data();
 
         /**determinando que tipo de formato se va utilizar */
         $documento = 'facturacion/cfdi/cfdi_acuse_cancelacion';
 
-        $pdf      = PDF::loadView($documento, ['cfdi' => $cfdi, 'datos' => $datos, 'status_sat' => $checando_cfdi, 'empresa' => $empresa]);
+        $pdf = PDF::loadView($documento, ['cfdi' => $cfdi, 'datos' => $datos, 'status_sat' => $checando_cfdi, 'empresa' => $empresa]);
         $name_pdf = "ACUSE DE CANCELACION FACTURA FOLIO " . strtoupper($datos['Comprobante']['Folio']) . '.pdf';
 
         $pdf->setOptions([
-            'title'       => $name_pdf,
+            'title' => $name_pdf,
             'footer-html' => view('facturacion.cfdi.footer', ['empresa' => $empresa]),
         ]);
 
@@ -2433,7 +2435,7 @@ class FacturacionController extends ApiController
              */
             /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
             $email_controller = new EmailController();
-            $enviar_email     = $email_controller->pdf_email(
+            $enviar_email = $email_controller->pdf_email(
                 $email_to,
                 'Facturas Aeternus',
                 "ACUSE DE CANCELACION FACTURA FOLIO " . strtoupper($datos['Comprobante']['Folio']),
@@ -2493,13 +2495,13 @@ Dim folio1 As wsFolio = New wsFolio                                             
 
             folio1.folioSustitucion = ""
 
- 
+
 
             Dim Folios As New wsFolios40()
 
             Folios.folio = folio1
 
- 
+
 
             Dim Folios_40(0) As wsFolios40
 
