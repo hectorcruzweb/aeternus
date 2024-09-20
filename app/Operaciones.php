@@ -58,18 +58,18 @@ class Operaciones extends Model
             'ventas_terrenos_id',
             'ventas_terrenos_id'
         )->where('status', '<>', 0)->select(
-            'ventas_terrenos_id',
-            'nombre_afectado',
-            'fechahora_defuncion',
-            'fechahora_inhumacion',
-            'id as servicios_funerarios_id',
-            DB::raw(
-                '(NULL) AS fecha_defuncion_texto'
-            ),
-            DB::raw(
-                '(NULL) AS fecha_inhumacion_texto'
-            )
-        );
+                'ventas_terrenos_id',
+                'nombre_afectado',
+                'fechahora_defuncion',
+                'fechahora_inhumacion',
+                'id as servicios_funerarios_id',
+                DB::raw(
+                    '(NULL) AS fecha_defuncion_texto'
+                ),
+                DB::raw(
+                    '(NULL) AS fecha_inhumacion_texto'
+                )
+            );
     }
 
     public function cuota_cementerio()
@@ -79,7 +79,7 @@ class Operaciones extends Model
 
     public function cuota_cementerio_terreno()
     {
-        return $this->hasMany('App\Operaciones', 'ventas_terrenos_id', 'ventas_terrenos_id')->select("*","operaciones.id as operacion_id")->where('empresa_operaciones_id', 2);
+        return $this->hasMany('App\Operaciones', 'ventas_terrenos_id', 'ventas_terrenos_id')->select("*", "operaciones.id as operacion_id")->where('empresa_operaciones_id', 2);
     }
 
     /**la venta tiene uno o muchos pagos programados */
@@ -284,6 +284,6 @@ class Operaciones extends Model
 
     public function movimiento_operacion_inventario()
     {
-        return $this->hasOne('App\MovimientosInventario', 'operaciones_id', 'operacion_id')->select('operaciones_id', 'id');
+        return $this->hasOne('App\MovimientosInventario', 'operaciones_id', 'id')->select('operaciones_id', 'id');
     }
 }
