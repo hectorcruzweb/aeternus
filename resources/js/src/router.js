@@ -424,6 +424,32 @@ const router = new Router({
                         authRequired: true
                     }
                 },
+                {
+                    path: "/funeraria/ventas_generales",
+                    name: "ventas_generales",
+                    component: () =>
+                        import(
+                            "@/views/pages/funeraria/servicios_funerarios/ServiciosList.vue"
+                        ),
+                    meta: {
+                        breadcrumb: [
+                            {
+                                title: "Home",
+                                url: "/"
+                            },
+                            {
+                                title: "Control de Ventas en Gral."
+                            },
+                            {
+                                title: "Ventas en Gral.",
+                                active: true
+                            }
+                        ],
+                        pageTitle: "Ventas en Gral",
+                        rule: "editor",
+                        authRequired: true
+                    }
+                },
 
                 {
                     path: "/reportes",
