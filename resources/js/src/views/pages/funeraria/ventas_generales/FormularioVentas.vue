@@ -125,7 +125,7 @@
                       src="@assets/images/barcode.svg"
                     />
                     <div
-                      class="w-auto md:w-6/12 lg:w-4/12 xl:w-2/12 px-2 input-text hidden lg:block"
+                      class="w-auto md:w-6/12 lg:w-4/12 xl:w-3/12 px-2 input-text hidden lg:block"
                     >
                       <label>Clave o código de barras</label>
                       <vs-input
@@ -485,13 +485,11 @@ import "flatpickr/dist/themes/airbnb.css";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 //componente de password
 import Password from "@pages/confirmar_password";
-import inventario from "@services/inventario";
 import funeraria from "@services/funeraria";
 import ClientesBuscador from "@pages/clientes/searcher.vue";
 import vSelect from "vue-select";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 import ArticulosBuscador from "@pages/funeraria/servicios_funerarios/searcher_articulos.vue";
-
 /**VARIABLES GLOBALES */
 import { configdateTimePicker } from "@/VariablesGlobales";
 
@@ -606,6 +604,8 @@ export default {
         numero_control: "",
       },
       form: {
+        venta_id: "", //para modificaciones
+        fecha_venta: "",
         tipo: { label: "Uso Inmediato", value: "1" },
         id_cliente: "",
         cliente: "",
@@ -751,7 +751,7 @@ export default {
             (async () => {
               if (this.getTipoformulario == "agregar") {
                 /**EL FORMULARIO ES SOLO DE VALIDACION */
-                this.callBackConfirmarAceptar = await this.control_ventas;
+                this.callBackConfirmarAceptar = await this.control_ventas_gral;
                 this.openConfirmarAceptar = true;
               }
             })();
@@ -760,12 +760,15 @@ export default {
         .catch(() => {});
     },
 
-    async control_ventas() {
+    async control_ventas_gral() {
       //aqui mando guardar los datos
       this.errores = [];
       this.$vs.loading();
       try {
-        let res = await inventario.control_ventas(this.form);
+        let res = await funeraria.control_ventas_gral(
+          this.form,
+          this.getTipoformulario
+        );
         if (res.data >= 1) {
           //success
           this.$vs.notify({
@@ -892,7 +895,7 @@ export default {
     clienteSeleccionado(datos) {
       /**obtiene los datos retornados del buscar cliente */
       this.form.cliente = datos.nombre;
-      this.form.id_cliente = datos.numero_control;
+      this.form.id_cliente = datos.id_cliente;
       this.form.direccion_cliente = datos.datos.direccion;
     },
 

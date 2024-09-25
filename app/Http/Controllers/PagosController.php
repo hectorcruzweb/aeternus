@@ -26,11 +26,11 @@ class PagosController extends ApiController
         /**puesto de venderor id 5 */
         /**obtiene los usuarios con puesto de cobrador */
         return $this->showAll(User::select('id', 'nombre')
-                ->join('usuarios_puestos', 'usuarios_puestos.usuarios_id', '=', 'usuarios.id')
-                ->where('roles_id', '>', 1)
-                ->where('puestos_id', '=', 5)
-                ->where('usuarios.status', '>', 0)
-                ->get());
+            ->join('usuarios_puestos', 'usuarios_puestos.usuarios_id', '=', 'usuarios.id')
+            ->where('roles_id', '>', 1)
+            ->where('puestos_id', '=', 5)
+            ->where('usuarios.status', '>', 0)
+            ->get());
     }
 
     public function get_formas_pago_sat()
@@ -152,11 +152,8 @@ class PagosController extends ApiController
                     /**VENTA DE PLANES FUNERARIOS A FUTURO */
                     $dato['operacion_texto'] = 'Abono a Plan Funerario de uso a Futuro';
                 } elseif ($dato['empresa_operaciones_id'] == 5) {
-                    /**ERVICIOS ESPECIALES CON EXTREMIDADES */
-                    $dato['operacion_texto'] = 'Pago por Servicios Especiales con Extremidades';
-                } elseif ($dato['empresa_operaciones_id'] == 6) {
                     /**VENTAS EN GRAL. */
-                    $dato['operacion_texto'] = 'Venta en Gral.';
+                    $dato['operacion_texto'] = 'Ventas en Gral.';
                 }
 
                 /**aqui se saca el porcentaje para ver cuanto seria el descuento por pago en cada pronto pago */
@@ -1088,12 +1085,12 @@ class PagosController extends ApiController
                     '(NULL) AS status_texto'
                 )
             )
-            // ->with(['referencias_cubiertas:id,referencia_pago,operaciones_id,monto_programado,fecha_programada,conceptos_pagos_id'])
+                // ->with(['referencias_cubiertas:id,referencia_pago,operaciones_id,monto_programado,fecha_programada,conceptos_pagos_id'])
                 ->whereHas('referencias_cubiertas', function ($q) {
                     //$q->where('referencia_pago', '=', '00120200101025');
                 })
                 ->with('referencias_cubiertas.operacion_del_pago.cuota_cementerio:id,descripcion')
-                ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,cuotas_cementerio_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
+                ->with('referencias_cubiertas.operacion_del_pago:id,clientes_id,total,empresa_operaciones_id,status,ventas_terrenos_id,ventas_planes_id,servicios_funerarios_id,cuotas_cementerio_id,ventas_generales_id,saldo', 'referencias_cubiertas.operacion_del_pago.cliente:id,nombre,email')
                 ->whereHas('referencias_cubiertas.operacion_del_pago', function ($q) use ($request) {
                     if (isset($request->operacion_id)) {
                         if ($request->operacion_id != null) {
@@ -1101,12 +1098,12 @@ class PagosController extends ApiController
                         }
 
                     } else
-                    if (isset($request->operaciones_id)) {
-                        if ($request->operaciones_id != null) {
-                            $q->whereIn('id', $request->operaciones_id);
-                        }
+                        if (isset($request->operaciones_id)) {
+                            if ($request->operaciones_id != null) {
+                                $q->whereIn('id', $request->operaciones_id);
+                            }
 
-                    }
+                        }
                 })
                 ->with(['registro:id,nombre', 'sat_moneda', 'cobrador:id,nombre', 'cancelador:id,nombre', 'subpagos.referencias_cubiertas', 'forma_pago'])
                 ->whereHas('forma_pago', function ($q) {
@@ -1135,7 +1132,7 @@ class PagosController extends ApiController
                 ->orderBy('pagos.id', 'desc')
                 ->orderBy('movimientos_pagos_id', 'asc')
 
-            //->where('parent_pago_id', '<>', NULL)
+                //->where('parent_pago_id', '<>', NULL)
                 ->get();
             $resultado = array();
             if ($paginated == 'paginated') {
@@ -1246,9 +1243,6 @@ class PagosController extends ApiController
                     /**es tipo de VENTA DE PLANES FUNERARIOS A FUTURO */
                     $pago['tipo_operacion_texto'] = 'VENTA DE PLAN FUNERARIO A FUTURO';
                 } elseif ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 5) {
-                    /**es tipo de SERVICIOS ESPECIALES CON EXTREMIDADES */
-                    $pago['tipo_operacion_texto'] = 'SERVICIOS ESPECIALES CON EXTREMIDADES';
-                } elseif ($pago['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 6) {
                     /**es tipo de VENTAS EN GRAL. */
                     $pago['tipo_operacion_texto'] = 'VENTAS EN GRAL.';
                 }

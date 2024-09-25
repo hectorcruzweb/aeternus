@@ -214,5 +214,10 @@ export default {
     delete_articulo(param) {
         let call = "/inventario/enable_disable/disable";
         return axios.post(call, param);
-    }
+    },
+    //ventas en gral
+    control_ventas_gral(param, tipo_servicio) {
+        let call = "/funeraria/control_ventas_gral/" + tipo_servicio;
+        return axios.post(call, param);
+    },
 };

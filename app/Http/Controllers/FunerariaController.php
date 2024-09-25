@@ -6364,4 +6364,175 @@ class FunerariaController extends ApiController
             return $pdf->inline($name_pdf);
         }
     }
+
+
+
+
+
+
+    //VENTAS EN GRAL FUNCIONES
+    public function control_ventas_gral(Request $request, $tipo_servicio = '')
+    {
+
+        if (!(trim($tipo_servicio) == 'agregar' || trim($tipo_servicio) == 'modificar')) {
+            return $this->errorResponse('Error, debe especificar que tipo de control está solicitando.', 409);
+        }
+
+        //validaciones directas sin condicionales
+        $validaciones = [
+            "articulos" => "required|array|min:1",
+            'articulos.*.id' => 'required|integer|min:1',
+            'articulos.*.cantidad' => 'required|integer|min:1',
+            'articulos.*.costo_neto_normal' => 'required|numeric|min:0',
+            'articulos.*.costo_neto_descuento' => 'required|numeric|min:0',
+            'articulos.*.plan_b' => 'required|boolean',
+            'articulos.*.descuento_b' => 'required|boolean',
+            'articulos.*.facturable_b' => 'required|boolean',
+            'fecha_venta' => 'required',
+            'id_cliente' => 'required|numeric|min:1',
+            'tasa_iva' => 'required|numeric|min:14|max:25',
+            'tipo.value' => 'required|integer|min:0|max:1',
+        ];
+
+        /**FIN DE  VALIDACIONES CONDICIONADAS*/
+        $mensajes = [
+            'required' => 'Este dato es necesario.',
+            'articulos.min' => 'Debe ingresar al menos 1 Artículo/Servicio para continuar con este proceso.',
+            'articulos.*.cantidad.min' => 'La cantidad de los articulos o servicios debe ser de al menos 1.',
+        ];
+
+        request()->validate(
+            $validaciones,
+            $mensajes
+        );
+        //sacando totales
+        $subtotal = 0;
+        $descuento = 0;
+        $impuestos = 0;
+        $total = 0;
+        foreach ($request->articulos as $index => $articulo) {
+            if ($articulo['descuento_b'] == 1) {
+                //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
+                if ($articulo['costo_neto_normal'] >= $articulo['costo_neto_descuento']) {
+                    /**si se puede aplicar descuento */
+                    if ($articulo['facturable_b'] == 1) {
+                        /**se desglosa el IVA */
+                        $subtotal += (($articulo['costo_neto_normal'] / (1 + ($request->tasa_iva / 100))) * $articulo['cantidad']);
+                        $impuestos += ((($articulo['costo_neto_descuento'] / (1 + ($request->tasa_iva / 100))) * (($request->tasa_iva / 100))) * $articulo['cantidad']);
+                        $descuento += ((($articulo['costo_neto_normal'] / (1 + ($request->tasa_iva / 100))) - ($articulo['costo_neto_descuento'] / (1 + ($request->tasa_iva / 100)))) * $articulo['cantidad']);
+                    } else {
+                        /**no grava IVA */
+                        $subtotal += (($articulo['costo_neto_descuento']) * $articulo['cantidad']);
+                        $descuento += ((($articulo['costo_neto_normal']) - ($articulo['costo_neto_descuento'])) * $articulo['cantidad']);
+                    }
+                    //sumando el total
+                    $total += $articulo['costo_neto_descuento'] * $articulo['cantidad'];
+                } else {
+                    /**no se puede proceder por que el precio de descuento no es correcto */
+                    return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
+                }
+            } else {
+                /**fueron puros precios sin descuento */
+                if ($articulo['facturable_b'] == 1) {
+                    /**se desglosa el IVA */
+                    $subtotal += (($articulo['costo_neto_normal'] / (1 + ($request->tasa_iva / 100))) * $articulo['cantidad']);
+                    $impuestos += ((($articulo['costo_neto_normal'] / (1 + ($request->tasa_iva / 100))) * (($request->tasa_iva / 100))) * $articulo['cantidad']);
+                } else {
+                    /**no grava IVA */
+                    $subtotal += (($articulo['costo_neto_normal']) * $articulo['cantidad']);
+                }
+                //sumando el total
+                $total += $articulo['costo_neto_normal'] * $articulo['cantidad'];
+            }
+        }
+        $subtotal = round($subtotal, 2);
+        $descuento = round($descuento, 2);
+        $impuestos = round($impuestos, 2);
+        $total = round($total, 2);
+
+        /**verificando si es tipo modificar para validar que venga el id a modificar */
+
+        /*
+                $datos_plan = array();
+                if ($tipo_servicio == 'modificar') {
+                    $datos_plan = $this->get_planes(false, $request->id_plan_modificar)[0];
+                    if (empty($datos_plan)) {
+                       //no se encontro los datos
+                        return $this->errorResponse('No se encontró la información del plan solicitada', 409);
+                    } else if ($datos_plan['status'] == 0) {
+                        return $this->errorResponse('Esta plan ya fue cancelado, no puede modificarse', 409);
+                    }
+                }
+        */
+
+        $id_return = 0;
+        try {
+            DB::beginTransaction();
+            if ($tipo_servicio == 'agregar') {
+                $id_venta = DB::table('ventas_generales')->insertGetId(
+                    [
+                        'uso_inmediato_b' => $request->tipo['value']
+                    ]
+                );
+                //hacemos la operacion empresa_operaciones_id = 5 => ventan en gral
+                $id_operacion = DB::table('operaciones')->insertGetId(
+                    [
+                        'financiamiento' => 1,
+                        'clientes_id' => $request->id_cliente,
+                        'empresa_operaciones_id' => 5,
+                        'aplica_devolucion_b' => 0,
+                        'fecha_operacion' => $request->fecha_venta,
+                        'fecha_registro' => now(),
+                        'ventas_generales_id' => $id_venta,
+                        'subtotal' => $subtotal,
+                        'descuento' => $descuento,
+                        'impuestos' => $impuestos,
+                        'total' => $total,
+                        'saldo' => $total,
+                        'tasa_iva' => $request->tasa_iva,
+                        'registro_id' => (int) $request->user()->id,
+                        'status' => 1
+                    ]
+                );
+
+                /**al registrar el plan, se procede a registrar los articulos de manera temporal */
+                foreach ($request->articulos as $key => $articulo) {
+                    DB::table('articulos_venta_general_temporal')->insert(
+                        [
+                            'articulos_id' => $articulo['id'],
+                            'cantidad' => $articulo['cantidad'],
+                            'costo_neto_normal' => $articulo['costo_neto_normal'],
+                            'costo_neto_descuento' => $articulo['costo_neto_descuento'],
+                            'descuento_b' => $articulo['descuento_b'],
+                            'facturable_b' => $articulo['facturable_b'],
+                            'operaciones_id' => $id_operacion
+                        ]
+                    );
+                }
+                //registramos el pago programado
+                $id_pago_programado_unico = DB::table('pagos_programados')->insertGetId(
+                    [
+                        /**utilizo la referencia de pago 005 para ventas en gral */
+                        'num_pago' => 1, //numero 1, pues es unico
+                        'referencia_pago' => '005' . date('Ymd', strtotime($request->fechahora_contrato)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
+                        'fecha_programada' => $request->fecha_venta, //fecha de la venta
+                        'conceptos_pagos_id' => 3, //3-pago unico //que concepto de pago es, segun los conceptos de pago, abono, enganche o liquidacion
+                        'monto_programado' => $total,
+                        'operaciones_id' => $id_operacion,
+                        'status' => 1,
+                    ]
+                );
+                $id_return = $id_venta;
+                /**todo salio bien y se debe de guardar */
+            } else {
+                /**es modificar */
+            }
+            DB::commit();
+            return $id_return;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th;
+        }
+    }
+
 }

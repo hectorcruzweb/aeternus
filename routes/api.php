@@ -281,6 +281,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
     Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
+    //ventas gral
+    Route::post('funeraria/control_ventas_gral/{tipo_servicio}', 'FunerariaController@control_ventas_gral');
 });
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {

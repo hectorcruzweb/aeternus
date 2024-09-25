@@ -142,9 +142,14 @@
                                     @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 3)
                                         <!--es de planes a futuro--->
                                         {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['servicios_funerarios_id'] }}<br>
+                                    @elseif($datos['referencias_cubiertas'][0]['operacion_del_pago']['empresa_operaciones_id'] == 5)
+                                        <!--es de ventas en gral.--->
+                                        {{ $datos['referencias_cubiertas'][0]['operacion_del_pago']['ventas_generales_id'] }}<br>
                                     @endif
-                                    <span class="bold">Fallecido:</span>
-                                    {{ $fallecido }}<br>
+                                    @if ($fallecido != 'N/A')
+                                        <span class="bold">Fallecido:</span>
+                                        {{ $fallecido }}<br>
+                                    @endif
                                 </td>
                             </tr>
                         </table>
