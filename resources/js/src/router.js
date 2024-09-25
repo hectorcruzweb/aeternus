@@ -429,7 +429,7 @@ const router = new Router({
                     name: "ventas_generales",
                     component: () =>
                         import(
-                            "@/views/pages/funeraria/servicios_funerarios/ServiciosList.vue"
+                            "@/views/pages/funeraria/ventas_generales/ComprasList.vue"
                         ),
                     meta: {
                         breadcrumb: [
