@@ -15,11 +15,12 @@ class CreateVentasGeneralesMigration extends Migration
     {
         Schema::create('ventas_generales', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->tinyInteger('uso_inmediato_b')->default(1);//1 => si, 0 => no (A futuro)
             $table->tinyInteger('entregado_b')->default(1);//1 => si, 0 => no
             $table->dateTime('fechahora_entrega')->nullable();
             $table->unsignedBigInteger('entrego_id')->unsigned()->nullable();
             $table->foreign('entrego_id')->references('id')->on('usuarios');
+            $table->unsignedBigInteger('vendedores_id')->unsigned();
+            $table->foreign('vendedores_id')->references('id')->on('usuarios');
         });
 
         //ventas_generales en operaciones

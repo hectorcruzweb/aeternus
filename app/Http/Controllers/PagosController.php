@@ -83,6 +83,7 @@ class PagosController extends ApiController
                 'operaciones.id',
                 'ventas_planes_id',
                 'ventas_terrenos_id',
+                'ventas_generales_id',
                 'cuotas_cementerio_id',
                 'servicios_funerarios_id',
                 'operaciones.id as operacion_id',
@@ -440,7 +441,16 @@ class PagosController extends ApiController
                     return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
                 }
                 $saldo_tabla_operaciones = $datos_venta["saldo_neto"];
+            } else if ($empresa_operaciones_id == 5) {
+                /**venta en gral */
+                $datos_venta = $funeraria_controller->get_ventas_gral($request, $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['ventas_generales_id'], '')[0];
+                //verificando que no este cancelada
+                if ($datos_venta['operacion_status'] == 0) {
+                    return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                }
+                $saldo_tabla_operaciones = $datos_venta["saldo_neto"];
             }
+
             /** cambiando el estatus de la operacion*/
             DB::table('operaciones')->where('id', $datos_pago['referencias_cubiertas'][0]['operacion_del_pago']['id'])->update(
                 [
@@ -977,6 +987,18 @@ class PagosController extends ApiController
                         'saldo' => $datos_operacion['pagos_programados'][0]["saldo_neto"]
                     ]
                 );
+            } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
+                /**servicios funerarios */
+                $funeraria_controller = new FunerariaController();
+                $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_operacion['servicios_funerarios_id'], '')[0];
+                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
+                DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
+                    [
+                        /**status de ya liquidada */
+                        'status' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
+                        'saldo' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                    ]
+                );
             } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
                 /**venta de planes a futuro */
                 $funeraria_controller = new FunerariaController();
@@ -988,16 +1010,14 @@ class PagosController extends ApiController
                         'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
                     ]
                 );
-            } else if ($datos_operacion['empresa_operaciones_id'] == 3) {
-                /**servicios funerarios */
-                $funeraria_controller = new FunerariaController();
-                $datos_venta = $funeraria_controller->get_solicitudes_servicios($request, $datos_operacion['servicios_funerarios_id'], '')[0];
-                /**tiene cero saldo y se debe de modificar el status a pagado de la venta (2) */
-                DB::table('operaciones')->where('id', $datos_venta['operacion']['operacion_id'])->update(
+            } else if ($datos_operacion['empresa_operaciones_id'] == 5) {
+                /**es tipo de ventas en gral */
+                $datos_venta = $funeraria_controller->get_ventas_gral($request, $datos_operacion['ventas_generales_id'], '')[0];
+                DB::table('operaciones')->where('id', $datos_venta['operacion_id'])->update(
                     [
-                        /**status de ya liquidada */
-                        'status' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
-                        'saldo' => round($datos_venta['operacion']['saldo_neto'], 2, PHP_ROUND_HALF_UP)
+                        /**status de ya liquidada o de pendiente de pago si tiene saldo pendiente*/
+                        'status' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP) <= 0 ? 2 : 1,
+                        'saldo' => round($datos_venta['saldo_neto'], 2, PHP_ROUND_HALF_UP)
                     ]
                 );
             }

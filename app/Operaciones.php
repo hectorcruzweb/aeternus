@@ -286,4 +286,13 @@ class Operaciones extends Model
     {
         return $this->hasOne('App\MovimientosInventario', 'operaciones_id', 'id')->select('operaciones_id', 'id');
     }
+
+
+    public function venta_general()
+    {
+        return $this->belongsTo('App\VentasGral', 'ventas_generales_id', 'id')
+            ->select(
+                '*'
+            );
+    }
 }

@@ -86,26 +86,26 @@
                 </div>
                 <div class="w-full input-text xl:w-3/12 px-2">
                   <label class="">
-                    Tipo de Venta
+                    Vendedor
                     <span class="">(*)</span>
                   </label>
                   <v-select
-                    :options="tipos"
+                    :options="vendedores"
                     :clearable="false"
                     :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.tipo"
+                    v-model="form.vendedor"
                     class="w-full"
-                    v-validate:tipo_computed.immediate="'required'"
-                    name="tipo_venta_id"
+                    v-validate:vendedor_computed.immediate="'required'"
+                    name="vendedor"
                     data-vv-as=" "
                   >
                     <div slot="no-options">Seleccione una opción</div>
                   </v-select>
                   <span class="">
-                    {{ errors.first("tipo_venta_id") }}
+                    {{ errors.first("vendedor") }}
                   </span>
-                  <span class="" v-if="this.errores['tipo_venta_id.value']">{{
-                    errores["tipo_venta_id.value"][0]
+                  <span class="" v-if="this.errores['vendedor.value']">{{
+                    errores["vendedor.value"][0]
                   }}</span>
                 </div>
               </div>
@@ -486,6 +486,7 @@ import ConfirmarDanger from "@pages/ConfirmarDanger";
 //componente de password
 import Password from "@pages/confirmar_password";
 import funeraria from "@services/funeraria";
+import cementerio from "@services/cementerio";
 import ClientesBuscador from "@pages/clientes/searcher.vue";
 import vSelect from "vue-select";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
@@ -532,7 +533,7 @@ export default {
         };
         (async () => {
           if (this.getTipoformulario == "agregar") {
-            //await this.get_solicitudes_servicios_id();
+            await this.get_vendedores();
           }
         })();
       } else {
@@ -558,12 +559,8 @@ export default {
         return newValue;
       },
     },
-    tipo_computed: function () {
-      if (this.form.tipo.value != "") {
-        return true;
-      } else {
-        return false;
-      }
+    vendedor_computed: function () {
+      return this.form.vendedor.value;
     },
     totalVenta: function () {
       let total = 0;
@@ -587,17 +584,8 @@ export default {
 
   data() {
     return {
-      ///formi
-      tipos: [
-        {
-          value: "1",
-          label: "Uso Inmediato",
-        },
-        {
-          value: "0",
-          label: "Uso a Futuro",
-        },
-      ],
+      ///form
+      vendedores: [],
       //form
 
       serverOptions: {
@@ -606,7 +594,7 @@ export default {
       form: {
         venta_id: "", //para modificaciones
         fecha_venta: "",
-        tipo: { label: "Uso Inmediato", value: "1" },
+        vendedor: { label: "Seleccione 1", value: "" },
         id_cliente: "",
         cliente: "",
         direccion_cliente: "",
@@ -631,6 +619,36 @@ export default {
     };
   },
   methods: {
+    //get vendedores
+    async get_vendedores() {
+      try {
+        let res = await cementerio.get_vendedores();
+        //le agrego todos los usuarios vendedores
+        this.vendedores = [];
+        this.vendedores.push({ label: "Seleccione 1", value: "" });
+        if (this.getTipoformulario == "agregar") {
+          this.form.vendedor = this.vendedores[0];
+        }
+        res.data.forEach((element) => {
+          this.vendedores.push({
+            label: element.nombre,
+            value: element.id,
+          });
+        });
+      } catch (error) {
+        /**error al cargar vendedores */
+        this.$vs.notify({
+          title: "Error",
+          text: "Ha ocurrido un error al tratar de cargar el catálogo de vendedores, por favor reintente.",
+          iconPack: "feather",
+          icon: "icon-alert-circle",
+          color: "danger",
+          position: "bottom-right",
+          time: "9000",
+        });
+        this.cerrarVentana();
+      }
+    },
     get_concepto_por_codigo(origen = "", evento = "") {
       if (evento == "blur") {
         return;
@@ -874,7 +892,7 @@ export default {
       this.form.fecha_venta = "";
       this.form.id_cliente = "";
       this.form.cliente = "";
-      this.form.tipo = this.tipos[0];
+      this.form.vendedor = this.vendedores[0];
     },
 
     closePassword() {

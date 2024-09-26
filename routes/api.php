@@ -284,6 +284,7 @@ Route::middleware(['auth:api'])->group(function () {
     //ventas gral
     Route::post('funeraria/control_ventas_gral/{tipo_servicio}', 'FunerariaController@control_ventas_gral');
 });
+Route::get('funeraria/get_ventas_gral/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas_gral');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {
     Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');
