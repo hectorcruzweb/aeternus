@@ -6491,6 +6491,7 @@ class FunerariaController extends ApiController
                         'saldo' => $total,
                         'tasa_iva' => $request->tasa_iva,
                         'registro_id' => (int) $request->user()->id,
+                        'nota' => $request->nota,
                         'status' => 1
                     ]
                 );
@@ -6538,9 +6539,9 @@ class FunerariaController extends ApiController
 
     public function get_ventas_gral(Request $request, $id_venta = 'all', $paginated = false)
     {
-        $light = $request->light;
+        $light = filter_var($request->light, FILTER_VALIDATE_BOOLEAN);
         $filtro_especifico_opcion = $request->filtro_especifico_opcion;
-        $titular = $request->titular;
+        $cliente = $request->cliente;
         $numero_control = $request->numero_control;
         $status = $request->status;
         $fecha_operacion = $request->fecha_operacion;
@@ -6659,10 +6660,11 @@ class FunerariaController extends ApiController
                 '(NULL) AS motivos_cancelacion_texto'
             )
         )->with('venta_general');
-        if (!isset($light)) {
+        if (!$light) {
             $resultado_query = $resultado_query->with('pagosProgramados.pagados')
                 ->with('venta_general.vendedor')
                 ->with('cancelador:id,nombre')
+                ->with('conceptos_temporales')
                 ->with('registro:id,nombre');
         }
         $resultado_query = $resultado_query->where('empresa_operaciones_id', '=', 5);
@@ -6678,7 +6680,7 @@ class FunerariaController extends ApiController
         })
             ->where(function ($q) use ($numero_control, $filtro_especifico_opcion) {
                 if (trim($numero_control) != '') {
-                    if ($filtro_especifico_opcion == 3) {
+                    if ($filtro_especifico_opcion == 1) {
                         /**filtro por numero de venta en gral */
                         $q->where('operaciones.ventas_generales_id', '=', $numero_control);
                     }
@@ -6692,14 +6694,27 @@ class FunerariaController extends ApiController
                     } elseif ($status == 2) {
                         //solo las pagadas
                         $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
+                    } elseif ($status == 5) {
+                        //solo las activas
+                        $q->where('operaciones.status', '>', 0);
+                    } elseif ($status == 3) {
+                        //solo las entregadas
+                        $q->WhereHas('venta_general', function ($query) {
+                            $query->where('entregado_b', '=', 1);
+                        });
+                    } elseif ($status == 4) {
+                        //solo las por entregar
+                        $q->WhereHas('venta_general', function ($query) {
+                            $query->where('entregado_b', '=', 0);
+                        });
                     } elseif ($status == 0) {
                         $q->where('operaciones.status', 0);
                     }
                 }
             })
             ->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
-            ->where('nombre', 'like', '%' . $titular . '%')
-            ->orderBy('operaciones.ventas_generales_id', 'desc')
+            ->where('nombre', 'like', '%' . $cliente . '%')
+            ->orderBy('operaciones.id', 'desc')
             ->get();
         /**verificando si el usario necesita el resultado paginado, todo o por id */
         $resultado = array();
@@ -6750,7 +6765,7 @@ class FunerariaController extends ApiController
                 $venta['tipo_financimiento_texto'] = 'A futuro/'
                     . $venta['financiamiento'] . ' Mes(s)';
             }
-            if (!isset($light)) {
+            if (!$light) {
                 $venta['num_pagos_programados'] = count($venta['pagos_programados']);
                 $num_pagos_programados_vigentes = 0;
                 if ($venta['num_pagos_programados'] > 0) {

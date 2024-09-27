@@ -15,7 +15,7 @@ class CreateVentasGeneralesMigration extends Migration
     {
         Schema::create('ventas_generales', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->tinyInteger('entregado_b')->default(1);//1 => si, 0 => no
+            $table->tinyInteger('entregado_b')->default(0);//1 => si, 0 => no
             $table->dateTime('fechahora_entrega')->nullable();
             $table->unsignedBigInteger('entrego_id')->unsigned()->nullable();
             $table->foreign('entrego_id')->references('id')->on('usuarios');
@@ -49,6 +49,10 @@ class CreateVentasGeneralesMigration extends Migration
      */
     public function down()
     {
+        //limpiamos los pagos programados que se hacen durante las pruebas de este modulo
+        DB::statement("DELETE FROM pagos_pagos_programados WHERE pagos_programados_id IN(SELECT pagos_programados.id FROM operaciones INNER JOIN pagos_programados ON pagos_programados.`operaciones_id`=operaciones.`id` WHERE operaciones.`empresa_operaciones_id`=5)");
+        DB::statement("DELETE FROM pagos_programados WHERE operaciones_id IN(SELECT operaciones.id FROM operaciones WHERE operaciones.`empresa_operaciones_id`=5)");
+        //eliminamos los pagos relacionados a las ventas en gral.
         //quitando el campo de ventas_genrales_id en operaciones
         Schema::table('operaciones', function ($table) {
             $table->dropForeign(['ventas_generales_id']);
@@ -58,5 +62,6 @@ class CreateVentasGeneralesMigration extends Migration
         Schema::dropIfExists('ventas_generales');
         //quitando tabla de articulos_venta_general_temporal
         Schema::dropIfExists('articulos_venta_general_temporal');
+        DB::statement("DELETE FROM operaciones WHERE empresa_operaciones_id=5");
     }
 }

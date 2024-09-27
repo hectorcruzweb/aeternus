@@ -292,7 +292,27 @@ class Operaciones extends Model
     {
         return $this->belongsTo('App\VentasGral', 'ventas_generales_id', 'id')
             ->select(
-                '*'
+                '*',
+                DB::raw(
+                    'if(entregado_b=1,"Entregado","Por Entregar") AS status_entregado_texto'
+                )
             );
     }
+
+    public function conceptos_temporales()
+    {
+        return $this->hasMany('App\ArticulosTemporales', 'operaciones_id', 'id')
+            ->select(
+                "cantidad",
+                "descripcion",
+                "articulos_id",
+                "costo_neto_normal",
+                "costo_neto_descuento",
+                "descuento_b",
+                "facturable_b",
+                "operaciones_id"
+            )
+            ->join('articulos', 'articulos.id', '=', 'articulos_venta_general_temporal.articulos_id');
+    }
+
 }

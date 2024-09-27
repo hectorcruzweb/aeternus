@@ -519,6 +519,11 @@ export default {
       required: false,
       default: "z-index54k",
     },
+    id_venta: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   watch: {
     show: function (newValue, oldValue) {
@@ -532,8 +537,12 @@ export default {
           this.cancelar();
         };
         (async () => {
+          await this.get_vendedores();
           if (this.getTipoformulario == "agregar") {
-            await this.get_vendedores();
+          } else {
+            this.form.venta_id = this.get_venta_id;
+            /**se cargan los datos al formulario */
+            await this.consultar_venta_id();
           }
         })();
       } else {
@@ -542,6 +551,14 @@ export default {
     },
   },
   computed: {
+    get_venta_id: {
+      get() {
+        return this.id_venta;
+      },
+      set(newValue) {
+        return newValue;
+      },
+    },
     /**validaciones de los selects */
     showVentana: {
       get() {
@@ -587,7 +604,6 @@ export default {
       ///form
       vendedores: [],
       //form
-
       serverOptions: {
         numero_control: "",
       },
@@ -619,6 +635,90 @@ export default {
     };
   },
   methods: {
+    async consultar_venta_id() {
+      try {
+        this.$vs.loading();
+        let res = await funeraria.get_ventas_gral(
+          null,
+          false,
+          this.form.venta_id
+        );
+        if (res.data.length > 0) {
+          res = res.data[0];
+          //cargo informacion
+          let partes_fecha = res.fecha_operacion.split("-");
+          //yyyy-mm-dd
+          this.form.fecha_venta = new Date(
+            partes_fecha[0],
+            partes_fecha[1] - 1,
+            partes_fecha[2]
+          );
+
+          this.form.id_cliente = res.cliente_id;
+          this.form.cliente = res.nombre;
+          this.form.direccion_cliente = res.direccion;
+          /**verificando si existe el vendedor o si no para crearlo, podria no existir en caso de que haya sido cancelado */
+          this.vendedores.forEach((element) => {
+            if (element.value == res.venta_general.vendedor.id) {
+              this.form.vendedor = element;
+              return;
+            }
+          });
+          if (this.form.vendedor.value == "") {
+            let vendedor = {
+              value: res.venta_general.vendedor.id,
+              label:
+                "(" +
+                res.venta_general.vendedor.nombre +
+                ", vendedor original)",
+            };
+            this.vendedores.push(vendedor);
+            this.form.vendedor = vendedor;
+            /**se agrega el original y se selecciona */
+          }
+          this.form.tasa_iva = Number(res.tasa_iva) <= 0 ? 16 : res.tasa_iva;
+          res.conceptos_temporales.forEach((element) => {
+            this.form.articulos.push({
+              id: element.articulos_id,
+              descripcion: element.descripcion,
+              cantidad: element.cantidad,
+              costo_neto_normal: element.costo_neto_normal,
+              descuento_b: element.descuento_b,
+              costo_neto_descuento: element.costo_neto_descuento,
+              facturable_b: element.facturable_b,
+            });
+          });
+          this.form.nota = res.nota;
+        } else {
+          //no se encontro la info
+          this.$vs.notify({
+            title: "Modificar Venta",
+            text: "No se ha encontrado esta venta en el sistema.",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+            time: 4000,
+          });
+          this.cerrarVentana();
+        }
+        this.$vs.loading.close();
+      } catch (err) {
+        this.$vs.loading.close();
+        if (err.response) {
+          if (err.response.status == 403) {
+            /**FORBIDDEN ERROR */
+            this.$vs.notify({
+              title: "Permiso denegado",
+              text: "Verifique sus permisos con el administrador del sistema.",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "warning",
+              time: 4000,
+            });
+          }
+        }
+      }
+    },
     //get vendedores
     async get_vendedores() {
       try {
@@ -682,8 +782,7 @@ export default {
               //lote: lote.lotes_id,
               //num_lote_inventario: lote.num_lote_inventario,
               cantidad: 1,
-              //costo_neto_normal: datos.precio_venta,
-              costo_neto_normal: "",
+              costo_neto_normal: datos.precio_venta,
               descuento_b: 0,
               costo_neto_descuento: 0,
               importe: 0,

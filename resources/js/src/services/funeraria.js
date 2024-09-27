@@ -53,9 +53,6 @@ export default {
             params: param
         });
     },
-
-
-
     get_solicitudes_servicios_id(param) {
         return axios.get("/funeraria/get_solicitudes_servicios/" + param + '/0/0/0/1', {
             cancelToken: new CancelToken(c => {
@@ -219,5 +216,22 @@ export default {
     control_ventas_gral(param, tipo_servicio) {
         let call = "/funeraria/control_ventas_gral/" + tipo_servicio;
         return axios.post(call, param);
+    },
+    get_ventas_gral(param, light = false, id = "") {
+        let service = "/funeraria/get_ventas_gral/";
+        if (id == "") {
+            service += "all/paginated";
+        } else {
+            service += id;
+        }
+        if (light == true) {
+            service += "?light=true";
+        }
+        return axios.get(service, {
+            cancelToken: new CancelToken(c => {
+                self.cancel = c;
+            }),
+            params: param
+        });
     },
 };
