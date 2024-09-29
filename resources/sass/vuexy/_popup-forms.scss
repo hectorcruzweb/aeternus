@@ -10,6 +10,46 @@
         max-height: 440px !important;
     }
 
+    &.width-auto {
+        .vs-popup {
+            width: 60% !important;
+            height: 270px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            .vs-popup--content {
+                height: 100% !important;
+                > div {
+                    height: 100% !important;
+                }
+            }
+        }
+        .title {
+            @extend .h3;
+        }
+        .content-text {
+            font-size: $normal;
+        }
+        @media (min-width: 576px) {
+            .title {
+                font-size: $h1-font-size;
+            }
+            .content-text {
+                font-size: $h4-font-size;
+            }
+            .vs-popup {
+                max-width: 576px !important;
+            }
+        }
+        @media (min-width: 768px) {
+        }
+
+        @media (min-width: 992px) {
+        }
+
+        @media (min-width: 1200px) {
+        }
+    }
+
     .vs-dialog {
         border-radius: 0 !important;
     }
@@ -37,7 +77,6 @@
 
 /*heighs del form segun su break-points*/
 @media (max-width: 1200px) {
-
     /*para los forms que no son fullscreen*/
     .forms-popup {
         &:not(&.fullscreen) {
@@ -292,7 +331,7 @@
         @extend .theme-background;
 
         .vs-popup--content {
-            &>div {
+            & > div {
                 .tab-content {
                     // height: 100vh !important;
                     padding: 1.5rem 1.25rem 1.5rem 1.25rem;

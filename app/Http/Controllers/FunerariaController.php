@@ -6380,12 +6380,12 @@ class FunerariaController extends ApiController
 
         //validaciones directas sin condicionales
         $validaciones = [
+            'venta_id' => (trim($tipo_servicio) == 'agregar') ? '' : 'required|numeric|min:1',
             "articulos" => "required|array|min:1",
             'articulos.*.id' => 'required|integer|min:1',
             'articulos.*.cantidad' => 'required|integer|min:1',
             'articulos.*.costo_neto_normal' => 'required|numeric|min:0',
             'articulos.*.costo_neto_descuento' => 'required|numeric|min:0',
-            'articulos.*.plan_b' => 'required|boolean',
             'articulos.*.descuento_b' => 'required|boolean',
             'articulos.*.facturable_b' => 'required|boolean',
             'fecha_venta' => 'required',
@@ -6405,6 +6405,22 @@ class FunerariaController extends ApiController
             $validaciones,
             $mensajes
         );
+
+
+        /**verificando si es tipo modificar para validar que venga el id a modificar */
+        $datos_plan = array();
+        if ($tipo_servicio == 'modificar') {
+            $venta = $this->get_ventas_gral(new \Illuminate\Http\Request(), $request->venta_id)[0];
+            if (empty($venta)) {
+                //no se encontro los datos
+                return $this->errorResponse('No se encontró la información de la venta solicitada.', 409);
+            } else if ($venta['operacion_status'] == 0) {
+                return $this->errorResponse('Esta venta ya fue cancelada, no puede modificarse.', 409);
+            } else if ($venta['venta_general']["entregado_b"] != 0) {
+                return $this->errorResponse('Esta venta ya fue entregada, no puede modificarse.', 409);
+            }
+        }
+
         //sacando totales
         $subtotal = 0;
         $descuento = 0;
@@ -6449,21 +6465,6 @@ class FunerariaController extends ApiController
         $descuento = round($descuento, 2);
         $impuestos = round($impuestos, 2);
         $total = round($total, 2);
-
-        /**verificando si es tipo modificar para validar que venga el id a modificar */
-
-        /*
-                $datos_plan = array();
-                if ($tipo_servicio == 'modificar') {
-                    $datos_plan = $this->get_planes(false, $request->id_plan_modificar)[0];
-                    if (empty($datos_plan)) {
-                       //no se encontro los datos
-                        return $this->errorResponse('No se encontró la información del plan solicitada', 409);
-                    } else if ($datos_plan['status'] == 0) {
-                        return $this->errorResponse('Esta plan ya fue cancelado, no puede modificarse', 409);
-                    }
-                }
-        */
 
         $id_return = 0;
         try {
@@ -6515,7 +6516,7 @@ class FunerariaController extends ApiController
                     [
                         /**utilizo la referencia de pago 005 para ventas en gral */
                         'num_pago' => 1, //numero 1, pues es unico
-                        'referencia_pago' => '005' . date('Ymd', strtotime($request->fechahora_contrato)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
+                        'referencia_pago' => '005' . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
                         'fecha_programada' => $request->fecha_venta, //fecha de la venta
                         'conceptos_pagos_id' => 3, //3-pago unico //que concepto de pago es, segun los conceptos de pago, abono, enganche o liquidacion
                         'monto_programado' => $total,
@@ -6526,7 +6527,62 @@ class FunerariaController extends ApiController
                 $id_return = $id_venta;
                 /**todo salio bien y se debe de guardar */
             } else {
+                $id_venta = $request->venta_id;
                 /**es modificar */
+                //reviso que el nuevo total no menor al importe saldado hasta el momento.
+                if ($venta['total_cubierto'] > $total) {
+                    return $this->errorResponse('Error, el nuevo total no debe ser menor al total ya pagado($' . number_format($venta['total_cubierto'], 2) . ' MXN).', 409);
+                }
+                //empezamos a modificar
+                DB::table('ventas_generales')->where("id", $id_venta)->update(
+                    [
+                        'vendedores_id' => $request->vendedor['value']
+                    ]
+                );
+                //hacemos la modificacion de operacion
+                $nuevo_saldo = round($total - $venta["total_cubierto"]);
+                DB::table('operaciones')->where("ventas_generales_id", $id_venta)->update(
+                    [
+                        'clientes_id' => $request->id_cliente,
+                        'fecha_operacion' => $request->fecha_venta,
+                        'subtotal' => $subtotal,
+                        'descuento' => $descuento,
+                        'impuestos' => $impuestos,
+                        'total' => $total,
+                        'saldo' => $nuevo_saldo,
+                        'tasa_iva' => $request->tasa_iva,
+                        'fecha_modificacion' => now(),
+                        'modifico_id' => (int) $request->user()->id,
+                        'nota' => $request->nota,
+                        'status' => $nuevo_saldo > 0 ? 1 : 2
+                    ]
+                );
+
+                /**al registrar el plan, se procede a registrar los articulos de manera temporal */
+                DB::table('articulos_venta_general_temporal')->where('operaciones_id', $venta["operacion_id"])->delete();
+                foreach ($request->articulos as $key => $articulo) {
+                    DB::table('articulos_venta_general_temporal')->insert(
+                        [
+                            'articulos_id' => $articulo['id'],
+                            'cantidad' => $articulo['cantidad'],
+                            'costo_neto_normal' => $articulo['costo_neto_normal'],
+                            'costo_neto_descuento' => $articulo['costo_neto_descuento'],
+                            'descuento_b' => $articulo['descuento_b'],
+                            'facturable_b' => $articulo['facturable_b'],
+                            'operaciones_id' => $venta["operacion_id"]
+                        ]
+                    );
+                }
+                //actualizamos el pago programado
+                DB::table('pagos_programados')->where('operaciones_id', $venta["operacion_id"])->update(
+                    [
+                        /**utilizo la referencia de pago 005 para ventas en gral */
+                        'referencia_pago' => '005' . date('Ymd', strtotime($request->fecha_venta)) . '01' . $id_venta, //se crea una referencia para saber a que pago pertenece
+                        'fecha_programada' => $request->fecha_venta, //fecha de la venta
+                        'monto_programado' => $total,
+                    ]
+                );
+                $id_return = $id_venta;
             }
             DB::commit();
             return $id_return;
