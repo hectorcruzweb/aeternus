@@ -163,7 +163,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/get_servicios_adeudos', 'FunerariaController@get_servicios_adeudos');
     Route::get('funeraria/get_abonos_vencidos_planes_funerarios', 'FunerariaController@get_abonos_vencidos_planes_funerarios');
     Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
-
+    Route::post('funeraria/cancelar_venta_gral', 'FunerariaController@cancelar_venta_gral');
     /**rutas de pagos */
     Route::get('pagos/calcular_adeudo/{referencia}/{fecha_pago}/{multipago?}', 'PagosController@calcular_adeudo');
     Route::post('pagos/guardar_pago', 'PagosController@guardar_pago')->middleware('permiso:20,57');

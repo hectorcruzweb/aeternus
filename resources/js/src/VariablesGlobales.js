@@ -1,6 +1,8 @@
 import { Spanish } from "flatpickr/dist/l10n/es.js";
 import { range } from "lodash";
 export const configdateTimePickerWithTime = {
+    altInput: true,
+    altFormat: "j M Y H:i",
     enableTime: true,
     dateFormat: "Y-m-d H:i",
     locale: Spanish,
@@ -9,6 +11,18 @@ export const configdateTimePickerWithTime = {
     maxDate: new Date(new Date().setDate(new Date().getDate() + 25))
 };
 export const configdateTimePicker = {
+    altInput: true,
+    altFormat: "j M Y",
+    enableTime: false,
+    dateFormat: "Y-m-d",
+    locale: Spanish,
+    shorthandCurrentMonth: false,
+    maxDate: new Date(new Date().setDate(new Date().getDate() + 25))
+};
+
+export const configdateTimePickerFullMonth = {
+    altInput: true,
+    altFormat: "j F Y",
     enableTime: false,
     dateFormat: "Y-m-d",
     locale: Spanish,
@@ -17,6 +31,8 @@ export const configdateTimePicker = {
 };
 
 export const configdateTimePickerRange = {
+    altInput: true,
+    altFormat: "j M Y",
     mode: "range",
     dateFormat: "Y-m-d",
     locale: Spanish,
@@ -25,6 +41,8 @@ export const configdateTimePickerRange = {
 };
 
 export const configdateTimePickerFechasCaducidad = {
+    altInput: true,
+    altFormat: "j M Y",
     enableTime: false,
     dateFormat: "Y-m-d",
     locale: Spanish,

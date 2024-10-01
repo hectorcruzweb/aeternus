@@ -7031,10 +7031,6 @@ class FunerariaController extends ApiController
                 } else {
                     /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
                 }
-
-
-
-
             }
 
         } //fin foreach venta
@@ -7043,4 +7039,128 @@ class FunerariaController extends ApiController
         /**aqui se puede hacer todo los calculos para llenar la informacion calculada del servicio get_ventas */
     }
 
+
+    /**CANCELAR LA VENTA EN GRAL. */
+    public function cancelar_venta_gral(Request $request)
+    {
+        try {
+            //return $request->minima_cuota_inicial;
+            //validaciones directas sin condicionales
+            $datos_solicitud = $this->get_solicitudes_servicios($request, $request->solicitud_id, '')[0];
+            /**unicamente puede regresarse lo que  se ha cubierto de capital */
+            $validaciones = [
+                'solicitud_id' => 'required',
+                'motivo.value' => 'required',
+            ];
+            $total_cubierto = 0;
+            if ($datos_solicitud['operacion'] != null) {
+                $validaciones['cantidad'] = 'numeric|min:0|' . 'max:' . $datos_solicitud['operacion']['total_cubierto'];
+                $total_cubierto = $datos_solicitud['operacion']['total_cubierto'];
+            }
+
+            $mensajes = [
+                'required' => 'Ingrese este dato',
+                'numeric' => 'Este dato debe ser un número',
+                'max' => 'La cantidad a devolver no debe superar a la cantidad abonada hasta la fecha: $ ' . number_format($total_cubierto, 2),
+                'min' => 'La cantidad a devolver debe ser mínimo: $ 00.00 Pesos MXN',
+            ];
+
+            request()->validate(
+                $validaciones,
+                $mensajes
+            );
+            /**validar si la propiedad tiene gente sepultada */
+            /**pendiente
+             * pendiente
+             * pendiente
+             * pendiente
+             */
+
+            /**validar si la propiedad no fue dada de baja ya */
+
+            if ($datos_solicitud['status_b'] == 0) {
+                return $this->errorResponse('Esta solicitud ya habia sido cancelada.', 409);
+            }
+
+            /**verifica si el servicio puede ser cancelado por motivos de exhumacion */
+            if ($datos_solicitud['exhumado_b'] == 1) {
+                return $this->errorResponse('Este servicio ha sido exhumado y no puede ser cancelado, por motivos de historial.', 409);
+            }
+
+            DB::beginTransaction();
+            /**verifico si la solicitud tiene servicio funerario sino para eliminar la soliitud */
+
+            DB::table('operaciones')->where('servicios_funerarios_id', $request->solicitud_id)->where("empresa_operaciones_id", 3)->update(
+                [
+                    'motivos_cancelacion_id' => $request['motivo.value'],
+                    'fecha_cancelacion' => now(),
+                    'cantidad_a_regresar_cancelacion' => (float) $request->cantidad,
+                    'cancelo_id' => (int) $request->user()->id,
+                    'nota_cancelacion' => $request->comentario,
+                    'status' => 0,
+                ]
+            );
+
+            DB::table('servicios_funerarios')->where('id', $request->solicitud_id)->update(
+                [
+                    //'cancelo_id' => (int) $request->user()->id,
+                    'status' => 0,
+                ]
+            );
+
+            /**se deben de regresar los articulos que tiene este contrato al inventario */
+            /**aqui voy */
+            $detalle_inventario = [];
+            if (isset($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'])) {
+                /**la operacion ya tenia articulos y servicios agregados y se deben de revisar para ver cuales
+                 * se quitaron y se deben regresar al inventario
+                 */
+                $lotes_iguales = [];
+                $detalle_inventario = [];
+                foreach ($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_contrato => $articulo_contrato) {
+                    if (in_array($index_contrato, $lotes_iguales) || !is_numeric($articulo_contrato['lotes_id'])) {
+                        continue;
+                    }
+                    /**busco los ids y lotes iguales */
+                    $suma_articulo = 0;
+                    foreach ($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_sub => $articulo_sub) {
+                        if (
+                            $articulo_contrato['articulos_id'] == $articulo_sub['articulos_id'] &&
+                            $articulo_contrato['lotes_id'] == $articulo_sub['lotes_id']
+                        ) {
+                            $suma_articulo += $articulo_sub['cantidad'];
+                            array_push($lotes_iguales, $index_sub);
+                        }
+                    }
+                    array_push($detalle_inventario, [
+                        'lotes_id' => $articulo_contrato['lotes_id'],
+                        'articulos_id' => $articulo_contrato['articulos_id'],
+                        'cantidad' => $suma_articulo,
+                    ]);
+                }
+            } //fin if isset articulos en el contrato
+
+            /**al ser obtenido el array de los articulos a regresar, solo de aumentan al inventario */
+            foreach ($detalle_inventario as $detalle) {
+                $total = Inventario::select('existencia')->where('lotes_id', '=', $detalle['lotes_id'])->where('articulos_id', '=', $detalle['articulos_id'])->first();
+                $suma = $total['existencia'] + $detalle['cantidad'];
+                DB::table('inventario')->where('lotes_id', $detalle['lotes_id'])->where(
+                    'articulos_id',
+                    $detalle['articulos_id']
+                )->update(
+                        [
+                            'existencia' => $suma,
+                        ]
+                    );
+            }
+
+            // return $this->errorResponse($detalle_inventario,409);
+
+            DB::commit();
+            return $request->solicitud_id;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th;
+        }
+    }
 }

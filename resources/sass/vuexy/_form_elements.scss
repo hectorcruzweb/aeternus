@@ -9,36 +9,53 @@
 }
 
 .input-text {
-
-    input[type=text],
-    .vs__dropdown-toggle {
-        border-radius: 0 !important;
+    .form-control {
+        @extend .size-base, .color-copy, .font-normal;
+        text-transform: uppercase;
+        padding: 5px 0px 5px 7px;
+        border: 1px solid rgba(var(--vs-default_color), 1);
+        &::placeholder {
+            @extend .size-small, .color-dark-300, .font-light;
+            padding: 5px 0px 5px 7px;
+        }
+        height: 37.59px !important ;
+        &:hover {
+            border: 1px solid rgba(var(--vs-primary), 1) !important;
+            cursor: pointer;
+        }
     }
 
+    input[type="text"],
+    .vs__dropdown-toggle {
+        border-radius: 0 !important;
+        line-height: 1rem !important;
+    }
     padding-top: 0.25rem !important;
     padding-bottom: 0.25rem !important;
-
-    &>label {
+    & > label {
         padding: 0.25rem 0 0.25rem 0;
         @extend .size-small, .color-copy, .font-medium;
         text-transform: uppercase !important;
-
         span {
             @extend .color-danger-900;
         }
     }
-
-    &>span {
+    & > span {
         padding: 0.25rem 0 0.25rem 0;
         @extend .color-danger-900, .size-smaller;
     }
-
     .vs-input--placeholder {
         @extend .size-small, .color-dark-300, .font-light;
     }
-
     .vs__selected {
         @extend .size-base, .color-copy, .font-normal;
         text-transform: lowercase !important;
+    }
+
+    &.large-size {
+        input {
+            height: 47px !important;
+            padding: 5px 0px 5px 7px !important;
+        }
     }
 }

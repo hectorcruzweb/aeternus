@@ -79,16 +79,16 @@
                     <vs-td :data="data[indextr].ventas_planes_id">
                         <span class="font-semibold">{{
                             data[indextr].ventas_planes_id
-                        }}</span>
+                            }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
                     <vs-td :data="data[indextr].venta_plan.tipo_financiamiento_texto">{{
                         data[indextr].venta_plan.tipo_financiamiento_texto
-                    }}</vs-td>
+                        }}</vs-td>
                     <vs-td :data="data[indextr].numero_solicitud">
                         <span class="font-medium">{{
                             data[indextr].numero_solicitud_texto
-                        }}</span>
+                            }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].numero_convenio">
                         <span class="font-medium">{{ data[indextr].numero_convenio }}</span>
@@ -202,7 +202,6 @@
 import planes from "@services/planes";
 import Entregarconvenio from "@pages/EntregarConvenio";
 import FormularioVentas from "../ventas/FormularioVentas";
-
 import ReportesVentas from "../ventas/ReportesVentas";
 import CancelarVenta from "../ventas/CancelarVenta";
 import VerNotas from "@pages/VerNotas";
