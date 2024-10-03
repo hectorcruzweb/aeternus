@@ -14,14 +14,14 @@ class MovimientosInventario extends Model
         return $this->hasOne('App\User', 'id', 'registro_id');
     }
 
-     public function cancelo()
+    public function cancelo()
     {
         return $this->hasOne('App\User', 'id', 'cancelo_id');
     }
 
-     public function operacion()
+    public function operacion()
     {
-        return $this->belongsTo('App\Operaciones', 'operaciones_id','id');
+        return $this->belongsTo('App\Operaciones', 'operaciones_id', 'id');
     }
 
     public function detalles()
@@ -48,6 +48,11 @@ class MovimientosInventario extends Model
         return $this->hasMany('App\VentaDetalle', 'movimientos_inventario_id', 'id');
     }
 
+    public function venta_gral_detalle()
+    {
+        return $this->hasMany('App\VentaDetalle', 'movimientos_inventario_id', 'id');
+    }
+
     public function articulos_operacion()
     {
         return $this->hasMany('App\VentaDetalle', 'movimientos_inventario_id', 'id')
@@ -60,36 +65,36 @@ class MovimientosInventario extends Model
 
     public function proveedor()
     {
-       return $this->hasOne('App\Proveedores','id','proveedores_id');
+        return $this->hasOne('App\Proveedores', 'id', 'proveedores_id');
     }
 
 
     public function compra_detalle()
     {
         return $this->hasMany('App\CompraDetalle', 'movimientos_inventario_id', 'id')
-        ->select(
-            'articulos.id as id_articulo',
-            'articulos.descripcion',
-            'compra_detalle.articulos_id',
-            'compra_detalle.movimientos_inventario_id',
-            'compra_detalle.cantidad',
-            'compra_detalle.costo_neto',
-            'compra_detalle.costo_neto_descuento',
-            'compra_detalle.descuento_b',
-            'compra_detalle.facturable_b'
+            ->select(
+                'articulos.id as id_articulo',
+                'articulos.descripcion',
+                'compra_detalle.articulos_id',
+                'compra_detalle.movimientos_inventario_id',
+                'compra_detalle.cantidad',
+                'compra_detalle.costo_neto',
+                'compra_detalle.costo_neto_descuento',
+                'compra_detalle.descuento_b',
+                'compra_detalle.facturable_b'
             )
-        ->join('articulos', 'articulos.id', '=', 'compra_detalle.articulos_id')
+            ->join('articulos', 'articulos.id', '=', 'compra_detalle.articulos_id')
         ;
     }
 
 
-     public function costos_incurridos()
+    public function costos_incurridos()
     {
         return $this->hasMany('App\CostosIncurridos', 'movimientos_inventario_id', 'id');
     }
 
 
-     public function detalle_ajuste_reporte()
+    public function detalle_ajuste_reporte()
     {
         return $this->hasMany('App\AjusteInventarioDetalle', 'movimientos_inventario_id', 'id')
             ->orderBy('ajuste_detalle.articulos_id', 'asc');

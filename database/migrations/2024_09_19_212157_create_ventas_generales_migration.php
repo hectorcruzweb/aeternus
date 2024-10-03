@@ -50,6 +50,8 @@ class CreateVentasGeneralesMigration extends Migration
     public function down()
     {
         //limpiamos los pagos programados que se hacen durante las pruebas de este modulo
+        DB::statement("DELETE FROM venta_detalle WHERE movimientos_inventario_id IN(SELECT movimientos_inventario.id FROM movimientos_inventario INNER JOIN operaciones ON movimientos_inventario.`operaciones_id`=operaciones.`id` WHERE operaciones.`empresa_operaciones_id`=5)");
+        DB::statement("DELETE FROM movimientos_inventario WHERE operaciones_id IN(SELECT operaciones.id FROM operaciones WHERE operaciones.`empresa_operaciones_id`=5)");
         DB::statement("DELETE FROM pagos_pagos_programados WHERE pagos_programados_id IN(SELECT pagos_programados.id FROM operaciones INNER JOIN pagos_programados ON pagos_programados.`operaciones_id`=operaciones.`id` WHERE operaciones.`empresa_operaciones_id`=5)");
         DB::statement("DELETE FROM pagos_programados WHERE operaciones_id IN(SELECT operaciones.id FROM operaciones WHERE operaciones.`empresa_operaciones_id`=5)");
         //eliminamos los pagos relacionados a las ventas en gral.

@@ -16,4 +16,13 @@ class VentasGral extends Model
                 'nombre'
             );
     }
+
+    public function entrego()
+    {
+        return $this->belongsTo('App\User', 'entrego_id', 'id')
+            ->select(
+                'id',
+                'nombre'
+            );
+    }
 }

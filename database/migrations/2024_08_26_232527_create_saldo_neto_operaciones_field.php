@@ -14,7 +14,7 @@ class CreateSaldoNetoOperacionesField extends Migration
     public function up()
     {
         Schema::table('operaciones', function (Blueprint $table) {
-            $table->float('saldo')->after('total');
+            $table->unsignedDecimal('saldo', 10, 2)->after('total');
         });
     }
     /**

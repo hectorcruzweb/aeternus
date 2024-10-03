@@ -122,9 +122,9 @@ class Handler extends ExceptionHandler
             if ($codigo_error == 1451) {
                 return $this->errorResponse('No se puede eliminar de forma permanente el recurso porque esta relacionado con algun otro.', 409);
             }/*
-            if ($codigo_error == 1048) {
-                return $this->errorResponse('La bd no puede ejecutar su petición por que faltan campos obligatorios.', 409);
-            }*/
+           if ($codigo_error == 1048) {
+               return $this->errorResponse('La bd no puede ejecutar su petición por que faltan campos obligatorios.', 409);
+           }*/
         }
 
 

@@ -173,46 +173,42 @@ export default {
     },
     watch: {
         id_venta: function (newValue, oldValue) {
-
             (async () => {
-                if (newValue > 0) {
-                    this.$vs.loading();
-                    try {
-                        let res = await funeraria.get_ventas_gral(
-                            null,
-                            false,
-                            newValue
-                        );
-                        this.datosVenta = res.data[0];
-                        this.$vs.loading.close();
-                    } catch (err) {
-                        this.$vs.loading.close();
-                        if (err.response) {
-                            if (err.response.status == 403) {
-                                this.$vs.notify({
-                                    title: "Permiso denegado",
-                                    text: "Verifique sus permisos con el administrador del sistema.",
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "warning",
-                                    time: 4000,
-                                });
-                            } else {
-                                this.$vs.notify({
-                                    title: "Error",
-                                    text: "Ha ocurrido un error al tratar de cargar la información solicitada, por favor reintente.",
-                                    iconPack: "feather",
-                                    icon: "icon-alert-circle",
-                                    color: "danger",
-                                    position: "bottom-right",
-                                    time: "9000",
-                                });
-                            }
+                this.$vs.loading();
+                try {
+                    let res = await funeraria.get_ventas_gral(
+                        null,
+                        false,
+                        newValue
+                    );
+                    this.datosVenta = res.data[0];
+                    this.$vs.loading.close();
+                } catch (err) {
+                    this.$vs.loading.close();
+                    if (err.response) {
+                        if (err.response.status == 403) {
+                            this.$vs.notify({
+                                title: "Permiso denegado",
+                                text: "Verifique sus permisos con el administrador del sistema.",
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "warning",
+                                time: 4000,
+                            });
+                        } else {
+                            this.$vs.notify({
+                                title: "Error",
+                                text: "Ha ocurrido un error al tratar de cargar la información solicitada, por favor reintente.",
+                                iconPack: "feather",
+                                icon: "icon-alert-circle",
+                                color: "danger",
+                                position: "bottom-right",
+                                time: "9000",
+                            });
                         }
                     }
                 }
             })();
-
         },
     },
     computed: {

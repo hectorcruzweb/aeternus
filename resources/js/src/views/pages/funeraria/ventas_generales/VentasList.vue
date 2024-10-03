@@ -71,7 +71,7 @@
                     <vs-td :data="data[indextr].ventas_generales_id">
                         <span class="font-semibold">{{
                             data[indextr].ventas_generales_id
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">
                         {{ data[indextr].nombre }}
@@ -119,23 +119,20 @@
                     </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
-                            <img v-if="
-                                data[indextr].operacion_status == 0
-                            " class="img-btn-22 mx-3" src="@assets/images/deliver-disabled.svg"
-                                title="Hacer Entrega de Venta" @click="openEntregarVenta(data[indextr])" />
-                            <img v-if="data[indextr].operacion_status >= 1 && data[indextr].venta_general.entregado_b == 0"
-                                class="img-btn-22 mx-3" src="@assets/images/deliver-yes.svg"
+                            <img v-if="data[indextr].operacion_status == 0" class="img-btn-22 mx-3"
+                                src="@assets/images/deliver-disabled.svg" title="Hacer Entrega de Venta"
+                                @click="openEntregarVenta(data[indextr])" />
+                            <img v-else-if="
+                                data[indextr].operacion_status >= 1 &&
+                                data[indextr].venta_general.entregado_b == 0
+                            " class="img-btn-22 mx-3" src="@assets/images/deliver-yes.svg"
                                 title="Hacer Entrega de Venta" @click="openEntregarVenta(data[indextr])" />
                             <img v-else class="img-btn-22 mx-3" src="@assets/images/deliver-no.svg"
                                 title="Esta venta ya fue entregada." @click="openEntregarVenta(data[indextr])" />
                             <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/folder.svg"
                                 title="Expediente" @click="ConsultarVenta(data[indextr].ventas_generales_id)" />
-                            <img v-if="
-                                data[indextr].operacion_status != 0 &&
-                                data[indextr].venta_general.entregado_b == 0
-                            " class="img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta"
-                                @click="openModificar(data[indextr].ventas_generales_id)" /><img v-else
-                                class="img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta" />
+                            <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta"
+                                @click="openModificar(data[indextr])" />
                             <img v-if="data[indextr].operacion_status >= 1" class="img-btn-22 mx-3"
                                 src="@assets/images/trash.svg" title="Cancelar Venta"
                                 @click="cancelarVenta(data[indextr].ventas_generales_id)" />
@@ -166,7 +163,8 @@
 
         <CancelarVenta :show="openCancelar" @closeCancelarVenta="openCancelar = false" @ConsultarVenta="ConsultarVenta"
             :id_venta="id_venta"></CancelarVenta>
-        <EntregarVenta :show="openEntregar" @closeEntregarVenta="closeEntregarVenta" :id_venta="id_venta">
+        <EntregarVenta :show="openEntregar" @closeEntregarVenta="closeEntregarVenta"
+            @ConsultarVenta="ConsultarVentaNota" :id_venta="id_venta">
         </EntregarVenta>
     </div>
 </template>
@@ -189,7 +187,7 @@ export default {
         FormularioVentas,
         ReportesServicio,
         CancelarVenta,
-        EntregarVenta
+        EntregarVenta,
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -345,39 +343,82 @@ export default {
             }
         },
         openEntregarVenta(venta) {
-            this.id_venta = venta.ventas_generales_id;
-            this.openEntregar = true;
+            if (venta.operacion_status == 0) {
+                this.$vs.notify({
+                    title: "Entregar Venta",
+                    text: "Esta venta fue cancelada.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else if (venta.venta_general.entregado_b == 1) {
+                this.$vs.notify({
+                    title: "Entregar Venta",
+                    text: "Esta venta ya fue entregada.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else {
+                this.id_venta = venta.ventas_generales_id;
+                this.openEntregar = true;
+            }
         },
-        openModificar(id_venta) {
-            this.tipoFormulario = "modificar";
-            this.id_venta = id_venta;
-            this.verFormularioVentas = true;
+        ConsultarVentaNota(id_venta) {
+            console.log("🚀 ~ ConsultarVentaNota ~ id_venta:", id_venta)
         },
-
+        ConsultarVentaAcuse(id_venta) {
+            console.log("🚀 ~ ConsultarVentaAcuse ~ id_venta:", id_venta)
+        },
+        openModificar(venta) {
+            if (venta.operacion_status == 0) {
+                this.$vs.notify({
+                    title: "Modificar Venta",
+                    text: "Esta venta fue cancelada y no se puede modificar.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else if (venta.venta_general.entregado_b == 1) {
+                this.$vs.notify({
+                    title: "Modificar Venta",
+                    text: "Esta venta fue entregada y no se puede modificar.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else {
+                this.tipoFormulario = "modificar";
+                this.id_venta = venta.ventas_generales_id;
+                this.verFormularioVentas = true;
+            }
+        },
         closeStatus() {
             this.openStatus = false;
         },
-
         closeEntregarVenta() {
             this.openEntregar = false;
             this.id_venta = 0;
+            (async () => {
+                await this.get_data(this.actual);
+            })();
         },
-
         ConsultarVenta(id_venta) {
             this.id_venta = id_venta;
             this.openReportes = true;
         },
-
         OpenFormularioVentas(tipo) {
             this.tipoFormulario = tipo;
             this.verFormularioVentas = true;
         },
-
         cancelarVenta(id_venta) {
             this.id_venta = id_venta;
             this.openCancelar = true;
         },
-
         async cancelar_venta() {
             //aqui mando guardar los datos
             this.errores = [];
@@ -449,7 +490,6 @@ export default {
                 this.$vs.loading.close();
             }
         },
-
         closeListaReportes() {
             this.openReportes = false;
             this.verAcuse = false;
@@ -458,7 +498,6 @@ export default {
                 await this.get_data(this.actual);
             })();
         },
-
         reloadList() {
             (async () => {
                 this.verFormularioVentas = false;

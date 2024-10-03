@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use PhpParser\Node\Stmt\Foreach_;
 
 class FunerariaController extends ApiController
 {
@@ -2561,7 +2562,6 @@ class FunerariaController extends ApiController
             'motivo.value' => 'required',
             'cantidad' => 'numeric|min:0|' . 'max:' . $datos_venta['abonado_capital'],
         ];
-
         $mensajes = [
             'required' => 'Ingrese este dato',
             'numeric' => 'Este dato debe ser un número',
@@ -3161,7 +3161,6 @@ class FunerariaController extends ApiController
             $articulos_servicios_recorridos = [];
 
             $requestArticulos = $request->articulos_servicios;
-
             $inventario_temporal = $inventario;
 
             /**regreso las cantidades al inventario temporal */
@@ -3267,14 +3266,12 @@ class FunerariaController extends ApiController
 
             /**reinicio el arreglo */
             $articulos_servicios_recorridos = [];
-
             /**arreglo vacio para que cada que se encuentre en la lista de artivulos enviados se descarte en la proxima vuelta */
             foreach ($requestArticulos as $index_articulo_servicio => $articulo_servicio) {
                 if (in_array($index_articulo_servicio, $articulos_servicios_recorridos)) {
                     /**me brinco al siguiente*/
                     continue;
                 }
-
                 /**busncando articulo en el inventario actual */
                 $articulo_encontrado = false;
                 foreach ($inventario as $articulo) {
@@ -3291,7 +3288,6 @@ class FunerariaController extends ApiController
                                 $existe_lote = false;
 
                                 foreach ($articulo['inventario'] as $lote) {
-
                                     if ($lote['lotes_id'] == $articulo_servicio['lote']) {
                                         /**el lote existe */
                                         $existe_lote = true;
@@ -4854,9 +4850,7 @@ class FunerariaController extends ApiController
                         ]
                     );
             }
-
             // return $this->errorResponse($detalle_inventario,409);
-
             DB::commit();
             return $request->solicitud_id;
         } catch (\Throwable $th) {
@@ -6410,15 +6404,17 @@ class FunerariaController extends ApiController
         /**verificando si es tipo modificar para validar que venga el id a modificar */
         $datos_plan = array();
         if ($tipo_servicio == 'modificar') {
-            $venta = $this->get_ventas_gral(new \Illuminate\Http\Request(), $request->venta_id)[0];
-            if (empty($venta)) {
+            $venta = $this->get_ventas_gral(new \Illuminate\Http\Request(), $request->venta_id);
+            if (!empty($venta)) {
+                $venta = $venta[0];
+                if ($venta['operacion_status'] == 0) {
+                    return $this->errorResponse('Esta venta ya fue cancelada, no puede modificarse.', 409);
+                } else if ($venta['venta_general']["entregado_b"] != 0) {
+                    return $this->errorResponse('Esta venta ya fue entregada, no puede modificarse.', 409);
+                }
+            } else
                 //no se encontro los datos
                 return $this->errorResponse('No se encontró la información de la venta solicitada.', 409);
-            } else if ($venta['operacion_status'] == 0) {
-                return $this->errorResponse('Esta venta ya fue cancelada, no puede modificarse.', 409);
-            } else if ($venta['venta_general']["entregado_b"] != 0) {
-                return $this->errorResponse('Esta venta ya fue entregada, no puede modificarse.', 409);
-            }
         }
 
         //sacando totales
@@ -6719,8 +6715,10 @@ class FunerariaController extends ApiController
         if (!$light) {
             $resultado_query = $resultado_query->with('pagosProgramados.pagados')
                 ->with('venta_general.vendedor')
+                ->with('venta_general.entrego')
                 ->with('cancelador:id,nombre')
                 ->with('conceptos_temporales')
+                ->with('movimientoinventario.venta_gral_detalle')
                 ->with('registro:id,nombre');
         }
         $resultado_query = $resultado_query->where('empresa_operaciones_id', '=', 5);
@@ -6821,6 +6819,7 @@ class FunerariaController extends ApiController
                 $venta['tipo_financimiento_texto'] = 'A futuro/'
                     . $venta['financiamiento'] . ' Mes(s)';
             }
+            $venta['venta_general']["fecha_entrega_texto"] = $venta['venta_general']['fechahora_entrega'] != null ? fecha_abr($venta['venta_general']['fechahora_entrega']) : '';
             if (!$light) {
                 $venta['num_pagos_programados'] = count($venta['pagos_programados']);
                 $num_pagos_programados_vigentes = 0;
@@ -7040,124 +7039,274 @@ class FunerariaController extends ApiController
     }
 
 
-    /**CANCELAR LA VENTA EN GRAL. */
-    public function cancelar_venta_gral(Request $request)
+    /**ENTREGAR LA VENTA EN GRAL. */
+    public function entregar_venta_gral(Request $request)
     {
+        $validaciones = [
+            'venta_id' => 'required',
+            'fecha_entrega' => 'required|before:tomorrow',
+            'entregador.value' => 'required',
+        ];
+        $mensajes = [
+            'required' => 'Ingrese este dato.',
+            'before' => "La fecha de entrega no puede exceder la fecha actual."
+        ];
+        request()->validate($validaciones, $mensajes);
         try {
-            //return $request->minima_cuota_inicial;
-            //validaciones directas sin condicionales
-            $datos_solicitud = $this->get_solicitudes_servicios($request, $request->solicitud_id, '')[0];
-            /**unicamente puede regresarse lo que  se ha cubierto de capital */
-            $validaciones = [
-                'solicitud_id' => 'required',
-                'motivo.value' => 'required',
-            ];
-            $total_cubierto = 0;
-            if ($datos_solicitud['operacion'] != null) {
-                $validaciones['cantidad'] = 'numeric|min:0|' . 'max:' . $datos_solicitud['operacion']['total_cubierto'];
-                $total_cubierto = $datos_solicitud['operacion']['total_cubierto'];
-            }
-
-            $mensajes = [
-                'required' => 'Ingrese este dato',
-                'numeric' => 'Este dato debe ser un número',
-                'max' => 'La cantidad a devolver no debe superar a la cantidad abonada hasta la fecha: $ ' . number_format($total_cubierto, 2),
-                'min' => 'La cantidad a devolver debe ser mínimo: $ 00.00 Pesos MXN',
-            ];
-
-            request()->validate(
-                $validaciones,
-                $mensajes
-            );
-            /**validar si la propiedad tiene gente sepultada */
-            /**pendiente
-             * pendiente
-             * pendiente
-             * pendiente
-             */
-
-            /**validar si la propiedad no fue dada de baja ya */
-
-            if ($datos_solicitud['status_b'] == 0) {
-                return $this->errorResponse('Esta solicitud ya habia sido cancelada.', 409);
-            }
-
-            /**verifica si el servicio puede ser cancelado por motivos de exhumacion */
-            if ($datos_solicitud['exhumado_b'] == 1) {
-                return $this->errorResponse('Este servicio ha sido exhumado y no puede ser cancelado, por motivos de historial.', 409);
-            }
-
-            DB::beginTransaction();
-            /**verifico si la solicitud tiene servicio funerario sino para eliminar la soliitud */
-
-            DB::table('operaciones')->where('servicios_funerarios_id', $request->solicitud_id)->where("empresa_operaciones_id", 3)->update(
-                [
-                    'motivos_cancelacion_id' => $request['motivo.value'],
-                    'fecha_cancelacion' => now(),
-                    'cantidad_a_regresar_cancelacion' => (float) $request->cantidad,
-                    'cancelo_id' => (int) $request->user()->id,
-                    'nota_cancelacion' => $request->comentario,
-                    'status' => 0,
-                ]
-            );
-
-            DB::table('servicios_funerarios')->where('id', $request->solicitud_id)->update(
-                [
-                    //'cancelo_id' => (int) $request->user()->id,
-                    'status' => 0,
-                ]
-            );
-
-            /**se deben de regresar los articulos que tiene este contrato al inventario */
-            /**aqui voy */
-            $detalle_inventario = [];
-            if (isset($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'])) {
-                /**la operacion ya tenia articulos y servicios agregados y se deben de revisar para ver cuales
-                 * se quitaron y se deben regresar al inventario
-                 */
-                $lotes_iguales = [];
-                $detalle_inventario = [];
-                foreach ($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_contrato => $articulo_contrato) {
-                    if (in_array($index_contrato, $lotes_iguales) || !is_numeric($articulo_contrato['lotes_id'])) {
-                        continue;
-                    }
-                    /**busco los ids y lotes iguales */
-                    $suma_articulo = 0;
-                    foreach ($datos_solicitud['operacion']['movimientoinventario']['articulosserviciofunerario'] as $index_sub => $articulo_sub) {
-                        if (
-                            $articulo_contrato['articulos_id'] == $articulo_sub['articulos_id'] &&
-                            $articulo_contrato['lotes_id'] == $articulo_sub['lotes_id']
-                        ) {
-                            $suma_articulo += $articulo_sub['cantidad'];
-                            array_push($lotes_iguales, $index_sub);
+            //Verificamos que la venta cumpla con los parametros para ser entregada (pagada, no cancelada y no entregada)
+            $datos_venta = $this->get_ventas_gral($request, $request->venta_id, '');
+            if (!empty($datos_venta)) {
+                $datos_venta = $datos_venta[0];
+                if ($datos_venta['saldo'] > 0)
+                    return $this->errorResponse('Debe pagar esta venta para continuar con la entrega ($' . number_format($datos_venta['saldo'], 2) . 'MXN Pendiente).', 409);
+                if ($datos_venta['venta_general']["entregado_b"] != 0)
+                    return $this->errorResponse('Esta venta ya ha sido entregada.', 409);
+                if ($datos_venta["operacion_status"] == 0)
+                    return $this->errorResponse('Esta venta esta cancelada y no puede ser entregada.', 409);
+                //TODO BIEN Y SE PUEDE COMENZAR CON EL MOVIMIENTO DEL INVENTARIO PARA SACAR LOS ARTICULOS
+                $inventario = $this->get_inventario(new \Illuminate\Http\Request());
+                //Conceptos a sacar de la venta
+                $conceptos = $datos_venta["conceptos_temporales"];
+                //creamos el arreglo de lotes para guardar en el detalle del movimiento del inventario a registrar de esta entrega de venta
+                $requestArticulos = $datos_venta["conceptos_temporales"];
+                $inventario_temporal = $inventario;
+                $arreglo_de_lotes = [];
+                if (count($requestArticulos) > 0) {
+                    /**si vienen conceptos debemos crear los lotes */
+                    foreach ($requestArticulos as &$concepto) {
+                        foreach ($inventario_temporal as &$articulo) {
+                            if ($concepto['articulos_id'] == $articulo['id']) {
+                                if ($articulo['tipo_articulos_id'] != 2) {
+                                    if ($concepto['cantidad'] <= $articulo['existencia']) {
+                                        $cantidad_concepto = $concepto['cantidad'];
+                                        $crear_row = false;
+                                        foreach ($articulo['inventario'] as &$lote) {
+                                            if ($cantidad_concepto > 0 && $lote['existencia'] > 0) {
+                                                if (!$crear_row) {
+                                                    /**queda cantidad por crear en lotes */
+                                                    if ($cantidad_concepto >= $lote['existencia'] && $lote['existencia'] > 0) {
+                                                        $crear_row = true;
+                                                        /**al ser mayor la cantidad por agregar, metemos todo el lote en el lote a crear */
+                                                        $concepto['lote'] = $lote['lotes_id'];
+                                                        $cantidad_concepto -= $lote['existencia'];
+                                                        $concepto['cantidad'] = $lote['existencia'];
+                                                        $articulo['existencia'] -= $lote['existencia'];
+                                                        $lote['existencia'] = 0;
+                                                        array_push($arreglo_de_lotes, $concepto);
+                                                    } else {
+                                                        /**se agrega la cantidad al lote del row actual, pues no necesita de crear ningun nuevo row */
+                                                        $concepto['lote'] = $lote['lotes_id'];
+                                                        $concepto['cantidad'] = $cantidad_concepto;
+                                                        $lote['existencia'] -= $cantidad_concepto;
+                                                        $articulo['existencia'] -= $cantidad_concepto;
+                                                        array_push($arreglo_de_lotes, $concepto);
+                                                        break;
+                                                    }
+                                                } else {
+                                                    $copia_row_actual = $concepto;
+                                                    if ($cantidad_concepto >= $lote['existencia'] && $lote['existencia'] > 0) {
+                                                        /**al ser mayor la cantidad por agregar, metemos todo el lote en el lote a crear */
+                                                        $cantidad_concepto -= $lote['existencia'];
+                                                        $copia_row_actual['cantidad'] = $lote['existencia'];
+                                                        $copia_row_actual['lote'] = $lote['lotes_id'];
+                                                        $lote['existencia'] = 0;
+                                                        $articulo['existencia'] -= $lote['existencia'];
+                                                        array_push($arreglo_de_lotes, $copia_row_actual);
+                                                    } else {
+                                                        /**se agrega la cantidad al lote del row actual, pues no necesita de crear ningun nuevo row */
+                                                        $copia_row_actual['cantidad'] = $cantidad_concepto;
+                                                        $copia_row_actual['lote'] = $lote['lotes_id'];
+                                                        $lote['existencia'] -= $cantidad_concepto;
+                                                        $articulo['existencia'] -= $cantidad_concepto;
+                                                        array_push($arreglo_de_lotes, $copia_row_actual);
+                                                        break;
+                                                    }
+                                                }
+                                            } else {
+                                                continue;
+                                            }
+                                        }
+                                    } else {
+                                        return $this->errorResponse("No hay suficiente existencia (Cant. Actual " . $articulo['existencia'] . ") del " . $articulo['descripcion'] . " en el inventario.", 409);
+                                    }
+                                } else {
+                                    $copia_row_actual = $concepto;
+                                    $copia_row_actual['lote'] = null;
+                                    $copia_row_actual['cantidad'] = $concepto['cantidad'];
+                                    array_push($arreglo_de_lotes, $copia_row_actual);
+                                }
+                            }
                         }
                     }
-                    array_push($detalle_inventario, [
-                        'lotes_id' => $articulo_contrato['lotes_id'],
-                        'articulos_id' => $articulo_contrato['articulos_id'],
-                        'cantidad' => $suma_articulo,
-                    ]);
+                } else {
+                    return $this->errorResponse("error, no hay artículos ni servicios que agregar a esta entrega.", 409);
                 }
-            } //fin if isset articulos en el contrato
-
-            /**al ser obtenido el array de los articulos a regresar, solo de aumentan al inventario */
-            foreach ($detalle_inventario as $detalle) {
-                $total = Inventario::select('existencia')->where('lotes_id', '=', $detalle['lotes_id'])->where('articulos_id', '=', $detalle['articulos_id'])->first();
-                $suma = $total['existencia'] + $detalle['cantidad'];
-                DB::table('inventario')->where('lotes_id', $detalle['lotes_id'])->where(
-                    'articulos_id',
-                    $detalle['articulos_id']
-                )->update(
+                $requestArticulos = $arreglo_de_lotes;
+                //comenzamos con el registro en la bd
+                DB::beginTransaction();
+                DB::table('operaciones')->where("ventas_generales_id", $datos_venta["ventas_generales_id"])->update(
+                    [
+                        'nota' => $request->comentario
+                    ]
+                );
+                //limpio los movimientos de inventario previamente registrado para hacer uno limpio (esto es solo para desarrollo, en prod se supone que no se necesita porque no se podria modificar una venta si ya fue entregada)
+                DB::statement("DELETE FROM venta_detalle WHERE movimientos_inventario_id IN(SELECT id FROM movimientos_inventario  WHERE operaciones_id=" . $datos_venta["operacion_id"] . ")");
+                DB::table('movimientos_inventario')->where('operaciones_id', $datos_venta["operacion_id"])->delete();
+                //creo el movimiento
+                $id_movimiento_inventario = DB::table('movimientos_inventario')->insertGetId(
+                    [
+                        'fecha_movimiento' => $request->fecha_entrega,
+                        'fecha_registro' => now(),
+                        'operaciones_id' => $datos_venta['operacion_id'],
+                        'tipo_movimientos_id' => 9, //venta de mercancia
+                        'registro_id' => (int) $request->user()->id,
+                        'status' => 1
+                    ]
+                );
+                //registro el detalle
+                foreach ($requestArticulos as $index_detalle => $detalle) {
+                    DB::table('venta_detalle')->insert(
                         [
-                            'existencia' => $suma,
+                            'cantidad' => $detalle['cantidad'],
+                            'lotes_id' => $detalle['lote'],
+                            'movimientos_inventario_id' => $id_movimiento_inventario,
+                            'articulos_id' => $detalle['articulos_id'],
+                            'costo_neto_normal' => $detalle['costo_neto_normal'],
+                            'costo_neto_descuento' => $detalle['costo_neto_descuento'],
+                            'descuento_b' => $detalle['descuento_b'],
+                            'facturable_b' => $detalle['facturable_b']
                         ]
                     );
+                }
+                //actualizo el inventario segun los lotes que se sacaron
+                foreach ($inventario_temporal as $articulo) {
+                    if ($articulo["tipo_articulos_id"] != 1)
+                        continue;
+                    foreach ($requestArticulos as $detalle) {
+                        if ($detalle["articulos_id"] == $articulo["id"]) {
+                            //actualiza el inventario
+                            foreach ($articulo['inventario'] as $key_inventario => $inventario) {
+                                DB::table('inventario')
+                                    ->where('articulos_id', '=', $inventario['articulos_id'])
+                                    ->where('lotes_id', '=', $inventario['lotes_id'])->update(
+                                        [
+                                            'existencia' => $inventario['existencia'],
+                                        ]
+                                    );
+                            }
+                        }
+
+                    }
+                }
+                //actualizo la tabla de ventas en gral como entregado
+                DB::table('ventas_generales')->where("id", $datos_venta["ventas_generales_id"])->update(
+                    [
+                        'entrego_id' => (int) $request->user()->id,
+                        'entregado_b' => 1,
+                        'fechahora_entrega' => $request->fecha_entrega
+                    ]
+                );
+            } else {
+                return $this->errorResponse('Esta venta no se ha encontrado, por favor vuelva a intentarlo.', 409);
             }
-
-            // return $this->errorResponse($detalle_inventario,409);
-
             DB::commit();
-            return $request->solicitud_id;
+            return $request->venta_id;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $e;
+        }
+    }
+
+
+    public function cancelar_venta_gral(Request $request)
+    {
+        $validaciones = [
+            'venta_id' => 'required',
+            'cantidad' => 'required|numeric|gte:0',
+            'motivo.value' => 'required',
+        ];
+        $mensajes = [
+            'required' => 'Ingrese este dato.',
+            'gte' => "El monto a devolver debe ser 0 mínimo."
+        ];
+        request()->validate($validaciones, $mensajes);
+        try {
+            /**unicamente puede regresarse lo que  se ha cubierto de capital */
+            $datos_venta = $this->get_ventas_gral($request, $request->venta_id, '');
+            if (!empty($datos_venta)) {
+                $datos_venta = $datos_venta[0];
+                if ($datos_venta["operacion_status"] == 0)
+                    return $this->errorResponse('Esta venta esta cancelada.', 409);
+                //verificamos que no haya sido de baja antes
+                if (($request->cantidad > $datos_venta["total_cubierto"]) && ($request->cantidad > 0)) {
+                    return $this->errorResponse('La cantidad a devolver sobrepasa el total pagado hasta el momento ($ ' . number_format($request->monto, 2) . ' MXN).', 409);
+                }
+                DB::beginTransaction();
+                /**verifico si la solicitud tiene servicio funerario sino para eliminar la soliitud */
+                DB::table('operaciones')->where('ventas_generales_id', $request->venta_id)->update(
+                    [
+                        'motivos_cancelacion_id' => $request['motivo.value'],
+                        'fecha_cancelacion' => now(),
+                        'cantidad_a_regresar_cancelacion' => (float) $request->cantidad,
+                        'cancelo_id' => (int) $request->user()->id,
+                        'nota_cancelacion' => $request->comentario,
+                        'status' => 0
+                    ]
+                );
+                //si la venta ya fue entregada se debe de hacer el regreso de estos articulos al inventario.
+                if ($datos_venta["venta_general"]["entregado_b"] != 0) {
+                    //se considera entregado
+                    if (!isset($datos_venta["movimientoinventario"]))
+                        return $this->errorResponse('Esta venta no tiene artículos registrados, por favor vuelva a intentarlo.', 409);
+                    //comenzamos a crear el arreglo de articulos que se van a devolver al inventario
+                    /**se regresan los articulos a su inventario */
+                    if (isset($datos_venta['movimientoinventario']['venta_gral_detalle'])) {
+                        /**la operacion ya tenia articulos y servicios agregados y se deben de revisar para ver cuales
+                         * se quitaron y se deben regresar al inventario
+                         */
+                        $lotes_iguales = [];
+                        $detalle_inventario = [];
+                        foreach ($datos_venta['movimientoinventario']['venta_gral_detalle'] as $index_contrato => $articulo_contrato) {
+                            if (in_array($index_contrato, $lotes_iguales) || !is_numeric($articulo_contrato['lotes_id'])) {
+                                continue;
+                            }
+                            /**busco los ids y lotes iguales */
+                            $suma_articulo = 0;
+                            foreach ($datos_venta['movimientoinventario']['venta_gral_detalle'] as $index_sub => $articulo_sub) {
+                                if (
+                                    $articulo_contrato['articulos_id'] == $articulo_sub['articulos_id'] &&
+                                    $articulo_contrato['lotes_id'] == $articulo_sub['lotes_id']
+                                ) {
+                                    $suma_articulo += $articulo_sub['cantidad'];
+                                    array_push($lotes_iguales, $index_sub);
+                                }
+                            }
+                            array_push($detalle_inventario, [
+                                'lotes_id' => $articulo_contrato['lotes_id'],
+                                'articulos_id' => $articulo_contrato['articulos_id'],
+                                'cantidad' => $suma_articulo,
+                            ]);
+                        }
+                        /**al ser obtenido el array de los articulos a regresar, solo de aumentan al inventario */
+                        foreach ($detalle_inventario as $detalle) {
+                            $total = Inventario::select('existencia')->where('lotes_id', '=', $detalle['lotes_id'])->where('articulos_id', '=', $detalle['articulos_id'])->first();
+                            $suma = $total['existencia'] + $detalle['cantidad'];
+                            DB::table('inventario')->where('lotes_id', $detalle['lotes_id'])->where(
+                                'articulos_id',
+                                $detalle['articulos_id']
+                            )->update(
+                                    [
+                                        'existencia' => $suma,
+                                    ]
+                                );
+                        }
+                    } //fin if isset articulos en el contrato
+                }
+                DB::commit();
+                return $request->venta_id;
+            } else {
+                return $this->errorResponse('Esta venta no se ha encontrado, por favor vuelva a intentarlo.', 409);
+            }
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;

@@ -234,6 +234,10 @@ export default {
             params: param
         });
     },
+    entregar_venta_gral(datos) {
+        let call = "/funeraria/entregar_venta_gral";
+        return axios.post(call, datos);
+    },
     cancelar_venta_gral(datos) {
         let call = "/funeraria/cancelar_venta_gral";
         return axios.post(call, datos);

@@ -1,50 +1,58 @@
 <template>
     <div class="centerx">
         <vs-popup class="forms-popup popup-90" title="Entregar entrega en General" :active.sync="showVentana"
-            ref="cancelar_venta">
+            ref="entregar_venta">
             <div class="flex flex-wrap">
                 <div class="w-full">
                     <ResumenVenta :id_venta="getVentaId"></ResumenVenta>
-                    <div class="flex flex-wrap">
-                        <div class="w-full xl:w-12/12 pt-6">
-                            <div class="flex flex-wrap">
-                                <div class="w-full xl:w-4/12 input-text px-2 large-size">
-                                    <label>
-                                        Fecha de Entrega
-                                        <span>(*)</span>
-                                    </label>
-                                    <flat-pickr name="fecha_entrega" data-vv-as=" "
-                                        v-validate:fecha_entrega_validacion_computed.immediate="'required'
-                                            " :config="configdateTimePickerFullMonth" v-model="form.fecha_entrega"
-                                        placeholder="Fecha de la entrega" class="w-full" />
-                                    <span>
-                                        {{ errors.first("fecha_entrega") }}
-                                    </span>
-                                    <span v-if="this.errores.fecha_entrega">{{
-                                        errores.fecha_entrega[0]
-                                        }}</span>
-                                </div>
-                                <div class="w-full xl:w-8/12 input-text px-2 ">
-                                    <label>Responsable de entrega:</label>
-                                    <v-select disabled :options="vendedores" :clearable="false" v-model="form.vendedor"
-                                        :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full large_select"
-                                        name="vendedor_entrega" data-vv-as=" ">
-                                        <div slot="no-options">
-                                            No Se Ha Seleccionado Ningún Motivo
+                    <div class="flex flex-wrap py-6">
+                        <div class="w-full form-group">
+                            <div class="title-form-group">
+                                Datos de la entrega
+                            </div>
+                            <div class="form-group-content">
+                                <div class="w-full xl:w-12/12 pt-6">
+                                    <div class="flex flex-wrap">
+                                        <div class="w-full xl:w-4/12 input-text px-2 large-size">
+                                            <label>
+                                                Fecha de Entrega
+                                                <span>(*)</span>
+                                            </label>
+                                            <flat-pickr name="fecha_entrega" data-vv-as=" "
+                                                v-validate:fecha_entrega_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerFullMonth"
+                                                v-model="form.fecha_entrega" placeholder="Fecha de la entrega"
+                                                class="w-full" />
+                                            <span>
+                                                {{ errors.first("fecha_entrega") }}
+                                            </span>
+                                            <span v-if="this.errores.fecha_entrega">{{
+                                                errores.fecha_entrega[0]
+                                            }}</span>
                                         </div>
-                                    </v-select>
-                                    <span>{{ errors.first("motivo") }}</span>
-                                    <span v-if="this.errores['motivo.value']">{{
-                                        errores["motivo.value"][0]
-                                    }}</span>
+                                        <div class="w-full xl:w-8/12 input-text px-2 ">
+                                            <label>Responsable de entrega:</label>
+                                            <v-select disabled :options="entregadores" :clearable="false"
+                                                v-model="form.entregador" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                class="w-full large_select" name="entregador_entrega" data-vv-as=" ">
+                                                <div slot="no-options">
+                                                    No Se Ha Seleccionado Ningún Motivo
+                                                </div>
+                                            </v-select>
+                                            <span>{{ errors.first("entregador") }}</span>
+                                            <span v-if="this.errores['entregador.value']">{{
+                                                errores["entregador.value"][0]
+                                            }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-full input-text px-2">
+                                    <label>Agregue un comentario respecto a la entrega de esta
+                                        entrega:</label>
+                                    <vs-textarea class="w-full" label="Detalle de la entrega..." height="120px"
+                                        v-model="form.comentario" ref="comentario" />
                                 </div>
                             </div>
-                        </div>
-                        <div class="w-full input-text px-2">
-                            <label>Agregue un comentario respecto a la entrega de esta
-                                entrega:</label>
-                            <vs-textarea class="w-full" label="Detalle de la entrega..." height="150px"
-                                v-model="form.comentario" ref="comentario" />
                         </div>
                     </div>
                 </div>
@@ -56,14 +64,14 @@
                     click en el "Botón de Abajo”.
                 </div>
                 <div class="w-full">
-                    <vs-button v-if="!fueCancelada" class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-                        color="success" @click="acceptAlert()">
+                    <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
+                        @click="acceptAlert()">
                         <span>Guardar Entrega</span>
                     </vs-button>
                 </div>
             </div>
             <Password :show="openConfirmar" :callback-on-success="callback" @closeVerificar="openConfirmar = false"
-                :accion="'Cancelar entrega de propiedad'"></Password>
+                :accion="'Marcar Venta Como Entregada'"></Password>
             <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
                 :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
                 :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
@@ -104,7 +112,7 @@ export default {
     watch: {
         show: function (newValue, oldValue) {
             if (newValue == true) {
-                this.$refs["cancelar_venta"].$el.querySelector(".vs-icon").onclick =
+                this.$refs["entregar_venta"].$el.querySelector(".vs-icon").onclick =
                     () => {
                         this.cancelar();
                     };
@@ -114,19 +122,16 @@ export default {
 
                 (async () => {
                     let activeUserInfo = JSON.parse(localStorage.getItem("userInfo"));
-                    this.vendedores.push({ value: activeUserInfo.user_id, label: activeUserInfo.nombre });
-                    this.form.vendedor = this.vendedores[0];
+                    this.entregadores.push({ value: activeUserInfo.user_id, label: activeUserInfo.nombre });
+                    this.form.entregador = this.entregadores[0];
                 })();
             }
         },
     },
     computed: {
-
         fecha_entrega_validacion_computed: function () {
             return this.form.fecha_entrega;
         },
-
-
         motivo_computed: function () {
             return this.form.motivo.value;
         },
@@ -157,10 +162,11 @@ export default {
             callback: Function,
             openConfirmar: false,
             errores: [],
-            vendedores: [],
+            entregadores: [],
             datosVenta: [],
             form: {
-                vendedor: {},
+                fecha_entrega: '',
+                entregador: {},
                 venta_id: "",
                 comentario: "",
             },
@@ -184,14 +190,13 @@ export default {
                         return;
                     } else {
                         (async () => {
-                            this.callback = await this.cancelar_venta;
+                            this.callback = await this.entregar_venta;
                             this.openConfirmar = true;
                         })();
                     }
                 })
                 .catch(() => { });
         },
-
         cancelar() {
             this.botonConfirmarSinPassword = "Salir y limpiar";
             this.accionConfirmarSinPassword =
@@ -202,37 +207,35 @@ export default {
         cerrarVentana() {
             this.openConfirmarSinPassword = false;
             this.form.comentario = "";
-            this.form.vendedores = [];
-            this.vendedores.push({ value: "", label: "Seleccione 1" });
-            this.form.vendedor = this.vendedores[0]
+            this.form.entregadores = [];
+            this.entregadores.push({ value: "", label: "Seleccione 1" });
+            this.form.entregador = this.entregadores[0]
             this.form.fecha_entrega = ""
             this.$emit("closeEntregarVenta");
             return;
         },
-
-
-        async cancelar_venta() {
+        async entregar_venta() {
             this.errores = [];
             this.$vs.loading();
             this.form.venta_id = this.getVentaId;
             try {
-                let res = await funeraria.cancelar_venta_gral(this.form);
+                let res = await funeraria.entregar_venta_gral(this.form);
                 if (res.data >= 1) {
                     //success
                     this.$vs.notify({
                         title: "Ventas en Gral.",
-                        text: "Se ha cancelado la entrega correctamente.",
+                        text: "Se ha registrado la entrega correctamente.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success",
                         time: 5000,
                     });
-                    this.$emit("closeCancelarVenta", res.data);
+                    this.cerrarVentana();
                     this.$emit("ConsultarVenta", res.data);
                 } else {
                     this.$vs.notify({
                         title: "Ventas en Gral.",
-                        text: "Error al cancelar la entrega, por favor reintente.",
+                        text: "Error al registrar la entrega, por favor reintente.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
@@ -258,8 +261,8 @@ export default {
                         if (this.errores.venta_id) {
                             //la propiedad esa ya ha sido vendida
                             this.$vs.notify({
-                                title: "Seleccione una entrega",
-                                text: "No se ha seleccionado una entrega a cancelar",
+                                title: "Seleccione una venta para entregar entrega",
+                                text: "No se ha seleccionado una venta a entregar",
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger",
@@ -268,7 +271,7 @@ export default {
                         }
 
                         this.$vs.notify({
-                            title: "Cancelar entrega",
+                            title: "Registrar entrega",
                             text: "Verifique los errores encontrados en los datos.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
@@ -279,7 +282,7 @@ export default {
                         //este error es por alguna condicion que el contrano no cumple para modificar
                         //la propiedad esa ya ha sido vendida
                         this.$vs.notify({
-                            title: "Cancelar información de la entrega",
+                            title: "Registrar entrega",
                             text: err.response.data.error,
                             iconPack: "feather",
                             icon: "icon-alert-circle",
