@@ -35,6 +35,7 @@
                                         </template>
                                         <template slot="thead">
                                             <vs-th>#</vs-th>
+                                            <vs-th>Ecistencia</vs-th>
                                             <vs-th>Descripción</vs-th>
                                             <vs-th>Cant.</vs-th>
                                             <vs-th>Costo Neto</vs-th>
@@ -44,10 +45,16 @@
                                             <vs-th>Facturable</vs-th>
                                         </template>
                                         <template slot-scope="{ data }">
-                                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data"
+                                                :class="[data[indextr].existencia <= 0 ? 'text-danger' : '']">
                                                 <vs-td class="">
                                                     <div>
                                                         <span>{{ indextr + 1 }}</span>
+                                                    </div>
+                                                </vs-td>
+                                                <vs-td class="">
+                                                    <div class="uppercase">
+                                                        {{ data[indextr].existencia }}
                                                     </div>
                                                 </vs-td>
                                                 <vs-td class="">
@@ -135,9 +142,10 @@
                                 </div>
 
                                 <div class="w-full md:w-3/12 px-2 text-center">
-                                    <span class="font-medium color-black-700">
+                                    <span
+                                        :class="['font-medium', datosVenta.saldo > 0 ? 'text-danger' : 'color-black-700']">
                                         $ Saldo Pendiente</span>
-                                    <div class="w-full uppercase">
+                                    <div :class="['font-medium', datosVenta.saldo > 0 ? 'text-danger' : '']">
                                         $
                                         {{ datosVenta.saldo | numFormat("0,000.00") }}
                                     </div>

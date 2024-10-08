@@ -62,15 +62,13 @@
                     Por favor revise la información ingresada, si todo es correcto de
                     click en el "Botón de Abajo”.
                 </div>
-
                 <div class="w-full">
                     <vs-button v-if="!fueCancelada" class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
                         color="danger" @click="acceptAlert()">
-                        <span>Cancelar Contrato</span>
+                        <span>Cancelar Venta</span>
                     </vs-button>
                 </div>
             </div>
-
             <Password :show="openConfirmar" :callback-on-success="callback" @closeVerificar="openConfirmar = false"
                 :accion="'Cancelar venta de propiedad'"></Password>
             <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"

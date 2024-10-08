@@ -7030,6 +7030,19 @@ class FunerariaController extends ApiController
                 } else {
                     /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
                 }
+                //agregamos existencia de los articulos seleccionados en esta venta, es solo para plasmarlos en las vistas de este modulo
+                //aqui estoy
+                $inventario_controller = new InventarioController();
+                $inventario = $inventario_controller->get_articulos(new \Illuminate\Http\Request(), 'all', '', 0, 0, 0, 1);
+                foreach ($venta['conceptos_temporales'] as $key => &$temporal) {
+                    $temporal['existencia'] = 1;
+                    foreach ($inventario as $key_articulo => $articulo_inventario) {
+                        if ($articulo_inventario['id'] == $temporal["articulos_id"]) {
+                            $temporal['existencia'] = $articulo_inventario["existencia"];
+                            break;
+                        }
+                    }
+                }
             }
 
         } //fin foreach venta

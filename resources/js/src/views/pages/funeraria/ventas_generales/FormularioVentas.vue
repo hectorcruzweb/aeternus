@@ -121,6 +121,7 @@
                                                 </template>
                                                 <template slot="thead">
                                                     <vs-th>#</vs-th>
+                                                    <vs-th>Existencia</vs-th>
                                                     <vs-th>Descripción</vs-th>
                                                     <vs-th>Cant.</vs-th>
                                                     <vs-th>Costo Neto</vs-th>
@@ -131,13 +132,18 @@
                                                     <vs-th>Quitar</vs-th>
                                                 </template>
                                                 <template slot-scope="{ data }">
-                                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data"
+                                                        :class="[data[indextr].existencia <= 0 ? 'text-danger' : '']">
                                                         <vs-td class="">
                                                             <div>
                                                                 <span>{{ indextr + 1 }}</span>
                                                             </div>
                                                         </vs-td>
-
+                                                        <vs-td class="">
+                                                            <div class="uppercase">
+                                                                {{ data[indextr].existencia }}
+                                                            </div>
+                                                        </vs-td>
                                                         <vs-td class="">
                                                             <div class="uppercase">
                                                                 {{ data[indextr].descripcion }},
@@ -487,6 +493,7 @@ export default {
                 tasa_iva: 16,
                 nota: "",
             },
+            articuloSeleccionado: {},
             /**variables dle modulo */
             openBuscadorArticulos: false,
             openBuscadorClientes: false,
@@ -557,6 +564,7 @@ export default {
                             descuento_b: element.descuento_b,
                             costo_neto_descuento: element.costo_neto_descuento,
                             facturable_b: element.facturable_b,
+                            existencia: element.existencia
                         });
                     });
                     this.form.nota = res.nota;
@@ -825,8 +833,22 @@ export default {
         },
 
         LoteSeleccionado(datos) {
+            this.articuloSeleccionado = datos;
+            if (datos.existencia <= 0) {
+                /**preguntando si desea continuar con los datos a la lista de articulos y servicios y validando si tienen existencia*/
+                this.botonConfirmarSinPassword = "Agregar Artículo";
+                this.accionConfirmarSinPassword =
+                    "Este artículo no cuenta con existencia en el inventario. ¿Desea Agregarlo?";
+                this.openConfirmarSinPassword = true;
+                this.callBackConfirmar = this.AgregarLoteSeleccionado;
+            } else {
+                this.AgregarLoteSeleccionado();
+            }
+        },
+
+        AgregarLoteSeleccionado() {
             /**agregando los datos a la lista de articulos y servicios */
-            this.form.articulos.push(datos);
+            this.form.articulos.push(this.articuloSeleccionado);
         },
 
         cancelar() {
