@@ -146,11 +146,9 @@
                                                         </vs-td>
                                                         <vs-td class="">
                                                             <div class="uppercase">
-                                                                {{ data[indextr].descripcion }},
-                                                                {{ data[indextr].tipo }}
+                                                                {{ data[indextr].descripcion }}
                                                             </div>
                                                         </vs-td>
-
                                                         <vs-td class="">
                                                             <vs-input :name="'cantidad_articulos' + indextr"
                                                                 data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +

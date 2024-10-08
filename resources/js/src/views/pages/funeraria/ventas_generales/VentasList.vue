@@ -162,9 +162,9 @@
         </FormularioVentas>
 
         <CancelarVenta :show="openCancelar" @closeCancelarVenta="openCancelar = false" @ConsultarVenta="ConsultarVenta"
-            :id_venta="id_venta"></CancelarVenta>
+            :id_venta="id_venta_cancelar"></CancelarVenta>
         <EntregarVenta :show="openEntregar" @closeEntregarVenta="closeEntregarVenta"
-            @ConsultarVenta="ConsultarVentaNota" :id_venta="id_venta">
+            @ConsultarVenta="ConsultarVentaNota" :id_venta="id_venta_entregar">
         </EntregarVenta>
     </div>
 </template>
@@ -273,6 +273,8 @@ export default {
             accionNombre: "",
             /**opciones para filtrar la peticion del server */
             id_venta: 0 /**para consultar los reportesw */,
+            id_venta_entregar: 0,
+            id_venta_cancelar: 0
         };
     },
     methods: {
@@ -362,7 +364,7 @@ export default {
                     time: 4000,
                 });
             } else {
-                this.id_venta = venta.ventas_generales_id;
+                this.id_venta_entregar = venta.ventas_generales_id;
                 this.openEntregar = true;
             }
         },
@@ -402,7 +404,7 @@ export default {
         },
         closeEntregarVenta() {
             this.openEntregar = false;
-            this.id_venta = 0;
+            this.id_venta_entregar = 0;
             (async () => {
                 await this.get_data(this.actual);
             })();
@@ -416,7 +418,7 @@ export default {
             this.verFormularioVentas = true;
         },
         cancelarVenta(id_venta) {
-            this.id_venta = id_venta;
+            this.id_venta_cancelar = id_venta;
             this.openCancelar = true;
         },
         async cancelar_venta() {

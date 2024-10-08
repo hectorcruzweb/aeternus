@@ -4,7 +4,7 @@
             ref="entregar_venta">
             <div class="flex flex-wrap">
                 <div class="w-full">
-                    <ResumenVenta :id_venta="getVentaId"></ResumenVenta>
+                    <ResumenVenta :id_venta="getVentaId" @showNoInvetario="showNoInvetario"></ResumenVenta>
                     <div class="flex flex-wrap py-6">
                         <div class="w-full form-group">
                             <div class="title-form-group">
@@ -28,7 +28,7 @@
                                             </span>
                                             <span v-if="this.errores.fecha_entrega">{{
                                                 errores.fecha_entrega[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full xl:w-8/12 input-text px-2 ">
                                             <label>Responsable de entrega:</label>
@@ -42,7 +42,7 @@
                                             <span>{{ errors.first("entregador") }}</span>
                                             <span v-if="this.errores['entregador.value']">{{
                                                 errores["entregador.value"][0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -173,6 +173,16 @@ export default {
         };
     },
     methods: {
+        showNoInvetario() {
+            this.$vs.notify({
+                title: "Entrega de Ventas",
+                text: "Verifique los artículos sin existencia de esta venta.",
+                iconPack: "feather",
+                icon: "icon-alert-circle",
+                color: "warning",
+                time: 5000,
+            });
+        },
         acceptAlert() {
             this.$validator
                 .validateAll()
