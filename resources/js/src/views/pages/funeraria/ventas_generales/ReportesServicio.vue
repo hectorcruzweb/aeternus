@@ -23,8 +23,15 @@
                                         <span class="">{{ documento.documento }}</span>
                                     </vs-td>
                                     <vs-td>
+                                        <img class="cursor-pointer img-btn-25 mx-4" src="@assets/images/signature.svg"
+                                            title="Firmar Documento" @click="openFirmador(documento.documento_id)"
+                                            v-show="documento.firma" />
                                         <img v-if="documento.tipo == 'pdf'" class="cursor-pointer img-btn-24 mx-2"
                                             src="@assets/images/pdf.svg" title="Consultar Documento" @click="
+                                                openReporte(documento.documento, documento.url, '', '')
+                                                " />
+                                        <img width="30" v-else class="cursor-pointer ml-auto mr-auto"
+                                            src="@assets/images/excel.svg" title="Consultar Documento" @click="
                                                 openReporte(documento.documento, documento.url, '', '')
                                                 " />
                                     </vs-td>
@@ -181,7 +188,7 @@
             <CancelarPago :z_index="'z-index58k'" :show="openCancelar" @closeCancelarPago="closeCancelarPago"
                 @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
             <Firmas :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
-                :operacion_id="get_solicitud_id" :tipo="'solicitud'" @closeFirmas="openFirmas = false"></Firmas>
+                :operacion_id="operacion_id" :tipo="'solicitud'" @closeFirmas="openFirmas = false"></Firmas>
         </vs-popup>
     </div>
 </template>
@@ -271,23 +278,23 @@ export default {
             documentos: [
                 {
                     documento: "Nota de Venta en Gral.",
-                    url: "/funeraria/get_hoja_solicitud",
+                    url: "/funeraria/get_nota_venta_gral",
                     tipo: "pdf",
-                    documento_id: 15,
-                    firma: true,
+                    documento_id: 29,
+                    firma: false,
                 },
                 {
                     documento: "Acuse de Entrega",
-                    url: "/funeraria/hoja_preautorizacion",
+                    url: "/funeraria/get_acuse_entrega_venta_gral",
                     tipo: "pdf",
-                    documento_id: 16,
+                    documento_id: 30,
                     firma: true,
                 },
                 {
                     documento: "Acuse de cancelación",
-                    url: "/funeraria/servicio_funerario/acuse_cancelacion",
+                    url: "/funeraria/get_acuse_cancelacion_venta_gral",
                     tipo: "pdf",
-                    documento_id: 25,
+                    documento_id: 31,
                     firma: true,
                 }
             ],
@@ -317,8 +324,6 @@ export default {
             return;
         },
 
-
-
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
             this.ListaReportes = [];
             this.ListaReportes.push({
@@ -347,28 +352,8 @@ export default {
                     null, false,
                     this.get_venta_id
                 );
-                console.log(res)
                 this.datosSolicitud = res.data[0];
                 this.operacion_id = this.datosSolicitud.operacion_id;
-                /*if (this.datosSolicitud.pagos_programados.length > 0) {
-                  //calculando el total de rows
-                  this.funcion_reemplazada = [];
-                  for (
-
-                    let index = 0;
-                    index < this.datosSolicitud.pagos_programados.length;
-                    index++
-                  ) {
-                    this.$nextTick(() => {
-                      this.funcion_reemplazada.push(this.$refs["row"][index].clicktd);
-                      this.$refs["row"][index].clicktd = e => {};
-                      this.$refs["row"][index].$el
-                        .querySelector(".vs-icon")
-                        .addEventListener("click", this.funcion_reemplazada[index]);
-                    });
-                  }
-                }
-        */
                 this.$vs.loading.close();
             } catch (err) {
                 this.$vs.loading.close();

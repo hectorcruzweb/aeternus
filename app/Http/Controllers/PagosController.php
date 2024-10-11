@@ -447,6 +447,8 @@ class PagosController extends ApiController
                 //verificando que no este cancelada
                 if ($datos_venta['operacion_status'] == 0) {
                     return $this->errorResponse('No se puede proceder con el proceso, debido a que la operación afectada ha sido cancelada.', 409);
+                } elseif ($datos_venta['venta_general']["entregado_b"] == 1) {
+                    return $this->errorResponse('No se puede proceder con la cancelación de este pago, debido a que la venta de esta operación ya fue entregada.', 409);
                 }
                 $saldo_tabla_operaciones = $datos_venta["saldo_neto"];
             }
