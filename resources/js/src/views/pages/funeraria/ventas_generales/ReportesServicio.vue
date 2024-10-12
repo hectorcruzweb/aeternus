@@ -15,7 +15,8 @@
                                 <vs-th>Seleccionar Documento</vs-th>
                             </template>
                             <template>
-                                <vs-tr v-for="(documento, index_documento) in documentos" v-bind:key="documento.id">
+                                <vs-tr v-for="(documento, index_documento) in documentos"
+                                    v-bind:key="documento.documento_id" v-show="documento.visible">
                                     <vs-td>
                                         <span class="font-bold">{{ index_documento + 1 }}</span>
                                     </vs-td>
@@ -113,8 +114,6 @@
                         </template>
                     </vs-table>
                 </div>
-
-
                 <div class="w-full pt-8" v-if="datosSolicitud">
                     <vs-table class="tabla-datos" :data="pagos" noDataText="0 Resultados">
                         <template slot="header">
@@ -282,6 +281,7 @@ export default {
                     tipo: "pdf",
                     documento_id: 29,
                     firma: false,
+                    visible: true
                 },
                 {
                     documento: "Acuse de cancelación",
@@ -289,6 +289,7 @@ export default {
                     tipo: "pdf",
                     documento_id: 30,
                     firma: true,
+                    visible: false
                 }
             ],
             total: 0 /**rows que se van a remplazar el click en el evento de las tablas para modificar el expand */,
@@ -349,6 +350,7 @@ export default {
                 this.operacion_id = this.datosSolicitud.operacion_id;
                 //actualizamos si es posible firmar como entregado la nota
                 this.datosSolicitud.venta_general.entregado_b == 1 ? this.documentos[0].firma = true : this.documentos[0].firma = false;
+                this.datosSolicitud.operacion_status == 0 ? this.documentos[1].visible = true : this.documentos[1].visible = false;
                 this.$vs.loading.close();
             } catch (err) {
                 this.$vs.loading.close();
