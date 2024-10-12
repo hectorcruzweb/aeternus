@@ -21,6 +21,7 @@ class CreateVentasGeneralesMigration extends Migration
             $table->foreign('entrego_id')->references('id')->on('usuarios');
             $table->unsignedBigInteger('vendedores_id')->unsigned();
             $table->foreign('vendedores_id')->references('id')->on('usuarios');
+            $table->longText('nota_entrega')->nullable();
         });
 
         //ventas_generales en operaciones

@@ -7207,9 +7207,9 @@ class FunerariaController extends ApiController
                 $requestArticulos = $arreglo_de_lotes;
                 //comenzamos con el registro en la bd
                 DB::beginTransaction();
-                DB::table('operaciones')->where("ventas_generales_id", $datos_venta["ventas_generales_id"])->update(
+                DB::table('ventas_generales')->where("id", $datos_venta["ventas_generales_id"])->update(
                     [
-                        'nota' => $request->comentario
+                        'nota_entrega' => $request->comentario
                     ]
                 );
                 //limpio los movimientos de inventario previamente registrado para hacer uno limpio (esto es solo para desarrollo, en prod se supone que no se necesita porque no se podria modificar una venta si ya fue entregada)
@@ -7378,88 +7378,78 @@ class FunerariaController extends ApiController
 
     public function get_nota_venta_gral(Request $request)
     {
-        try {
-            /**estos valores verifican si el usuario quiere mandar el pdf por correo */
-            $email = $request->email_send === 'true' ? true : false;
-            $email_to = $request->email_address;
-            $requestVentasList = json_decode($request->request_parent[0], true);
-            $id_venta = $requestVentasList['id_venta'];
-
-            /**aqui obtengo los datos que se ocupan para generar el reporte, es enviado desde cada modulo al reporteador
-             * por lo cual puede variar de paramtros degun la ncecesidad
-             */
-            /*$id_venta = 4;
-            $email = false;
-            $email_to = 'hector@gmail.com';
-    */
-
-            //obtengo la informacion de esa venta
-            $datos_solicitud = $this->get_ventas_gral($request, $id_venta, '')[0];
-            if (empty($datos_solicitud)) {
-                /**datos no encontrados */
-                return $this->errorResponse('Error al cargar los datos.', 409);
-            }
-
-            /**verificando si el documento aplica para esta solictitud */
-            /*if ($datos_venta['numero_solicitud_raw'] == null) {
-            return 0;
-            }*/
-
-            $get_funeraria = new EmpresaController();
-            $empresa = $get_funeraria->get_empresa_data();
-
-            /* $FirmasController = new FirmasController();
-             $firma_entrega = $FirmasController->get_firma_documento($datos_solicitud['id'], 15, 'por_area_firma', 'solicitud');
-            $firmas = [
-                'entrega_pertenencias' => $firma_entrega['firma_path'],
-                'no_portaba' => $firma_no_portaba['firma_path'],
-            ];
-            */
-            $pdf = PDF::loadView('funeraria/ventas_gral/nota_venta', ['datos' => $datos_solicitud, 'empresa' => $empresa]);
-            //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-            $name_pdf = 'NOTA DE VENTA EN GRAL.' . strtoupper($datos_solicitud['nombre']) . '.pdf';
-            $pdf->setOptions([
-                'title' => $name_pdf,
-                'footer-html' => view('funeraria.ventas_gral.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-            ]);
-            $pdf->setOptions([
-                'header-html' => view('funeraria.ventas_gral.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-            ]);
-            //$pdf->setOption('grayscale', true);
-            //$pdf->setOption('header-right', 'dddd');
-            $pdf->setOption('margin-left', 12.4);
-            $pdf->setOption('margin-right', 12.4);
-            $pdf->setOption('margin-top', 12.4);
-            $pdf->setOption('margin-bottom', 12.4);
-            $pdf->setOption('page-size', 'letter');
-
-            if ($email == true) {
-                /**email */
-                /**
-                 * parameters lista de la funcion
-                 * to destinatario
-                 * to_name nombre del destinatario
-                 * subject motivo del correo
-                 * name_pdf nombre del pdf
-                 * pdf archivo pdf a enviar
-                 */
-                /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
-                $email_controller = new EmailController();
-                $enviar_email = $email_controller->pdf_email(
-                    $email_to,
-                    strtoupper($datos_solicitud['nombre']),
-                    'NOTA DE VENTA EN GRAL.',
-                    $name_pdf,
-                    $pdf
-                );
-                return $enviar_email;
-                /**email fin */
-            } else {
-                return $pdf->inline($name_pdf);
-            }
-        } catch (\Throwable $th) {
-            return $this->errorResponse('Error al solicitar los datos', 409);
+        //try {
+        /**estos valores verifican si el usuario quiere mandar el pdf por correo */
+        $email = $request->email_send === 'true' ? true : false;
+        $email_to = $request->email_address ? $request->email_address : 'hectorcrzprz@gmail.com';
+        $requestVentasList = isset($request->request_parent[0]) ? json_decode($request->request_parent[0], true) : null;
+        $id_venta = isset($requestVentasList['id_venta']) ? $requestVentasList['id_venta'] : 4;
+        //obtengo la informacion de esa venta
+        $datos_solicitud = $this->get_ventas_gral($request, $id_venta, '')[0];
+        if (empty($datos_solicitud)) {
+            /**datos no encontrados */
+            return $this->errorResponse('Error al cargar los datos.', 409);
         }
+
+        /**verificando si el documento aplica para esta solictitud */
+        /*if ($datos_venta['numero_solicitud_raw'] == null) {
+        return 0;
+        }*/
+
+        $get_funeraria = new EmpresaController();
+        $empresa = $get_funeraria->get_empresa_data();
+
+        $FirmasController = new FirmasController();
+        $firma_entrega = $FirmasController->get_firma_documento($datos_solicitud['operacion_id'], 32, 'por_area_firma', 'solicitud');
+        $firmas = [
+            'aceptacion_recibido_cliente' => $firma_entrega['firma_path']
+        ];
+
+        $pdf = PDF::loadView('funeraria/ventas_gral/nota_venta', ['datos' => $datos_solicitud, 'empresa' => $empresa, 'firmas' => $firmas]);
+        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+        $name_pdf = 'NOTA DE VENTA EN GRAL.' . strtoupper($datos_solicitud['nombre']) . '.pdf';
+        $pdf->setOptions([
+            'title' => $name_pdf,
+            'footer-html' => view('funeraria.ventas_gral.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+        ]);
+        $pdf->setOptions([
+            'header-html' => view('funeraria.ventas_gral.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+        ]);
+        //$pdf->setOption('grayscale', true);
+        //$pdf->setOption('header-right', 'dddd');
+        $pdf->setOption('margin-left', 12.4);
+        $pdf->setOption('margin-right', 12.4);
+        $pdf->setOption('margin-top', 12.4);
+        $pdf->setOption('margin-bottom', 12.4);
+        $pdf->setOption('page-size', 'letter');
+
+        if ($email == true) {
+            /**email */
+            /**
+             * parameters lista de la funcion
+             * to destinatario
+             * to_name nombre del destinatario
+             * subject motivo del correo
+             * name_pdf nombre del pdf
+             * pdf archivo pdf a enviar
+             */
+            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+            $email_controller = new EmailController();
+            $enviar_email = $email_controller->pdf_email(
+                $email_to,
+                strtoupper($datos_solicitud['nombre']),
+                'NOTA DE VENTA EN GRAL.',
+                $name_pdf,
+                $pdf
+            );
+            return $enviar_email;
+            /**email fin */
+        } else {
+            return $pdf->inline($name_pdf);
+        }
+        /*} catch (\Throwable $th) {
+            return $this->errorResponse('Error al solicitar los datos', 409);
+        }*/
     }
 
 }

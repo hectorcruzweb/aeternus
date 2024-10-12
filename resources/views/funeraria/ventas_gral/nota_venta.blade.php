@@ -57,14 +57,19 @@
             word-break: break-all;
         }
 
+        .conceptos-content-full {
+            min-height: 750px !important;
+            border: 1px solid #ddd;
+        }
+
         .conceptos-content {
-            min-height: 650px !important;
+            min-height: 550px !important;
             border: 1px solid #ddd;
         }
 
         .comentario-content {
-            min-height: 150px !important;
-            height: 150px;
+            min-height: 70px !important;
+            height: 70px;
         }
     </style>
 </head>
@@ -72,7 +77,7 @@
 <body>
     @include('layouts.estilos')
 
-    <header id="header" style="page-break-inside: avoid;">
+    <header id="header">
         <section>
             <table class="texto-xs2">
                 <tr>
@@ -127,11 +132,11 @@
     <table class="w-100 mt-5 datos_tabla uppercase texto-xs3">
         <tr>
             <td class="w-60 py-1 px-2 bg-gray"><span class="bold">Datos del Cliente</span></td>
-            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Número de Venta en Gral.</span></td>
+            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Número de Venta.</span></td>
             <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Fecha de Venta</span></td>
         </tr>
         <tr>
-            <td class="w-60 py-1 px-2" rowspan="3">
+            <td class="w-60 py-1 px-2" rowspan="2">
                 <table class="w-100 table-borderless">
                     <tr>
                         <td class="w-100" colspan="2">
@@ -183,9 +188,6 @@
             </td>
         </tr>
         <tr>
-            <td colspan="2" class="center bg-gray bold">TIPO DE operación</td>
-        </tr>
-        <tr>
             <td colspan="2" class="center py-2">
                 <h1>VENTAS EN GENERAL</h1>
             </td>
@@ -194,15 +196,14 @@
 
     <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 bg-gray">
         <tr>
-            <td class="w-50 px-1 px-2 center "><span class="bold">DESGLOCE DE CEONCEPTOS</span>
+            <td class="w-50 px-1 px-2 center "><span class="bold">DESGLOCE DE CONCEPTOS</span>
             </td>
             <td class="w-50 px-1 px-2 center "><span class="bold">Vendedor:
                 </span><span>{{ $datos['venta_general']['vendedor']['nombre'] }}</span>
             </td>
         </tr>
     </table>
-
-    <div class="conceptos-content">
+    <div class="{{ $datos['venta_general']['entregado_b'] == 1 ? 'conceptos-content' : 'conceptos-content-full' }}">
         <table class="w-100 datos_tabla uppercase texto-xs3 mt-2">
             <tr>
                 <td class="py-1 px-1 bg-gray center"><span class="bold">#</span></td>
@@ -236,7 +237,7 @@
             @endfor
         </table>
     </div>
-    <div class="mt-1" style="page-break-inside: avoid;">
+    <div class="mt-0">
         <table class="w-100 datos_tabla uppercase texto-xs3">
             <tr>
                 <td class="w-75 py-2 px-2 left"><span class="bold">importe con letra: </span>
@@ -265,14 +266,47 @@
                 </td>
             </tr>
             <tr>
-                <td class="py-2 px-2 left comentario-content" colspan="2"><span class="bold">importe con
+                <td class="py-2 px-2 left comentario-content" colspan="2"><span class="bold">
                         NOTA / COMENTARIOS: </span>
                     <span>{{ $datos['nota'] }}</span>
                 </td>
             </tr>
         </table>
+        @if ($datos['venta_general']['entregado_b'] == 1)
+            <table class="w-100 datos_tabla uppercase texto-xs3" style="page-break-inside: avoid;">
+                <tr class="bg-gray">
+                    <td class="w-100 py-2 px-2 center" colspan="3"><span class="bold">ACUSE DE ENTREGA</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="w-100 py-4 px-2 left" colspan="3"><span class="bold">NOTA / COMENTARIO: </span>
+                        {{ $datos['venta_general']['nota_entrega'] }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class=" py-2 px-2 center"><span class="bold">FECHA DE ENTREGA</span>
+                    </td>
+                    <td class=" py-2 px-2 center"><span class="bold">NOMBRE DE QUIEN ENTREGÓ</span>
+                    </td>
+                    <td class=" py-2 px-2 center" rowspan="2">
+                        <div class="">
+                            <img src="{{ $firmas['aceptacion_recibido_cliente'] }}" class="firma">
+                        </div>
+                        <span class="bold">FIRMA DE RECIBIDO
+                            CLIENTE</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class=" py-2 px-2 center"><span
+                            class="">{{ $datos['venta_general']['fecha_entrega_texto'] }}</span>
+                    </td>
+                    <td class=" py-2 px-2 center"><span
+                            class="">{{ $datos['venta_general']['entrego']['nombre'] }}</span>
+                    </td>
+                </tr>
+            </table>
+        @endif
     </div>
-
 </body>
 
 </html>

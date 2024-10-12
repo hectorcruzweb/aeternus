@@ -284,17 +284,10 @@ export default {
                     firma: false,
                 },
                 {
-                    documento: "Acuse de Entrega",
-                    url: "/funeraria/get_acuse_entrega_venta_gral",
-                    tipo: "pdf",
-                    documento_id: 30,
-                    firma: true,
-                },
-                {
                     documento: "Acuse de cancelación",
                     url: "/funeraria/get_acuse_cancelacion_venta_gral",
                     tipo: "pdf",
-                    documento_id: 31,
+                    documento_id: 30,
                     firma: true,
                 }
             ],
@@ -354,6 +347,8 @@ export default {
                 );
                 this.datosSolicitud = res.data[0];
                 this.operacion_id = this.datosSolicitud.operacion_id;
+                //actualizamos si es posible firmar como entregado la nota
+                this.datosSolicitud.venta_general.entregado_b == 1 ? this.documentos[0].firma = true : this.documentos[0].firma = false;
                 this.$vs.loading.close();
             } catch (err) {
                 this.$vs.loading.close();
