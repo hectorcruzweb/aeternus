@@ -2,7 +2,7 @@
     <div class="centerx">
         <vs-popup :class="['confirm-form', z_index]" close="cancelar" title="contraseña" :active.sync="showChecker"
             ref="contra">
-            <div class="text-center password_icono"></div>
+            <div class="text-center password_icono hidden"></div>
             <div class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2">
                 confirmar contraseña
             </div>

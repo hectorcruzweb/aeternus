@@ -136,13 +136,8 @@ class FacturacionController extends ApiController
             ],
             [
                 'id' => 5,
-                'tipo' => 'Servicios con extremidadades',
-                'ver_b' => 0,
-            ],
-            [
-                'id' => 6,
                 'tipo' => 'Ventas en general',
-                'ver_b' => 0,
+                'ver_b' => 1,
             ],
         ];
 
@@ -179,11 +174,11 @@ class FacturacionController extends ApiController
             'clientes.id as cliente_id',
             'clientes.nombre',
             'fecha_operacion',
-            'empresa_operaciones_id',
             'ventas_terrenos_id',
             'servicios_funerarios_id',
             'cuotas_cementerio_id',
             'ventas_planes_id',
+            'ventas_generales_id',
             DB::raw(
                 '(NULL) AS fecha_operacion_texto'
             ),
@@ -195,6 +190,7 @@ class FacturacionController extends ApiController
             )
         )
             ->with('movimiento_operacion_inventario.articulos_operacion:movimientos_inventario_id,cantidad,plan_b,descuento_b,facturable_b,costo_neto_normal,costo_neto_descuento,articulos_id,sat_productos_servicios.id as sat_producto_servicio_id,sat_productos_servicios.clave as sat_producto_servicio_clave,sat_productos_servicios.descripcion as sat_producto_servicio_descripcion,articulos.descripcion as articulo_descripcion,sat_unidades.id as sat_unidad_id,sat_unidades.unidad as sat_unidad,sat_unidades.clave as sat_unidad_clave')
+            ->with('conceptos_temporales')
             ->where('operaciones.status', '<>', 0)
             ->where(function ($q) use ($tipo_operacion_id) {
                 if ($tipo_operacion_id > 0) {
@@ -220,6 +216,7 @@ class FacturacionController extends ApiController
                     $q->where('ventas_terrenos_id', '=', $numero_control);
                     $q->orWhere('ventas_planes_id', '=', $numero_control);
                     $q->orWhere('servicios_funerarios_id', '=', $numero_control);
+                    $q->orWhere('ventas_generales_id', '=', $numero_control);
                 }
 
                 if ($numero_control == 2) {
@@ -263,6 +260,31 @@ class FacturacionController extends ApiController
             $conceptos = [];
 
             /**creando el arreglo con los conceptos que puede facturar el usuario segun la operacion*/
+
+
+            if ($operacion['empresa_operaciones_id'] == 5) {
+                /**es venta en gral */
+                if (isset($operacion['conceptos_temporales'])) {
+                    foreach ($operacion['conceptos_temporales'] as $id => $concepto) {
+                        if ($concepto['facturable_b'] == 1) {
+                            /**solo los que  */
+                            array_push($conceptos, [
+                                'clave_sat' => ['value' => $concepto['sat_producto_servicio_id'], 'label' => $concepto['sat_producto_servicio_descripcion'] . ' (' . $concepto['sat_producto_servicio_clave'] . ')'],
+                                'unidad_sat' => ['value' => $concepto['sat_unidad_id'], 'label' => $concepto['sat_unidad'] . ' (' . $concepto['sat_unidad_clave'] . ')'],
+                                "cantidad" => $concepto['cantidad'],
+                                "descripcion" => $concepto['descripcion'],
+                                'descuento_b' => $concepto['descuento_b'] == 1 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+                                'modifica_b' => 0,
+                                'concepto_operacion_id' => $operacion['operacion_id'],
+                                'precio_neto' => $concepto['costo_neto_normal'],
+                                'precio_descuento' => $concepto['costo_neto_descuento'],
+                            ]);
+                        }
+                    }
+                }
+            }
+
+
             if ($operacion['empresa_operaciones_id'] == 3) {
                 /**es servicio funerario */
                 if (isset($operacion['movimiento_operacion_inventario']['articulos_operacion'])) {
@@ -1803,7 +1825,6 @@ class FacturacionController extends ApiController
         $metodos_pago = MetodosPago::select('*')->get();
         $sat_paises = SatPais::select('*')->get();
         $sat_usos = SatUsosCfdi::select('*')->get();
-
         foreach ($resultado as $index_cfdi => &$cfdi) {
             //datos del servicio funerario
             //aqui voy
@@ -1818,7 +1839,6 @@ class FacturacionController extends ApiController
                     }
                 }
             }
-
             /**status */
             if ($cfdi['status'] == 1) {
                 $cfdi['status_texto'] = 'Vigente';

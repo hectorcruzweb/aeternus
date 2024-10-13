@@ -3,15 +3,20 @@
         <vs-popup :class="['forms-popup popup-90', z_index]" fullscreen title="Catálogo de operaciones atendidas"
             :active.sync="showVentana" ref="buscador_operaciones">
             <!--inicio de buscador-->
-            <div class="py-3">
-                <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
-                    <template slot="no-body">
-                        <div>
-                            <div class="flex flex-wrap px-4 py-4">
-                                <div class="w-full sm:w-12/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2">
+            <div class="flex flex-wrap">
+                <div class="w-full text-right">
+                    <img class="cursor-pointer img-btn" src="@assets/images/reload.svg" @click="reset()" />
+                </div>
+                <div class="w-full pt-2">
+                    <div class="form-group">
+                        <div class="title-form-group">Filtro de Operaciones</div>
+                        <div class="form-group-content">
+                            <div class="flex flex-wrap">
+                                <!--INICIO DE FORM TIPO-->
+                                <div class="w-full sm:w-12/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text">
                                     <label class="text-sm opacity-75 font-bold">
-                                        <span>Tipo de Operación</span>
-                                        <span class="texto-importante">(*)</span>
+                                        Tipo de Operación
+                                        <span class="">(*)</span>
                                     </label>
                                     <v-select :options="tipo_operaciones" :clearable="false"
                                         :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="serverOptions.tipo_operacion"
@@ -24,7 +29,7 @@
                                             }}</span>
                                     </div>
                                 </div>
-                                <div class="w-full sm:w-12/12 md:w-2/12 lg:w-2/12 xl:w-2/12 px-2">
+                                <div class="w-full sm:w-12/12 md:w-2/12 lg:w-2/12 xl:w-2/12 px-2 input-text">
                                     <label class="text-sm opacity-75 font-bold">Número de operación</label>
                                     <vs-input name="numero_control" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
                                         placeholder="Ej. 001" maxlength="15" v-model.trim="serverOptions.numero_control"
@@ -37,8 +42,7 @@
                                     </div>
                                     <div class="mt-2"></div>
                                 </div>
-
-                                <div class="w-full sm:w-12/12 md:w-4/12 lg:w-4/12 xl:w-4/12 px-2">
+                                <div class="w-full sm:w-12/12 md:w-4/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                                     <label class="text-sm opacity-75 font-bold">
                                         Rango de Fechas año/mes/dia
                                         <span class="texto-importante">(*)</span>
@@ -46,11 +50,11 @@
 
                                     <flat-pickr name="fecha_operacion" data-vv-as=" "
                                         v-validate:fechapago_validacion_computed.immediate="'required'
-                                            " :config="configdateTimePickerRange" v-model="serverOptions.fecha_operacion"
-                                        placeholder="Fecha(s) de la operación" class="w-full my-1"
-                                        @on-close="onCloseDate" />
+                                            " :config="configdateTimePickerRange"
+                                        v-model="serverOptions.fecha_operacion" placeholder="Fecha(s) de la operación"
+                                        class="w-full my-1" @on-close="onCloseDate" />
                                 </div>
-                                <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2">
+                                <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
                                     <label class="text-sm opacity-75 font-bold">Nombre del cliente</label>
                                     <vs-input ref="cliente" name="cliente" data-vv-as=" " type="text"
                                         class="w-full pb-1 pt-1" placeholder="Ej. Juán Pérez" maxlength="150"
@@ -63,64 +67,66 @@
                                     </div>
                                     <div class="mt-2"></div>
                                 </div>
+
+                                <!--FIN FORM TIPO-->
                             </div>
                         </div>
-                    </template>
-                </vx-card>
-                <div class="mt-10">
-                    <vs-table :sst="true" :max-items="serverOptions.per_page" :data="operaciones" stripe
-                        noDataText="0 Resultados">
-                        <template slot="header">
-                            <h3>Lista de Operaciones a Facturar</h3>
-                        </template>
-                        <template slot="thead">
-                            <vs-th>#</vs-th>
-                            <vs-th>Núm. Operación</vs-th>
-                            <vs-th>Tipo</vs-th>
-                            <vs-th>Fecha</vs-th>
-                            <vs-th>Cliente</vs-th>
-                            <vs-th>Seleccionar</vs-th>
-                        </template>
-                        <template slot-scope="{ data }">
-                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                                <vs-td :data="data[indextr].id">
-                                    <span class="font-semibold">{{ indextr + 1 }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].id">
-                                    <span class="font-semibold" v-if="data[indextr].empresa_operaciones_id == 1">{{
-                                        data[indextr].ventas_terrenos_id }}</span>
-                                    <span class="font-semibold"
-                                        v-else-if="data[indextr].empresa_operaciones_id == 2">Venta Cementerio > {{
-                                        data[indextr].ventas_terrenos_id }}</span>
-                                    <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 3">{{
-                                        data[indextr].servicios_funerarios_id }}</span>
-                                    <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 4">{{
-                                        data[indextr].ventas_planes_id }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].tipo_operacion_texto">{{
-                                    data[indextr].tipo_operacion_texto
-                                    }}</vs-td>
-
-                                <vs-td :data="data[indextr].fecha_operacion_texto">{{
-                                    data[indextr].fecha_operacion_texto
-                                    }}</vs-td>
-                                <vs-td :data="data[indextr].nombre">{{
-                                    data[indextr].nombre
-                                    }}</vs-td>
-                                <vs-td :data="data[indextr].id">
-                                    <img width="25" class="cursor-pointer" src="@assets/images/checked.svg"
-                                        @click="retornarSeleccion(data[indextr])" />
-                                </vs-td>
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                    <div>
-                        <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual"
-                            class="mt-3"></vs-pagination>
                     </div>
                 </div>
             </div>
+            <div class="mt-10">
+                <vs-table :sst="true" :max-items="serverOptions.per_page" :data="operaciones" stripe
+                    noDataText="0 Resultados">
+                    <template slot="header">
+                        <h3>Lista de Operaciones a Facturar</h3>
+                    </template>
+                    <template slot="thead">
+                        <vs-th>#</vs-th>
+                        <vs-th>Núm. Operación</vs-th>
+                        <vs-th>Tipo</vs-th>
+                        <vs-th>Fecha</vs-th>
+                        <vs-th>Cliente</vs-th>
+                        <vs-th>Seleccionar</vs-th>
+                    </template>
+                    <template slot-scope="{ data }">
+                        <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                            <vs-td :data="data[indextr].id">
+                                <span class="font-semibold">{{ indextr + 1 }}</span>
+                            </vs-td>
+                            <vs-td :data="data[indextr].id">
+                                <span class="font-semibold" v-if="data[indextr].empresa_operaciones_id == 1">{{
+                                    data[indextr].ventas_terrenos_id }}</span>
+                                <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 2">Venta
+                                    Cementerio > {{
+                                        data[indextr].ventas_terrenos_id }}</span>
+                                <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 3">{{
+                                    data[indextr].servicios_funerarios_id }}</span>
+                                <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 4">{{
+                                    data[indextr].ventas_planes_id }}</span>
+                                <span class="font-semibold" v-else-if="data[indextr].empresa_operaciones_id == 5">{{
+                                    data[indextr].ventas_generales_id }}</span>
+                            </vs-td>
+                            <vs-td :data="data[indextr].tipo_operacion_texto">{{
+                                data[indextr].tipo_operacion_texto
+                            }}</vs-td>
 
+                            <vs-td :data="data[indextr].fecha_operacion_texto">{{
+                                data[indextr].fecha_operacion_texto
+                            }}</vs-td>
+                            <vs-td :data="data[indextr].nombre">{{
+                                data[indextr].nombre
+                            }}</vs-td>
+                            <vs-td :data="data[indextr].id">
+                                <img width="25" class="cursor-pointer" src="@assets/images/checked.svg"
+                                    @click="retornarSeleccion(data[indextr])" />
+                            </vs-td>
+                        </vs-tr>
+                    </template>
+                </vs-table>
+                <div>
+                    <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
+                </div>
+            </div>
             <!--fin de buscador-->
         </vs-popup>
     </div>
@@ -135,6 +141,7 @@ import funeraria from "@services/funeraria";
 import vSelect from "vue-select";
 
 import { configdateTimePickerRange } from "@/VariablesGlobales";
+import { reset } from "numeral";
 const moment = require("moment");
 
 export default {
@@ -292,8 +299,7 @@ export default {
                 });
         },
 
-        reset(card) {
-            card.removeRefreshAnimation(500);
+        reset() {
             this.serverOptions.numero_control = "";
             this.serverOptions.cliente = "";
             this.serverOptions.fecha_operacion = "";

@@ -244,6 +244,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}/{actualizar_saldos?}', 'FunerariaController@get_solicitudes_servicios');
     Route::get('funeraria/get_inventario/{id_articulo?}/{paginated?}/{solo_existencias?}/{con_material_velacion?}', 'FunerariaController@get_inventario');
     Route::get('funeraria/get_categorias_servicio', 'FunerariaController@get_categorias_servicio');
+    //ventas gral
+    Route::post('funeraria/control_ventas_gral/{tipo_servicio}', 'FunerariaController@control_ventas_gral');
+    Route::get('funeraria/get_ventas_gral/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas_gral');
+    Route::get('funeraria/get_nota_venta_gral', 'FunerariaController@get_nota_venta_gral');
+    Route::get('funeraria/get_acuse_cancelacion_venta_gral', 'FunerariaController@get_acuse_cancelacion_venta_gral');
     /**fin de rutas del cementerio */
 
     /**RUTAS PARA FACTURACION */
@@ -282,12 +287,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
     Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
-    //ventas gral
-    Route::post('funeraria/control_ventas_gral/{tipo_servicio}', 'FunerariaController@control_ventas_gral');
 });
-Route::get('funeraria/get_ventas_gral/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas_gral');
-Route::get('funeraria/get_nota_venta_gral', 'FunerariaController@get_nota_venta_gral');
-Route::get('funeraria/get_acuse_cancelacion_venta_gral', 'FunerariaController@get_acuse_cancelacion_venta_gral');
 
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {

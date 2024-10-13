@@ -304,15 +304,36 @@ class Operaciones extends Model
         return $this->hasMany('App\ArticulosTemporales', 'operaciones_id', 'id')
             ->select(
                 "cantidad",
-                "descripcion",
+                "articulos.descripcion",
                 "articulos_id",
                 "costo_neto_normal",
                 "costo_neto_descuento",
                 "descuento_b",
                 "facturable_b",
-                "operaciones_id"
+                "operaciones_id",
+                "sat_productos_servicios.id as sat_producto_servicio_id",
+                "sat_productos_servicios.descripcion as sat_producto_servicio_descripcion",
+                "sat_productos_servicios.clave as sat_producto_servicio_clave",
+                "sat_unidades_venta",
+                "sat_unidades.id as sat_unidad_id",
+                "sat_unidades.clave as sat_unidad_clave",
+                "sat_unidades.unidad as sat_unidad"
             )
-            ->join('articulos', 'articulos.id', '=', 'articulos_venta_general_temporal.articulos_id');
+            ->join('articulos', 'articulos.id', '=', 'articulos_venta_general_temporal.articulos_id')
+            ->join('sat_productos_servicios', 'articulos.sat_productos_servicios_id', '=', 'sat_productos_servicios.id')
+            ->join('sat_unidades', 'articulos.sat_unidades_venta', '=', 'sat_unidades.id');
     }
-
 }
+/*
+array_push($conceptos, [
+    'clave_sat' => ['value' => $concepto['sat_producto_servicio_id'], 'label' => $concepto['sat_producto_servicio_descripcion'] . ' (' . $concepto['sat_producto_servicio_clave'] . ')'],
+    'unidad_sat' => ['value' => $concepto['sat_unidad_id'], 'label' => $concepto['sat_unidad'] . ' (' . $concepto['sat_unidad_clave'] . ')'],
+    "cantidad" => $concepto['cantidad'],
+    "descripcion" => $concepto['descripcion'],
+    'descuento_b' => $concepto['descuento_b'] == 1 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
+    'modifica_b' => 0,
+    'concepto_operacion_id' => $operacion['operacion_id'],
+    'precio_neto' => $concepto['costo_neto_normal'],
+    'precio_descuento' => $concepto['costo_neto_descuento'],
+]);
+*/

@@ -8,6 +8,10 @@
     border-radius: 0 !important;
 }
 
+.large {
+    border-radius: 0px !important;
+}
+
 .input-text {
     .form-control {
         @extend .size-base, .color-copy, .font-normal;
