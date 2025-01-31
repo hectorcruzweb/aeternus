@@ -1140,9 +1140,9 @@ class FacturacionController extends ApiController
 
                             /**continuando despues de guardar los conceptos en la base de datos */
                             /**verifianco que la cantidad a egresar no sobrepasa el limite a egresar dle cfdi */
-                            if ($cfdi_a_egresar['maximo_a_egresar'] < $total_a_egresar) {
+                            if (round($cfdi_a_egresar['maximo_a_egresar']) < round($total_a_egresar)) {
                                 $this->regresar_bd_folio();
-                                return $this->errorResponse('Este cfdi solo puede tener egresos de máximo $ ' . number_format($cfdi_a_egresar['maximo_a_egresar'] . '.', 2), 409);
+                                return $this->errorResponse('Este cfdi solo puede tener egresos de máximo $' . number_format($cfdi_a_egresar['maximo_a_egresar'], 2) . '.', 409);
                             }
                         } else {
                             $this->regresar_bd_folio();
