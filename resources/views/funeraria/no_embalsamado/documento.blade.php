@@ -143,8 +143,12 @@
             </span> a
             quien corresponde el
             certificado de defunción
-            No.<span class="bold uppercase ">
-                {{ $datos['folio_certificado'] }}
+            No. <span class="bold uppercase ">
+                @if (trim($datos['folio_certificado']) == '')
+                    N/A
+                @else
+                    {{ $datos['folio_certificado'] }}
+                @endif
             </span>
             <span class="bold uppercase ">no ha sido embalsamado en esta funeraria</span>, misma que se localiza en
             {{ strtolower($empresa->calle) }} Núm. Ext {{ $empresa->num_ext }}

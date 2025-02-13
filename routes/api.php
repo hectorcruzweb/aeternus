@@ -18,7 +18,7 @@ Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenContro
 /**rutas de modulo en proceso */
 
 /**rutas publicas_ entran sin token */
-Route::get('funeraria/get_planes/{solo_a_futuro?}/{id_plan?}', 'FunerariaController@get_planes');
+
 /**fin de rutas de modulo en proceso */
 
 /**servicios accedidos desde el backend */
@@ -241,6 +241,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/get_material_velacion/{id_articulo?}/{paginated?}/{id_departamento?}/{id_categoria?}/{tipo_articulo?}/{solo_inventariable?}', 'InventarioController@get_articulos');
     Route::get('funeraria/get_tipos_contratante', 'FunerariaController@get_tipos_contratante');
     Route::get('funeraria/contancia_de_no_embalsamiento', 'FunerariaController@contancia_de_no_embalsamiento');
+    Route::get('funeraria/get_planes/{solo_a_futuro?}/{id_plan?}', 'FunerariaController@get_planes');
+    Route::get('funeraria/get_legistas_embalsamadores', 'FunerariaController@get_legistas_embalsamadores');
     Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}/{actualizar_saldos?}', 'FunerariaController@get_solicitudes_servicios');
     Route::get('funeraria/get_inventario/{id_articulo?}/{paginated?}/{solo_existencias?}/{con_material_velacion?}', 'FunerariaController@get_inventario');
     Route::get('funeraria/get_categorias_servicio', 'FunerariaController@get_categorias_servicio');

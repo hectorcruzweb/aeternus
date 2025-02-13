@@ -154,26 +154,60 @@
             , a
             través de las personas que tengan a bien designar, efectúen todos los trámites necesarios ante las
             autoridades
-            correspondientes con el fin de lograr la: <br> <span class="bold">( @if ($datos['embalsamar_b'] != 0)
+            correspondientes con el fin de lograr la: <br> <span class="bold">
+                ( @if ($datos['embalsamar_b'] != 0)
                     __X__
                 @else
                     ____
-                @endif ) preparación</span>, <span class="bold">(
+                @endif )
+                preparación</span>,
+            <span class="bold">(
                 @if ($datos['inhumacion_b'] != 0)
                     __X__
                 @else
                     ____
                 @endif )
                 inhumación
-            </span>, <span class="bold">( @if ($datos['cremacion_b'] != 0)
+                <!--condiciono resto de texto-->
+                @if ($datos['inhumacion_b'] != 0)
+                    @if ($datos['estado_cuerpo']['id'] == 4 /**cenizas*/ || $datos['cremacion_b'] == 1)
+                        de cenizas
+                    @elseif($datos['estado_cuerpo']['id'] == 5 /**restos aridos*/)
+                        de restos áridos
+                    @endif
+                    <!--FIN condiciono resto de texto-->
+                @endif
+            </span>,
+            <span class="bold">( @if ($datos['cremacion_b'] != 0)
                     __X__
                 @else
                     ____
-                    @endif ) cremación, y/o ( @if ($datos['traslado_b'] != 0)
-                        __X__
+                @endif ) cremación
+                @if ($datos['cremacion_b'] != 0)
+                    <!--condiciono resto de texto-->
+                    @if ($datos['estado_cuerpo']['id'] == 5 /**restos aridos*/)
+                        de restos áridos
+                    @endif
+                    <!--FIN condiciono resto de texto-->
+                @endif
+                , y/o
+                ( @if ($datos['traslado_b'] != 0)
+                    __X__
+                @else
+                    ____
+                @endif) traslado
+                @if ($datos['traslado_b'] != 0)
+                    <!--condiciono resto de texto-->
+                    @if ($datos['estado_cuerpo']['id'] == 4 /**cenizas*/ || $datos['cremacion_b'] == 1)
+                        de cenizas
+                    @elseif($datos['estado_cuerpo']['id'] == 5 /**restos aridos*/)
+                        de restos áridos
                     @else
-                        ____
-                    @endif) traslado del cuerpo</span>
+                        del cuerpo
+                    @endif
+                    <!--FIN condiciono resto de texto-->
+                @endif
+            </span>
             del (la)
         </p>
         <table class="w-100 tabla_dato size-19px">

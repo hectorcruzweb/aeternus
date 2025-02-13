@@ -12,6 +12,7 @@ use App\EstadosCiviles;
 use App\Http\Controllers\CementerioController;
 use App\Http\Controllers\FirmasController;
 use App\Inventario;
+use App\LegistasEmbalsamadores;
 use App\LugaresInhumacion;
 use App\LugaresServicio;
 use App\Operaciones;
@@ -2759,8 +2760,13 @@ class FunerariaController extends ApiController
             'estado_cuerpo.value' => 'required',
 
             /**DESTINOS DEL SERVICIO */
+            'legista.value' => 'required',
+            'medico_legista' => '',
+            'cedula_legista' => '',
             'embalsamar_b' => 'required|numeric|min:0|max:1',
+            'embalsamador.value' => '',
             'preparador' => '',
+            'cedula_embalsamador' => '',
 
             'velacion_b' => 'required|numeric|min:0|max:1',
             'lugar_servicio.value' => '',
@@ -2820,8 +2826,18 @@ class FunerariaController extends ApiController
         ];
 
         /**VALIDACIONES CONDICIONADAS */
+        if ($request->legista['value'] == 1) {
+            /**es el embalsamador 'otro' y puede capturar manual */
+            $validaciones['medico_legista'] = 'required';
+            $validaciones['cedula_legista'] = 'required';
+        }
         if ($request->embalsamar_b == 1) {
-            $validaciones['preparador'] = 'required';
+            $validaciones['embalsamador.value'] = 'required';
+            if ($request->embalsamador['value'] == 2) {
+                /**es el embalsamador 'otro' y puede capturar manual */
+                $validaciones['preparador'] = 'required';
+                $validaciones['cedula_embalsamador'] = 'required';
+            }
         }
 
         if ($request->velacion_b == 1) {
@@ -2985,11 +3001,15 @@ class FunerariaController extends ApiController
                     'certificado_informante' => $request->certificado_informante != null ? strtoupper($request->certificado_informante) : null,
                     'certificado_informante_telefono' => $request->certificado_informante_telefono != null ? strtoupper($request->certificado_informante_telefono) : null,
                     'certificado_informante_parentesco' => $request->certificado_informante_parentesco != null ? strtoupper($request->certificado_informante_parentesco) : null,
-                    'medico_legista' => $request->medico_legista != null ? strtoupper($request->medico_legista) : null,
+                    'legista_id' => $request->legista["value"],
+                    'medico_legista' => $request->legista["value"] == 1 ? strtoupper($request->medico_legista) : null,
+                    'cedula_legista' => $request->legista["value"] == 1 ? strtoupper($request->cedula_legista) : null,
                     'estado_afectado_id' => $request->estado_cuerpo['value'],
                     /**ACTUALIZANDO LOS DESTINOS DEL SERVICIO */
                     'embalsamar_b' => $request->embalsamar_b != 1 ? 0 : 1,
-                    'preparador' => $request->preparador != null ? ($request->embalsamar_b == 1 ? strtoupper($request->preparador) : null) : null,
+                    'embalsamador_id' => $request->embalsamar_b == 1 ? $request->embalsamador["value"] : null,
+                    'preparador' => ($request->embalsamar_b == 1 && $request->embalsamador["value"] == 2) ? strtoupper($request->preparador) : null,
+                    'cedula_embalsamador' => ($request->embalsamar_b == 1 && $request->embalsamador["value"] == 2) ? strtoupper($request->cedula_embalsamador) : null,
                     'medico_responsable_embalsamado' => $request->embalsamar_b != 1 ? null : ($request->embalsamar_b == 1 ? strtoupper($request->medico_responsable_embalsamado) : null),
                     'velacion_b' => $request->velacion_b != 1 ? 0 : 1,
                     'lugares_servicios_id' => $request->velacion_b != 1 ? null : strtoupper($request->lugar_servicio['value']),
@@ -4107,14 +4127,18 @@ class FunerariaController extends ApiController
             'certificado_informante_telefono',
             'certificado_informante_parentesco',
             'folio_certificado',
+            'legista_id',
             'medico_legista',
+            'cedula_legista',
             'sitios_muerte_id',
             'lugar_muerte',
             'afiliaciones_id',
             'afiliacion_nota',
             'estado_afectado_id',
             'medico_responsable_embalsamado',
+            'embalsamador_id',
             'preparador',
+            'cedula_embalsamador',
             'tipos_contratante_id',
             'status'
         )->with("operacion");
@@ -4123,6 +4147,8 @@ class FunerariaController extends ApiController
             $resultado_query = $resultado_query->with("estado_cuerpo")
                 ->with('registro:id,nombre')
                 ->with('nacionalidad')
+                ->with('legista')
+                ->with('embalsamador')
                 ->with('escolaridad')
                 ->with('recogio:id,nombre')
                 ->with('estado_civil')
@@ -5993,6 +6019,11 @@ class FunerariaController extends ApiController
         } catch (\Throwable $th) {
             return $this->errorResponse('Error al solicitar los datos', 409);
         }
+    }
+
+    public function get_legistas_embalsamadores()
+    {
+        return LegistasEmbalsamadores::orderBy('id', 'desc')->get();
     }
 
     public function get_estados_civiles()

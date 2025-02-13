@@ -7,6 +7,9 @@ let cancel;
 export default {
     cancel: null,
 
+    get_legistas_embalsamadores() {
+        return axios.get("/funeraria/get_legistas_embalsamadores/");
+    },
     get_personal_recoger() {
         return axios.get("/funeraria/get_personal_recoger/");
     },

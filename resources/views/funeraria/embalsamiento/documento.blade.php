@@ -136,14 +136,15 @@
             cuerpo sin
             vida de quien llevara el nombre del <span class="bold uppercase ">
                 @if (isset($datos['titulo']['titulo']))
-                {{ $datos['titulo']['titulo']}}
+                    {{ $datos['titulo']['titulo'] }}
                 @else
-                N/A
-                @endif. {{ $datos['nombre_afectado'] }}</span> a
+                    N/A
+                @endif. {{ $datos['nombre_afectado'] }}
+            </span> a
             quien corresponde el
             certificado de defunción
             No.<span class="bold uppercase ">
-                {{  $datos['folio_certificado']}}
+                {{ $datos['folio_certificado'] }}
             </span>
             ha sido embalsamado en la sala de preparación de esta funeraria, misma que se localiza en
             {{ strtolower($empresa->calle) }} Núm. Ext {{ $empresa->num_ext }}
@@ -183,41 +184,51 @@
         <p class="justificar line-lg size-18px">
             Como consecuencia de dicha técnica, el cuerpo sin vida del <span class="bold uppercase ">
                 @if (isset($datos['titulo']['titulo']))
-                {{ $datos['titulo']['titulo']}}
+                    {{ $datos['titulo']['titulo'] }}
                 @else
-                N/A
-                @endif. {{ $datos['nombre_afectado'] }}</span> ha quedado en condiciones satisfactoriamente para
+                    N/A
+                @endif. {{ $datos['nombre_afectado'] }}
+            </span> ha quedado en condiciones satisfactoriamente para
             su velación, inhumación y/o traslado.
 
         </p>
 
 
         <div class="w-100 center">
+            <!--
             <div class="w-50 float-left">
                   <img src="{{ $firmas['medico'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class=" pb-1"><span class="texto-base bold">
-                            @if ($datos['embalsamar_b']==1)
-                            Dr.
-                            @endif
+                            @if ($datos['embalsamar_b'] == 1)
+Dr.
+@endif
                             {{ $datos['medico_responsable_embalsamado'] }}</span></div>
                 </div>
                 <span class="texto-base">Médico Responsable</span>
             </div>
-            <div class="w-50 float-right">
-                  <img src="{{ $firmas['embalsamador'] }}" class="firma">
+        -->
+            <div class="w-50 ml-auto mr-auto">
+                <img src="{{ $firmas['embalsamador'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
-                    <div class="pb-1"><span class="texto-base bold">{{ $datos['preparador'] }}</span>
+                    <div class="pb-1"><span class="texto-base bold">
+                            @if ($datos['embalsamador_id'] > 2)
+                                    {{ $datos['embalsamador']["nombre"] }}
+                                    <div>
+                                        {{ $datos['embalsamador']["cedula"] }}
+                                    </div>
+                            @else
+                                {{ $datos['preparador'] }}
+                                <div>
+                                    {{ $datos['cedula_embalsamador'] }}
+                                </div>
+                            @endif
+                        </span>
                     </div>
-                    <span class="texto-base">Embalsamador</span>
+                    <span class="texto-base">Técnico Embalsamador</span>
                 </div>
             </div>
         </div>
-
-
-
-
-
     </div>
 </body>
 

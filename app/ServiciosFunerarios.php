@@ -25,6 +25,16 @@ class ServiciosFunerarios extends Model
         return $this->hasOne('App\EstadosAfectado', 'id', 'estado_afectado_id');
     }
 
+    public function legista()
+    {
+        return $this->hasOne('App\LegistasEmbalsamadores', 'id', 'legista_id');
+    }
+
+    public function embalsamador()
+    {
+        return $this->hasOne('App\LegistasEmbalsamadores', 'id', 'embalsamador_id');
+    }
+
     public function operacion()
     {
         return $this->hasOne('App\Operaciones', 'servicios_funerarios_id', 'id')->select(
