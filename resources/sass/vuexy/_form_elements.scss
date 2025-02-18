@@ -76,3 +76,26 @@
         }
     }
 }
+//estilos del vue-editor
+.ql-editor {
+    height: 150px !important;
+    max-height: 150px !important;
+    @media (min-width: 992px) {
+        min-height: 329px !important;
+        max-height: 450px !important;
+    }
+    overflow-y: auto;
+}
+.ql-formats button svg {
+    @media (max-width: 992px) {
+        max-width: 14px !important;
+    }
+}
+.ql-action::after {
+    content: "Guardar" !important;
+}
+.ql-editing {
+    &::before {
+        content: "URL del video" !important;
+    }
+}

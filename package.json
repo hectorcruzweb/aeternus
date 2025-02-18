@@ -87,8 +87,11 @@
     "dependencies": {
         "moment": "^2.29.1",
         "numeral": "^2.0.6",
+        "quill-image-drop-module": "^1.0.3",
+        "quill-image-resize-vue": "^1.0.4",
         "vue-filter-number-format": "^2.0.0",
         "vue-moment": "^4.1.0",
-        "vue-signature-pad": "^2.0.2"
+        "vue-signature-pad": "^2.0.2",
+        "vue2-editor": "^2.10.3"
     }
 }

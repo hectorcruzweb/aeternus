@@ -1,0 +1,6 @@
+@for $index from 1 to 100 {
+    /*solo se necesitan 20 indexes hasta el momento*/
+    .hp-#{$index} {
+        height: #{($index)}#{"%"} !important;
+    }
+}

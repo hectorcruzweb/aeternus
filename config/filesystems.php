@@ -26,7 +26,7 @@ return [
     |
      */
 
-    'cloud'   => env('FILESYSTEM_CLOUD', 's3'),
+    'cloud' => env('FILESYSTEM_CLOUD', 's3'),
 
     /*
     |--------------------------------------------------------------------------
@@ -41,39 +41,37 @@ return [
     |
      */
 
-    'disks'   => [
-
-        'local'  => [
+    'disks' => [
+        'local' => [
             'driver' => 'local',
-            'root'   => storage_path('app'),
+            'root' => storage_path('app'),
         ],
-
         'public' => [
-            'driver'     => 'local',
-            'root'       => storage_path('app/public'),
-            'url'        => env('APP_URL') . '/storage',
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => env('APP_URL') . "/storage",
             'visibility' => 'public',
         ],
-        'cfdis'  => [
-            'driver'     => 'local',
-            'root'       => ENV('APP_ENV') == 'local' ? storage_path(ENV('XML_ROOT_DEVELOP')) : storage_path(ENV('XML_ROOT_PRODUCTION')),
-            'url'        => env('APP_URL') . '/cfdis',
+        'cfdis' => [
+            'driver' => 'local',
+            'root' => ENV('APP_ENV') == 'local' ? storage_path(ENV('XML_ROOT_DEVELOP')) : storage_path(ENV('XML_ROOT_PRODUCTION')),
+            'url' => env('APP_URL') . '/cfdis',
             'visibility' => 'public',
         ],
-         'signatures' => [
-         'driver' => 'local',
-         'root' => storage_path(ENV('SIGNATURES_ROOT')),
-         'url' => env('APP_URL') . '/signatures',
-         'visibility' => 'public',
-         ],
+        'signatures' => [
+            'driver' => 'local',
+            'root' => storage_path(ENV('SIGNATURES_ROOT')),
+            'url' => env('APP_URL') . '/signatures',
+            'visibility' => 'public',
+        ],
 
-        's3'     => [
+        's3' => [
             'driver' => 's3',
-            'key'    => env('AWS_ACCESS_KEY_ID'),
+            'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('AWS_BUCKET'),
-            'url'    => env('AWS_URL'),
+            'url' => env('AWS_URL'),
         ],
 
     ],

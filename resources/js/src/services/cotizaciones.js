@@ -19,5 +19,11 @@ export default {
     modificar_solicitud(param) {
         let call = "/funeraria/control_solicitud/modificar";
         return axios.post(call, param);
+    },
+    upload(param) {
+        let call = "http://app.aeternus/funeraria/subir";
+        return axios.post(call, param, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
     }
 };

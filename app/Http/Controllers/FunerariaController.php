@@ -2,40 +2,56 @@
 
 namespace App\Http\Controllers;
 
-use App\Afiliaciones;
-use App\Articulos;
-use App\Categorias;
-use App\Clientes;
-use App\Escolaridades;
-use App\EstadosAfectado;
-use App\EstadosCiviles;
-use App\Http\Controllers\CementerioController;
-use App\Http\Controllers\FirmasController;
-use App\Inventario;
-use App\LegistasEmbalsamadores;
-use App\LugaresInhumacion;
-use App\LugaresServicio;
-use App\Operaciones;
-use App\PlanConceptosServicioOriginal;
-use App\PlanesFunerarios;
-use App\PreciosPlanes;
-use App\RegistroPublico;
-use App\ServiciosFunerarios;
-use App\SitiosMuerte;
-use App\TiposContratante;
-use App\Titulos;
-use App\User;
-use App\VentasPlanes;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 use PDF;
+use App\User;
+use App\Titulos;
+use App\Clientes;
+use App\Articulos;
+use Carbon\Carbon;
+use App\Categorias;
+use App\Inventario;
+use App\Operaciones;
+use App\Afiliaciones;
+use App\SitiosMuerte;
+use App\VentasPlanes;
+use App\Escolaridades;
+use App\PreciosPlanes;
+use App\EstadosCiviles;
+use App\EstadosAfectado;
+use App\LugaresServicio;
+use App\RegistroPublico;
+use App\PlanesFunerarios;
+use App\TiposContratante;
+use App\LugaresInhumacion;
+use App\ServiciosFunerarios;
+use Illuminate\Http\Request;
+use App\LegistasEmbalsamadores;
 use PhpParser\Node\Stmt\Foreach_;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use App\PlanConceptosServicioOriginal;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\FirmasController;
+use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+    public function upload(Request $req)
+    {
+        if ($req->hasFile('image')) {
+            $filename = $req->file('image')->getClientOriginalName(); // get the file name
+            $getfilenamewitoutext = pathinfo($filename, PATHINFO_FILENAME); // get the file name without extension
+            $getfileExtension = $req->file('image')->getClientOriginalExtension(); // get the file extension
+            $createnewFileName = time() . '_' . str_replace(' ', '_', $getfilenamewitoutext) . '.' . $getfileExtension; // create new random file name
+            $img_path = $req->file('image')->storeAs("public", $createnewFileName); // get the image path
+            return response()->json([
+                'url' => Storage::url($img_path)
+            ]);
+        } else {
+            return $this->errorResponse("Error", 409);
+        }
 
+    }
     /**REGISTRAR PLAN FUNERARIO*/
     public function control_planes(Request $request, $tipo_servicio = '')
     {

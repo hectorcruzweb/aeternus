@@ -321,6 +321,89 @@
                                     AGREGAR CONCEPTO MANUALMENTE <img src="@assets/images/plus-success.svg" />
                                 </button>
                             </div>
+                            <div class="flex flex-wrap px-2 py-2">
+                                <div class="w-full lg:w-7/12 xl:w-8/12 lg:pr-2 py-2">
+                                    <vue-editor placeholder="Comentarios..." id="editor" v-model="content"
+                                        useCustomImageHandler @image-added="handleImageAdded"
+                                        :editorOptions="editorSettings" :editorToolbar="customToolbar"></vue-editor>
+                                </div>
+                                <div class="w-full lg:w-5/12 xl:w-4/12 lg:pl-2 pt-6 lg:py-2">
+                                    <div class="form-group h-full mt-0">
+                                        <div class="title-form-group">Finalizar Cotización</div>
+                                        <div class="form-group-content h-full content-center md:content-end">
+                                            <div class="flex flex-wrap h-full hp-95 content-between">
+                                                <div class="w-full">
+                                                    <div
+                                                        class="w-full justify-between px-2 flex flex-wrap h2 py-2 lg:py-0">
+                                                        <span>Total a Pagar</span>
+                                                        <span>$ 150, 000.00</span>
+                                                    </div>
+                                                    <div
+                                                        class="w-full justify-between px-2 flex flex-wrap size-base text-danger lg:py-0">
+                                                        <span>Descuento Aplicado</span>
+                                                        <span>$1600.00</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="w-full lg:w-12/12 px-2 input-text lg:py-0">
+                                                    <label>
+                                                        MODALIDAD DE PAGOS
+                                                        <span>(*)</span>
+                                                    </label>
+                                                    <v-select :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
+                                                        " :options="planes_funerarios" :clearable="false"
+                                                        :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.plan_funerario"
+                                                        class="w-full" name=" plan_validacion" data-vv-as=" ">
+                                                        <div slot="no-options">
+                                                            No Se Ha Seleccionado Ningún Plan
+                                                        </div>
+                                                    </v-select>
+                                                    <span>{{ errors.first("plan_validacion") }}</span>
+                                                    <span v-if="this.errores['plan_funerario.value']">{{
+                                                        errores["plan_funerario.value"][0]
+                                                    }}</span>
+                                                </div>
+                                                <div class="w-full md:w-6/12 px-2 input-text lg:py-0">
+                                                    <label>
+                                                        $ PAGO INICIAL
+                                                        <span>(*)</span>
+                                                    </label>
+                                                    <vs-input v-validate="'required'
+                                                        " name="solicitud" data-vv-as=" " type="text" class="w-full"
+                                                        placeholder="Ej. 6692145634" v-model="form.solicitud"
+                                                        maxlength="12" />
+                                                    <span>{{ errors.first("solicitud") }}</span>
+                                                    <span v-if="this.errores.solicitud">{{
+                                                        errores.solicitud[0]
+                                                    }}</span>
+                                                </div>
+                                                <div class="w-full md:w-6/12 px-2 input-text lg:py-0">
+                                                    <label>
+                                                        % PAGO INICIAL
+                                                        <span>(*)</span>
+                                                    </label>
+                                                    <vs-input v-validate="'required'
+                                                        " name="solicitud" data-vv-as=" " type="text" class="w-full"
+                                                        placeholder="Ej. 6692145634" v-model="form.solicitud"
+                                                        maxlength="12" />
+                                                    <span>{{ errors.first("solicitud") }}</span>
+                                                    <span v-if="this.errores.solicitud">{{
+                                                        errores.solicitud[0]
+                                                        }}</span>
+                                                </div>
+                                                <div
+                                                    class="w-full text-center px-2 size-regular text-info py-4 lg:py-0">
+                                                    <span>Pago Inicial de $ 150,000.00 MXN y 9 pagos de $12,500.00 por
+                                                        mes.</span>
+                                                </div>
+                                                <vs-button class="w-full" color="success">
+                                                    <span>Hacer Cotización</span>
+                                                </vs-button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -331,7 +414,16 @@
     </div>
 </template>
 <script>
+import { VueEditor, Quill } from 'vue2-editor'
+
+import { ImageDrop } from 'quill-image-drop-module';
+import ImageResize from 'quill-image-resize-vue';
+
+Quill.register("modules/imageDrop", ImageDrop);
+Quill.register("modules/imageResize", ImageResize);
+
 import funeraria from "@services/funeraria";
+import cotizaciones from "@services/cotizaciones";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
@@ -341,7 +433,9 @@ export default {
     components: {
         "v-select": vSelect,
         flatPickr,
-        ArticulosBuscador
+        ArticulosBuscador,
+        VueEditor,
+        Quill
     },
     props: {
         show: {
@@ -399,6 +493,29 @@ export default {
     },
     data() {
         return {
+            customToolbar: [
+                [{ header: [false, 1, 2, 3, 4, 5, 6] }],
+                ["bold", "italic", "underline", "strike"], // toggled buttons
+                [
+                    { align: "" },
+                    { align: "center" },
+                    { align: "right" },
+                    { align: "justify" }
+                ],
+                //["blockquote", "code-block"],
+                [{ list: "ordered" }, { list: "bullet" }, { list: "check" }],
+                [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
+                [{ color: [] }, { background: [] }], // dropdown with defaults from theme
+                ["link", "image", "video"],
+                ["clean"] // remove formatting button
+            ],
+            content: '',
+            editorSettings: {
+                modules: {
+                    imageDrop: true,
+                    imageResize: {}
+                }
+            },
             form: {
                 solicitud: '',
                 planes_predefinidos_b: false,
@@ -421,6 +538,20 @@ export default {
         };
     },
     methods: {
+        handleImageAdded: function (file, Editor, cursorLocation, resetUploader) {
+            var formData = new FormData();
+            formData.append("image", file);
+            cotizaciones
+                .upload(formData)
+                .then((result) => {
+                    const url = result.data.url; // Get url from response
+                    Editor.insertEmbed(cursorLocation, "image", url);
+                    resetUploader();
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
+        },
         get_concepto_por_codigo(origen = "", evento = "") {
             if (evento == "blur") {
                 return;
@@ -510,4 +641,8 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.quillWrapper {
+    position: relative !important;
+}
+</style>

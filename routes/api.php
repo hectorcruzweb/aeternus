@@ -12,7 +12,8 @@
  */
 
 /**en pruebas */
-
+Route::post('funeraria/subir', 'FunerariaController@upload');
+Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
 /**rutas de modulo en proceso */
@@ -141,6 +142,7 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     Route::post('cementerio/actualizar_status_convenio', 'CementerioController@actualizar_status_convenio');
 
     /**rutas de funeraria ventas planes */
+
     Route::post('funeraria/control_ventas/{tipo_servicio}', 'FunerariaController@control_ventas'); //agregar,modificar
     Route::post('funeraria/control_planes/{tipo_servicio?}', 'FunerariaController@control_planes');
     Route::post('funeraria/enable_disable_planes', 'FunerariaController@enable_disable_planes');
@@ -216,7 +218,7 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     /**rutas de servicios funerarios */
     Route::post('funeraria/control_solicitud/{tipo_servicio}', 'FunerariaController@control_solicitud');
     Route::post('funeraria/control_contratos/{tipo_servicio}', 'FunerariaController@control_contratos');
-    Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
+
 
     Route::get('funeraria/autorizacion_cremacion', 'FunerariaController@autorizacion_cremacion');
     Route::get('funeraria/get_hoja_solicitud', 'FunerariaController@get_hoja_solicitud');
