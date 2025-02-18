@@ -17,11 +17,11 @@
         "laravel/framework": "^6.0",
         "laravel/passport": "^8.2",
         "laravel/tinker": "^1.0",
+        "lcobucci/jwt": "3.3.3",
         "milon/barcode": "^6.0",
         "nesbot/carbon": "^2.32",
         "spatie/array-to-xml": "^2.14",
-        "villca/numeros-en-letras": "^1.2",
-        "lcobucci/jwt": "3.3.3"
+        "villca/numeros-en-letras": "^1.2"
     },
     "require-dev": {
         "facade/ignition": "^1.4",

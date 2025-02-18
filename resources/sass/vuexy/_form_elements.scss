@@ -1,7 +1,20 @@
 /*aplica para todos las cajas de texto, selects, emails, passwords.*/
-.input-cantidad input {
-    min-width: 100px !important;
-    text-align: center !important;
+.input-cantidad {
+    margin: 0 auto !important;
+    input {
+        min-width: 100px !important;
+        text-align: center !important;
+        &.width-hug {
+            min-width: 0 !important;
+            width: 35px !important;
+        }
+    }
+    &.no-min-width {
+        input {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+    }
 }
 
 .vs-con-input .input-text {

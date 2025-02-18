@@ -2,13 +2,16 @@ const mix = require("laravel-mix");
 let tailwindcss = require("tailwindcss");
 require("dotenv").config();
 mix.webpackConfig({
-    devServer: {
+   /*devServer: {
         proxy: {
-            "*": "http://app.laravel:80"
+            "*": "http://app.aeternus:80"
         }
     }
+        */
 });
-
+mix.browserSync({
+    proxy:'http://app.aeternus:80'
+});
 /*
  |--------------------------------------------------------------------------
  | Mix Asset Management

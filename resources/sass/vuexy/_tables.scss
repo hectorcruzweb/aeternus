@@ -83,6 +83,9 @@
 
     text-align: center !important;
     padding: 3.5px !important;
+    &.padding-y-7 {
+        padding: 7px 0px !important;
+    }
 }
 
 th .sort-th,

@@ -450,7 +450,32 @@ const router = new Router({
                         authRequired: true
                     }
                 },
-
+                {
+                    path: "/cotizaciones",
+                    name: "cotizaciones",
+                    component: () =>
+                        import(
+                            "@/views/pages/cotizaciones/CotizacionesList.vue"
+                        ),
+                    meta: {
+                        breadcrumb: [
+                            {
+                                title: "Home",
+                                url: "/"
+                            },
+                            {
+                                title: "Control de Cotizaciones."
+                            },
+                            {
+                                title: "Cotizaciones.",
+                                active: true
+                            }
+                        ],
+                        pageTitle: "Cotizaciones",
+                        rule: "editor",
+                        authRequired: true
+                    }
+                },
                 {
                     path: "/reportes",
                     name: "reportes",
@@ -664,7 +689,7 @@ router.beforeEach((to, from, next) => {
                         index < modulos_permisos.length;
                         index++
                     ) {
-                        if (modulos_permisos[index].url === to.path) {
+                        if (modulos_permisos[index].url === to.path || to.path=="/cotizaciones") {
                             next();
                             return false;
                         }

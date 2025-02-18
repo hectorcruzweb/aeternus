@@ -13,3 +13,9 @@
 
 @import "layout/theNavbar";
 @import "layout/footer";
+@media (min-width: 768px) {
+    .buttons-container-header {
+        margin-top: -60px !important;
+        padding-bottom: 24px;
+    }
+}
