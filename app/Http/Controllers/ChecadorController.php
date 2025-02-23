@@ -66,7 +66,7 @@ class ChecadorController extends ApiController
         if (isset($request->filtro_especifico_opcion)) {
             $resultado_query = $resultado_query->where("status", "=", $request->filtro_especifico_opcion);
         }
-
+        $resultado_query = $resultado_query->where("id", ">", 1);
         $resultado_query = $resultado_query->get();
         $resultado = array();
         $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
