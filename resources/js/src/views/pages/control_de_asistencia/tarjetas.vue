@@ -10,7 +10,7 @@
                 <div class="flex flex-wrap">
                     <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2">
                         <div class="w-full input-text pb-2">
-                            <label class="">Filtrar Por Fecha</label>
+                            <label class="">Listar por Estado</label>
                             <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
                                 v-model="filtroEspecifico" class="md:mb-0" />
                         </div>
@@ -137,6 +137,11 @@ export default {
                 await this.get_data(1);
             })();
         },
+        "filtroEspecifico.value": function (newValue, oldValue) {
+            (async () => {
+                await this.get_data(1);
+            })();
+        },
     },
     computed: {},
     data() {
@@ -145,12 +150,20 @@ export default {
             area: { label: "Ambas", value: "0" },
             configdateTimePickerRange: configdateTimePickerRange,
             registros: [],
-            filtroEspecifico: { label: "Rango de Fechas", value: "1" },
+            filtroEspecifico: { label: "Empleados Vigentes", value: "1" },
             filtrosEspecificos: [
                 {
-                    label: "Rango de Fechas",
+                    label: "Todos los Empleados",
+                    value: "",
+                },
+                {
+                    label: "Empleados Vigentes",
                     value: "1",
                 },
+                {
+                    label: "Empleados Cancelados",
+                    value: "0",
+                }
             ],
             usuario_id: "",
             empleados: [],
@@ -195,6 +208,7 @@ export default {
             this.fecha_inicio = "";
             this.serverOptions.nombre = "";
             this.area = this.areasOptionsTodas[0];
+            this.filtroEspecifico = this.filtrosEspecificos[1];
             (async () => {
                 await this.get_data(1);
             })();
@@ -221,6 +235,7 @@ export default {
             this.verPaginado = false;
             this.serverOptions.page = page;
             this.serverOptions.area = this.area.value;
+            this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
             checador
                 .get_empleados_paginados(this.serverOptions)
                 .then((res) => {
