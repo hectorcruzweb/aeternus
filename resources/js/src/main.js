@@ -10,7 +10,6 @@
 import Vue from "vue";
 import App from "./App.vue";
 
-
 // Vuesax Component Framework
 import Vuesax from "vuesax";
 
@@ -50,7 +49,6 @@ import "./filters/filters";
 // Clipboard
 import VueClipboard from "vue-clipboard2";
 Vue.use(VueClipboard);
-
 
 // Tour
 import VueTour from "vue-tour";
@@ -103,15 +101,15 @@ import numeral from "numeral";
 import numFormat from "vue-filter-number-format";
 
 Vue.filter("numFormat", numFormat(numeral));
-Vue.use(require('vue-moment'));
-const moment = require('moment')
-require('moment/locale/es')
- 
-Vue.use(require('vue-moment'), {
+Vue.use(require("vue-moment"));
+const moment = require("moment");
+require("moment/locale/es");
+
+Vue.use(require("vue-moment"), {
     moment
-})
- 
-import VueSignaturePad from 'vue-signature-pad';
+});
+
+import VueSignaturePad from "vue-signature-pad";
 
 Vue.use(VueSignaturePad);
 /**con esta funcion valido si el usuario tiene cierto permiso sobre algun modulo, tomand

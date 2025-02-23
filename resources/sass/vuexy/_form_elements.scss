@@ -43,9 +43,11 @@
     }
 
     input[type="text"],
+    input[type="email"],
     .vs__dropdown-toggle {
         border-radius: 0 !important;
         line-height: 1rem !important;
+        max-height: 47px !important;
     }
     padding-top: 0.25rem !important;
     padding-bottom: 0.25rem !important;
@@ -66,13 +68,25 @@
     }
     .vs__selected {
         @extend .size-base, .color-copy, .font-normal;
-        text-transform: lowercase !important;
+        text-transform: capitalize !important;
     }
 
     &.large-size {
         input {
             height: 47px !important;
             padding: 5px 0px 5px 7px !important;
+            @extend .h3;
+        }
+
+        .vs__selected,
+        .vs__selected-options {
+            @extend .h6;
+            max-height: 47px !important;
+            padding: 0px 0px 0px 7px !important;
+            text-transform: uppercase !important;
+        }
+        .vs__selected {
+            margin-top: 0px !important;
         }
     }
 }

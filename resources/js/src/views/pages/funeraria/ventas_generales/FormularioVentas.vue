@@ -25,7 +25,7 @@
                                     </span>
                                     <span v-if="this.errores.fecha_venta">{{
                                         errores.fecha_venta[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full xl:w-7/12">
                                     <div class="w-full px-2 input-text" v-if="form.id_cliente == ''">
@@ -76,7 +76,7 @@
                                     </span>
                                     <span class="" v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
