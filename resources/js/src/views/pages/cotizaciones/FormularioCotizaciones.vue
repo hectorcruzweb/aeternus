@@ -3,7 +3,7 @@
         <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" :title="getTipoformulario == 'agregar'
             ? 'Elaborar cotización'
             : 'modificar venta en general'
-            " :active.sync="showVentana">
+            " :active.sync="showVentana" ref="formulario">
             <!--inicio de cotizacion-->
             <div class="flex flex-wrap">
                 <div class="w-full xl:w-6/12 px-2 py-4">
@@ -16,13 +16,13 @@
                                         Nombre del cliente
                                         <span>(*)</span>
                                     </label>
-                                    <vs-input v-validate="'required'" name="nombre" data-vv-as=" " type="text"
-                                        class="w-full" focused placeholder="Ej. José Pérez" v-model="form.nombre"
-                                        maxlength="100" />
+                                    <vs-input v-validate="'required'" ref="nombre" name="nombre" data-vv-as=" "
+                                        type="text" class="w-full" focused placeholder="Ej. José Pérez"
+                                        v-model="form.nombre" maxlength="100" />
                                     <span>{{ errors.first("nombre") }}</span>
                                     <span v-if="this.errores.nombre">{{
                                         errores.nombre[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -35,7 +35,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -72,7 +72,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -84,7 +84,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -102,7 +102,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -118,7 +118,7 @@
                         <div class="form-group-content">
                             <div class="flex flex-wrap">
                                 <div class="w-full lg:w-6/12 px-2 py-2">
-                                    <button class="w-full btn-icon-50">
+                                    <button class="w-full btn-icon-50" @click="openPaquetes('funeraria')">
                                         ver planes de funeraria predefinidos
                                         <img src="@assets/images/folder.svg" />
                                     </button>
@@ -131,7 +131,8 @@
                                 </div>
                             </div>
                             <div class="w-full px-2 py-4">
-                                <vs-table noDataText="" class="tabla-datos tabla-datos-no-data">
+                                <vs-table noDataText="" class="tabla-datos tabla-datos-no-data"
+                                    :data="form.predefinidos">
                                     <template slot="header">
                                         <h3>Listado de Cotizaciones Agregadas</h3>
                                     </template>
@@ -142,17 +143,18 @@
                                         <vs-th><span class="px-2">QUITAR</span></vs-th>
                                     </template>
                                     <template slot-scope="{ data }">
-                                        <vs-tr :data="tr" :key="n" v-for="n in 2">
+                                        <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
                                             <vs-td>
-                                                <span class="font-semibold px-2">{{ n }}</span>
+                                                <span class="font-semibold px-2">{{ indextr + 1 }}</span>
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
-                                                <span class="px-2">PAQUETE PRIORITY PLUS (CREMACION). 1, 6, 12, 18 PAGO
-                                                    (S)</span>
+                                                <span class="px-2">{{ form.predefinidos[indextr].label
+                                                }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
-                                                        src="@assets/images/folder.svg" title="" /></span>
+                                                        src="@assets/images/folder.svg" title=""
+                                                        @click="verCotizacion(tr, 'ver_funeraria')" /></span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2">
@@ -355,7 +357,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -375,7 +377,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -398,7 +400,7 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
@@ -421,6 +423,10 @@
         <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+        <Paquetes :show="ver_cotizaciones" :tipo_cotizacion="tipo_cotizacion"
+            @closeCotizaciones="ver_cotizaciones = false" @agregarCotizacion="agregarCotizacion"
+            :cotizacionVer="cotizacionVer">
+        </Paquetes>
     </div>
 </template>
 <script>
@@ -435,11 +441,13 @@ Quill.register("modules/imageResize", ImageResize);
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 import funeraria from "@services/funeraria";
 import cotizaciones from "@services/cotizaciones";
+import cementerio from "@services/cementerio";
 import vSelect from "vue-select";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
 import ArticulosBuscador from "@pages/funeraria/servicios_funerarios/searcher_articulos.vue";
+import Paquetes from "@pages/cotizaciones/Paquetes.vue";
 import { configdateTimePicker } from "@/VariablesGlobales";
 import functions from "@/functions";
 export default {
@@ -450,6 +458,7 @@ export default {
         VueEditor,
         Quill,
         ConfirmarDanger,
+        Paquetes
     },
     props: {
         show: {
@@ -470,12 +479,14 @@ export default {
         show: function (newValue, oldValue) {
             if (newValue == true) {
                 this.$nextTick(
-                    () => { }
-                    // this.$refs["fallecido_ref"].$el.querySelector("input").focus()
+                    () => { this.$refs["nombre"].$el.querySelector("input").focus() }
                 );
                 this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
                     this.cancelar();
                 };
+                (async () => {
+                    await this.get_vendedores();
+                })();
             } else {
                 /**acciones al cerrar el formulario */
             }
@@ -654,7 +665,7 @@ export default {
                 vendedor: { label: "Seleccione 1", value: "" },
                 fecha_cotizacion: "",
                 validez: { label: "Uso Inmediato (1 Día)", value: "1" },
-                cotizaciones_predefinidas_b: false,
+                cotizaciones_predefinidas_b: true,
                 predefinidos: [],
                 conceptos: [
                     {
@@ -682,9 +693,41 @@ export default {
             accionConfirmarSinPassword: "",
             callBackConfirmar: Function,
             errores: [],
+            ver_cotizaciones: false,
+            cotizacionVer: {}
         };
     },
     methods: {
+        //get vendedores
+        async get_vendedores() {
+            try {
+                let res = await cementerio.get_vendedores();
+                //le agrego todos los usuarios vendedores
+                this.vendedores = [];
+                this.vendedores.push({ label: "Seleccione 1", value: "" });
+                if (this.getTipoformulario == "agregar") {
+                    this.form.vendedor = this.vendedores[0];
+                }
+                res.data.forEach((element) => {
+                    this.vendedores.push({
+                        label: element.nombre,
+                        value: element.id,
+                    });
+                });
+            } catch (error) {
+                /**error al cargar vendedores */
+                this.$vs.notify({
+                    title: "Error",
+                    text: "Ha ocurrido un error al tratar de cargar el catálogo de vendedores, por favor reintente.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger",
+                    position: "bottom-right",
+                    time: "9000",
+                });
+                this.cerrarVentana();
+            }
+        },
         changePagoInicial(event) {
             let pago_inicial = functions.parseToDecimal(this.form.pago_inicial);
             if (pago_inicial > this.totalCotizacion || pago_inicial < 0) {
@@ -832,6 +875,33 @@ export default {
         eliminar_conceptos_callback() {
             this.form.conceptos = [];
         },
+        cancelar() {
+            this.botonConfirmarSinPassword = "Salir y limpiar";
+            this.accionConfirmarSinPassword =
+                "Esta acción limpiará los datos que capturó en el formulario.";
+            this.openConfirmarSinPassword = true;
+            this.callBackConfirmar = this.cerrarVentana;
+        },
+        cerrarVentana() {
+            this.openConfirmarSinPassword = false;
+            this.limpiarVentana();
+            this.$emit("closeVentana");
+        },
+        limpiarVentana() {
+        },
+        openPaquetes(tipo = '') {
+            this.tipo_cotizacion = tipo;
+            this.ver_cotizaciones = true;
+        },
+        agregarCotizacion(cotizacion) {
+            this.form.predefinidos.push(cotizacion)
+        },
+        verCotizacion(cotizacion) {
+            console.log("🚀 ~ verCotizacion ~ cotizacion:", cotizacion)
+            this.tipo_cotizacion = 'ver_' + cotizacion.tipo;
+            this.cotizacionVer = cotizacion;
+            this.ver_cotizaciones = true;
+        }
     },
     created() { },
     updated() { },

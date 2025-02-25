@@ -16,9 +16,11 @@ export default {
         return axios.post(call, datos);
     },
     get_planes(solo_a_futuro = false, plan_id = 0) {
-        return axios.get(
-            "/funeraria/get_planes/" + solo_a_futuro + "/" + plan_id
-        );
+        let url =
+            "/funeraria/get_planes/" +
+            solo_a_futuro +
+            (plan_id > 0 ? "/" + plan_id : "");
+        return axios.get(url);
     },
     enable_disable_planes(datos) {
         let call = "/funeraria/enable_disable_planes";

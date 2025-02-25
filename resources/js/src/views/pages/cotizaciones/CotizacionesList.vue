@@ -50,7 +50,7 @@
                     <vs-td :data="data[indextr].ventas_generales_id">
                         <span class="font-semibold">{{
                             data[indextr].ventas_generales_id
-                        }}</span>
+                            }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">
                         {{ data[indextr].nombre }}
@@ -157,8 +157,14 @@ export default {
             this.tipoFormulario = tipo;
             this.verFormularioCotizaciones = true;
         },
+        reloadList() {
+            (async () => {
+                this.verFormularioCotizaciones = false;
+                //await this.get_data(this.actual);
+            })();
+        },
     },
-    created(
+    mounted(
     ) {
         this.OpenFormularioCotizaciones("agregar");
     }
