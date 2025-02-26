@@ -22,7 +22,7 @@
                                     <span>{{ errors.first("nombre") }}</span>
                                     <span v-if="this.errores.nombre">{{
                                         errores.nombre[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -35,7 +35,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -72,7 +72,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -84,7 +84,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -102,7 +102,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -149,7 +149,7 @@
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
                                                 <span class="px-2">{{ form.predefinidos[indextr].label
-                                                }}</span>
+                                                    }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
@@ -358,7 +358,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -378,7 +378,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -401,7 +401,7 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
@@ -490,6 +490,7 @@ export default {
                 })();
             } else {
                 /**acciones al cerrar el formulario */
+                //Lmpiamos el form
             }
         },
         "form.modalidad_pago": function (newValue, oldValue) {
@@ -641,15 +642,6 @@ export default {
             },
             vendedores: [],
             modalidades_pago: [
-                { label: "Pago Único", value: "1" },
-                { label: "2 Pagos", value: "2" },
-                { label: "3 Pagos", value: "3" },
-                { label: "4 Pagos", value: "4" },
-                { label: "5 Pagos", value: "5" },
-                { label: "6 Pagos", value: "6" },
-                { label: "7 Pagos", value: "7" },
-                { label: "8 Pagos", value: "8" },
-                { label: "9 Pagos", value: "9" },
             ],
             periodos_validez: [
                 { label: "Uso Inmediato (1 Día)", value: "1" },
@@ -658,7 +650,6 @@ export default {
                 { label: "3 Semanas", value: "4" },
                 { label: "1 Mes", value: "5" },
             ],
-            oldValuePorcentaje: '',
             form: {
                 cliente: "",
                 telefono: "",
@@ -914,6 +905,21 @@ export default {
             this.$emit("closeVentana");
         },
         limpiarVentana() {
+            this.form.nombre = '';
+            this.form.telefono = '';
+            this.form.email = '';
+            this.form.vendedor = this.vendedores[0];
+            this.form.fecha_cotizacion = '';
+            this.form.validez = this.periodos_validez[0];
+            this.form.cotizaciones_predefinidas_b = false;
+            this.form.predefinidos = [];
+            this.serverOptions.numero_control = '';
+            this.form.conceptos = [];
+            this.form.nota = '';
+            this.form.modalidad = this.modalidades_pago[0];
+            this.form.pago_inicial = '0.00';
+            this.form.pago_inicial_porcentaje = '0.00';
+            this.$validator.reset()
         },
         openPaquetes(tipo = '') {
             this.tipo_cotizacion = tipo;
@@ -926,10 +932,17 @@ export default {
             this.tipo_cotizacion = 'ver';
             this.cotizacionVer = cotizacion;
             this.ver_cotizaciones = true;
-        }
+        },
     },
     created() { },
     updated() { },
+    mounted() {
+        this.modalidades_pago.push({ label: "Pago Único", value: "1" });
+        this.modalidades_pago.push({ label: "2 Mensualidades", value: "2" });
+        for (let index = 3; index <= 24; index++) {
+            this.modalidades_pago.push({ label: +index + " Mensualidades", value: index });
+        }
+    }
 };
 </script>
 
