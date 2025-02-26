@@ -85,6 +85,7 @@
 <script>
 import vSelect from "vue-select";
 import planes from "@services/planes";
+import cementerio from "@services/cementerio";
 export default {
     components: {
         "v-select": vSelect,
@@ -112,19 +113,23 @@ export default {
     watch: {
         show: function (newValue, oldValue) {
             if (newValue == true) {
+                console.log(this.tipoCotizacion)
                 if (this.tipoCotizacion == 'funeraria') {
                     (async () => {
                         await this.get_planes_funerarios();
                     })();
-                } else if (this.tipoCotizacion == 'ver_funeraria') {
-                    console.log("🚀 ~ this.GetCotizacionVer:", this.GetCotizacionVer)
+                } else if (this.tipoCotizacion == 'cementerio') {
+                    (async () => {
+                        await this.get_financiamientos();
+                    })();
+                } else if (this.tipoCotizacion == 'ver') {
                     this.cotizaciones.push(this.GetCotizacionVer);
-                    this.form.cotizacion = this.cotizaciones[0]
+                    this.form.cotizacion = this.cotizaciones[0];
                 }
             } else {
                 //reinicias el form
-                this.cotizaciones = [];
                 this.form.cotizacion = {};
+                this.cotizaciones = [];
             }
         },
     },
@@ -171,11 +176,73 @@ export default {
         };
     },
     methods: {
+        async get_financiamientos() {
+            try {
+                this.$vs.loading();
+                let res = await cementerio.get_financiamientos();
+                //creamos las diferentes cotizaciones
+                this.cotizaciones = [];
+                res.data.forEach((element) => {
+                    if (element.precios.length > 0) {
+                        //creamos el objeto con la informacion de esta cotizacion
+                        let financiamientos = [];
+                        element.precios.forEach((financiamiento) => {
+                            financiamientos.push({
+                                financiamiento: financiamiento.tipo_financiamiento,
+                                costo_neto: financiamiento.costo_neto,
+                                pago_inicial: financiamiento.pago_inicial,
+                                pago_mensual: financiamiento.pago_mensual
+                            })
+                        });
+                        //se agrega al cotizaciones object
+                        this.cotizaciones.push({
+                            tipo: this.tipoCotizacion,
+                            label: 'Espacio en cementerio tipo ' + element.tipo,
+                            secciones: [{
+                                //solo una seccion de incluye
+                                seccion: 'incluye',
+                                conceptos: [
+                                    'espacio en cementerio tipo ' + element.tipo + ' con capacidad de ' + element.capacidad + ' Persona(s).'
+                                ]
+                            }],
+                            financiamientos: financiamientos,
+                        });
+                    }
+                });
+                if (this.cotizaciones.length > 0) {
+                    this.form.cotizacion = this.cotizaciones.length > 1 ? this.cotizaciones[1] : this.cotizaciones[0];
+                    console.log(this.cotizaciones)
+                } else {
+                    this.$vs.notify({
+                        title: "Error",
+                        text: "Verifique los presupuestos predefinidos (Costos y Secciones de conceptos contenidos).",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger",
+                        position: "bottom-right",
+                        time: "9000",
+                    });
+                    this.cerrar_ventana();
+                }
+                this.$vs.loading.close();
+            } catch (err) {
+                this.$vs.loading.close();
+                /**FORBIDDEN ERROR */
+                this.$vs.notify({
+                    title: "Error",
+                    text: "Ha ocurrido un error al tratar de cargar el catálogo de cotizaciones predefinidas, por favor reintente.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            }
+        },
         async get_planes_funerarios() {
             try {
                 this.$vs.loading();
                 let res = await planes.get_planes(false, "");
-                //le agrego todos los usuarios vendedores
+                //creamos las diferentes cotizaciones
                 this.cotizaciones = [];
                 res.data.forEach((element) => {
                     if (element.precios.length > 0 && element.secciones.length > 0) {

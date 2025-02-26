@@ -124,7 +124,7 @@
                                     </button>
                                 </div>
                                 <div class="w-full lg:w-6/12 px-2 py-2">
-                                    <button class="w-full btn-icon-50">
+                                    <button class="w-full btn-icon-50" @click="openPaquetes('cementerio')">
                                         ver planes de cementerio predefinidos
                                         <img src="@assets/images/folder.svg" />
                                     </button>
@@ -154,12 +154,13 @@
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
                                                         src="@assets/images/folder.svg" title=""
-                                                        @click="verCotizacion(tr, 'ver_funeraria')" /></span>
+                                                        @click="verCotizacion(tr, 'ver')" /></span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2">
                                                     <img class="cursor-pointer img-btn-14 mx-3"
-                                                        src="@assets/images/quitar.svg" title="" /></span>
+                                                        src="@assets/images/quitar.svg" title=""
+                                                        @click="quitar_item(indextr, 'predefinidos')" /></span>
                                             </vs-td>
                                         </vs-tr>
                                     </template>
@@ -669,7 +670,23 @@ export default {
                 predefinidos: [],
                 conceptos: [
                     {
-                        descripcion: "Ataúd Metálico Estándar Celestial",
+                        descripcion: "Concepto 1",
+                        costo_neto_normal: 1500,
+                        descuento_b: 0,
+                        costo_neto_descuento: 1000,
+                        cantidad: 1,
+                        importe: 0,
+                    },
+                    {
+                        descripcion: "Concepto 2",
+                        costo_neto_normal: 1500,
+                        descuento_b: 0,
+                        costo_neto_descuento: 1000,
+                        cantidad: 1,
+                        importe: 0,
+                    },
+                    {
+                        descripcion: "Concepto 3",
                         costo_neto_normal: 1500,
                         descuento_b: 0,
                         costo_neto_descuento: 1000,
@@ -859,11 +876,20 @@ export default {
                     this.form.conceptos[index_item].descripcion +
                     " de la lista.";
                 this.callBackConfirmar = this.quitar_item_callback;
+            } else {
+                this.accionConfirmarSinPassword =
+                    "Se quitará la cotización de " +
+                    this.form.predefinidos[index_item].label +
+                    " de la lista.";
+                this.callBackConfirmar = this.quitar_predefinido_callback;
             }
         },
         //remover beneficiario callback quita del array al beneficiario seleccionado
         quitar_item_callback() {
             this.form.conceptos.splice(this.form.index_item, 1);
+        },
+        quitar_predefinido_callback() {
+            this.form.predefinidos.splice(this.form.index_item, 1);
         },
         limpiar_conceptos() {
             if (this.form.conceptos.length == 0) return;
@@ -897,8 +923,7 @@ export default {
             this.form.predefinidos.push(cotizacion)
         },
         verCotizacion(cotizacion) {
-            console.log("🚀 ~ verCotizacion ~ cotizacion:", cotizacion)
-            this.tipo_cotizacion = 'ver_' + cotizacion.tipo;
+            this.tipo_cotizacion = 'ver';
             this.cotizacionVer = cotizacion;
             this.ver_cotizaciones = true;
         }
