@@ -2,7 +2,7 @@
     <div>
         <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" :title="getTipoformulario == 'agregar'
             ? 'Elaborar cotización'
-            : 'modificar venta en general'
+            : 'modificar cotización'
             " :active.sync="showVentana" ref="formulario">
             <!--inicio de cotizacion-->
             <div class="flex flex-wrap">
@@ -305,7 +305,7 @@
                                             <vs-td class="">
                                                 <div class="flex justify-center">
                                                     <img class="img-btn-14 mx-3" src="@assets/images/quitar.svg"
-                                                        title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
+                                                        title="Quitar concepto de la lista."
                                                         @click="quitar_item(indextr, 'conceptos')" />
                                                 </div>
                                             </vs-td>
@@ -426,7 +426,8 @@
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
         <ConfirmarAceptar :z_index="'z-index58k'" :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
-            :accion="'He revisado la información y quiero guardar la venta'" :confirmarButton="'Guardar Venta'">
+            :accion="'He revisado la información y quiero guardar la cotización'"
+            :confirmarButton="'Guardar Cotización'">
         </ConfirmarAceptar>
         <Paquetes :show="ver_cotizaciones" :tipo_cotizacion="tipo_cotizacion"
             @closeCotizaciones="ver_cotizaciones = false" @agregarCotizacion="agregarCotizacion"

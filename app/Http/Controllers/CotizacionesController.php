@@ -25,7 +25,7 @@ class CotizacionesController extends ApiController
             'telefono' => '',
             'email' => '',
             'vendedor.value' => 'required',
-            'fecha_cotizacion' => 'required|date',
+            'fecha_cotizacion' => 'required|date|before:tomorrow',
             'validez.value' => 'required',
             'cotizaciones_predefinidas_b' => '',
             'modalidad_pago.value' => 'required',
@@ -40,8 +40,6 @@ class CotizacionesController extends ApiController
         if (isset($request->email)) {
             $validaciones['email'] = 'email';
         }
-
-
         if (isset($request->conceptos) && count($request->conceptos) > 0) {
             $validaciones['conceptos.*.descripcion'] = 'required';
             $validaciones['conceptos.*.costo_neto_normal'] = 'required|numeric|min:0';
@@ -56,6 +54,7 @@ class CotizacionesController extends ApiController
             'email' => 'Ingrese un E-mail válido.',
             'vendedor.value.required' => 'Seleccione 1 vendedor.',
             'fecha_cotizacion.required' => 'Ingrese la fecha de cotización.',
+            'fecha_cotizacion.before' => 'Ingrese una fecha válida.',
             'date' => 'Ingrese una fecha válida.',
             'validez.value.required' => 'Seleccione el periodo de validéz.',
             'modalidad_pago.value.required' => 'Seleccione una modalidad de pago.',
