@@ -21,24 +21,26 @@ class CreateCotizacionesTable extends Migration
             $table->unsignedBigInteger('vendedor_id')->unsigned();
             $table->foreign('vendedor_id')->references('id')->on('usuarios');
             $table->date('fecha');
-            $table->tinyInteger('periodo_validez');
+            $table->tinyInteger('periodo_validez_id');
             $table->tinyInteger('predefinidas_b');
             $table->unsignedDecimal('descuento', 10, 2);
             $table->unsignedDecimal('total', 10, 2);
             $table->tinyInteger('modalidad');
-            $table->string('descripcion_pagos');
-            $table->longText('nota');
-            $table->tinyInteger('tipo_persona')->default(1);//1 - medico legista. 2- tecnico embalsamador
+            $table->string('descripcion_pagos')->nullable();
+            $table->longText('nota')->nullable();
+            $table->unsignedBigInteger('registro_id')->unsigned()->nullable();
+            $table->foreign('registro_id')->references('id')->on('usuarios');
+            $table->dateTime('fechahora_registro');
             $table->unsignedBigInteger('modifico_id')->unsigned()->nullable();
             $table->foreign('modifico_id')->references('id')->on('usuarios');
-            $table->dateTime('fechahora_modificacion');
+            $table->dateTime('fechahora_modificacion')->nullable();
             $table->unsignedBigInteger('cancelo_id')->unsigned()->nullable();
             $table->foreign('cancelo_id')->references('id')->on('usuarios');
-            $table->dateTime('fechahora_cancelacion');
-            $table->longText('nota_cancelacion');
+            $table->dateTime('fechahora_cancelacion')->nullable();
+            $table->longText('nota_cancelacion')->nullable();
             $table->unsignedBigInteger('modifico_aceptado_id')->unsigned()->nullable();
             $table->foreign('modifico_aceptado_id')->references('id')->on('usuarios');
-            $table->dateTime('fechahora_aceptado');
+            $table->dateTime('fechahora_aceptado')->nullable();
             $table->tinyInteger('status')->default(1);
         });
 

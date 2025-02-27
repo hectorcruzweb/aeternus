@@ -16,12 +16,12 @@
                                         Nombre del cliente
                                         <span>(*)</span>
                                     </label>
-                                    <vs-input v-validate="'required'" ref="nombre" name="nombre" data-vv-as=" "
+                                    <vs-input v-validate="'required'" ref="cliente" name="cliente" data-vv-as=" "
                                         type="text" class="w-full" focused placeholder="Ej. José Pérez"
-                                        v-model="form.nombre" maxlength="100" />
-                                    <span>{{ errors.first("nombre") }}</span>
-                                    <span v-if="this.errores.nombre">{{
-                                        errores.nombre[0]
+                                        v-model="form.cliente" maxlength="100" />
+                                    <span>{{ errors.first("cliente") }}</span>
+                                    <span v-if="this.errores.cliente">{{
+                                        errores.cliente[0]
                                     }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -29,9 +29,8 @@
                                         Teléfono
                                         <span>(*)</span>
                                     </label>
-                                    <vs-input v-validate="'required'" name="telefono" data-vv-as=" " type="text"
-                                        class="w-full" placeholder="Ej. 6692145634" v-model="form.telefono"
-                                        maxlength="100" />
+                                    <vs-input v-validate="''" name="telefono" data-vv-as=" " type="text" class="w-full"
+                                        placeholder="Ej. 6692145634" v-model="form.telefono" maxlength="100" />
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
@@ -64,7 +63,7 @@
                                     </label>
                                     <v-select :options="vendedores" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
                                         v-validate:vendedor_computed.immediate="'required'" v-model="form.vendedor"
-                                        class="w-full" name=" vendedor" data-vv-as=" ">
+                                        class="w-full" name="vendedor" data-vv-as=" ">
                                         <div slot="no-options">
                                             No Se Ha Seleccionado Ningún Vendedor
                                         </div>
@@ -223,7 +222,8 @@
                                             </vs-td>
                                             <vs-td class=" padding-y-7 w-8/12">
                                                 <vs-input :ref="'descripcion' + indextr" :name="'descripcion' + indextr"
-                                                    data-vv-as=" " data-vv-validate-on="blur" v-validate="'required'"
+                                                    data-vv-as=" " data-vv-validate-on="blur"
+                                                    v-validate.disable="'required'"
                                                     class="px-2 mr-auto ml-auto w-full input-cantidad" maxlength="150"
                                                     v-model="form.conceptos[indextr].descripcion" />
                                                 <div class="size-smallest text-danger">
@@ -235,7 +235,7 @@
                                             <vs-td class="">
                                                 <vs-input :name="'cantidad' + indextr" data-vv-as=" "
                                                     data-vv-validate-on="blur"
-                                                    v-validate="'required|integer|min_value:1'"
+                                                    v-validate.disable="'required|integer|min_value:1'"
                                                     class="mr-auto ml-auto input-cantidad px-2 w-full" maxlength="4"
                                                     v-model="form.conceptos[indextr].cantidad" />
                                                 <div class="size-smallest text-danger">
@@ -247,7 +247,7 @@
                                             <vs-td class="">
                                                 <vs-input :name="'costo_neto_normal' + indextr" data-vv-as=" "
                                                     data-vv-validate-on="blur"
-                                                    v-validate="'required|decimal:2|min_value:0'"
+                                                    v-validate.disable="'required|decimal:2|min_value:0'"
                                                     class="mr-auto ml-auto input-cantidad px-2 w-full" maxlength="10"
                                                     v-model="form.conceptos[indextr].costo_neto_normal" />
                                                 <div class="size-smallest text-danger">
@@ -260,19 +260,19 @@
                                             </vs-td>
                                             <vs-td class="">
                                                 <vs-switch class="ml-auto mr-auto" color="success" icon-pack="feather"
-                                                    v-model="form.conceptos[indextr].descuento_b">
+                                                    v-model="form.conceptos[indextr].descuento_b"
+                                                    @change="validarCostoNetoDescuento(indextr)">
                                                     <span slot="on">SI</span>
                                                     <span slot="off">NO</span>
                                                 </vs-switch>
                                             </vs-td>
                                             <vs-td class="">
                                                 <vs-input :name="'costo_neto_descuento' + indextr" data-vv-as=" "
-                                                    data-vv-validate-on="blur" v-validate="'required|decimal:2|min_value:' +
+                                                    data-vv-validate-on="blur" v-validate.disable="tr.descuento_b == 1 ? 'required|decimal:2|min_value:' +
                                                         0 +
                                                         '|max_value:' +
-                                                        form.conceptos[indextr].costo_neto_normal
-                                                        " class="mr-auto ml-auto input-cantidad px-2 w-full"
-                                                    maxlength="10"
+                                                        form.conceptos[indextr].costo_neto_normal : ''"
+                                                    class="mr-auto ml-auto input-cantidad px-2 w-full" maxlength="10"
                                                     v-model="form.conceptos[indextr].costo_neto_descuento"
                                                     :disabled="form.conceptos[indextr].descuento_b == 0" />
                                                 <div class="size-smallest text-danger">
@@ -367,9 +367,9 @@
                                                         <span>(*)</span>
                                                     </label>
                                                     <vs-input ref="pago_inicial" @change="changePagoInicial($event)"
-                                                        v-validate.disable="pago_inicial_validacion_computed.rules"
+                                                        v-validate="pago_inicial_validacion_computed.rules"
                                                         :disabled="form.modalidad_pago.value == 1" name="pago_inicial"
-                                                        data-vv-as=" " data-vv-validate-on="blur" type="text"
+                                                        data-vv-as=" " data-vv-validate-on="change" type="text"
                                                         class="w-full" placeholder="" v-model="form.pago_inicial"
                                                         maxlength="12" />
                                                     <span v-show="form.modalidad_pago.value > 1">{{
@@ -392,7 +392,7 @@
                                                         :disabled="form.modalidad_pago.value == 1"
                                                         name="pago_inicial_porcentaje" data-vv-as=" "
                                                         v-validate.disable="'required|decimal:2|min_value:' + 0 + '|max_value:100'"
-                                                        data-vv-validate-on="blur" type="text" class="w-full "
+                                                        data-vv-validate-on="change" type="text" class="w-full "
                                                         v-model="form.pago_inicial_porcentaje" maxlength="6" />
                                                     <span v-show="form.modalidad_pago.value > 1">{{
                                                         errors.first("pago_inicial_porcentaje") ?
@@ -406,7 +406,7 @@
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
                                                 </div>
-                                                <vs-button class="w-full" color="success">
+                                                <vs-button @click="acceptAlert()" class="w-full" color="success">
                                                     <span>Hacer Cotización</span>
                                                 </vs-button>
                                             </div>
@@ -424,6 +424,10 @@
         <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+        <ConfirmarAceptar :z_index="'z-index58k'" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+            :accion="'He revisado la información y quiero guardar la venta'" :confirmarButton="'Guardar Venta'">
+        </ConfirmarAceptar>
         <Paquetes :show="ver_cotizaciones" :tipo_cotizacion="tipo_cotizacion"
             @closeCotizaciones="ver_cotizaciones = false" @agregarCotizacion="agregarCotizacion"
             :cotizacionVer="cotizacionVer">
@@ -440,6 +444,7 @@ Quill.register("modules/imageDrop", ImageDrop);
 Quill.register("modules/imageResize", ImageResize);
 
 import ConfirmarDanger from "@pages/ConfirmarDanger";
+import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 import funeraria from "@services/funeraria";
 import cotizaciones from "@services/cotizaciones";
 import cementerio from "@services/cementerio";
@@ -459,7 +464,8 @@ export default {
         VueEditor,
         Quill,
         ConfirmarDanger,
-        Paquetes
+        Paquetes,
+        ConfirmarAceptar
     },
     props: {
         show: {
@@ -480,7 +486,7 @@ export default {
         show: function (newValue, oldValue) {
             if (newValue == true) {
                 this.$nextTick(
-                    () => { this.$refs["nombre"].$el.querySelector("input").focus() }
+                    () => { this.$refs["cliente"].$el.querySelector("input").focus() }
                 );
                 this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
                     this.cancelar();
@@ -562,8 +568,7 @@ export default {
             return total = functions.parseToDecimal(total);
         },
         pago_inicial_validacion_computed: function () {
-            let montoTotal = Intl.NumberFormat(undefined,
-                { minimumFractionDigits: 2 }).format(this.totalCotizacion) + " MXN.";
+            let montoTotal = functions.formatCurrency(this.totalCotizacion) + " MXN."
             if (this.form.modalidad_pago.value > 1) {
                 //será a futuro
                 return {
@@ -574,7 +579,7 @@ export default {
             } else {
                 //uso inmediato
                 return {
-                    'rules': 'required|decimal:2|is:' + this.totalCotizacion,
+                    'rules': 'required|decimal:2|min_value:' + this.totalCotizacion + '|min_value:' + this.totalCotizacion,
                     'errorMessage': 'El pago debe ser de : $' + montoTotal,
                     'label': 'Pago Único'
                 }
@@ -618,6 +623,8 @@ export default {
     },
     data() {
         return {
+            openConfirmarAceptar: false,
+            callBackConfirmarAceptar: Function,
             customToolbar: [
                 [{ header: [false, 1, 2, 3, 4, 5, 6] }],
                 ["bold", "italic", "underline", "strike"], // toggled buttons
@@ -689,6 +696,9 @@ export default {
                 modalidad_pago: { label: "Pago Único", value: "1" },
                 pago_inicial: "",
                 pago_inicial_porcentaje: "",
+                descripcion_pagos: '',
+                total: '',
+                descuento: ''
             },
             serverOptions: {
                 numero_control: "",
@@ -706,6 +716,116 @@ export default {
         };
     },
     methods: {
+        validarCostoNetoDescuento(index) {
+            if (this.form.conceptos[index].descuento_b == 0) {
+                if (isNaN(this.form.conceptos[index].costo_neto_descuento) || this.form.conceptos[index].costo_neto_descuento == '') {
+                    this.form.conceptos[index].costo_neto_descuento = 0;
+                }
+            }
+        },
+        acceptAlert() {
+            this.$validator
+                .validateAll()
+                .then((result) => {
+                    if (!result) {
+                        this.$vs.notify({
+                            title: "Error",
+                            text: "Verifique que todos los datos han sido capturados",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger",
+                            position: "bottom-right",
+                            time: "12000",
+                        });
+                        return;
+                    } else {
+                        this.form.descripcion_pagos = this.descripcion_pagos;
+                        this.form.total = this.totalCotizacion;
+                        this.form.descuento = this.descuentoTotal;
+                        //AL LLEGAR AQUI SE SABE QUE EL FORMULARIO PASO LA VALIDACION
+                        (async () => {
+                            if (this.getTipoformulario == "agregar") {
+                                this.callBackConfirmarAceptar = await this.control_cotizaciones;
+                                this.openConfirmarAceptar = true;
+                            } else {
+                                //this.callback = await this.control_cotizaciones;
+                                //this.openPassword = true;
+                            }
+                        })();
+                    }
+                })
+                .catch(() => { });
+        },
+        async control_cotizaciones() {
+            //aqui mando guardar los datos
+            this.errores = [];
+            this.$vs.loading();
+            try {
+                let res = await cotizaciones.control_cotizaciones(
+                    this.form,
+                    this.getTipoformulario
+                );
+                if (res.data >= 1) {
+                    //success
+                    this.$vs.notify({
+                        title: "Cotizaciones",
+                        text: this.getTipoformulario == "agregar" ? "Se ha registrado la cotización correctamente." : "Se ha modificado la cotización correctamente.",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "success",
+                        time: 5000,
+                    });
+                    this.limpiarVentana();
+                } else {
+                    this.$vs.notify({
+                        title: "Cotizaciones",
+                        text: "Error al registrar la cotización, por favor reintente.",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger",
+                        time: 6000,
+                    });
+                }
+                this.$vs.loading.close();
+            } catch (err) {
+                if (err.response) {
+                    if (err.response.status == 403) {
+                        /**FORBIDDEN ERROR */
+                        this.$vs.notify({
+                            title: "Permiso denegado",
+                            text: "Verifique sus permisos con el administrador del sistema.",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "warning",
+                            time: 4000,
+                        });
+                    } else if (err.response.status == 422) {
+                        //checo si existe cada error
+                        this.errores = err.response.data.error;
+                        this.$vs.notify({
+                            title: "Registro de Cotizaciones",
+                            text: "Verifique los errores encontrados en los datos.",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger",
+                            time: 5000,
+                        });
+                    } else if (err.response.status == 409) {
+                        //este error es por alguna condicion que el contrano no cumple para modificar
+                        //la propiedad esa ya ha sido vendida
+                        this.$vs.notify({
+                            title: "Registro de Cotizaciones",
+                            text: err.response.data.error,
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "danger",
+                            time: 8000,
+                        });
+                    }
+                }
+                this.$vs.loading.close();
+            }
+        },
         //get vendedores
         async get_vendedores() {
             try {
@@ -846,8 +966,8 @@ export default {
                 descripcion: "",
                 cantidad: 1,
                 costo_neto_normal: "",
-                descuento_b: "",
-                costo_neto_descuento: "",
+                descuento_b: 0,
+                costo_neto_descuento: 0,
                 importe: "",
             });
             this.$nextTick(() => {
@@ -905,7 +1025,7 @@ export default {
             this.$emit("closeVentana");
         },
         limpiarVentana() {
-            this.form.nombre = '';
+            this.form.cliente = '';
             this.form.telefono = '';
             this.form.email = '';
             this.form.vendedor = this.vendedores[0];
@@ -919,7 +1039,7 @@ export default {
             this.form.modalidad = this.modalidades_pago[0];
             this.form.pago_inicial = '0.00';
             this.form.pago_inicial_porcentaje = '0.00';
-            this.$validator.reset()
+            this.$validator.reset();
         },
         openPaquetes(tipo = '') {
             this.tipo_cotizacion = tipo;

@@ -25,5 +25,9 @@ export default {
         return axios.post(call, param, {
             headers: { "Content-Type": "multipart/form-data" }
         });
+    },
+    control_cotizaciones(param, tipo_servicio) {
+        let call = "/cotizaciones/control_cotizaciones/" + tipo_servicio;
+        return axios.post(call, param);
     }
 };
