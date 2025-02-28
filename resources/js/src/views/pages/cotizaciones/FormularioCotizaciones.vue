@@ -164,6 +164,11 @@
                                         </vs-tr>
                                     </template>
                                 </vs-table>
+                                <div class="size-small text-center pt-2 text-danger">
+                                    <span v-if="this.errores['predefinidos']">{{
+                                        errores["predefinidos"][0]
+                                    }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -659,9 +664,9 @@ export default {
                 { label: "1 Mes", value: "5" },
             ],
             form: {
-                cliente: "",
-                telefono: "",
-                email: "",
+                cliente: "Hector",
+                telefono: "6691617750",
+                email: "hector@gmail.com",
                 vendedor: { label: "Seleccione 1", value: "" },
                 fecha_cotizacion: "",
                 validez: { label: "Uso Inmediato (1 Día)", value: "1" },
@@ -693,7 +698,7 @@ export default {
                         importe: 0,
                     },
                 ],
-                nota: "",
+                nota: "Esto es una nota",
                 modalidad_pago: { label: "Pago Único", value: "1" },
                 pago_inicial: "",
                 pago_inicial_porcentaje: "",
@@ -1047,6 +1052,7 @@ export default {
             this.ver_cotizaciones = true;
         },
         agregarCotizacion(cotizacion) {
+            console.log("🚀 ~ agregarCotizacion ~ cotizacion:", cotizacion)
             this.form.predefinidos.push(cotizacion)
         },
         verCotizacion(cotizacion) {

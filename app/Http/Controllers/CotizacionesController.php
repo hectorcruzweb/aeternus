@@ -33,10 +33,10 @@ class CotizacionesController extends ApiController
             'pago_inicial_porcentaje.' => 'numeric',
             'total' => 'required|numeric',
             'descuento' => 'required|numeric',
-            'descripcion_pagos' => 'required'
+            'descripcion_pagos' => 'required',
+            'predefinidos' => ''
         ];
         /**VALIDACIONES CONDICIONADAS*/
-
         if (isset($request->email)) {
             $validaciones['email'] = 'email';
         }
@@ -46,6 +46,22 @@ class CotizacionesController extends ApiController
             $validaciones['conceptos.*.costo_neto_descuento'] = 'required|numeric|min:0';
             $validaciones['conceptos.*.descuento_b'] = 'required|min:0|max:1';
             $validaciones['conceptos.*.cantidad'] = 'required|integer|min:1';
+        }
+
+        //VALIDANDO COTIZACIONES PREDEFINIDAS
+        $cotizaciones_predefinidas_b = isset($request->cotizaciones_predefinidas_b) && $request->cotizaciones_predefinidas_b == 1 ? true : false;
+        if ($cotizaciones_predefinidas_b) {
+            $validaciones['predefinidos'] = 'required';
+            $validaciones['predefinidos.*.tipo'] = 'required';
+            $validaciones['predefinidos.*.label'] = 'required';
+            $validaciones['predefinidos.*.financiamientos'] = 'required|min:1';
+            $validaciones['predefinidos.*.secciones'] = 'required';
+            $validaciones['predefinidos.*.financiamientos.*.costo_neto'] = 'required|numeric';
+            $validaciones['predefinidos.*.financiamientos.*.financiamiento'] = 'required';
+            $validaciones['predefinidos.*.financiamientos.*.pago_inicial'] = 'required|numeric';
+            $validaciones['predefinidos.*.financiamientos.*.pago_mensual'] = 'required|numeric';
+            $validaciones['predefinidos.*.secciones.*.seccion'] = 'required';
+            $validaciones['predefinidos.*.secciones.*.conceptos'] = '';
         }
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
         //Mensajes de validaciones
@@ -64,7 +80,8 @@ class CotizacionesController extends ApiController
             'conceptos.*.costo_neto_normal.*' => 'Ingrese un costo neto válido.',
             'conceptos.*.descuento_b.*' => 'Indique si tiene descuento.',
             'conceptos.*.costo_neto_descuento.*' => 'Ingrese un costo neto con descuento válido.',
-            'conceptos.*.cantidad.*' => 'Ingrese una cantidad válida.'
+            'conceptos.*.cantidad.*' => 'Ingrese una cantidad válida.',
+            'predefinidos.*' => "Verifique que ha capturado las cotizaciones correctamente."
         ];
         request()->validate(
             $validaciones,
@@ -115,8 +132,8 @@ class CotizacionesController extends ApiController
                 ConceptosPredefinidas::whereIn('cotizacion_predefinida_id', $ids_cotizaciones_predefinidas)->delete();
                 FinanciamientosPredefinidas::whereIn('cotizacion_predefinida_id', $ids_cotizaciones_predefinidas)->delete();
             }
-            //aqui se hacen los registros de conceptos y planes predefinidos(asi como sus registros de conceptos y financiamentos correspondientes).
 
+            //aqui se hacen los registros de conceptos y planes predefinidos(asi como sus registros de conceptos y financiamentos correspondientes).
             //se agregan los conceptos
             if (isset($request->conceptos) && count($request->conceptos) > 0) {
                 foreach ($request->conceptos as $key => $concepto) {
@@ -133,6 +150,49 @@ class CotizacionesController extends ApiController
                 }
             }
 
+            if ($cotizaciones_predefinidas_b) {
+                foreach ($request->predefinidos as $key => $predefinido) {
+                    //guardamos la cotizacion y obtenemos el ID
+                    $cotizacion_predefinida_id = CotizacionesPredefinidas::insertGetId(
+                        [
+                            'descripcion' => $predefinido['label'],
+                            'tipo' => $predefinido['tipo'],
+                            'cotizaciones_id' => $id_cotizacion
+                        ]
+                    );
+                    foreach ($predefinido["secciones"] as $key_seccion => $seccion) {
+                        $seccion_id = 1;//1 por defecto seccion "incluye"
+                        if ($seccion['seccion'] == 'inhumacion') {
+                            $seccion_id = 2;
+                        } else if ($seccion['seccion'] == 'cremacion') {
+                            $seccion_id = 3;
+                        } else if ($seccion['seccion'] == 'velacion') {
+                            $seccion_id = 4;
+                        }
+                        foreach ($seccion["conceptos"] as $key_concepto => $concepto) {
+                            ConceptosPredefinidas::insert(
+                                [
+                                    'seccion_id' => $seccion_id,
+                                    'concepto' => $concepto,
+                                    'cotizacion_predefinida_id' => $cotizacion_predefinida_id
+                                ]
+                            );
+                        }
+                    }
+                    //guardo los financiamientos
+                    foreach ($predefinido["financiamientos"] as $key_financiamiento => $financiamiento) {
+                        FinanciamientosPredefinidas::insert(
+                            [
+                                'cotizacion_predefinida_id' => $cotizacion_predefinida_id,
+                                'financiamiento' => $financiamiento['financiamiento'],
+                                'costo_neto' => $financiamiento['costo_neto'],
+                                'pago_inicial' => $financiamiento['pago_inicial'],
+                                'pago_mensual' => $financiamiento['pago_mensual']
+                            ]
+                        );
+                    }
+                }
+            }
             DB::commit();
             return $id_cotizacion;
         } catch (\Throwable $th) {

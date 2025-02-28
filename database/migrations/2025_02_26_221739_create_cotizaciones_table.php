@@ -63,11 +63,10 @@ class CreateCotizacionesTable extends Migration
         });
         Schema::create('financiamientos_predefinidas', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('descripcion');
-            $table->tinyInteger('financiamiento');
+            $table->string('financiamiento');
             $table->unsignedDecimal('costo_neto', 10, 2);
             $table->unsignedDecimal('pago_inicial', 10, 2);
-            $table->unsignedDecimal('abono_mensual', 10, 2);
+            $table->unsignedDecimal('pago_mensual', 10, 2);
             $table->unsignedBigInteger('cotizacion_predefinida_id')->unsigned();
             $table->foreign('cotizacion_predefinida_id')->references('id')->on('cotizaciones_predefinidas');
         });
