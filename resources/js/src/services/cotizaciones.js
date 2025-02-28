@@ -29,5 +29,22 @@ export default {
     control_cotizaciones(param, tipo_servicio) {
         let call = "/cotizaciones/control_cotizaciones/" + tipo_servicio;
         return axios.post(call, param);
+    },
+    get_cotizaciones(param, light = false, id = "") {
+        let service = "/cotizaciones/get_cotizaciones/";
+        if (id == "") {
+            service += "all/paginated";
+        } else {
+            service += id;
+        }
+        if (light == true) {
+            service += "?light=true";
+        }
+        return axios.get(service, {
+            cancelToken: new CancelToken(c => {
+                self.cancel = c;
+            }),
+            params: param
+        });
     }
 };

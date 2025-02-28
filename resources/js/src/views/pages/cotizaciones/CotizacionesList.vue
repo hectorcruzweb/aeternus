@@ -31,7 +31,7 @@
             </vx-card>
         </div>
         <br>
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="ventas" noDataText="0 Resultados"
+        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="cotizaciones" noDataText="0 Resultados"
             class="tabla-datos">
             <template slot="header">
                 <h3>Listado de Cotizaciones</h3>
@@ -39,39 +39,39 @@
             <template slot="thead">
                 <vs-th>Núm. Cotización</vs-th>
                 <vs-th>Cliente</vs-th>
+                <vs-th>Tel. / Celular</vs-th>
                 <vs-th>Fecha Elaboración</vs-th>
                 <vs-th>Fecha de Vencimiento</vs-th>
-                <vs-th>Tel. / Celular</vs-th>
                 <vs-th>Estatus</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
             <template slot-scope="{ data }">
                 <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].ventas_generales_id">
+                    <vs-td :data="data[indextr].id">
                         <span class="font-semibold">{{
-                            data[indextr].ventas_generales_id
+                            data[indextr].id
                             }}</span>
                     </vs-td>
-                    <vs-td :data="data[indextr].nombre">
-                        {{ data[indextr].nombre }}
+                    <vs-td :data="data[indextr].cliente_nombre">
+                        {{ data[indextr].cliente_nombre }}
                     </vs-td>
-                    <vs-td :data="data[indextr].fecha_operacion_texto">
+                    <vs-td :data="data[indextr].cliente_telefono">
                         <span class="font-medium">
-                            {{ data[indextr].fecha_operacion_texto }}
+                            {{ data[indextr].cliente_telefono }}
                         </span>
                     </vs-td>
-                    <vs-td :data="data[indextr].total">
+                    <vs-td :data="data[indextr].fecha_texto">
                         <span class="font-medium">
-                            $
-                            {{ data[indextr].total | numFormat("0,000.00") }}
+                            {{ data[indextr].fecha_texto }}
                         </span>
                     </vs-td>
-                    <vs-td :data="data[indextr].saldo">
+                    <vs-td :data="data[indextr].fecha_vencimiento_texto">
                         <span class="font-medium">
-                            $
-                            {{ data[indextr].saldo | numFormat("0,000.00") }}
+
+                            {{ data[indextr].fecha_vencimiento_texto }}
                         </span>
                     </vs-td>
+
                     <vs-td>
                         <p v-if="data[indextr].status_texto == 'Cancelada'">
                             {{ data[indextr].status_texto }}
@@ -126,6 +126,7 @@
 <script>
 import FormularioCotizaciones from "@pages/cotizaciones/FormularioCotizaciones";
 import { mostrarOptions } from "@/VariablesGlobales";
+import cotizacionesService from "@services/cotizaciones";
 import vSelect from "vue-select";
 export default {
     components: {
@@ -133,10 +134,21 @@ export default {
         FormularioCotizaciones
     },
     watch: {
+        actual: function (newValue, oldValue) {
+            (async () => {
+                await this.get_data(this.actual);
+            })();
+        },
+        mostrar: function (newValue, oldValue) {
+            (async () => {
+                await this.get_data(1);
+            })();
+        },
     },
     data() {
         return {
             mostrarOptions: mostrarOptions,
+            mostrar: { label: "15", value: "15" },
             serverOptions: {
                 page: "",
                 per_page: "",
@@ -145,8 +157,12 @@ export default {
                 numero_control: "",
                 cliente: "",
             },
+            verPaginado: true,
+            total: 0,
+            actual: 1,
+            cotizaciones: [],
             tipoFormulario: "",
-            verFormularioCotizaciones: false
+            verFormularioCotizaciones: false,
         }
     },
     methods: {
@@ -157,6 +173,60 @@ export default {
             this.tipoFormulario = tipo;
             this.verFormularioCotizaciones = true;
         },
+        async get_data(page, evento = "") {
+            if (evento == "blur") {
+                if (
+                    this.serverOptions.cliente != "" ||
+                    this.serverOptions.cliente == ""
+                ) {
+                    //la funcion no avanza
+
+                    return false;
+                }
+                if (
+                    this.serverOptions.numero_control == "" ||
+                    this.serverOptions.numero_control != ""
+                ) {
+                    //la funcion no avanza
+
+                    return false;
+                }
+            }
+            if (cotizacionesService.cancel) {
+                cotizacionesService.cancel("Operation canceled by the user.");
+            }
+            this.$vs.loading();
+            this.verPaginado = false;
+            this.serverOptions.page = page;
+            this.serverOptions.per_page = this.mostrar.value;
+            //this.serverOptions.status = this.estado.value;
+            //this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+            try {
+                let res = await cotizacionesService.get_cotizaciones(this.serverOptions, true);
+                if (res.data.data) {
+                    this.cotizaciones = res.data.data;
+                    this.total = res.data.last_page;
+                    this.actual = res.data.current_page;
+                }
+                this.verPaginado = true;
+                this.$vs.loading.close();
+            } catch (err) {
+                this.$vs.loading.close();
+                if (err.response) {
+                    if (err.response.status == 403) {
+                        /**FORBIDDEN ERROR */
+                        this.$vs.notify({
+                            title: "Permiso denegado",
+                            text: "Verifique sus permisos con el administrador del sistema.",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "warning",
+                            time: 4000,
+                        });
+                    }
+                }
+            }
+        },
         reloadList() {
             (async () => {
                 this.verFormularioCotizaciones = false;
@@ -166,7 +236,12 @@ export default {
     },
     mounted(
     ) {
-        this.OpenFormularioCotizaciones("agregar");
-    }
+        //this.OpenFormularioCotizaciones("agregar");
+    },
+    created() {
+        (async () => {
+            await this.get_data(this.actual);
+        })();
+    },
 };
 </script>

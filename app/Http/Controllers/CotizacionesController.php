@@ -1,17 +1,19 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\ConceptosCotizacion;
-use App\ConceptosPredefinidas;
-use App\Cotizaciones;
-use App\CotizacionesPredefinidas;
-use App\FinanciamientosPredefinidas;
 use PDF;
 use App\User;
+use Carbon\Carbon;
+use App\Cotizaciones;
+use App\ConceptosCotizacion;
 use Illuminate\Http\Request;
+use App\ConceptosPredefinidas;
+use App\CotizacionesPredefinidas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
+use App\FinanciamientosPredefinidas;
 use Illuminate\Support\Facades\Storage;
+
 class CotizacionesController extends ApiController
 {
     public function control_cotizaciones(Request $request, $tipo_request = '')
@@ -265,17 +267,25 @@ class CotizacionesController extends ApiController
                 { label: "3 Semanas", value: "4" },
                 { label: "1 Mes", value: "5" },
             */
+            $fecha_cotizacion = Carbon::create($cotizacion["fecha"]);
             if ($cotizacion['periodo_validez_id'] == 1) {
                 $cotizacion['periodo_validez_texto'] = 'Uso Inmediato (1 Día).';
+                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addDay();
             } else if ($cotizacion['periodo_validez_id'] == 2) {
                 $cotizacion['periodo_validez_texto'] = '1 Semana.';
+                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeek();
             } else if ($cotizacion['periodo_validez_id'] == 3) {
                 $cotizacion['periodo_validez_texto'] = '2 Semanas.';
+                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeeks(2);
             } else if ($cotizacion['periodo_validez_id'] == 4) {
                 $cotizacion['periodo_validez_texto'] = '3 Semanas.';
+                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeeks(3);
             } else if ($cotizacion['periodo_validez_id'] == 5) {
                 $cotizacion['periodo_validez_texto'] = '1 Mes.';
+                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addMonth();
             }
+            $cotizacion['fecha_vencimiento'] = Carbon::create($cotizacion["fecha_vencimiento"])->format('Y-m-d');
+            $cotizacion['fecha_vencimiento_texto'] = fecha_abr($cotizacion["fecha_vencimiento"]);
             //modalidad
             if ($cotizacion["modalidad"] == 1) {
                 $cotizacion["modalidad_texto"] = 'Pago Único.';
