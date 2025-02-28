@@ -200,4 +200,158 @@ class CotizacionesController extends ApiController
             return $th;
         }
     }
+
+    public function get_cotizaciones(Request $request, $id_cotizacion = 'all', $paginated = false)
+    {
+        $light = filter_var($request->light, FILTER_VALIDATE_BOOLEAN);
+        $filtro_especifico_opcion = $request->filtro_especifico_opcion;
+        $cliente = $request->cliente;
+        $numero_control = $request->numero_control;
+        $status = $request->status;
+        $fecha_cotizacion = $request->fecha_cotizacion;
+        $resultado_query = Cotizaciones::select(
+            '*'
+        );
+        if (!$light) {
+            //version con todo y datos
+            $resultado_query = $resultado_query->with('vendedor')->with('registro')->with('conceptos')->with('predefinidos.conceptos')->with('predefinidos.financiamientos');
+        }
+        /**solo ventas de planes funerarios */
+        $resultado_query = $resultado_query->where(function ($q) use ($id_cotizacion) {
+            if (trim($id_cotizacion) == 'all' || $id_cotizacion > 0) {
+                if (trim($id_cotizacion) == 'all') {
+                    $q->where('id', '>', $id_cotizacion);
+                } else if ($id_cotizacion > 0) {
+                    $q->where('id', '=', $id_cotizacion);
+                }
+            }
+        })
+            ->where(function ($q) use ($numero_control, $filtro_especifico_opcion) {
+                if (trim($numero_control) != '') {
+                    if ($filtro_especifico_opcion == 1) {
+                        /**filtro por numero de venta en gral */
+                        $q->where('id', '=', $numero_control);
+                    }
+                }
+            })
+            ->where(function ($q) use ($status) {
+                if (trim($status) != "") {
+
+                }
+            })
+            ->where('cliente_nombre', 'like', '%' . $cliente . '%')
+            ->orderBy('id', 'desc')
+            ->get();
+        $resultado = array();
+        if ($paginated == 'paginated') {
+            $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
+            $resultado = &$resultado_query['data'];
+        } else {
+            $resultado_query = $resultado_query->toArray();
+            $resultado = &$resultado_query;
+        }
+
+
+        foreach ($resultado as $index_cotizacion => &$cotizacion) {
+            $cotizacion['fecha_texto'] = fecha_abr($cotizacion["fecha"]);
+            $cotizacion['fechahora_registro_texto'] = fecha_abr($cotizacion["fechahora_registro"]);
+            $cotizacion['fechahora_modificacion_texto'] = $cotizacion["fechahora_modificacion"] != '' ? fecha_abr($cotizacion["fechahora_modificacion"]) : null;
+            $cotizacion['fechahora_cancelacion_texto'] = $cotizacion["fechahora_cancelacion"] != '' ? fecha_abr($cotizacion["fechahora_cancelacion"]) : null;
+            $cotizacion['fechahora_aceptado_texto'] = $cotizacion["fechahora_aceptado"] != '' ? fecha_abr($cotizacion["fechahora_aceptado"]) : null;
+            /*
+             { label: "Uso Inmediato (1 Día)", value: "1" },
+                { label: "1 Semana", value: "2" },
+                { label: "2 Semanas", value: "3" },
+                { label: "3 Semanas", value: "4" },
+                { label: "1 Mes", value: "5" },
+            */
+            if ($cotizacion['periodo_validez_id'] == 1) {
+                $cotizacion['periodo_validez_texto'] = 'Uso Inmediato (1 Día).';
+            } else if ($cotizacion['periodo_validez_id'] == 2) {
+                $cotizacion['periodo_validez_texto'] = '1 Semana.';
+            } else if ($cotizacion['periodo_validez_id'] == 3) {
+                $cotizacion['periodo_validez_texto'] = '2 Semanas.';
+            } else if ($cotizacion['periodo_validez_id'] == 4) {
+                $cotizacion['periodo_validez_texto'] = '3 Semanas.';
+            } else if ($cotizacion['periodo_validez_id'] == 5) {
+                $cotizacion['periodo_validez_texto'] = '1 Mes.';
+            }
+            //modalidad
+            if ($cotizacion["modalidad"] == 1) {
+                $cotizacion["modalidad_texto"] = 'Pago Único.';
+            } else {
+                $cotizacion["modalidad_texto"] = $cotizacion["modalidad"] . ' Mensualidades.';
+            }
+
+            /*Manejo de los Status*/
+            if ($cotizacion['status'] == 0) {
+                $cotizacion['status_texto'] = 'Cancelado.';
+            } else if ($cotizacion['status'] == 1) {
+                $cotizacion['status_texto'] = 'Vigente';
+            }
+
+            if (!$light) {
+                //hago el array listo para mostrar al frontend
+                foreach ($cotizacion['predefinidos'] as $key_predefinidos => &$predefinido) {
+                    /*if ($predefinido['tipo'] == "cementerio")
+                        continue;*/
+                    $secciones = array();
+                    $secciones = [
+                        [
+                            'seccion' => 'incluye',
+                            'conceptos' => [],
+                        ],
+                        [
+                            'seccion' => 'inhumacion',
+                            'conceptos' => [],
+                        ],
+                        [
+                            'seccion' => 'cremacion',
+                            'conceptos' => [],
+                        ],
+                        [
+                            'seccion' => 'velacion',
+                            'conceptos' => [],
+                        ],
+                    ];
+                    foreach ($predefinido['conceptos'] as $key_seccion => $seccion) {
+                        /**agregando los conceptos segun su seccion */
+                        if ($seccion['seccion_id'] == 1) {
+                            /**incluye */
+                            array_push(
+                                $secciones[0]['conceptos'],
+                                $seccion['concepto']
+                            );
+                        } elseif ($seccion['seccion_id'] == 2) {
+                            /**inhumacion */
+                            array_push(
+                                $secciones[1]['conceptos'],
+                                $seccion['concepto']
+                            );
+                        } elseif ($seccion['seccion_id'] == 3) {
+                            /**cremacion */
+                            array_push(
+                                $secciones[2]['conceptos'],
+                                $seccion['concepto']
+                            );
+                        } elseif ($seccion['seccion_id'] == 4) {
+                            /**velacion */
+                            array_push(
+                                $secciones[3]['conceptos'],
+                                $seccion['concepto']
+                            );
+                        }
+                    }
+                    $predefinido = [
+                        'label' => $predefinido['descripcion'],
+                        'financiamientos' => $predefinido['financiamientos'],
+                        'tipo' => $predefinido['tipo'],
+                        'secciones' => $secciones
+                    ];
+                }
+            }
+        }
+        return $resultado_query;
+    }
+
 }

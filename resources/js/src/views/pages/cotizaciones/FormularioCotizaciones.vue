@@ -835,6 +835,7 @@ export default {
         //get vendedores
         async get_vendedores() {
             try {
+                this.$vs.loading();
                 let res = await cementerio.get_vendedores();
                 //le agrego todos los usuarios vendedores
                 this.vendedores = [];
@@ -848,6 +849,7 @@ export default {
                         value: element.id,
                     });
                 });
+                this.$vs.loading.close();
             } catch (error) {
                 /**error al cargar vendedores */
                 this.$vs.notify({
@@ -859,6 +861,7 @@ export default {
                     position: "bottom-right",
                     time: "9000",
                 });
+                this.$vs.loading.close();
                 this.cerrarVentana();
             }
         },
