@@ -42,7 +42,8 @@ class CotizacionesController extends ApiController
         if (isset($request->email)) {
             $validaciones['email'] = 'email';
         }
-        if (isset($request->conceptos) && count($request->conceptos) > 0) {
+        $cotizacion_personalizada_b = isset($request->conceptos) && count($request->conceptos) > 0 ? true : false;
+        if ($cotizacion_personalizada_b) {
             $validaciones['conceptos.*.descripcion'] = 'required';
             $validaciones['conceptos.*.costo_neto_normal'] = 'required|numeric|min:0';
             $validaciones['conceptos.*.costo_neto_descuento'] = 'required|numeric|min:0';
@@ -65,6 +66,20 @@ class CotizacionesController extends ApiController
             $validaciones['predefinidos.*.secciones.*.seccion'] = 'required';
             $validaciones['predefinidos.*.secciones.*.conceptos'] = '';
         }
+
+        //definiendo tipo de cotizacion
+        $tipo_id = 0;
+        if ($cotizacion_personalizada_b && $cotizaciones_predefinidas_b)
+            $tipo_id = 3;
+        else if (!$cotizacion_personalizada_b && $cotizaciones_predefinidas_b)
+            $tipo_id = 2;
+        else if ($cotizacion_personalizada_b && !$cotizaciones_predefinidas_b)
+            $tipo_id = 1;
+
+        if ($tipo_id == 0) {
+            return $this->errorResponse("Ingrese los conceptos de esta cotización.", 409);
+        }
+
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
         //Mensajes de validaciones
         $mensajes = [
@@ -90,6 +105,20 @@ class CotizacionesController extends ApiController
             $mensajes
         );
         try {
+            $fecha_cotizacion = Carbon::create($request->fecha_cotizacion);
+            $fecha_vencimiento = null;
+            $periodo_validez_value = (int) $request->validez['value'];
+            if ($periodo_validez_value == 1) {
+                $fecha_vencimiento = $fecha_cotizacion->addDay();
+            } else if ($periodo_validez_value == 2) {
+                $fecha_vencimiento = $fecha_cotizacion->addWeek();
+            } else if ($periodo_validez_value == 3) {
+                $fecha_vencimiento = $fecha_cotizacion->addWeeks(2);
+            } else if ($periodo_validez_value == 4) {
+                $fecha_vencimiento = $fecha_cotizacion->addWeeks(3);
+            } else if ($periodo_validez_value == 5) {
+                $fecha_vencimiento = $fecha_cotizacion->addMonth();
+            }
             DB::beginTransaction();
             $cotizacion = [
                 'cliente_nombre' => strtoupper(trim($request->cliente)),
@@ -98,12 +127,14 @@ class CotizacionesController extends ApiController
                 'vendedor_id' => (int) $request->vendedor['value'],
                 'fecha' => trim($request->fecha_cotizacion),
                 'periodo_validez_id' => (int) $request->validez['value'],
+                'fecha_vencimiento' => $fecha_vencimiento,
                 'predefinidas_b' => isset($request->cotizaciones_predefinidas_b) ? $request->cotizaciones_predefinidas_b : 0,
                 'descuento' => isset($request->descuento) ? $request->descuento : 0,
                 'total' => isset($request->total) ? $request->total : 0,
                 'modalidad' => (int) $request->modalidad_pago['value'],
                 'descripcion_pagos' => strtoupper(trim($request->descripcion_pagos)),
-                'nota' => trim($request->nota)
+                'nota' => trim($request->nota),
+                'tipo_id' => $tipo_id
             ];
             $query = DB::table('cotizaciones');
             $id_cotizacion = 0;
@@ -118,6 +149,14 @@ class CotizacionesController extends ApiController
                 );
                 $id_cotizacion = $query->insertGetId($cotizacion);
             } else {
+                //verificando que se pueda modificar
+                $request_empty = new \Illuminate\Http\Request();
+                $cotizacion_datos = $this->get_cotizaciones($request_empty, $request->id_cotizacion, false)[0];
+                if ($cotizacion_datos['status'] == 0) {
+                    return $this->errorResponse("Esta cotización ya fue cancelada y no se puede modificar.", 409);
+                } else if ($cotizacion_datos['status'] == 3) {
+                    return $this->errorResponse("Esta cotización ya venció y no se puede modificar.", 409);
+                }
                 $id_cotizacion = $request->id_cotizacion;
                 $cotizacion = array_merge(
                     $cotizacion,
@@ -133,11 +172,11 @@ class CotizacionesController extends ApiController
                 $ids_cotizaciones_predefinidas = CotizacionesPredefinidas::select('id')->where('cotizaciones_id', '=', $id_cotizacion)->get();
                 ConceptosPredefinidas::whereIn('cotizacion_predefinida_id', $ids_cotizaciones_predefinidas)->delete();
                 FinanciamientosPredefinidas::whereIn('cotizacion_predefinida_id', $ids_cotizaciones_predefinidas)->delete();
+                CotizacionesPredefinidas::whereIn('id', $ids_cotizaciones_predefinidas)->delete();
             }
-
             //aqui se hacen los registros de conceptos y planes predefinidos(asi como sus registros de conceptos y financiamentos correspondientes).
             //se agregan los conceptos
-            if (isset($request->conceptos) && count($request->conceptos) > 0) {
+            if ($cotizacion_personalizada_b) {
                 foreach ($request->conceptos as $key => $concepto) {
                     ConceptosCotizacion::insert(
                         [
@@ -212,7 +251,19 @@ class CotizacionesController extends ApiController
         $status = $request->status;
         $fecha_cotizacion = $request->fecha_cotizacion;
         $resultado_query = Cotizaciones::select(
-            '*'
+            '*',
+            \DB::raw('(CASE
+                        WHEN status = "0" THEN "Cancelado"
+                        WHEN status = "2" THEN "Aceptado"
+                        WHEN status = "1" AND now() > fecha_vencimiento  THEN "Vencido"
+                        ELSE "Vigente"
+                        END) AS status_texto'),
+            \DB::raw('(CASE
+                        WHEN status = "0" THEN 0
+                        WHEN status = "2" THEN 2
+                        WHEN status = "1" AND now() > fecha_vencimiento  THEN 3
+                        ELSE 1
+                        END) AS status')
         );
         if (!$light) {
             //version con todo y datos
@@ -228,12 +279,10 @@ class CotizacionesController extends ApiController
                 }
             }
         })
-            ->where(function ($q) use ($numero_control, $filtro_especifico_opcion) {
+            ->where(function ($q) use ($numero_control) {
                 if (trim($numero_control) != '') {
-                    if ($filtro_especifico_opcion == 1) {
-                        /**filtro por numero de venta en gral */
-                        $q->where('id', '=', $numero_control);
-                    }
+                    /**filtro por numero de venta en gral */
+                    $q->where('id', '=', $numero_control);
                 }
             })
             ->where(function ($q) use ($status) {
@@ -252,8 +301,6 @@ class CotizacionesController extends ApiController
             $resultado_query = $resultado_query->toArray();
             $resultado = &$resultado_query;
         }
-
-
         foreach ($resultado as $index_cotizacion => &$cotizacion) {
             $cotizacion['fecha_texto'] = fecha_abr($cotizacion["fecha"]);
             $cotizacion['fechahora_registro_texto'] = fecha_abr($cotizacion["fechahora_registro"]);
@@ -267,24 +314,6 @@ class CotizacionesController extends ApiController
                 { label: "3 Semanas", value: "4" },
                 { label: "1 Mes", value: "5" },
             */
-            $fecha_cotizacion = Carbon::create($cotizacion["fecha"]);
-            if ($cotizacion['periodo_validez_id'] == 1) {
-                $cotizacion['periodo_validez_texto'] = 'Uso Inmediato (1 Día).';
-                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addDay();
-            } else if ($cotizacion['periodo_validez_id'] == 2) {
-                $cotizacion['periodo_validez_texto'] = '1 Semana.';
-                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeek();
-            } else if ($cotizacion['periodo_validez_id'] == 3) {
-                $cotizacion['periodo_validez_texto'] = '2 Semanas.';
-                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeeks(2);
-            } else if ($cotizacion['periodo_validez_id'] == 4) {
-                $cotizacion['periodo_validez_texto'] = '3 Semanas.';
-                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addWeeks(3);
-            } else if ($cotizacion['periodo_validez_id'] == 5) {
-                $cotizacion['periodo_validez_texto'] = '1 Mes.';
-                $cotizacion['fecha_vencimiento'] = $fecha_cotizacion->addMonth();
-            }
-            $cotizacion['fecha_vencimiento'] = Carbon::create($cotizacion["fecha_vencimiento"])->format('Y-m-d');
             $cotizacion['fecha_vencimiento_texto'] = fecha_abr($cotizacion["fecha_vencimiento"]);
             //modalidad
             if ($cotizacion["modalidad"] == 1) {
@@ -292,12 +321,13 @@ class CotizacionesController extends ApiController
             } else {
                 $cotizacion["modalidad_texto"] = $cotizacion["modalidad"] . ' Mensualidades.';
             }
-
-            /*Manejo de los Status*/
-            if ($cotizacion['status'] == 0) {
-                $cotizacion['status_texto'] = 'Cancelado.';
-            } else if ($cotizacion['status'] == 1) {
-                $cotizacion['status_texto'] = 'Vigente';
+            //tipo de cotizacion
+            if ($cotizacion['tipo_id'] == 1) {
+                $cotizacion['tipo_texto'] = 'Personalizada';
+            } else if ($cotizacion['tipo_id'] == 2) {
+                $cotizacion['tipo_texto'] = 'Predefinida';
+            } else {
+                $cotizacion['tipo_texto'] = 'Mixta';
             }
 
             if (!$light) {

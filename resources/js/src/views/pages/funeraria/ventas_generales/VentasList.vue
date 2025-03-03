@@ -71,7 +71,7 @@
                     <vs-td :data="data[indextr].ventas_generales_id">
                         <span class="font-semibold">{{
                             data[indextr].ventas_generales_id
-                        }}</span>
+                            }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">
                         {{ data[indextr].nombre }}
@@ -369,10 +369,8 @@ export default {
             }
         },
         ConsultarVentaNota(id_venta) {
-            console.log("🚀 ~ ConsultarVentaNota ~ id_venta:", id_venta)
         },
         ConsultarVentaAcuse(id_venta) {
-            console.log("🚀 ~ ConsultarVentaAcuse ~ id_venta:", id_venta)
         },
         openModificar(venta) {
             if (venta.operacion_status == 0) {

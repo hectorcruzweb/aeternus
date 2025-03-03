@@ -51,7 +51,7 @@
                                 </vs-td>
                                 <vs-td class="size-base padding-y-7">
                                     <span class="px-2">{{ form.cotizacion.financiamientos[indextr].financiamiento
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
                                 <vs-td class="size-base padding-y-7">
                                     <span class="px-2">$ {{ form.cotizacion.financiamientos[indextr].costo_neto
@@ -113,7 +113,6 @@ export default {
     watch: {
         show: function (newValue, oldValue) {
             if (newValue == true) {
-                console.log(this.tipoCotizacion)
                 if (this.tipoCotizacion == 'funeraria') {
                     (async () => {
                         await this.get_planes_funerarios();
@@ -211,7 +210,6 @@ export default {
                 });
                 if (this.cotizaciones.length > 0) {
                     this.form.cotizacion = this.cotizaciones.length > 1 ? this.cotizaciones[1] : this.cotizaciones[0];
-                    console.log(this.cotizaciones)
                 } else {
                     this.$vs.notify({
                         title: "Error",

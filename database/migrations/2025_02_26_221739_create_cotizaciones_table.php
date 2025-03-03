@@ -22,6 +22,7 @@ class CreateCotizacionesTable extends Migration
             $table->foreign('vendedor_id')->references('id')->on('usuarios');
             $table->date('fecha');
             $table->tinyInteger('periodo_validez_id');
+            $table->date('fecha_vencimiento');
             $table->tinyInteger('predefinidas_b');
             $table->unsignedDecimal('descuento', 10, 2);
             $table->unsignedDecimal('total', 10, 2);
@@ -41,6 +42,7 @@ class CreateCotizacionesTable extends Migration
             $table->unsignedBigInteger('modifico_aceptado_id')->unsigned()->nullable();
             $table->foreign('modifico_aceptado_id')->references('id')->on('usuarios');
             $table->dateTime('fechahora_aceptado')->nullable();
+            $table->tinyInteger('tipo_id')->default(1);//1- Cotizacion Personalizada 2- Cotización Predefinidad 3- Cotizacion Mixta
             $table->tinyInteger('status')->default(1);
         });
 

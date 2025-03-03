@@ -22,7 +22,7 @@
                                     <span>{{ errors.first("cliente") }}</span>
                                     <span v-if="this.errores.cliente">{{
                                         errores.cliente[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -34,7 +34,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -71,7 +71,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -83,7 +83,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -101,7 +101,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
                                                 <span class="px-2">{{ form.predefinidos[indextr].label
-                                                    }}</span>
+                                                }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
@@ -167,7 +167,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['predefinidos']">{{
                                         errores["predefinidos"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -317,6 +317,11 @@
                                         </vs-tr>
                                     </template>
                                 </vs-table>
+                                <div class="size-small text-center pt-2 text-danger">
+                                    <span v-if="this.errores['conceptos']">{{
+                                        errores["conceptos"][0]
+                                        }}</span>
+                                </div>
                                 <button class="w-full btn-icon-50 my-4" @click="agregar_manual">
                                     AGREGAR CONCEPTO MANUALMENTE
                                     <img src="@assets/images/plus-success.svg" />
@@ -363,7 +368,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -383,7 +388,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -406,13 +411,15 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
                                                 </div>
                                                 <vs-button @click="acceptAlert()" class="w-full" color="success">
-                                                    <span>Hacer Cotización</span>
+                                                    <span v-if="getTipoformulario == 'agregar'">Guardar
+                                                        Cotización</span>
+                                                    <span v-else>Modificar Cotización</span>
                                                 </vs-button>
                                             </div>
                                         </div>
@@ -438,6 +445,8 @@
             @closeCotizaciones="ver_cotizaciones = false" @agregarCotizacion="agregarCotizacion"
             :cotizacionVer="cotizacionVer">
         </Paquetes>
+        <Password :z_index="'z-index56k'" :show="openPassword" :callback-on-success="callback"
+            @closeVerificar="closePassword" :accion="'Modificar Cotización'"></Password>
     </div>
 </template>
 <script>
@@ -448,7 +457,8 @@ import ImageResize from "quill-image-resize-vue";
 
 Quill.register("modules/imageDrop", ImageDrop);
 Quill.register("modules/imageResize", ImageResize);
-
+//componente de password
+import Password from "@pages/confirmar_password";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 import funeraria from "@services/funeraria";
@@ -471,7 +481,8 @@ export default {
         Quill,
         ConfirmarDanger,
         Paquetes,
-        ConfirmarAceptar
+        ConfirmarAceptar,
+        Password
     },
     props: {
         show: {
@@ -487,18 +498,27 @@ export default {
             required: false,
             default: "z-index54k",
         },
+        id_cotizacion: {
+            type: Number,
+            required: false,
+            default: 0,
+        },
     },
     watch: {
         show: function (newValue, oldValue) {
             if (newValue == true) {
+                this.limpiarVentana();
                 this.$nextTick(
                     () => { this.$refs["cliente"].$el.querySelector("input").focus() }
                 );
-                this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-                    this.cancelar();
-                };
                 (async () => {
                     await this.get_vendedores();
+                    if (this.getTipoformulario == "modificar") {
+                        //es modificar
+                        this.form.id_cotizacion = this.get_cotizacion_id;
+                        /**se cargan los datos al formulario */
+                        await this.consultar_cotizacion();
+                    }
                 })();
             } else {
                 /**acciones al cerrar el formulario */
@@ -513,6 +533,14 @@ export default {
         }
     },
     computed: {
+        get_cotizacion_id: {
+            get() {
+                return this.id_cotizacion;
+            },
+            set(newValue) {
+                return newValue;
+            },
+        },
         showVentana: {
             get() {
                 return this.show;
@@ -704,7 +732,8 @@ export default {
                 pago_inicial_porcentaje: "",
                 descripcion_pagos: '',
                 total: '',
-                descuento: ''
+                descuento: '',
+                id_cotizacion: ''
             },
             serverOptions: {
                 numero_control: "",
@@ -718,10 +747,90 @@ export default {
             callBackConfirmar: Function,
             errores: [],
             ver_cotizaciones: false,
-            cotizacionVer: {}
+            cotizacionVer: {},
+            openPassword: false,
+            callback: Function
         };
     },
     methods: {
+        async consultar_cotizacion() {
+            try {
+                this.$vs.loading();
+                let res = await cotizaciones.get_cotizaciones(
+                    null,
+                    false,
+                    this.form.id_cotizacion
+                );
+                console.log("🚀 ~ consultar_cotizacion ~ res:", res)
+                if (res.data.length > 0) {
+                    res = res.data[0];
+                    //veo si se puede modificar
+                    //solo si es activa
+                    //cargo informacion
+                    this.form.cliente = res.cliente_nombre;
+                    this.form.telefono = res.cliente_telefono;
+                    this.form.email = res.cliente_email;
+                    this.form.vendedor = {
+                        value: res.vendedor.id,
+                        label: res.vendedor.nombre
+                    }
+                    let partes_fecha = res.fecha.split("-");
+                    //yyyy-mm-dd
+                    this.form.fecha_cotizacion = new Date(
+                        partes_fecha[0],
+                        partes_fecha[1] - 1,
+                        partes_fecha[2]
+                    );
+                    this.periodos_validez.forEach(element => {
+                        if (element.value == res.periodo_validez_id) {
+                            this.form.validez = element;
+                            return;
+                        }
+                    });
+                    //CARGO LOS PREDEFINIDOS
+                    this.form.cotizaciones_predefinidas_b = res.predefinidas_b;
+                    if (res.predefinidas_b == 1) {
+                        //si tiene predefinidos los cargo
+                        this.form.predefinidos = res.predefinidos;
+                        console.log("🚀 ~ consultar_cotizacion ~ res.predefinidos:", res.predefinidos)
+                    }
+                    //CARGO LOS CONCEPTOS PERSONALIZADOS
+                    if (res.conceptos.length > 0) {
+                        //si tiene personalizados los cargo
+                        this.form.conceptos = res.conceptos;
+                    }
+
+                    this.form.nota = res.nota;
+                } else {
+                    //no se encontro la info
+                    this.$vs.notify({
+                        title: "Modificar Cotización",
+                        text: "No se ha encontrado esta cotización en el sistema.",
+                        iconPack: "feather",
+                        icon: "icon-alert-circle",
+                        color: "danger",
+                        time: 4000,
+                    });
+                    this.cerrarVentana();
+                }
+                this.$vs.loading.close();
+            } catch (err) {
+                this.$vs.loading.close();
+                if (err.response) {
+                    if (err.response.status == 403) {
+                        /**FORBIDDEN ERROR */
+                        this.$vs.notify({
+                            title: "Permiso denegado",
+                            text: "Verifique sus permisos con el administrador del sistema.",
+                            iconPack: "feather",
+                            icon: "icon-alert-circle",
+                            color: "warning",
+                            time: 4000,
+                        });
+                    }
+                }
+            }
+        },
         validarCostoNetoDescuento(index) {
             if (this.form.conceptos[index].descuento_b == 0) {
                 if (isNaN(this.form.conceptos[index].costo_neto_descuento) || this.form.conceptos[index].costo_neto_descuento == '') {
@@ -754,8 +863,8 @@ export default {
                                 this.callBackConfirmarAceptar = await this.control_cotizaciones;
                                 this.openConfirmarAceptar = true;
                             } else {
-                                //this.callback = await this.control_cotizaciones;
-                                //this.openPassword = true;
+                                this.callback = await this.control_cotizaciones;
+                                this.openPassword = true;
                             }
                         })();
                     }
@@ -809,7 +918,7 @@ export default {
                         //checo si existe cada error
                         this.errores = err.response.data.error;
                         this.$vs.notify({
-                            title: "Registro de Cotizaciones",
+                            title: "Cotizaciones",
                             text: "Verifique los errores encontrados en los datos.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
@@ -820,7 +929,7 @@ export default {
                         //este error es por alguna condicion que el contrano no cumple para modificar
                         //la propiedad esa ya ha sido vendida
                         this.$vs.notify({
-                            title: "Registro de Cotizaciones",
+                            title: "Cotizaciones",
                             text: err.response.data.error,
                             iconPack: "feather",
                             icon: "icon-alert-circle",
@@ -1063,6 +1172,9 @@ export default {
             this.cotizacionVer = cotizacion;
             this.ver_cotizaciones = true;
         },
+        closePassword() {
+            this.openPassword = false;
+        },
     },
     created() { },
     updated() { },
@@ -1072,6 +1184,9 @@ export default {
         for (let index = 3; index <= 24; index++) {
             this.modalidades_pago.push({ label: +index + " Mensualidades", value: index });
         }
+        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
+            this.cancelar();
+        };
     }
 };
 </script>

@@ -15,13 +15,33 @@
                         <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
                             v-model="mostrar" class="w-full" />
                     </div>
+                    <div class="w-full sm:w-6/12 lg:w-3/12 px-2 input-text">
+                        <label class="">Estado</label>
+                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado" class="w-full" />
+                    </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
                         <label class="">Número de Control</label>
                         <vs-input class="w-full" icon="search" maxlength="14"
                             placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
                             v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
                     </div>
-                    <div class="w-full  lg:w-6/12 input-text px-2">
+                    <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
+                        <label class="">Número de Control</label>
+                        <vs-input class="w-full" icon="search" maxlength="14"
+                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap">
+                    <div class="w-full px-2">
+                        <h3 class="text-base font-semibold my-3">
+                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
+                            Cliente
+                        </h3>
+                    </div>
+                    <div class="w-full input-text px-2">
                         <label class="">Nombre del Cliente</label>
                         <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Cliente"
                             v-model="serverOptions.cliente" v-on:keyup.enter="get_data(1)"
@@ -42,6 +62,7 @@
                 <vs-th>Tel. / Celular</vs-th>
                 <vs-th>Fecha Elaboración</vs-th>
                 <vs-th>Fecha de Vencimiento</vs-th>
+                <vs-th>Tipo</vs-th>
                 <vs-th>Estatus</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
@@ -56,8 +77,11 @@
                         {{ data[indextr].cliente_nombre }}
                     </vs-td>
                     <vs-td :data="data[indextr].cliente_telefono">
-                        <span class="font-medium">
+                        <span class="font-medium" v-if="data[indextr].cliente_telefono">
                             {{ data[indextr].cliente_telefono }}
+                        </span>
+                        <span class="font-medium" v-else>
+                            N/A
                         </span>
                     </vs-td>
                     <vs-td :data="data[indextr].fecha_texto">
@@ -67,47 +91,47 @@
                     </vs-td>
                     <vs-td :data="data[indextr].fecha_vencimiento_texto">
                         <span class="font-medium">
-
                             {{ data[indextr].fecha_vencimiento_texto }}
                         </span>
                     </vs-td>
+                    <vs-td :data="data[indextr].tipo_texto">
+                        <span class="font-medium">
 
+                            {{ data[indextr].tipo_texto }}
+                        </span>
+                    </vs-td>
                     <vs-td>
-                        <p v-if="data[indextr].status_texto == 'Cancelada'">
+                        <p v-if="data[indextr].status == 0">
                             {{ data[indextr].status_texto }}
                             <span class="dot-danger"></span>
                         </p>
-                        <p v-else-if="data[indextr].status_texto == 'Por Pagar'">
+                        <p v-else-if="data[indextr].status == 1">
                             {{ data[indextr].status_texto }}
                             <span class="dot-warning"></span>
                         </p>
-                        <p v-else-if="data[indextr].status_texto == 'Pagada'">
+                        <p v-else-if="data[indextr].status == 2">
                             {{ data[indextr].status_texto }}
                             <span class="dot-success"></span>
+                        </p>
+                        <p v-else-if="data[indextr].status == 3">
+                            {{ data[indextr].status_texto }}
+                            <span class="dot-vencido"></span>
                         </p>
                     </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
-                            <img v-if="data[indextr].operacion_status == 0" class="img-btn-22 mx-3"
-                                src="@assets/images/deliver-disabled.svg" title="Hacer Entrega de Venta"
-                                @click="openEntregarVenta(data[indextr])" />
-                            <img v-else-if="
-                                data[indextr].operacion_status >= 1 &&
-                                data[indextr].venta_general.entregado_b == 0
-                            " class="img-btn-22 mx-3" src="@assets/images/deliver-yes.svg"
-                                title="Hacer Entrega de Venta" @click="openEntregarVenta(data[indextr])" />
-                            <img v-else class="img-btn-22 mx-3" src="@assets/images/deliver-no.svg"
-                                title="Esta venta ya fue entregada." @click="openEntregarVenta(data[indextr])" />
-                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/folder.svg"
-                                title="Expediente" @click="ConsultarVenta(data[indextr].ventas_generales_id)" />
+                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/pdf.svg" title="Expediente"
+                                @click="ConsultarVenta(data[indextr].id)" />
                             <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta"
                                 @click="openModificar(data[indextr])" />
-                            <img v-if="data[indextr].operacion_status >= 1" class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg" title="Cancelar Venta"
-                                @click="cancelarVenta(data[indextr].ventas_generales_id)" />
-                            <img v-else class="img-btn-22 mx-3" src="@assets/images/trash-open.svg"
-                                title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
-                                @click="ConsultarVentaAcuse(data[indextr].ventas_generales_id)" />
+                            <img v-if="data[indextr].status == 1" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
+                                title="Cancelar Venta" @click="cancelarVenta(data[indextr].id)" />
+                            <img v-else-if="data[indextr].status == 0" class="img-btn-22 mx-3"
+                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada."
+                                @click="ConsultarVentaAcuse(data[indextr].id)" />
+                            <img v-else-if="data[indextr].status == 3" class="img-btn-22 mx-3"
+                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue venció."
+                                @click="ConsultarVentaAcuse(data[indextr].id)" />
                         </div>
                     </vs-td>
                     <template class="expand-user" slot="expand"></template>
@@ -118,7 +142,7 @@
             <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
         <!--Componentes-->
-        <FormularioCotizaciones :id_venta="id_venta" :tipo="tipoFormulario" :show="verFormularioCotizaciones"
+        <FormularioCotizaciones :id_cotizacion="id_cotizacion" :tipo="tipoFormulario" :show="verFormularioCotizaciones"
             @closeVentana="reloadList">
         </FormularioCotizaciones>
     </div>
@@ -147,6 +171,29 @@ export default {
     },
     data() {
         return {
+            estado: { label: "Todas", value: "" },
+            estadosOptions: [
+                {
+                    label: "Todas",
+                    value: "",
+                },
+                {
+                    label: "Vigentes",
+                    value: "1",
+                },
+                {
+                    label: "Canceladas",
+                    value: "0",
+                },
+                {
+                    label: "Vencidas",
+                    value: "3",
+                },
+                {
+                    label: "Aceptadas",
+                    value: "4",
+                }
+            ],
             mostrarOptions: mostrarOptions,
             mostrar: { label: "15", value: "15" },
             serverOptions: {
@@ -163,11 +210,18 @@ export default {
             cotizaciones: [],
             tipoFormulario: "",
             verFormularioCotizaciones: false,
+            id_cotizacion: ''
         }
     },
     methods: {
         reset(card) {
             card.removeRefreshAnimation(500);
+            //this.filtroEspecifico = { label: "Núm. Venta", value: "1" };
+            this.serverOptions.numero_control = "";
+            this.mostrar = mostrarOptions[0];
+            //this.estado = { label: "Todas", value: "" };
+            this.serverOptions.cliente = "";
+            //this.get_data(this.actual);
         },
         OpenFormularioCotizaciones(tipo) {
             this.tipoFormulario = tipo;
@@ -232,6 +286,40 @@ export default {
                 this.verFormularioCotizaciones = false;
                 //await this.get_data(this.actual);
             })();
+        },
+        openModificar(cotizacion) {
+            if (cotizacion.status == 0) {
+                this.$vs.notify({
+                    title: "Modificar Cotización",
+                    text: "Esta cotización fue cancelada y no se puede modificar.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else if (cotizacion.status == 2) {
+                this.$vs.notify({
+                    title: "Modificar Cotización",
+                    text: "Esta cotización fue aceptada y no se puede modificar.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else if (cotizacion.status == 3) {
+                this.$vs.notify({
+                    title: "Modificar Cotización",
+                    text: "Esta cotización venció y no se puede modificar.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 4000,
+                });
+            } else {
+                this.tipoFormulario = "modificar";
+                this.id_cotizacion = cotizacion.id;
+                this.verFormularioCotizaciones = true;
+            }
         },
     },
     mounted(
