@@ -338,7 +338,7 @@ export default {
             if (selectedDates.length == 0) {
                 /**no hay fechas que buscar */
                 this.serverOptions.fecha_inicio = "";
-                this.serverOptionsfecha_fin = "";
+                this.serverOptions.fecha_fin = "";
                 this.filtroEspecifico = this.filtrosEspecificos[0];
             } else if (selectedDates.length == 1) {
                 this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(

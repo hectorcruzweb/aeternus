@@ -22,7 +22,7 @@
                                     <span>{{ errors.first("cliente") }}</span>
                                     <span v-if="this.errores.cliente">{{
                                         errores.cliente[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -34,7 +34,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -71,7 +71,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -83,7 +83,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -101,7 +101,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
                                                 <span class="px-2">{{ form.predefinidos[indextr].label
-                                                }}</span>
+                                                    }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
@@ -167,7 +167,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['predefinidos']">{{
                                         errores["predefinidos"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -320,7 +320,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['conceptos']">{{
                                         errores["conceptos"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <button class="w-full btn-icon-50 my-4" @click="agregar_manual">
                                     AGREGAR CONCEPTO MANUALMENTE
@@ -329,9 +329,7 @@
                             </div>
                             <div class="flex flex-wrap px-2 py-2">
                                 <div class="w-full lg:w-7/12 xl:w-8/12 lg:pr-2 py-2">
-                                    <vue-editor placeholder="Comentarios..." id="editor" v-model="form.nota"
-                                        useCustomImageHandler @image-added="handleImageAdded"
-                                        :editorOptions="editorSettings" :editorToolbar="customToolbar"></vue-editor>
+                                    <NotasComponent :value="form.nota" @input="(val) => { this.form.nota = val; }" />
                                 </div>
                                 <div class="w-full lg:w-5/12 xl:w-4/12 lg:pl-2 pt-6 lg:py-2">
                                     <div class="form-group h-full mt-0">
@@ -368,7 +366,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -388,7 +386,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -411,7 +409,7 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
@@ -451,10 +449,8 @@
 </template>
 <script>
 import { VueEditor, Quill } from "vue2-editor";
-
 import { ImageDrop } from "quill-image-drop-module";
 import ImageResize from "quill-image-resize-vue";
-
 Quill.register("modules/imageDrop", ImageDrop);
 Quill.register("modules/imageResize", ImageResize);
 //componente de password
@@ -472,6 +468,7 @@ import ArticulosBuscador from "@pages/funeraria/servicios_funerarios/searcher_ar
 import Paquetes from "@pages/cotizaciones/Paquetes.vue";
 import { configdateTimePicker } from "@/VariablesGlobales";
 import functions from "@/functions";
+import NotasComponent from "@pages/NotasComponent";
 export default {
     components: {
         "v-select": vSelect,
@@ -482,7 +479,8 @@ export default {
         ConfirmarDanger,
         Paquetes,
         ConfirmarAceptar,
-        Password
+        Password,
+        NotasComponent
     },
     props: {
         show: {
@@ -695,38 +693,14 @@ export default {
                 cliente: "Hector",
                 telefono: "6691617750",
                 email: "hector@gmail.com",
-                vendedor: { label: "Seleccione 1", value: "" },
+                vendedor: null,
                 fecha_cotizacion: "",
                 validez: { label: "Uso Inmediato (1 Día)", value: "1" },
                 cotizaciones_predefinidas_b: true,
                 predefinidos: [],
                 conceptos: [
-                    {
-                        descripcion: "Concepto 1",
-                        costo_neto_normal: 1500,
-                        descuento_b: 0,
-                        costo_neto_descuento: 1000,
-                        cantidad: 1,
-                        importe: 0,
-                    },
-                    {
-                        descripcion: "Concepto 2",
-                        costo_neto_normal: 1500,
-                        descuento_b: 0,
-                        costo_neto_descuento: 1000,
-                        cantidad: 1,
-                        importe: 0,
-                    },
-                    {
-                        descripcion: "Concepto 3",
-                        costo_neto_normal: 1500,
-                        descuento_b: 0,
-                        costo_neto_descuento: 1000,
-                        cantidad: 1,
-                        importe: 0,
-                    },
                 ],
-                nota: "Esto es una nota",
+                nota: "",
                 modalidad_pago: { label: "Pago Único", value: "1" },
                 pago_inicial: "",
                 pago_inicial_porcentaje: "",
@@ -761,7 +735,6 @@ export default {
                     false,
                     this.form.id_cotizacion
                 );
-                console.log("🚀 ~ consultar_cotizacion ~ res:", res)
                 if (res.data.length > 0) {
                     res = res.data[0];
                     //veo si se puede modificar
@@ -792,7 +765,7 @@ export default {
                     if (res.predefinidas_b == 1) {
                         //si tiene predefinidos los cargo
                         this.form.predefinidos = res.predefinidos;
-                        console.log("🚀 ~ consultar_cotizacion ~ res.predefinidos:", res.predefinidos)
+
                     }
                     //CARGO LOS CONCEPTOS PERSONALIZADOS
                     if (res.conceptos.length > 0) {
@@ -949,9 +922,7 @@ export default {
                 //le agrego todos los usuarios vendedores
                 this.vendedores = [];
                 this.vendedores.push({ label: "Seleccione 1", value: "" });
-                if (this.getTipoformulario == "agregar") {
-                    this.form.vendedor = this.vendedores[0];
-                }
+                this.form.vendedor = this.vendedores[0];
                 res.data.forEach((element) => {
                     this.vendedores.push({
                         label: element.nombre,

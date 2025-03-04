@@ -249,7 +249,6 @@ class CotizacionesController extends ApiController
         $cliente = $request->cliente;
         $numero_control = $request->numero_control;
         $status = $request->status;
-        $fecha_cotizacion = $request->fecha_cotizacion;
         $resultado_query = Cotizaciones::select(
             '*',
             \DB::raw('(CASE
@@ -287,12 +286,19 @@ class CotizacionesController extends ApiController
             })
             ->where(function ($q) use ($status) {
                 if (trim($status) != "") {
-
+                    if ($status < 3)
+                        $q = $q->where('status', $status);
+                    else
+                        $q = $q->whereRaw('status = "1" AND now() > fecha_vencimiento');
                 }
             })
             ->where('cliente_nombre', 'like', '%' . $cliente . '%')
-            ->orderBy('id', 'desc')
-            ->get();
+            ->orderBy('id', 'desc');
+
+        if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
+            $resultado_query = $resultado_query->whereDate('fecha', '>=', $request->fecha_inicio)->whereDate('fecha', '<=', $request->fecha_fin);
+        }
+        $resultado_query = $resultado_query->get();
         $resultado = array();
         if ($paginated == 'paginated') {
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();

@@ -10,11 +10,10 @@ mix.webpackConfig({
         */
 });
 
-/*
 mix.browserSync({
     proxy: "http://app.aeternus:80"
 });
-*/
+
 /*
  |--------------------------------------------------------------------------
  | Mix Asset Management

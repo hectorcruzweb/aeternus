@@ -21,10 +21,13 @@
                             v-model="estado" class="w-full" />
                     </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
-                        <label class="">Número de Control</label>
-                        <vs-input class="w-full" icon="search" maxlength="14"
-                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                        <label class="">
+                            Rango de Fechas año/mes/dia
+                            <span>(*)</span>
+                        </label>
+                        <flat-pickr name="rango_fechas" data-vv-as=" " :config="configdateTimePickerRange"
+                            v-model="rango_fechas" placeholder="Rango de fechas" class="w-full"
+                            @on-close="onCloseDate" />
                     </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
                         <label class="">Número de Control</label>
@@ -71,7 +74,7 @@
                     <vs-td :data="data[indextr].id">
                         <span class="font-semibold">{{
                             data[indextr].id
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].cliente_nombre">
                         {{ data[indextr].cliente_nombre }}
@@ -115,7 +118,7 @@
                         </p>
                         <p v-else-if="data[indextr].status == 3">
                             {{ data[indextr].status_texto }}
-                            <span class="dot-vencido"></span>
+                            <span class="dot-danger"></span>
                         </p>
                     </vs-td>
                     <vs-td :data="data[indextr].id">
@@ -148,29 +151,45 @@
     </div>
 </template>
 <script>
+import flatPickr from "vue-flatpickr-component";
+import "flatpickr/dist/flatpickr.css";
+import "flatpickr/dist/themes/airbnb.css";
 import FormularioCotizaciones from "@pages/cotizaciones/FormularioCotizaciones";
-import { mostrarOptions } from "@/VariablesGlobales";
+import { mostrarOptions, configdateTimePickerRange } from "@/VariablesGlobales";
+const moment = require("moment");
 import cotizacionesService from "@services/cotizaciones";
 import vSelect from "vue-select";
 export default {
     components: {
         "v-select": vSelect,
-        FormularioCotizaciones
+        FormularioCotizaciones,
+        flatPickr
     },
     watch: {
         actual: function (newValue, oldValue) {
-            (async () => {
-                await this.get_data(this.actual);
-            })();
+            if (this.watchers)
+                (async () => {
+                    await this.get_data(this.actual);
+                })();
         },
         mostrar: function (newValue, oldValue) {
-            (async () => {
-                await this.get_data(1);
-            })();
+            if (this.watchers)
+                (async () => {
+                    await this.get_data(1);
+                })();
+        },
+        estado: function (newVal, previousVal) {
+            if (this.watchers)
+                (async () => {
+                    await this.get_data(1);
+                })();
         },
     },
     data() {
         return {
+            watchers: true,
+            configdateTimePickerRange: configdateTimePickerRange,
+            rango_fechas: [],
             estado: { label: "Todas", value: "" },
             estadosOptions: [
                 {
@@ -188,10 +207,6 @@ export default {
                 {
                     label: "Vencidas",
                     value: "3",
-                },
-                {
-                    label: "Aceptadas",
-                    value: "4",
                 }
             ],
             mostrarOptions: mostrarOptions,
@@ -203,6 +218,8 @@ export default {
                 filtro_especifico_opcion: "",
                 numero_control: "",
                 cliente: "",
+                fecha_inicio: "",
+                fecha_fin: "",
             },
             verPaginado: true,
             total: 0,
@@ -214,14 +231,55 @@ export default {
         }
     },
     methods: {
+        onCloseDate(selectedDates, dateStr, instance) {
+            /**se valdiad que se busque la informacion solo en los casos donde la fechas cambien */
+            if (selectedDates.length == 0) {
+                /**no hay fechas que buscar */
+                this.serverOptions.fecha_inicio = "";
+                this.serverOptions.fecha_fin = "";
+            } else if (selectedDates.length == 1) {
+                this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
+                    "YYYY-MM-DD"
+                );
+                this.serverOptions.fecha_fin = moment(selectedDates[0]).format(
+                    "YYYY-MM-DD"
+                );
+            } else {
+                /**hay fechas que buscar */
+                if (
+                    this.serverOptions.fecha_inicio !=
+                    moment(selectedDates[0]).format("YYYY-MM-DD") ||
+                    this.serverOptions.fecha_fin !=
+                    moment(selectedDates[1]).format("YYYY-MM-DD")
+                ) {
+                    /**agreggo la fecha 1 */
+                    this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
+                        "YYYY-MM-DD"
+                    );
+                    this.serverOptions.fecha_fin = moment(selectedDates[1]).format(
+                        "YYYY-MM-DD"
+                    );
+                }
+            }
+            //aqui mando llamar los nuevos datos
+            (async () => {
+                await this.get_data(this.actual);
+            })();
+        },
         reset(card) {
             card.removeRefreshAnimation(500);
+            this.watchers = false;
             //this.filtroEspecifico = { label: "Núm. Venta", value: "1" };
+            this.rango_fechas = [];
+            this.serverOptions.fecha_fin = "";
+            this.serverOptions.fecha_inicio = "";
             this.serverOptions.numero_control = "";
-            this.mostrar = mostrarOptions[0];
-            //this.estado = { label: "Todas", value: "" };
+            this.mostrar = this.mostrarOptions[0];
+            this.estado = { label: "Todas", value: "" };
             this.serverOptions.cliente = "";
-            //this.get_data(this.actual);
+            (async () => {
+                await this.get_data(1);
+            })();
         },
         OpenFormularioCotizaciones(tipo) {
             this.tipoFormulario = tipo;
@@ -253,7 +311,7 @@ export default {
             this.verPaginado = false;
             this.serverOptions.page = page;
             this.serverOptions.per_page = this.mostrar.value;
-            //this.serverOptions.status = this.estado.value;
+            this.serverOptions.status = this.estado.value;
             //this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
             try {
                 let res = await cotizacionesService.get_cotizaciones(this.serverOptions, true);
@@ -279,6 +337,8 @@ export default {
                         });
                     }
                 }
+            } finally {
+                this.watchers = true;
             }
         },
         reloadList() {

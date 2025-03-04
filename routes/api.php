@@ -12,7 +12,7 @@
  */
 
 /**en pruebas */
-Route::post('funeraria/subir', 'FunerariaController@upload');
+Route::post('notas/upload_image', 'NotasController@upload_image');
 Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
