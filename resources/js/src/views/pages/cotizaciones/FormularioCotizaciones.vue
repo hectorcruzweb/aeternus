@@ -22,7 +22,7 @@
                                     <span>{{ errors.first("cliente") }}</span>
                                     <span v-if="this.errores.cliente">{{
                                         errores.cliente[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -34,7 +34,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -71,7 +71,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -83,7 +83,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -101,7 +101,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
                                                 <span class="px-2">{{ form.predefinidos[indextr].label
-                                                    }}</span>
+                                                }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
@@ -167,7 +167,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['predefinidos']">{{
                                         errores["predefinidos"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -320,7 +320,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['conceptos']">{{
                                         errores["conceptos"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <button class="w-full btn-icon-50 my-4" @click="agregar_manual">
                                     AGREGAR CONCEPTO MANUALMENTE
@@ -366,7 +366,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -386,7 +386,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -409,7 +409,7 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
@@ -683,11 +683,12 @@ export default {
             modalidades_pago: [
             ],
             periodos_validez: [
-                { label: "Uso Inmediato (1 Día)", value: "1" },
-                { label: "1 Semana", value: "2" },
-                { label: "2 Semanas", value: "3" },
-                { label: "3 Semanas", value: "4" },
-                { label: "1 Mes", value: "5" },
+                { label: "Indefinido", value: "1" },
+                { label: "Uso Inmediato (1 Día)", value: "2" },
+                { label: "1 Semana", value: "3" },
+                { label: "2 Semanas", value: "4" },
+                { label: "3 Semanas", value: "5" },
+                { label: "1 Mes", value: "6" },
             ],
             form: {
                 cliente: "Hector",
@@ -695,7 +696,7 @@ export default {
                 email: "hector@gmail.com",
                 vendedor: null,
                 fecha_cotizacion: "",
-                validez: { label: "Uso Inmediato (1 Día)", value: "1" },
+                validez: { label: "Indefinido", value: "1" },
                 cotizaciones_predefinidas_b: true,
                 predefinidos: [],
                 conceptos: [
@@ -863,7 +864,7 @@ export default {
                         color: "success",
                         time: 5000,
                     });
-                    this.limpiarVentana();
+                    this.cerrarVentana();
                 } else {
                     this.$vs.notify({
                         title: "Cotizaciones",

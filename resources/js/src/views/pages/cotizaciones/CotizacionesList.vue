@@ -344,7 +344,7 @@ export default {
         reloadList() {
             (async () => {
                 this.verFormularioCotizaciones = false;
-                //await this.get_data(this.actual);
+                await this.get_data(this.actual);
             })();
         },
         openModificar(cotizacion) {

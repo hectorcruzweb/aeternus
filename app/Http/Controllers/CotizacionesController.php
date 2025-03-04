@@ -106,17 +106,17 @@ class CotizacionesController extends ApiController
         );
         try {
             $fecha_cotizacion = Carbon::create($request->fecha_cotizacion);
-            $fecha_vencimiento = null;
+            $fecha_vencimiento = $request->fecha_cotizacion;
             $periodo_validez_value = (int) $request->validez['value'];
-            if ($periodo_validez_value == 1) {
+            if ($periodo_validez_value == 2) {
                 $fecha_vencimiento = $fecha_cotizacion->addDay();
-            } else if ($periodo_validez_value == 2) {
-                $fecha_vencimiento = $fecha_cotizacion->addWeek();
             } else if ($periodo_validez_value == 3) {
-                $fecha_vencimiento = $fecha_cotizacion->addWeeks(2);
+                $fecha_vencimiento = $fecha_cotizacion->addWeek();
             } else if ($periodo_validez_value == 4) {
-                $fecha_vencimiento = $fecha_cotizacion->addWeeks(3);
+                $fecha_vencimiento = $fecha_cotizacion->addWeeks(2);
             } else if ($periodo_validez_value == 5) {
+                $fecha_vencimiento = $fecha_cotizacion->addWeeks(3);
+            } else if ($periodo_validez_value == 6) {
                 $fecha_vencimiento = $fecha_cotizacion->addMonth();
             }
             DB::beginTransaction();
@@ -254,13 +254,13 @@ class CotizacionesController extends ApiController
             \DB::raw('(CASE
                         WHEN status = "0" THEN "Cancelado"
                         WHEN status = "2" THEN "Aceptado"
-                        WHEN status = "1" AND now() > fecha_vencimiento  THEN "Vencido"
+                        WHEN status = "1" AND now() > fecha_vencimiento AND periodo_validez_id>1  THEN "Vencido"
                         ELSE "Vigente"
                         END) AS status_texto'),
             \DB::raw('(CASE
                         WHEN status = "0" THEN 0
                         WHEN status = "2" THEN 2
-                        WHEN status = "1" AND now() > fecha_vencimiento  THEN 3
+                        WHEN status = "1" AND now() > fecha_vencimiento AND periodo_validez_id>1  THEN 3
                         ELSE 1
                         END) AS status')
         );
@@ -320,7 +320,7 @@ class CotizacionesController extends ApiController
                 { label: "3 Semanas", value: "4" },
                 { label: "1 Mes", value: "5" },
             */
-            $cotizacion['fecha_vencimiento_texto'] = fecha_abr($cotizacion["fecha_vencimiento"]);
+            $cotizacion['fecha_vencimiento_texto'] = $cotizacion["periodo_validez_id"] > 1 ? fecha_abr($cotizacion["fecha_vencimiento"]) : 'N/A';
             //modalidad
             if ($cotizacion["modalidad"] == 1) {
                 $cotizacion["modalidad_texto"] = 'Pago Único.';
