@@ -32,7 +32,6 @@ class CotizacionesController extends ApiController
             'cotizaciones_predefinidas_b' => '',
             'modalidad_pago.value' => 'required',
             'pago_inicial' => 'numeric',
-            'pago_inicial_porcentaje.' => 'numeric',
             'total' => 'required|numeric',
             'descuento' => 'required|numeric',
             'descripcion_pagos' => 'required',
@@ -91,6 +90,7 @@ class CotizacionesController extends ApiController
             'date' => 'Ingrese una fecha válida.',
             'validez.value.required' => 'Seleccione el periodo de validéz.',
             'modalidad_pago.value.required' => 'Seleccione una modalidad de pago.',
+            'pago_inicial.numeric' => 'Ingrese el pago inicial.',
             'numeric' => 'Este dato debe ser un número.',
             'descripcion_pagos.required' => 'Ingrese la descripción de pagos.',
             'conceptos.*.descripcion.required' => 'Ingrese la descripción del concepto.',
@@ -132,6 +132,7 @@ class CotizacionesController extends ApiController
                 'descuento' => isset($request->descuento) ? $request->descuento : 0,
                 'total' => isset($request->total) ? $request->total : 0,
                 'modalidad' => (int) $request->modalidad_pago['value'],
+                'pago_inicial' => isset($request->pago_inicial) ? $request->pago_inicial : 0,
                 'descripcion_pagos' => strtoupper(trim($request->descripcion_pagos)),
                 'nota' => trim($request->nota),
                 'tipo_id' => $tipo_id
@@ -254,13 +255,13 @@ class CotizacionesController extends ApiController
             \DB::raw('(CASE
                         WHEN status = "0" THEN "Cancelado"
                         WHEN status = "2" THEN "Aceptado"
-                        WHEN status = "1" AND now() > fecha_vencimiento AND periodo_validez_id>1  THEN "Vencido"
+                        WHEN status = "1" AND CURRENT_DATE() > fecha_vencimiento AND periodo_validez_id>1  THEN "Vencido"
                         ELSE "Vigente"
                         END) AS status_texto'),
             \DB::raw('(CASE
                         WHEN status = "0" THEN 0
                         WHEN status = "2" THEN 2
-                        WHEN status = "1" AND now() > fecha_vencimiento AND periodo_validez_id>1  THEN 3
+                        WHEN status = "1" AND CURRENT_DATE() > fecha_vencimiento AND periodo_validez_id>1  THEN 3
                         ELSE 1
                         END) AS status')
         );
@@ -400,4 +401,44 @@ class CotizacionesController extends ApiController
         return $resultado_query;
     }
 
+    public function cancelar_cotizacion(Request $request)
+    {
+        $validaciones = [
+            'id' => 'required',
+            'nota' => 'required'
+        ];
+
+        /**FIN DE  VALIDACIONES CONDICIONADAS*/
+        //Mensajes de validaciones
+        $mensajes = [
+            'id.required' => 'Ingrese el ID de esta cotización.',
+            'nota.required' => 'Ingrese una nota sobre esta cancelación.'
+        ];
+        request()->validate(
+            $validaciones,
+            $mensajes
+        );
+        try {
+            $id_cotizacion = $request->id;
+            $request_empty = new \Illuminate\Http\Request();
+            $cotizacion_datos = $this->get_cotizaciones($request_empty, $id_cotizacion, false)[0];
+            if ($cotizacion_datos['status'] == 0) {
+                return $this->errorResponse("Esta cotización ya fue cancelada.", 409);
+            }
+            DB::beginTransaction();
+            $cotizacion = [
+                'cancelo_id' => (int) $request->user()->id,
+                'fechahora_cancelacion' => now(),
+                'nota_cancelacion' => $request->nota,
+                'status' => 0
+            ];
+            $query = DB::table('cotizaciones');
+            $query->where("id", "=", $id_cotizacion)->update($cotizacion);
+            DB::commit();
+            return $id_cotizacion;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return $th;
+        }
+    }
 }

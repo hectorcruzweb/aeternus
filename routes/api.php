@@ -293,6 +293,7 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 
     Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones');
+    Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion');
 });
 Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA

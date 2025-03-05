@@ -524,7 +524,7 @@ export default {
             }
         },
         "form.modalidad_pago": function (newValue, oldValue) {
-            this.form.pago_inicial = ''
+            //this.form.pago_inicial = ''
             this.$nextTick(
                 () => { this.$refs["pago_inicial"].$el.querySelector("input").focus() }
             );
@@ -584,8 +584,10 @@ export default {
                 this.form.pago_inicial = total;
                 this.form.pago_inicial_porcentaje = 100;
             } else {
-                this.form.pago_inicial = '';
-                this.form.pago_inicial_porcentaje = '';
+                if (this.getTipoformulario == 'agregar') {
+                    this.form.pago_inicial = '';
+                    this.form.pago_inicial_porcentaje = '';
+                }
             }
             return functions.parseToDecimal(total);
         },
@@ -766,15 +768,15 @@ export default {
                     if (res.predefinidas_b == 1) {
                         //si tiene predefinidos los cargo
                         this.form.predefinidos = res.predefinidos;
-
                     }
                     //CARGO LOS CONCEPTOS PERSONALIZADOS
                     if (res.conceptos.length > 0) {
                         //si tiene personalizados los cargo
                         this.form.conceptos = res.conceptos;
                     }
-
                     this.form.nota = res.nota;
+                    this.form.modalidad_pago = this.modalidades_pago[res.modalidad - 1];
+                    this.form.pago_inicial = res.pago_inicial;
                 } else {
                     //no se encontro la info
                     this.$vs.notify({

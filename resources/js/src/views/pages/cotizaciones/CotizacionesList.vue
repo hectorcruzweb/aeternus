@@ -127,14 +127,10 @@
                                 @click="ConsultarVenta(data[indextr].id)" />
                             <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta"
                                 @click="openModificar(data[indextr])" />
-                            <img v-if="data[indextr].status == 1" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
-                                title="Cancelar Venta" @click="cancelarVenta(data[indextr].id)" />
+                            <img v-if="data[indextr].status > 0" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
+                                title="Cancelar Cotización" @click="cancelarCotizacion(data[indextr])" />
                             <img v-else-if="data[indextr].status == 0" class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada."
-                                @click="ConsultarVentaAcuse(data[indextr].id)" />
-                            <img v-else-if="data[indextr].status == 3" class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue venció."
-                                @click="ConsultarVentaAcuse(data[indextr].id)" />
+                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada." />
                         </div>
                     </vs-td>
                     <template class="expand-user" slot="expand"></template>
@@ -148,6 +144,9 @@
         <FormularioCotizaciones :id_cotizacion="id_cotizacion" :tipo="tipoFormulario" :show="verFormularioCotizaciones"
             @closeVentana="reloadList">
         </FormularioCotizaciones>
+        <Cancelar :datos="datos_cancelar" :show="verCancelar"
+            @closeCancelarCotizacion="() => { this.verCancelar = false; this.reloadList(); }">
+        </Cancelar>
     </div>
 </template>
 <script>
@@ -155,6 +154,7 @@ import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
 import FormularioCotizaciones from "@pages/cotizaciones/FormularioCotizaciones";
+import Cancelar from "@pages/cotizaciones/Cancelar";
 import { mostrarOptions, configdateTimePickerRange } from "@/VariablesGlobales";
 const moment = require("moment");
 import cotizacionesService from "@services/cotizaciones";
@@ -163,7 +163,8 @@ export default {
     components: {
         "v-select": vSelect,
         FormularioCotizaciones,
-        flatPickr
+        flatPickr,
+        Cancelar
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -187,6 +188,8 @@ export default {
     },
     data() {
         return {
+            verCancelar: false,
+            datos_cancelar: {},
             watchers: true,
             configdateTimePickerRange: configdateTimePickerRange,
             rango_fechas: [],
@@ -231,6 +234,10 @@ export default {
         }
     },
     methods: {
+        cancelarCotizacion(cotizacion) {
+            this.datos_cancelar = cotizacion;
+            this.verCancelar = true;
+        },
         onCloseDate(selectedDates, dateStr, instance) {
             /**se valdiad que se busque la informacion solo en los casos donde la fechas cambien */
             if (selectedDates.length == 0) {
@@ -348,38 +355,9 @@ export default {
             })();
         },
         openModificar(cotizacion) {
-            if (cotizacion.status == 0) {
-                this.$vs.notify({
-                    title: "Modificar Cotización",
-                    text: "Esta cotización fue cancelada y no se puede modificar.",
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "warning",
-                    time: 4000,
-                });
-            } else if (cotizacion.status == 2) {
-                this.$vs.notify({
-                    title: "Modificar Cotización",
-                    text: "Esta cotización fue aceptada y no se puede modificar.",
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "warning",
-                    time: 4000,
-                });
-            } else if (cotizacion.status == 3) {
-                this.$vs.notify({
-                    title: "Modificar Cotización",
-                    text: "Esta cotización venció y no se puede modificar.",
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "warning",
-                    time: 4000,
-                });
-            } else {
-                this.tipoFormulario = "modificar";
-                this.id_cotizacion = cotizacion.id;
-                this.verFormularioCotizaciones = true;
-            }
+            this.tipoFormulario = "modificar";
+            this.id_cotizacion = cotizacion.id;
+            this.verFormularioCotizaciones = true;
         },
     },
     mounted(

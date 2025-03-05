@@ -30,6 +30,10 @@ export default {
         let call = "/cotizaciones/control_cotizaciones/" + tipo_servicio;
         return axios.post(call, param);
     },
+    cancelar_cotizacion(param) {
+        let call = "/cotizaciones/cancelar_cotizacion";
+        return axios.post(call, param);
+    },
     get_cotizaciones(param, light = false, id = "") {
         let service = "/cotizaciones/get_cotizaciones/";
         if (id == "") {

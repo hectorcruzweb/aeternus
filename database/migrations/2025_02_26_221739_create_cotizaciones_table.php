@@ -27,6 +27,7 @@ class CreateCotizacionesTable extends Migration
             $table->unsignedDecimal('descuento', 10, 2);
             $table->unsignedDecimal('total', 10, 2);
             $table->tinyInteger('modalidad');
+            $table->unsignedDecimal('pago_inicial', 10, 2);
             $table->string('descripcion_pagos')->nullable();
             $table->longText('nota')->nullable();
             $table->unsignedBigInteger('registro_id')->unsigned()->nullable();
