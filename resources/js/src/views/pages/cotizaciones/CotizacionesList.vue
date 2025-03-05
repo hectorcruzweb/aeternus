@@ -124,8 +124,8 @@
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
                             <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/pdf.svg" title="Expediente"
-                                @click="ConsultarVenta(data[indextr].id)" />
-                            <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Venta"
+                                @click="openReporte(data[indextr])" />
+                            <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Cotización"
                                 @click="openModificar(data[indextr])" />
                             <img v-if="data[indextr].status > 0" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
                                 title="Cancelar Cotización" @click="cancelarCotizacion(data[indextr])" />
@@ -147,9 +147,13 @@
         <Cancelar :datos="datos_cancelar" :show="verCancelar"
             @closeCancelarCotizacion="() => { this.verCancelar = false; this.reloadList(); }">
         </Cancelar>
+        <Reporteador :header="'consultar cotizaciones'" :show="openReportesLista" :listadereportes="ListaReportes"
+            :request="request" @closeReportes="openReportesLista = false">
+        </Reporteador>
     </div>
 </template>
 <script>
+import Reporteador from "@pages/Reporteador";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
@@ -164,7 +168,8 @@ export default {
         "v-select": vSelect,
         FormularioCotizaciones,
         flatPickr,
-        Cancelar
+        Cancelar,
+        Reporteador
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -188,6 +193,13 @@ export default {
     },
     data() {
         return {
+            openReportesLista: false,
+            ListaReportes: [],
+            request: {
+                id_cotizacion: "",
+                email: "",
+                destinatario: "",
+            },
             verCancelar: false,
             datos_cancelar: {},
             watchers: true,
@@ -234,6 +246,19 @@ export default {
         }
     },
     methods: {
+        openReporte(cotizacion = null) {
+            this.ListaReportes = [];
+            this.ListaReportes.push({
+                nombre: "Cotización.",
+                url: "/cotizaciones/get_pdf",
+            });
+            //estado de cuenta
+            this.request.email = cotizacion.cliente_email;
+            this.request.id_cotizacion = cotizacion.id;
+            this.request.destinatario = cotizacion.cliente_nombre;
+            this.openReportesLista = true;
+            this.$vs.loading.close();
+        },
         cancelarCotizacion(cotizacion) {
             this.datos_cancelar = cotizacion;
             this.verCancelar = true;

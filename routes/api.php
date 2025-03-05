@@ -294,7 +294,9 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
 
     Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones');
     Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion');
+
 });
+Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf');
 Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {

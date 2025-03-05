@@ -396,6 +396,31 @@ class CotizacionesController extends ApiController
                         'secciones' => $secciones
                     ];
                 }
+
+                foreach ($cotizacion['conceptos'] as $key => &$temporal) {
+                    if ($temporal['descuento_b'] == 1) {
+                        //se toma el precio de descuento, verificnado que el precio de descuento es menor o igual al precio de costo neto real
+                        if ($temporal['costo_neto_normal'] >= $temporal['costo_neto_descuento']) {
+                            /**si se puede aplicar descuento */
+                            /**no grava IVA */
+                            $temporal['descuento'] = $temporal['costo_neto_normal'] - $temporal['costo_neto_descuento'];
+                            $temporal['costo_neto'] = $temporal['costo_neto_descuento'];
+                            $temporal['importe'] = $temporal['costo_neto'] * $temporal['cantidad'];
+                        } else {
+                            /**no se puede proceder por que el precio de descuento no es correcto */
+                            return $this->errorResponse('Verifique que el costo de descuento es menor que el precio normal', 409);
+                        }
+                    } else {
+                        /**fueron puros precios sin descuento */
+                        /**no grava IVA */
+                        $temporal['descuento'] = 0;
+                        $temporal['costo_neto'] = $temporal['costo_neto_normal'];
+                        $temporal['importe'] = $temporal['costo_neto'] * $temporal['cantidad'];
+                    }
+                    $temporal['descuento'] = round($temporal['descuento'], 2);
+                    $temporal['costo_neto'] = round($temporal['costo_neto'], 2);
+                    $temporal['importe'] = round($temporal['importe'], 2);
+                }
             }
         }
         return $resultado_query;
@@ -440,5 +465,76 @@ class CotizacionesController extends ApiController
             DB::rollBack();
             return $th;
         }
+    }
+
+    public function get_pdf(Request $request)
+    {
+        try {
+            /**estos valores verifican si el usuario quiere mandar el pdf por correo */
+            $email = $request->email_send === 'true' ? true : false;
+            $email_to = $request->email_address ? $request->email_address : 'hectorcrzprz@gmail.com';
+            $requestVentasList = isset($request->request_parent[0]) ? json_decode($request->request_parent[0], true) : null;
+            $id_cotizacion = isset($requestVentasList['id_cotizacion']) ? $requestVentasList['id_cotizacion'] : 1;
+        } catch (\Throwable $th) {
+            return $this->errorResponse('Error al solicitar los datos', 409);
+        }
+        //obtengo la informacion de esa venta
+        $datos_solicitud = $this->get_cotizaciones($request, $id_cotizacion, false)[0];
+        if (empty($datos_solicitud)) {
+            /**datos no encontrados */
+            return $this->errorResponse('Error al cargar los datos.', 409);
+        }
+
+        /**verificando si el documento aplica para esta solictitud */
+        /*if ($datos_venta['numero_solicitud_raw'] == null) {
+        return 0;
+        }*/
+
+        $get_funeraria = new EmpresaController();
+        $empresa = $get_funeraria->get_empresa_data();
+
+        $pdf = PDF::loadView('cotizaciones/cotizacion', ['datos' => $datos_solicitud, 'empresa' => $empresa]);
+        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+        $name_pdf = 'COTIZACIÓN ' . strtoupper($datos_solicitud['cliente_nombre']) . '.pdf';
+        $pdf->setOptions([
+            'title' => $name_pdf,
+            'footer-html' => view('cotizaciones.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+        ]);
+        $pdf->setOptions([
+            'header-html' => view('cotizaciones.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+        ]);
+        //$pdf->setOption('grayscale', true);
+        //$pdf->setOption('header-right', 'dddd');
+        $pdf->setOption('margin-left', 12.4);
+        $pdf->setOption('margin-right', 12.4);
+        $pdf->setOption('margin-top', 12.4);
+        $pdf->setOption('margin-bottom', 12.4);
+        $pdf->setOption('page-size', 'letter');
+
+        if ($email == true) {
+            /**email */
+            /**
+             * parameters lista de la funcion
+             * to destinatario
+             * to_name nombre del destinatario
+             * subject motivo del correo
+             * name_pdf nombre del pdf
+             * pdf archivo pdf a enviar
+             */
+            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+            $email_controller = new EmailController();
+            $enviar_email = $email_controller->pdf_email(
+                $email_to,
+                strtoupper($datos_solicitud['cliente_nombre']),
+                'COTIZACIÓN',
+                $name_pdf,
+                $pdf
+            );
+            return $enviar_email;
+            /**email fin */
+        } else {
+            return $pdf->inline($name_pdf);
+        }
+
     }
 }
