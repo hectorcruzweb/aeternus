@@ -16,7 +16,7 @@ class NotasController extends ApiController
             $createnewFileName = time() . '_' . str_replace(' ', '_', $getfilenamewitoutext) . '.' . $getfileExtension; // create new random file name
             $img_path = $req->file('image')->storeAs("public", $createnewFileName); // get the image path
             return response()->json([
-                'url' => Storage::url($img_path)
+                'url' => ENV('APP_URL') . Storage::url($img_path)
             ]);
         } else {
             return $this->errorResponse("Error", 409);

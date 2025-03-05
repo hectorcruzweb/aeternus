@@ -507,7 +507,7 @@ class CotizacionesController extends ApiController
         //$pdf->setOption('header-right', 'dddd');
         $pdf->setOption('margin-left', 12.4);
         $pdf->setOption('margin-right', 12.4);
-        $pdf->setOption('margin-top', 12.4);
+        $pdf->setOption('margin-top', 58.4);
         $pdf->setOption('margin-bottom', 12.4);
         $pdf->setOption('page-size', 'letter');
 
