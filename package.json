@@ -3,7 +3,8 @@
     "scripts": {
         "dev": "npm run development",
         "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
-        "watch": "npm-run-all --parallel development -- --watch blade_css",
+        "watch": "npm run development -- --watch",
+        "watch-all": "npm-run-all --parallel blade_css watch",
         "watch-poll": "npm run watch -- --watch-poll",
         "blade_css": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css -w",
         "blade_css_prod": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css --style compressed",
