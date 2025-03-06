@@ -110,7 +110,6 @@ Vue.use(require("vue-moment"), {
 });
 
 import VueSignaturePad from "vue-signature-pad";
-
 Vue.use(VueSignaturePad);
 /**con esta funcion valido si el usuario tiene cierto permiso sobre algun modulo, tomand
  * con parametros la url del modulo y el id del permiso

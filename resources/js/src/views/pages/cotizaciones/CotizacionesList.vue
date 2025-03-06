@@ -74,7 +74,7 @@
                     <vs-td :data="data[indextr].id">
                         <span class="font-semibold">{{
                             data[indextr].id
-                        }}</span>
+                            }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].cliente_nombre">
                         {{ data[indextr].cliente_nombre }}

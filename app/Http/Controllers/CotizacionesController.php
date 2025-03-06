@@ -482,12 +482,6 @@ class CotizacionesController extends ApiController
                 /**datos no encontrados */
                 return $this->errorResponse('Error al cargar los datos.', 409);
             }
-
-            /**verificando si el documento aplica para esta solictitud */
-            /*if ($datos_venta['numero_solicitud_raw'] == null) {
-            return 0;
-            }*/
-
             $get_funeraria = new EmpresaController();
             $empresa = $get_funeraria->get_empresa_data();
 
@@ -536,6 +530,5 @@ class CotizacionesController extends ApiController
         } catch (\Throwable $th) {
             return $this->errorResponse('Error al solicitar los datos', 409);
         }
-
     }
 }

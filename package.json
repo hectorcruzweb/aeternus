@@ -9,7 +9,7 @@
         "blade_css_prod": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css --style compressed",
         "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
         "prod": "npm run production",
-        "hot-all":"npm-run-all --parallel hot blade_css",
+        "hot-all": "npm-run-all --parallel hot blade_css",
         "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
     },
     "devDependencies": {
