@@ -15,13 +15,13 @@
                 </td>
             </tr>
         </table>
-        <div class="conceptos-content">
+        <div class={{ $datos['status'] == 0 ? 'conceptos-content-300px' : 'conceptos-content-500px' }}>
             <table class="w-100 datos_tabla uppercase texto-xs mt-2">
                 <tr>
                     <td class="py-1 px-1 bg-gray center"><span class="bold">#</span></td>
                     <td class="px-1 px-1 center bg-gray"><span class="bold">concepto</span></td>
                     <td class="px-1 px-1 center bg-gray"><span class="bold">$ Costo</span></td>
-                    <td class="px-1 px-1 center bg-gray"><span class="bold">$ Descuento</span></td>
+                    <td class="px-1 px-1 center bg-gray"><span class="bold">$ Descuento x Unidad</span></td>
                     <td class="py-1 px-1 bg-gray center"><span class="bold">Cant.</span></td>
                     <td class="px-1 px-1 center bg-gray"><span class="bold">$ Importe</span></td>
                 </tr>

@@ -90,7 +90,7 @@
                     </tr>
                     <tr>
                         <td class="w-100 py-1">
-                            <span class="bold">email:</span> <span class="light">
+                            <span class="bold">email:</span> <span class="light lowercase">
                                 @if (trim($datos['cliente_email']))
                                     {{ $datos['cliente_email'] }}
                                 @else

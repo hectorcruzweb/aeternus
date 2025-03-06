@@ -153,11 +153,11 @@ export default {
                         color: "success",
                         time: 5000,
                     });
-                    this.cerrar_ventana();
+                    this.$emit("ConsultarCotizacion", { id: res.data, cliente_email: '', cliente_nombre: '' });
                 } else {
                     this.$vs.notify({
                         title: "Cotizaciones",
-                        text: "Error al registrar la cotización, por favor reintente.",
+                        text: "Error al cancelar la cotización, por favor reintente.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",

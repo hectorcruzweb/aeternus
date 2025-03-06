@@ -74,7 +74,7 @@
                     <vs-td :data="data[indextr].id">
                         <span class="font-semibold">{{
                             data[indextr].id
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].cliente_nombre">
                         {{ data[indextr].cliente_nombre }}
@@ -130,7 +130,8 @@
                             <img v-if="data[indextr].status > 0" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
                                 title="Cancelar Cotización" @click="cancelarCotizacion(data[indextr])" />
                             <img v-else-if="data[indextr].status == 0" class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada." />
+                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada."
+                                @click="openReporte(data[indextr])" />
                         </div>
                     </vs-td>
                     <template class="expand-user" slot="expand"></template>
@@ -142,10 +143,11 @@
         </div>
         <!--Componentes-->
         <FormularioCotizaciones :id_cotizacion="id_cotizacion" :tipo="tipoFormulario" :show="verFormularioCotizaciones"
-            @closeVentana="reloadList">
+            @closeVentana="reloadList" @ConsultarCotizacion="ConsultarCotizacion">
         </FormularioCotizaciones>
         <Cancelar :datos="datos_cancelar" :show="verCancelar"
-            @closeCancelarCotizacion="() => { this.verCancelar = false; this.reloadList(); }">
+            @closeCancelarCotizacion="() => { this.verCancelar = false; this.reloadList(); }"
+            @ConsultarCotizacion="ConsultarCotizacion">
         </Cancelar>
         <Reporteador :header="'consultar cotizaciones'" :show="openReportesLista" :listadereportes="ListaReportes"
             :request="request" @closeReportes="openReportesLista = false">
@@ -246,7 +248,15 @@ export default {
         }
     },
     methods: {
-        openReporte(cotizacion = null) {
+        ConsultarCotizacion(cotizacion) {
+            (async () => {
+                this.verCancelar = false;
+                this.verFormularioCotizaciones = false;
+                await this.get_data(this.actual);
+                await this.openReporte(cotizacion);
+            })();
+        },
+        async openReporte(cotizacion = null) {
             this.ListaReportes = [];
             this.ListaReportes.push({
                 nombre: "Cotización.",

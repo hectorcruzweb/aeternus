@@ -22,7 +22,7 @@
                                     <span>{{ errors.first("cliente") }}</span>
                                     <span v-if="this.errores.cliente">{{
                                         errores.cliente[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -34,7 +34,7 @@
                                     <span>{{ errors.first("telefono") }}</span>
                                     <span v-if="this.errores.telefono">{{
                                         errores.telefono[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -71,7 +71,7 @@
                                     <span>{{ errors.first("vendedor") }}</span>
                                     <span v-if="this.errores['vendedor.value']">{{
                                         errores["vendedor.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>Fecha de Cotizacion (Año-Mes-Dia)</label>
@@ -83,7 +83,7 @@
                                     <span>{{ errors.first("fecha_cotizacion") }}</span>
                                     <span v-if="this.errores.fecha_cotizacion">{{
                                         errores.fecha_cotizacion[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -101,7 +101,7 @@
                                     <span>{{ errors.first("validez") }}</span>
                                     <span v-if="this.errores['validez.value']">{{
                                         errores["validez.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -148,7 +148,7 @@
                                             </vs-td>
                                             <vs-td class="size-base padding-y-7">
                                                 <span class="px-2">{{ form.predefinidos[indextr].label
-                                                }}</span>
+                                                    }}</span>
                                             </vs-td>
                                             <vs-td>
                                                 <span class="px-2"><img class="cursor-pointer img-btn-14 mx-3"
@@ -167,7 +167,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['predefinidos']">{{
                                         errores["predefinidos"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -320,7 +320,7 @@
                                 <div class="size-small text-center pt-2 text-danger">
                                     <span v-if="this.errores['conceptos']">{{
                                         errores["conceptos"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <button class="w-full btn-icon-50 my-4" @click="agregar_manual">
                                     AGREGAR CONCEPTO MANUALMENTE
@@ -366,7 +366,7 @@
                                                     <span>{{ errors.first("modalidad_pago") }}</span>
                                                     <span v-if="this.errores['modalidad_pago.value']">{{
                                                         errores["modalidad_pago.value"][0]
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -386,7 +386,7 @@
                                                             '' }}</span>
                                                     <span v-if="this.errores.pago_inicial">{{
                                                         errores.pago_inicial[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div
                                                     class="w-full md:w-6/12 px-2 input-text large-size input-cantidad py-2 lg:py-0">
@@ -409,7 +409,7 @@
                                                     }}</span>
                                                     <span v-if="this.errores.pago_inicial_porcentaje">{{
                                                         errores.pago_inicial_porcentaje[0]
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div :class="['w-full text-center px-2 py-4 lg:py-0']">
                                                     <span>{{ descripcion_pagos }}</span>
@@ -517,17 +517,20 @@ export default {
                         /**se cargan los datos al formulario */
                         await this.consultar_cotizacion();
                     }
+                    this.watchers = true;
                 })();
             } else {
                 /**acciones al cerrar el formulario */
                 //Lmpiamos el form
+                this.watchers = false;
             }
         },
         "form.modalidad_pago": function (newValue, oldValue) {
-            //this.form.pago_inicial = ''
-            this.$nextTick(
-                () => { this.$refs["pago_inicial"].$el.querySelector("input").focus() }
-            );
+            if (this.watchers)
+                //this.form.pago_inicial = ''
+                this.$nextTick(
+                    () => { this.$refs["pago_inicial"].$el.querySelector("input").focus() }
+                );
         }
     },
     computed: {
@@ -657,6 +660,7 @@ export default {
     },
     data() {
         return {
+            watchers: false,
             openConfirmarAceptar: false,
             callBackConfirmarAceptar: Function,
             customToolbar: [
@@ -693,9 +697,9 @@ export default {
                 { label: "1 Mes", value: "6" },
             ],
             form: {
-                cliente: "Hector",
-                telefono: "6691617750",
-                email: "hector@gmail.com",
+                cliente: "",
+                telefono: "",
+                email: "",
                 vendedor: null,
                 fecha_cotizacion: "",
                 validez: { label: "Indefinido", value: "1" },
@@ -777,6 +781,7 @@ export default {
                     this.form.nota = res.nota;
                     this.form.modalidad_pago = this.modalidades_pago[res.modalidad - 1];
                     this.form.pago_inicial = res.pago_inicial;
+                    this.changePagoInicial(null);
                 } else {
                     //no se encontro la info
                     this.$vs.notify({
@@ -866,7 +871,7 @@ export default {
                         color: "success",
                         time: 5000,
                     });
-                    this.cerrarVentana();
+                    this.$emit("ConsultarCotizacion", { id: res.data, cliente_email: this.form.email, cliente_nombre: this.form.cliente });
                 } else {
                     this.$vs.notify({
                         title: "Cotizaciones",
@@ -970,20 +975,6 @@ export default {
             else if (this.form.modalidad_pago.value != 1) {
                 this.form.pago_inicial = functions.parseToDecimal((pago_inicial_porcentaje * this.totalCotizacion) / 100);
             }
-        },
-        handleImageAdded: function (file, Editor, cursorLocation, resetUploader) {
-            var formData = new FormData();
-            formData.append("image", file);
-            cotizaciones
-                .upload(formData)
-                .then((result) => {
-                    const url = result.data.url; // Get url from response
-                    Editor.insertEmbed(cursorLocation, "image", url);
-                    resetUploader();
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
         },
         get_concepto_por_codigo(origen = "", evento = "") {
             if (evento == "blur") {
@@ -1128,9 +1119,9 @@ export default {
             this.serverOptions.numero_control = '';
             this.form.conceptos = [];
             this.form.nota = '';
-            this.form.modalidad = this.modalidades_pago[0];
             this.form.pago_inicial = '0.00';
             this.form.pago_inicial_porcentaje = '0.00';
+            this.form.modalidad_pago = this.modalidades_pago[0];
             this.$validator.reset();
         },
         openPaquetes(tipo = '') {
@@ -1138,7 +1129,6 @@ export default {
             this.ver_cotizaciones = true;
         },
         agregarCotizacion(cotizacion) {
-            console.log("🚀 ~ agregarCotizacion ~ cotizacion:", cotizacion)
             this.form.predefinidos.push(cotizacion)
         },
         verCotizacion(cotizacion) {
