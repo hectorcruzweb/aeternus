@@ -267,7 +267,7 @@ class CotizacionesController extends ApiController
         );
         if (!$light) {
             //version con todo y datos
-            $resultado_query = $resultado_query->with('vendedor')->with('registro')->with('conceptos')->with('predefinidos.conceptos')->with('predefinidos.financiamientos');
+            $resultado_query = $resultado_query->with('cancelo')->with('vendedor')->with('registro')->with('conceptos')->with('predefinidos.conceptos')->with('predefinidos.financiamientos');
         }
         /**solo ventas de planes funerarios */
         $resultado_query = $resultado_query->where(function ($q) use ($id_cotizacion) {
@@ -475,65 +475,66 @@ class CotizacionesController extends ApiController
             $email_to = $request->email_address ? $request->email_address : 'hectorcrzprz@gmail.com';
             $requestVentasList = isset($request->request_parent[0]) ? json_decode($request->request_parent[0], true) : null;
             $id_cotizacion = isset($requestVentasList['id_cotizacion']) ? $requestVentasList['id_cotizacion'] : 1;
+
+            //obtengo la informacion de esa venta
+            $datos_solicitud = $this->get_cotizaciones($request, $id_cotizacion, false)[0];
+            if (empty($datos_solicitud)) {
+                /**datos no encontrados */
+                return $this->errorResponse('Error al cargar los datos.', 409);
+            }
+
+            /**verificando si el documento aplica para esta solictitud */
+            /*if ($datos_venta['numero_solicitud_raw'] == null) {
+            return 0;
+            }*/
+
+            $get_funeraria = new EmpresaController();
+            $empresa = $get_funeraria->get_empresa_data();
+
+            $pdf = PDF::loadView('cotizaciones/cotizacion', ['datos' => $datos_solicitud, 'empresa' => $empresa]);
+            //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
+            $name_pdf = 'COTIZACIÓN ' . strtoupper($datos_solicitud['cliente_nombre']) . '.pdf';
+            $pdf->setOptions([
+                'title' => $name_pdf,
+                'footer-html' => view('cotizaciones.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+            ]);
+            $pdf->setOptions([
+                'header-html' => view('cotizaciones.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
+            ]);
+            //$pdf->setOption('grayscale', true);
+            //$pdf->setOption('header-right', 'dddd');
+            $pdf->setOption('margin-left', 12.4);
+            $pdf->setOption('margin-right', 12.4);
+            $pdf->setOption('margin-top', 65.4);
+            $pdf->setOption('margin-bottom', 12.4);
+            $pdf->setOption('page-size', 'letter');
+
+            if ($email == true) {
+                /**email */
+                /**
+                 * parameters lista de la funcion
+                 * to destinatario
+                 * to_name nombre del destinatario
+                 * subject motivo del correo
+                 * name_pdf nombre del pdf
+                 * pdf archivo pdf a enviar
+                 */
+                /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+                $email_controller = new EmailController();
+                $enviar_email = $email_controller->pdf_email(
+                    $email_to,
+                    strtoupper($datos_solicitud['cliente_nombre']),
+                    'COTIZACIÓN',
+                    $name_pdf,
+                    $pdf
+                );
+                return $enviar_email;
+                /**email fin */
+            } else {
+                return $pdf->inline($name_pdf);
+            }
         } catch (\Throwable $th) {
             return $this->errorResponse('Error al solicitar los datos', 409);
-        }
-        //obtengo la informacion de esa venta
-        $datos_solicitud = $this->get_cotizaciones($request, $id_cotizacion, false)[0];
-        if (empty($datos_solicitud)) {
-            /**datos no encontrados */
-            return $this->errorResponse('Error al cargar los datos.', 409);
-        }
-
-        /**verificando si el documento aplica para esta solictitud */
-        /*if ($datos_venta['numero_solicitud_raw'] == null) {
-        return 0;
-        }*/
-
-        $get_funeraria = new EmpresaController();
-        $empresa = $get_funeraria->get_empresa_data();
-
-        $pdf = PDF::loadView('cotizaciones/cotizacion', ['datos' => $datos_solicitud, 'empresa' => $empresa]);
-        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf = 'COTIZACIÓN ' . strtoupper($datos_solicitud['cliente_nombre']) . '.pdf';
-        $pdf->setOptions([
-            'title' => $name_pdf,
-            'footer-html' => view('cotizaciones.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-        ]);
-        $pdf->setOptions([
-            'header-html' => view('cotizaciones.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-        ]);
-        //$pdf->setOption('grayscale', true);
-        //$pdf->setOption('header-right', 'dddd');
-        $pdf->setOption('margin-left', 12.4);
-        $pdf->setOption('margin-right', 12.4);
-        $pdf->setOption('margin-top', 58.4);
-        $pdf->setOption('margin-bottom', 12.4);
-        $pdf->setOption('page-size', 'letter');
-
-        if ($email == true) {
-            /**email */
-            /**
-             * parameters lista de la funcion
-             * to destinatario
-             * to_name nombre del destinatario
-             * subject motivo del correo
-             * name_pdf nombre del pdf
-             * pdf archivo pdf a enviar
-             */
-            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
-            $email_controller = new EmailController();
-            $enviar_email = $email_controller->pdf_email(
-                $email_to,
-                strtoupper($datos_solicitud['cliente_nombre']),
-                'COTIZACIÓN',
-                $name_pdf,
-                $pdf
-            );
-            return $enviar_email;
-            /**email fin */
-        } else {
-            return $pdf->inline($name_pdf);
         }
 
     }

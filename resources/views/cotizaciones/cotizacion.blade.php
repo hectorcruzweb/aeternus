@@ -3,40 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <style>
-        .crop {
-            word-break: break-all;
-        }
-
-        .conceptos-content-full {
-            min-height: 750px !important;
-            border: 1px solid #ddd;
-        }
-
-        .conceptos-content {
-            min-height: 550px !important;
-            border: 1px solid #ddd;
-        }
-
-        .comentario-content {
-            min-height: 70px !important;
-            height: 70px;
-        }
-
-        .page-break {
-            page-break-inside: avoid;
-        }
-
-        .page-break-always {
-            page-break-before: always;
-        }
-    </style>
 </head>
 
 <body>
     @include('layouts.estilos')
     @if (count($datos['conceptos']))
-        <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 bg-gray">
+        <table class="w-100 datos_tabla uppercase table-collapsed texto-sm bg-gray">
             <tr>
                 <td class="w-100 px-2 py-2 center "><span class="bold">COTIZACIÓN PERSONALIZADA | DESGLOCE DE
                         CONCEPTOS</span>
@@ -44,7 +16,7 @@
             </tr>
         </table>
         <div class="conceptos-content">
-            <table class="w-100 datos_tabla uppercase texto-xs3 mt-2">
+            <table class="w-100 datos_tabla uppercase texto-xs mt-2">
                 <tr>
                     <td class="py-1 px-1 bg-gray center"><span class="bold">#</span></td>
                     <td class="px-1 px-1 center bg-gray"><span class="bold">concepto</span></td>
@@ -55,7 +27,7 @@
                 </tr>
                 @for ($i = 0; $i < 1; $i++)
                     @foreach ($datos['conceptos'] as $index => $concepto)
-                        <tr>
+                        <tr class="texto-sm">
                             <td class="py-1 px-1 center"><span class="light">{{ $index + 1 }}</span></td>
                             <td class="py-1 px-1 center"><span class="light">{{ $concepto['descripcion'] }}</span>
                             </td>
@@ -71,7 +43,7 @@
                 @endfor
             </table>
         </div>
-        <table class="w-100 datos_tabla uppercase texto-xs3">
+        <table class="w-100 datos_tabla uppercase texto-xs">
             <tr>
                 <td class="w-75 py-2 px-2 left"><span class="bold">Modalidad de Pago: </span>
                     <span>{{ $datos['descripcion_pagos'] }} </span>
@@ -90,40 +62,86 @@
                 </td>
             </tr>
         </table>
+        @include('cotizaciones.nota', ['nota' => $datos['nota']])
     @endif
-
-
 
     @if (count($datos['predefinidos']))
         @foreach ($datos['predefinidos'] as $index => $predefinido)
             <div class="page-break-always">
-                <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 bg-gray">
+                <table class="w-100  uppercase texto-sm bg-gray">
                     <tr>
-                        <td class="w-100 px-2 py-2 center "><span class="bold">{{ $predefinido['label'] }}</span>
+                        <td class="w-100 px-2 py-2 center "><span class="bold">cotización {{ $predefinido['tipo'] }}
+                                | {{ $predefinido['label'] }}</span>
                         </td>
                     </tr>
                 </table>
-                <div class="conceptos-content">
-                    <table class="w-100 datos_tabla uppercase texto-xs3 mt-2">
+                <div class="py-2">
+                    @foreach ($predefinido['secciones'] as $index_seccion => $seccion)
+                        <table class="w-100 datos_tabla uppercase mt-1">
+                            @if (count($seccion['conceptos']))
+                                <tr>
+                                    <td class="px-2 py-1 center bg-gray texto-xs "><span
+                                            class="bold">{{ $index_seccion == 0 ? 'Incluye' : 'En caso de ' . $seccion['seccion'] }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-2 texto-sm">
+                                        <ol>
+                                            @foreach ($seccion['conceptos'] as $index_concepto => $concepto)
+                                                <li>{{ $concepto }}</li>
+                                            @endforeach
+                                        </ol>
+                                    </td>
+                                </tr>
+                            @endif
+                        </table>
+                    @endforeach
+                </div>
+                <div class="">
+                    <table class="w-100 datos_tabla uppercase  center">
                         <tr>
-                            <td class="py-1 px-1 bg-gray center"><span class="bold">#</span></td>
-                            <td class="px-1 px-1 center bg-gray"><span class="bold">Concepto</span></td>
+                            <td class="px-2 py-2 center bg-gray texto-sm" colspan="4"><span
+                                    class="bold">Financiamientos</span>
+                            </td>
                         </tr>
-
+                        <tr>
+                        <tr class=" bold texto-xs">
+                            <td class="px-2 py-2">
+                                Modalidad
+                            </td>
+                            <td class="px-2 py-2">
+                                $ Costo
+                            </td>
+                            <td class="px-2 py-2">
+                                $ PAgo Inicial
+                            </td>
+                            <td class="px-2 py-2">
+                                $ Pago Mensual
+                            </td>
+                        </tr>
+                        </tr>
+                        @foreach ($predefinido['financiamientos'] as $index_financiamiento => $financiamiento)
+                            <tr class="texto-xs">
+                                <td class="px-2 py-2">
+                                    {{ $financiamiento['financiamiento'] }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    $ {{ number_format($financiamiento['costo_neto'], 2) }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    $ {{ number_format($financiamiento['pago_inicial'], 2) }}
+                                </td>
+                                <td class="px-2 py-2">
+                                    $ {{ number_format($financiamiento['pago_mensual'], 2) }}
+                                </td>
+                            </tr>
+                        @endforeach
                     </table>
                 </div>
+                @include('cotizaciones.nota', ['datos' => $datos])
             </div>
         @endforeach
     @endif
-
-    <table class="w-100 datos_tabla uppercase texto-xs3 comentario-content">
-        <tr>
-            <td class="w-100 py-2 px-2 "><span class="bold">
-                    NOTA / COMENTARIOS: </span>
-                <span>{!! $datos['nota'] !!}</span>
-            </td>
-        </tr>
-    </table>
 </body>
 
 </html>

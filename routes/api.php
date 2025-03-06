@@ -12,8 +12,8 @@
  */
 
 /**en pruebas */
-Route::post('notas/upload_image', 'NotasController@upload_image');
-Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
+
+
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
 /**rutas de modulo en proceso */
@@ -167,6 +167,7 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     Route::get('funeraria/get_ventas/{id_venta?}/{paginated?}/', 'FunerariaController@get_ventas');
     Route::post('funeraria/entregar_venta_gral', 'FunerariaController@entregar_venta_gral');
     Route::post('funeraria/cancelar_venta_gral', 'FunerariaController@cancelar_venta_gral');
+    Route::get('funeraria/get_personal_recoger', 'FunerariaController@get_personal_recoger');
     /**rutas de pagos */
     Route::get('pagos/calcular_adeudo/{referencia}/{fecha_pago}/{multipago?}', 'PagosController@calcular_adeudo');
     Route::post('pagos/guardar_pago', 'PagosController@guardar_pago')->middleware('permiso:20,57');
@@ -292,12 +293,14 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 
+    /*Rutas para cotizaciones */
     Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones');
     Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion');
-
+    Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf');
+    Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
+    Route::post('notas/upload_image', 'NotasController@upload_image');
 });
-Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf');
-Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
+
 //RUTAS USADAS PARA LA APLICACIÓN DEL SISTEMA DE ASISTENCIA
 Route::middleware(['client'])->group(function () {
     Route::get('checador/get_configuracion', 'ChecadorController@get_configuracion');
@@ -309,7 +312,7 @@ Route::middleware(['client'])->group(function () {
     Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/{area_filtro?}', 'ChecadorController@get_registros_checador');
 });
 
-Route::get('funeraria/actualizar_saldos_operacion/{empresa_operaciones_id?}', 'FunerariaController@actualizar_saldos_operacion');
+//Route::get('funeraria/actualizar_saldos_operacion/{empresa_operaciones_id?}', 'FunerariaController@actualizar_saldos_operacion');
 
 Route::get('pdfs', 'Usuarios\UsuariosController@pdfs');
 

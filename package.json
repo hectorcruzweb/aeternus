@@ -5,8 +5,11 @@
         "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
         "watch": "npm run development -- --watch",
         "watch-poll": "npm run watch -- --watch-poll",
+        "blade_css": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css -w",
+        "blade_css_prod": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css --style compressed",
         "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
         "prod": "npm run production",
+        "hot-all":"npm-run-all --parallel hot blade_css",
         "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
     },
     "devDependencies": {
@@ -37,6 +40,7 @@
         "lodash": "^4.17.20",
         "material-icons": "^0.3.1",
         "node-sass": "^4.14.1",
+        "npm-run-all": "^4.1.5",
         "perfect-scrollbar": "^1.4.0",
         "postcss-rtl": "^1.5.0",
         "prismjs": "^1.16.0",

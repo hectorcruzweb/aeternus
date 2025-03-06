@@ -3,54 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <style>
-        #header,
-        #header section table {
-            width: 100% !important;
-            padding-top: 0px;
-        }
-
-        #header section table {
-            border-collapse: collapse !important;
-        }
-
-        .logo {
-            max-width: 100% !important;
-        }
-
-        /*fin de parrafos*/
-
-        /*
-        estilos de la tabla de datos
-        **/
-        .datos_tabla {
-            border-collapse: collapse;
-        }
-
-        .datos_tabla tr th,
-        .datos_tabla td {
-            border: 1px solid #ddd;
-        }
-
-        .table-borderless tr td {
-            border: none !important;
-        }
-
-        .td-noborder {
-            border-left: none !important;
-            border-right: none !important;
-        }
-
-        .table-collapsed {
-            border: 1px solid #ddd;
-            border-collapse: collapse;
-        }
-
-        .table-collapsed tr td {
-            border: none !important;
-        }
-    </style>
     @include('layouts.estilos')
+    <style>
+        /*fin de parrafos*/
+    </style>
 </head>
 
 <body style="" class="relative">
@@ -117,11 +73,11 @@
         </section>
     </header>
 
-    <table class="w-100 mt-5 datos_tabla uppercase texto-xs3">
+    <table class="w-100 mt-5 datos_tabla uppercase texto-xs">
         <tr>
             <td class="w-60 py-1 px-2 bg-gray"><span class="bold">Datos del Cliente</span></td>
-            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Número de Cotización.</span></td>
-            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Cotización</span></td>
+            <td class="w-20 px-2 center bg-gray"><span class="bold">Núm. de Cotización</span></td>
+            <td class="w-20 px-2 center bg-gray"><span class="bold">Cotización</span></td>
         </tr>
         <tr>
             <td class="w-60 py-1 px-2" rowspan="2">
@@ -164,7 +120,7 @@
             </td>
         </tr>
         <tr>
-            <td colspan="2" class="center py-2">
+            <td colspan="2" class="center py-2 texto-xs2">
                 <h1>Formato de Cotización</h1>
             </td>
         </tr>
