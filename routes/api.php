@@ -294,9 +294,9 @@ Route::middleware(['auth:api', 'cors'])->group(function () {
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 
     /*Rutas para cotizaciones */
-    Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones');
-    Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion');
-    Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf');
+    Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones')->middleware(['permiso:24,71']);
+    Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion')->middleware(['permiso:24,72']);
+    Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf')->middleware(['permiso:24,73']);
     Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
     Route::post('notas/upload_image', 'NotasController@upload_image');
 });

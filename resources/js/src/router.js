@@ -451,7 +451,7 @@ const router = new Router({
                     }
                 },
                 {
-                    path: "/cotizaciones",
+                    path: "/funeraria/cotizaciones",
                     name: "cotizaciones",
                     component: () =>
                         import(
@@ -689,12 +689,11 @@ router.beforeEach((to, from, next) => {
                         index < modulos_permisos.length;
                         index++
                     ) {
-                        if (modulos_permisos[index].url === to.path || to.path=="/cotizaciones") {
+                        if (modulos_permisos[index].url === to.path) {
                             next();
                             return false;
                         }
                     }
-
                     /**no esntro en niguna ruta */
                     return next("/");
                 } else {
