@@ -29,7 +29,7 @@ Route::middleware(['client'])->group(function () {
 /**fin de servicios accedidos desde el backend */
 
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
-Route::middleware(['auth:api', 'cors'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
     Route::post('firmas/firmar', 'FirmasController@firmar');
     Route::get('firmas/get_areas_firmar/{documento_id?}', 'FirmasController@get_areas_firmar');
     Route::get('firmas/get_firma/{operacion_id?}/{area_id?}/{tipo?}', 'FirmasController@get_firma');
