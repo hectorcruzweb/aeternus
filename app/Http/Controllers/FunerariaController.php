@@ -3825,7 +3825,7 @@ class FunerariaController extends ApiController
                     'impuestos' => $impuestos,
                     'total' => $total,
                     'tasa_iva' => $request->tasa_iva,
-                    'saldo' => $total - $datos_solicitud['operacion']['total_cubierto']//el nuevo total menos lo que ya esta pagado hasta la fecha
+                    'saldo' => $total - (isset($datos_solicitud['operacion']) ? $datos_solicitud['operacion']['total_cubierto'] : 0)//el nuevo total menos lo que ya esta pagado hasta la fecha
                 ]
             );
 
