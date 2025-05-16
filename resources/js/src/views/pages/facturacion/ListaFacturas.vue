@@ -114,7 +114,7 @@
                             <vs-td :data="data[indextr].id">
                                 <span class="font-semibold">{{
                                     data[indextr].id
-                                    }}</span>
+                                }}</span>
                             </vs-td>
                             <vs-td :data="data[indextr].uuid">
                                 {{ data[indextr].uuid }}
@@ -125,19 +125,19 @@
                             </vs-td>
                             <vs-td :data="data[indextr].fecha_timbrado_texto">{{
                                 data[indextr].fecha_timbrado_texto
-                                }}</vs-td>
+                            }}</vs-td>
                             <vs-td :data="data[indextr].cliente_nombre">{{
                                 data[indextr].cliente_nombre
-                                }}</vs-td>
+                            }}</vs-td>
                             <vs-td :data="data[indextr].rfc_receptor">{{
                                 data[indextr].rfc_receptor
-                                }}</vs-td>
+                            }}</vs-td>
                             <vs-td :data="data[indextr].tipo_comprobante_texto">{{
                                 data[indextr].tipo_comprobante_texto
-                            }}</vs-td>
+                                }}</vs-td>
                             <vs-td :data="data[indextr].sat_metodos_pago_texto">{{
                                 data[indextr].sat_metodos_pago_texto
-                            }}</vs-td>
+                                }}</vs-td>
                             <vs-td :data="data[indextr].status_texto">{{ data[indextr].status_texto }}
                             </vs-td>
                             <vs-td :data="data[indextr].total">
