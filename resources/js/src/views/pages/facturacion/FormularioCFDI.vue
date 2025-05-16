@@ -886,7 +886,7 @@
                         <div class="flex flex-wrap">
                             <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12">
                                 <div class="w-full mt-5">
-                                    <vs-table class="tabla-datos" :data="form.conceptos"
+                                    <vs-table multiple v-model="selected" class="tabla-datos" :data="form.conceptos"
                                         noDataText="No se han agregado conceptos a facturar">
                                         <template slot="header">
                                             <h3>Artículos y Servicios a Facturar</h3>
@@ -989,6 +989,13 @@
                                             </vs-tr>
                                         </template>
                                     </vs-table>
+                                    <div class="w-full text-right pt-1 mt-6" v-if="selected.length > 1">
+                                        <vs-button class="w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                                            color="danger" @click="quitarTodos">
+                                            <img class="img-btn" src="@assets/images/minus.svg" />
+                                            <span>Quitar Todos los seleccionados</span>
+                                        </vs-button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1416,6 +1423,7 @@ export default {
     },
     data() {
         return {
+            selected: [],
             openReportesLista: false,
             ListaReportes: [],
             request: {
@@ -1604,6 +1612,17 @@ export default {
         };
     },
     methods: {
+        quitarTodos() {
+            this.botonConfirmarSinPassword = "eliminar";
+            this.accionConfirmarSinPassword =
+                "¿Desea eliminar los conceptos seleccionados? Los conceptops quedarán eliminados del CFDI?";
+            this.callBackConfirmar = this.quitarTodosCallBack;
+            this.openConfirmarSinPassword = true;
+        },
+        quitarTodosCallBack() {
+            this.form.conceptos = this.form.conceptos.filter(item => !this.selected.includes(item));
+            this.selected = [];
+        },
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
             this.ListaReportes = [];
             this.request.folio_id = parametro.id;
