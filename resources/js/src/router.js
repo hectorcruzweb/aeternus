@@ -477,6 +477,32 @@ const router = new Router({
                     }
                 },
                 {
+                    path: "/clientes/control-de-seguimientos",
+                    name: "Control de Seguimientos",
+                    component: () =>
+                        import(
+                            "@/views/pages/seguimientos/SeguimientosList.vue"
+                        ),
+                    meta: {
+                        breadcrumb: [
+                            {
+                                title: "Home",
+                                url: "/"
+                            },
+                            {
+                                title: "Clientes"
+                            },
+                            {
+                                title: "Control de Seguimientos",
+                                active: true
+                            }
+                        ],
+                        pageTitle: "Control de Seguimientos",
+                        rule: "editor",
+                        authRequired: true
+                    }
+                },
+                {
                     path: "/reportes",
                     name: "reportes",
                     component: () =>
