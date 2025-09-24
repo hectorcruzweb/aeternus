@@ -1,23 +1,15 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup popup-95', z_index]" fullscreen close="cancelar" title="Control de Seguimientos"
+        <vs-popup :class="['forms-popup popup-50', z_index]" fullscreen close="cancelar" title="Programar Seguimiento"
             :active.sync="show" ref="formulario">
-            <vs-button class="w-full md:w-auto   md:ml-2 md:mt-0" color="success"
-                @click="ShowFormProgramarSeguimientos = true">
-                <span>Registrar Seguimiento</span>
-            </vs-button>
-            <FormularioProgramarSeguimiento :show="ShowFormProgramarSeguimientos"
-                :closeVentana="CloseFormProgramarSeguimientos"></FormularioProgramarSeguimiento>
         </vs-popup>
     </div>
 </template>
 <script>
-import PopupManager from "../../../utils/PopupManager";
-import FormularioProgramarSeguimiento from './FormularioProgramarSeguimiento'
+import PopupManager from '@/utils/PopupManager'
 export default {
-    components: { FormularioProgramarSeguimiento },
     // Name of the component (optional)
-    name: "FormularioSeguimientos",
+    name: "FormularioProgramarSeguimiento",
     // Props: data passed from parent
     props: {
         show: {
@@ -40,15 +32,12 @@ export default {
                 PopupManager.register(this.$options.name, this.cancelar)
             } else {
                 PopupManager.unregister(this.$options.name)
-                //window.removeEventListener('keydown', this.handleEsc)
             }
         }
     },
     // Data function returns the component's reactive state
     data() {
-        return {
-            ShowFormProgramarSeguimientos: false
-        };
+        return {};
     },
     // Methods: functions you can call in template or other hooks
     methods: {
@@ -57,12 +46,7 @@ export default {
             this.$emit("closeVentana");
         },
         limpiarVentana() { },
-        //opening form programarSeguimientos
-        CloseFormProgramarSeguimientos() {
-            this.ShowFormProgramarSeguimientos = false
-        }
     },
-
     // Lifecycle hooks
     created() {
         console.log("Component created!"); // reactive data is ready, DOM not yet
