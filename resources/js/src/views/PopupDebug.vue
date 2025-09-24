@@ -1,26 +1,20 @@
 <!-- src/components/PopupDebug.vue -->
 <template>
-    <div class="debug-box">
+    <div class="debug-box" v-if="$popupManager.state.stack.length > 0">
         <h3>PopupManager Debug</h3>
         <ul>
-            <li v-for="(popup, index) in popupStack" :key="index">
+            <li
+                v-for="(popup, index) in $popupManager.state.stack"
+                :key="index"
+            >
                 {{ index + 1 }}. {{ popup.popupId }}
             </li>
         </ul>
-        456
     </div>
 </template>
 
 <script>
-import PopupManager from '../utils/PopupManager';
-
-export default {
-    computed: {
-        popupStack() {
-            return PopupManager.state.stack
-        }
-    }
-}
+export default {};
 </script>
 
 <style scoped>
@@ -33,6 +27,6 @@ export default {
     padding: 10px;
     font-size: 12px;
     border-radius: 5px;
-    z-index: 100000 !important;
+    z-index: 1000000 !important;
 }
 </style>

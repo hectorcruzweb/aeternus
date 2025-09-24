@@ -9,6 +9,8 @@
 
 import Vue from "vue";
 import App from "./App.vue";
+import popupManager from "./plugins/popupManager.js";
+Vue.use(popupManager);
 
 // Vuesax Component Framework
 import Vuesax from "vuesax";
@@ -67,8 +69,8 @@ Vue.use(VueGoogleMaps, {
     load: {
         // Add your API key here
         key: "AIzaSyB4DDathvvwuwlwnUu7F4Sow3oU22y5T1Y",
-        libraries: "places" // This is required if you use the Auto complete plug-in
-    }
+        libraries: "places", // This is required if you use the Auto complete plug-in
+    },
 });
 
 // Vuejs - Vue wrapper for hammerjs
@@ -84,7 +86,7 @@ require("@assets/css/iconfont.css");
 
 Vue.config.productionTip = false;
 Vue.config.devtools = false;
-Vue.config.errorHandler = function(err, vm, info) {
+Vue.config.errorHandler = function (err, vm, info) {
     //console.log(`Error: ${err.toString()}\nInfo: ${info}`);
     if (info == "v-on handler") {
         /**para manejar este tipo de errores comunes solo actualizo el navegador */
@@ -92,7 +94,7 @@ Vue.config.errorHandler = function(err, vm, info) {
     }
 };
 
-Vue.config.warnHandler = function(msg, vm, trace) {
+Vue.config.warnHandler = function (msg, vm, trace) {
     /**que no muestre warnings */
     //console.log(`Warn: ${msg}\nTrace: ${trace}`);
 };
@@ -106,7 +108,7 @@ const moment = require("moment");
 require("moment/locale/es");
 
 Vue.use(require("vue-moment"), {
-    moment
+    moment,
 });
 
 import VueSignaturePad from "vue-signature-pad";
@@ -122,5 +124,5 @@ new Vue({
     store,
     i18n,
     acl,
-    render: h => h(App)
+    render: (h) => h(App),
 }).$mount("#app");

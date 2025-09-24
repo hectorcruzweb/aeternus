@@ -64,3 +64,67 @@
         }
     }
 }
+
+.btn-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0.5rem;
+    border-radius: 0;
+    line-height: 1.5rem;
+    @extend .size-base;
+    &--unselected {
+        cursor: pointer;
+        @extend .bg-danger-50, .border-danger-solid-1, .color-danger-900;
+        .action {
+            display: none;
+        }
+    }
+    &--selected {
+        justify-content: space-between;
+        @extend .bg-success-50, .border-success-solid-1, .color-copy;
+        text-align: justify;
+        .action {
+            position: relative;
+            display: inline-flex; // flex on the span
+            align-items: center; // vertical center
+            width: 20px;
+            height: 20px;
+            padding: 1rem;
+            cursor: pointer;
+            &::before {
+                content: "✖";
+                color: red;
+                font-weight: bold;
+                display: inline-block;
+                transition: transform 0.3s ease; // smooth rotation
+            }
+            &:hover::before {
+                transform: rotate(90deg); // rotate 90 degrees on hover
+            }
+            &::after {
+                content: attr(
+                    data-tooltip
+                ); // reads tooltip from data-attribute
+                position: absolute;
+                top: 50%;
+                left: 125%;
+                transform: translateY(-50%);
+                @extend .bg-danger-50, .border-danger-solid-1, .color-copy;
+                font-size: 12px;
+                padding: 3px 6px;
+                border-radius: 2px;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
+
+            &:hover::after {
+                opacity: 1;
+            }
+        }
+    }
+}

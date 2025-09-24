@@ -9,8 +9,9 @@ mix.webpackConfig({
     }
         */
 });
+
 mix.browserSync({
-    proxy: "http://app.aeternus:80"
+    proxy: "http://app.aeternus:80",
 });
 
 /*
@@ -39,18 +40,18 @@ mix.js("resources/js/app.js", "public/js")
                 "@pages": path.resolve(
                     __dirname,
                     "resources/js/src/views/pages"
-                )
-            }
-        }
+                ),
+            },
+        },
     })
     .copy(["resources/assets/css/w3.css"], "public/css/w3.css")
     .sass("resources/sass/app.scss", "public/css")
     .options({
-        postCss: [require("autoprefixer"), require("postcss-rtl")]
+        postCss: [require("autoprefixer"), require("postcss-rtl")],
     })
     .postCss("resources/assets/css/main.css", "public/css", [
         tailwindcss("tailwind.js"),
-        require("postcss-rtl")()
+        require("postcss-rtl")(),
     ])
     .copy("node_modules/vuesax/dist/vuesax.css", "public/css/vuesax.css") // Vuesax framework css
     .copy("resources/assets/css/iconfont.css", "public/css/iconfont.css") // Feather Icon Font css
@@ -75,14 +76,14 @@ if (mix.inProduction()) {
     mix.webpackConfig({
         output: {
             publicPath: "/",
-            chunkFilename: "js/chunks/[name].[chunkhash].js"
-        }
+            chunkFilename: "js/chunks/[name].[chunkhash].js",
+        },
     });
     mix.setResourceRoot("/");
 } else {
     mix.webpackConfig({
         output: {
-            chunkFilename: "js/chunks/[name].js"
-        }
+            chunkFilename: "js/chunks/[name].js",
+        },
     });
 }
