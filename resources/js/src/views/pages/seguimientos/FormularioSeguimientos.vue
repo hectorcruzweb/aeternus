@@ -1,7 +1,7 @@
 <template>
     <div>
         <vs-popup
-            :class="['forms-popup', 'popup-95', z_index]"
+            :class="['forms-popup', z_index]"
             fullscreen
             close="cancelar"
             title="Control de Seguimientos"
