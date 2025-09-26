@@ -1,60 +1,31 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup popup-85', z_index]"
-      title="Catálogo de clientes registrados"
-      :active.sync="showVentana"
-      ref="buscador_cliente"
-    >
+    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de clientes registrados"
+      :active.sync="showVentana" ref="buscador_cliente">
       <div class="w-full text-right">
-        <vs-button
-          class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-          color="primary"
-          @click="verFormularioClientes = true"
-        >
+        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+          @click="verFormularioClientes = true">
           <span>Registrar Cliente</span>
         </vs-button>
       </div>
 
       <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-        <vx-card
-          no-radius
-          title="Filtros de selección"
-          refresh-content-action
-          @refresh="reset"
-          :collapse-action="false"
-        >
+        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+          :collapse-action="false">
           <div class="flex flex-wrap pb-6">
             <div class="w-full input-text xl:w-3/12 px-2">
               <label>Núm. Cliente</label>
-              <vs-input
-                name="num_cliente"
-                data-vv-as=" "
-                type="text"
-                class="w-full"
-                placeholder="Ej. 1258"
-                maxlength="6"
-                v-model.trim="serverOptions.id_cliente"
-                v-on:keyup.enter="get_data('id_cliente', 1)"
-                v-on:blur="get_data('id_cliente', 1, 'blur')"
-              />
+              <vs-input name="num_cliente" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
+                maxlength="6" v-model.trim="serverOptions.id_cliente" v-on:keyup.enter="get_data('id_cliente', 1)"
+                v-on:blur="get_data('id_cliente', 1, 'blur')" />
               <span class="">{{ errors.first("num_cliente") }}</span>
             </div>
 
             <div class="w-full input-text xl:w-9/12 px-2">
               <label>Nombre</label>
-              <vs-input
-                ref="nombre_cliente"
-                name="nombre_cliente"
-                data-vv-as=" "
-                type="text"
-                class="w-full"
-                placeholder="Ej. Juan Pérez"
-                maxlength="12"
-                v-model.trim="serverOptions.cliente"
-                v-on:keyup.enter="get_data('cliente', 1)"
-                v-on:blur="get_data('cliente', 1, 'blur')"
-              />
+              <vs-input ref="nombre_cliente" name="nombre_cliente" data-vv-as=" " type="text" class="w-full"
+                placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.cliente"
+                v-on:keyup.enter="get_data('cliente', 1)" v-on:blur="get_data('cliente', 1, 'blur')" />
               <span class="">{{ errors.first("nombre_cliente") }}</span>
             </div>
           </div>
@@ -64,14 +35,8 @@
       <!--inicio de buscador-->
       <div class="py-6">
         <div class="resultados_clientes py-6">
-          <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="clientes"
-            stripe
-            noDataText="0 Resultados"
-            class="tabla-datos"
-          >
+          <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="clientes" stripe
+            noDataText="0 Resultados" class="tabla-datos">
             <template slot="header">
               <h3>Lista actualizada de clientes registrados</h3>
             </template>
@@ -80,7 +45,6 @@
               <vs-th>Nombre</vs-th>
               <vs-th>Domicilio</vs-th>
               <vs-th>Celular</vs-th>
-
               <vs-th>Seleccionar</vs-th>
             </template>
             <template slot-scope="{ data }">
@@ -100,39 +64,25 @@
 
                 <vs-td :data="data[indextr].id_user">
                   <div class="flex justify-center">
-                    <img
-                      class="cursor-pointer img-btn-20 mx-3"
-                      src="@assets/images/checked.svg"
-                      @click="
-                        retornarSeleccion(
-                          data[indextr].nombre,
-                          data[indextr].id,
-                          data[indextr]
-                        )
-                      "
-                    />
+                    <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
+                      retornarSeleccion(
+                        data[indextr].nombre,
+                        data[indextr].id,
+                        data[indextr]
+                      )
+                      " />
                   </div>
                 </vs-td>
               </vs-tr>
             </template>
           </vs-table>
           <div>
-            <vs-pagination
-              v-if="verPaginado"
-              :total="this.total"
-              v-model="actual"
-              class="mt-6"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
           </div>
         </div>
       </div>
-      <FormularioClientes
-        :tipo="'agregar'"
-        :z_index="'z-index58k'"
-        :show="verFormularioClientes"
-        @closeVentana="verFormularioClientes = false"
-        @retornar_id="retorno_id"
-      ></FormularioClientes>
+      <FormularioClientes :tipo="'agregar'" :z_index="'z-index58k'" :show="verFormularioClientes"
+        @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id"></FormularioClientes>
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -256,7 +206,7 @@ export default {
           });
           this.serverOptions.nacionalidad = this.nacionalidades[0];
         })
-        .catch((err) => {});
+        .catch((err) => { });
     },
     get_data(origen = "", page, evento = "") {
       if (evento == "blur") {
@@ -320,9 +270,9 @@ export default {
           }
         });
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
     retornarSeleccion(nombre = "", id = "", todos_los_datos = []) {
       /**retorna los datos seleccionados a la venta que los solicita */
       this.$emit("retornoCliente", {

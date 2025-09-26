@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Clientes;
+use App\Cotizaciones;
 use App\Nacionalidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class ClientesController extends ApiController
 {
@@ -97,8 +96,8 @@ class ClientesController extends ApiController
                         $q->where('clientes.nacionalidades_id', '=', $nacionalidad);
                     }
                 })
-                /**descartando el cliente publico en general */
-                //->whereNotIn('clientes.id', [1, 193])
+            /**descartando el cliente publico en general */
+            //->whereNotIn('clientes.id', [1, 193])
                 ->orderBy('clientes.id', 'desc')
                 ->get()
         );
@@ -112,13 +111,13 @@ class ClientesController extends ApiController
     {
         $cliente_id = $request->cliente_id;
         $resultado  =
-            Clientes::select(
-                '*',
-                'vivo_b as vivo_b_raw',
-                DB::Raw('IF(clientes.vivo_b=1 , "VIVO","FALLECIDO" ) as vivo_b'),
-                'nacionalidades_id',
-                'generos_id'
-            )->where('clientes.id', '=', $cliente_id)->with('nacionalidad')->with('genero')->with('regimen')
+        Clientes::select(
+            '*',
+            'vivo_b as vivo_b_raw',
+            DB::Raw('IF(clientes.vivo_b=1 , "VIVO","FALLECIDO" ) as vivo_b'),
+            'nacionalidades_id',
+            'generos_id'
+        )->where('clientes.id', '=', $cliente_id)->with('nacionalidad')->with('genero')->with('regimen')
             ->first();
         //se retorna el resultado
         return $resultado;
@@ -139,8 +138,8 @@ class ClientesController extends ApiController
             'rfc'                => '',
             'razon_social'       => '',
             'direccion_fiscal'   => '',
-            'cp' => '',
-            'regimen.value' => ''
+            'cp'                 => '',
+            'regimen.value'      => '',
         ];
 
         /**VALIDACIONES CONDICIONADAS*/
@@ -153,13 +152,13 @@ class ClientesController extends ApiController
             if (trim($request->rfc) != 'XAXX010101000' && trim($request->rfc) != 'XEX010101000') {
                 // $validaciones['rfc']              = 'required|unique:clientes,rfc';
             } else {
-                $validaciones['rfc']              = 'required';
+                $validaciones['rfc'] = 'required';
             }
 
             $validaciones['razon_social']     = 'required';
             $validaciones['direccion_fiscal'] = 'required';
-            $validaciones['cp'] = 'required';
-            $validaciones['regimen.value'] = 'required';
+            $validaciones['cp']               = 'required';
+            $validaciones['regimen.value']    = 'required';
         }
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
@@ -193,7 +192,7 @@ class ClientesController extends ApiController
                 'rfc'                 => trim($request->rfc) != '' ? trim($request->rfc) : null,
                 'razon_social'        => trim($request->razon_social) != '' ? trim($request->razon_social) : null,
                 'direccion_fiscal'    => trim($request->direccion_fiscal) != '' ? trim($request->direccion_fiscal) : null,
-                'cp'    => trim($request->cp) != '' ? trim($request->cp) : null,
+                'cp'                  => trim($request->cp) != '' ? trim($request->cp) : null,
                 'regimen_fiscal_id'   => (int) $request->regimen['value'],
                 /**datos del contacto */
                 'nombre_contacto'     => $request->nombre_contacto,
@@ -222,8 +221,8 @@ class ClientesController extends ApiController
             'rfc'                => '',
             'razon_social'       => '',
             'direccion_fiscal'   => '',
-            'cp' => '',
-            'regimen.value' => ''
+            'cp'                 => '',
+            'regimen.value'      => '',
         ];
 
         /**VALIDACIONES CONDICIONADAS*/
@@ -242,12 +241,12 @@ class ClientesController extends ApiController
                     Rule::unique('clientes', 'rfc')->ignore($request->id_cliente_modificar),
                 ];*/
             } else {
-                $validaciones['rfc']              = 'required';
+                $validaciones['rfc'] = 'required';
             }
             $validaciones['razon_social']     = 'required';
             $validaciones['direccion_fiscal'] = 'required';
-            $validaciones['cp'] = 'required';
-            $validaciones['regimen.value'] = 'required';
+            $validaciones['cp']               = 'required';
+            $validaciones['regimen.value']    = 'required';
         }
 
         /**FIN DE  VALIDACIONES CONDICIONADAS*/
@@ -280,7 +279,7 @@ class ClientesController extends ApiController
                 'rfc'                 => trim($request->rfc) != '' ? trim($request->rfc) : null,
                 'razon_social'        => trim($request->razon_social) != '' ? trim($request->razon_social) : null,
                 'direccion_fiscal'    => trim($request->direccion_fiscal) != '' ? trim($request->direccion_fiscal) : null,
-                'cp'    => trim($request->cp) != '' ? trim($request->cp) : null,
+                'cp'                  => trim($request->cp) != '' ? trim($request->cp) : null,
                 'regimen_fiscal_id'   => (int) $request->regimen['value'],
                 /**datos del contacto */
                 'nombre_contacto'     => $request->nombre_contacto,
@@ -299,11 +298,6 @@ class ClientesController extends ApiController
             return 0;
         }
     }
-
-
-
-
-
 
     /**DELETE CLIENTES */
     public function baja_cliente(Request $request)
@@ -330,7 +324,7 @@ class ClientesController extends ApiController
         $cliente_id = $request->id;
         request()->validate(
             [
-                'id' => 'required',
+                'id'                     => 'required',
                 'servicios_gratis.value' => 'required',
             ],
             [
@@ -339,8 +333,8 @@ class ClientesController extends ApiController
         );
         return DB::table('clientes')->where('id', $cliente_id)->update(
             [
-                'servicios_gratis' => $request->servicios_gratis['value'],
-                'nota_servicios_gratis' => $request->nota_servicios_gratis
+                'servicios_gratis'      => $request->servicios_gratis['value'],
+                'nota_servicios_gratis' => $request->nota_servicios_gratis,
             ]
         );
     }
@@ -362,4 +356,61 @@ class ClientesController extends ApiController
             ]
         );
     }
+
+    public function get_clientes_seguimientos(Request $request)
+    {
+        $nameFilter = trim($request->nombre ?? '');
+        $idFilter   = trim($request->id ?? '');
+        $filtro     = $request->filtro_especifico; // null, 1, or 2
+        $queries    = [];
+
+// Clientes query
+        if (is_null($filtro) || $filtro == 1) {
+            $clientesQuery = Clientes::select(
+                'id',
+                'nombre',
+                DB::raw('"cliente con operaciones" as source'),
+                DB::raw('1 as tipo_cliente_id')
+            )
+                ->when($nameFilter != '', function ($q) use ($nameFilter) {
+                    $q->where('nombre', 'like', "%{$nameFilter}%");
+                })
+                ->when($idFilter != '', function ($q) use ($idFilter) {
+                    $q->where('id', $idFilter);
+                });
+            $queries[] = $clientesQuery;
+        }
+// Cotizaciones query
+        if (is_null($filtro) || $filtro == 2) {
+            $cotizacionesQuery = Cotizaciones::select(
+                'id',
+                'cliente_nombre as nombre',
+                DB::raw('"bajo cotización" as source'),
+                DB::raw('2 as tipo_cliente_id')
+            )
+                ->when($nameFilter != '', function ($q) use ($nameFilter) {
+                    $q->where('cliente_nombre', 'like', "%{$nameFilter}%");
+                })
+                ->when($idFilter != '', function ($q) use ($idFilter) {
+                    $q->where('id', $idFilter);
+                });
+
+            $queries[] = $cotizacionesQuery;
+        }
+// Combine with unionAll
+        if (count($queries) == 2) {
+            $combinedQuery = $queries[0]->unionAll($queries[1]);
+        } else {
+            $combinedQuery = $queries[0];
+        }
+// Wrap in subquery for sorting
+        $sql = DB::table(DB::raw("({$combinedQuery->toSql()}) as combined"))
+            ->mergeBindings($combinedQuery->getQuery())
+            ->orderBy('id', 'asc')                                            // sort by id first
+            ->orderByRaw("CASE source WHEN 'cliente' THEN 0 ELSE 1 END ASC"); // Clientes first within same id
+
+        return $this->showAllPaginated($sql->get());
+
+    }
+
 }

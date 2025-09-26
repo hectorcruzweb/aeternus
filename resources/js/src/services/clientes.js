@@ -1,6 +1,6 @@
-import axios from "@/axios.js"
-import axiosSuper from 'axios'
-const CancelToken = axiosSuper.CancelToken
+import axios from "@/axios.js";
+import axiosSuper from "axios";
+const CancelToken = axiosSuper.CancelToken;
 const source = CancelToken.source();
 let cancel;
 
@@ -9,117 +9,138 @@ export default {
 
     /**obitne la infomacion del paginado */
     get_clientes(param) {
-        let self = this
+        let self = this;
         return new Promise((resolve, reject) => {
-            axios.get('/clientes/get_clientes', {
+            axios
+                .get("/clientes/get_clientes", {
                     cancelToken: new CancelToken((c) => {
-                        self.cancel = c
+                        self.cancel = c;
                     }),
-                    params: param
+                    params: param,
                 })
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
                     if (axiosSuper.isCancel(error)) {
-                        reject(error.message)
+                        reject(error.message);
                     } else {
-                        reject(error)
+                        reject(error);
                     }
-                })
-        })
+                });
+        });
     },
 
     //obtiene las nacionalidades de los clientes
     get_nacionalidades() {
-        let call = "/clientes/get_nacionalidades"
+        let call = "/clientes/get_nacionalidades";
         return new Promise((resolve, reject) => {
-            axios.get(call)
+            axios
+                .get(call)
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
 
     /**get datos del cliente por id */
     get_cliente_id(id) {
-        let call = "/clientes/get_cliente_id"
+        let call = "/clientes/get_cliente_id";
         return new Promise((resolve, reject) => {
-            axios.get(call, {
+            axios
+                .get(call, {
                     params: {
-                        'cliente_id': id
-                    }
+                        cliente_id: id,
+                    },
                 })
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
 
-
     guardar_cliente(datos) {
-        let call = "/clientes/guardar_cliente"
+        let call = "/clientes/guardar_cliente";
         return new Promise((resolve, reject) => {
-            axios.post(call, datos)
+            axios
+                .post(call, datos)
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
     /**modificacion de clientes */
     modificar_cliente(datos) {
-        let call = "/clientes/modificar_cliente"
+        let call = "/clientes/modificar_cliente";
         return new Promise((resolve, reject) => {
-            axios.post(call, datos)
+            axios
+                .post(call, datos)
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
-
 
     /**modificacion de clientes | baja logica */
     delete_cliente(datos) {
-        let call = "/clientes/baja_cliente"
+        let call = "/clientes/baja_cliente";
         return new Promise((resolve, reject) => {
-            axios.post(call, datos)
+            axios
+                .post(call, datos)
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
 
     /**modificacion de clientes | baja logica */
     alta_cliente(datos) {
-        let call = "/clientes/alta_cliente"
+        let call = "/clientes/alta_cliente";
         return new Promise((resolve, reject) => {
-            axios.post(call, datos)
+            axios
+                .post(call, datos)
                 .then((response) => {
-                    resolve(response)
+                    resolve(response);
                 })
                 .catch((error) => {
-                    reject(error)
-                })
-        })
+                    reject(error);
+                });
+        });
     },
 
     servicios_gratis(datos) {
         let call = "/clientes/servicios_gratis";
         return axios.post(call, datos);
-    }
-}
+    },
+
+    /**obtiene la infomacion del paginado de clientes para segumientos*/
+    async fetchClientes(params) {
+        try {
+            const response = await axios.get(
+                "/clientes/get_clientes_seguimientos",
+                {
+                    params,
+                }
+            );
+            return response.data; // return only the data
+        } catch (error) {
+            console.error("Error fetching clientes:", error);
+            throw error; // propagate the error so Vue can handle it
+        }
+    },
+};

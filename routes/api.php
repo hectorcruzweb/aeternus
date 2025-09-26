@@ -12,7 +12,7 @@
  */
 
 /**en pruebas */
-
+Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_clientes_seguimientos');
 
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
@@ -219,7 +219,6 @@ Route::middleware(['auth:api'])->group(function () {
     /**rutas de servicios funerarios */
     Route::post('funeraria/control_solicitud/{tipo_servicio}', 'FunerariaController@control_solicitud');
     Route::post('funeraria/control_contratos/{tipo_servicio}', 'FunerariaController@control_contratos');
-
 
     Route::get('funeraria/autorizacion_cremacion', 'FunerariaController@autorizacion_cremacion');
     Route::get('funeraria/get_hoja_solicitud', 'FunerariaController@get_hoja_solicitud');

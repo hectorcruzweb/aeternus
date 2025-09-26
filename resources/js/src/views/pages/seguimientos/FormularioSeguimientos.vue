@@ -1,26 +1,15 @@
 <template>
     <div>
-        <vs-popup
-            :class="['forms-popup', z_index]"
-            fullscreen
-            close="cancelar"
-            title="Control de Seguimientos"
-            :active.sync="showVentana"
-            ref="formulario"
-        >
+        <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" title="Control de Seguimientos"
+            :active.sync="showVentana" ref="formulario">
             <div class="flex flex-wrap">
                 <div class="w-full md:w-6/12 lg:w-4/12 px-2 py-4">
                     <div class="form-group py-6">
                         <div class="title-form-group">Datos del Cliente</div>
                         <div class="form-group-content">
                             <div class="w-full px-2">
-                                <button
-                                    class="btn-select btn-select--unselected"
-                                    @click="ShowBuscadorClientes = true"
-                                >
-                                    <span class="texto"
-                                        >Debe seleccionar a un cliente</span
-                                    >
+                                <button class="btn-select btn-select--unselected" @click="ShowBuscadorClientes = true">
+                                    <span class="texto">Debe seleccionar a un cliente</span>
                                 </button>
                                 <!--
                                 <button class="btn-select btn-select--selected">
@@ -38,7 +27,8 @@
                                         "
                                     ></span>
                                 </button>
-                            --></div>
+                            -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -54,14 +44,10 @@
             </vs-button>
         -->
 
-            <FormularioProgramarSeguimiento
-                :show="ShowFormProgramarSeguimientos"
-                @closeVentana="CloseFormProgramarSeguimientos"
-            />
-            <ClientesSearcherSeguimientos
-                :show="ShowBuscadorClientes"
-                @closeVentana="ShowBuscadorClientes = false"
-            ></ClientesSearcherSeguimientos>
+            <FormularioProgramarSeguimiento :show="ShowFormProgramarSeguimientos"
+                @closeVentana="CloseFormProgramarSeguimientos" />
+            <ClientesSearcherSeguimientos :show="ShowBuscadorClientes" @closeVentana="ShowBuscadorClientes = false"
+                @cliente-seleccionado="onClienteSeleccionado"></ClientesSearcherSeguimientos>
         </vs-popup>
     </div>
 </template>
@@ -119,16 +105,23 @@ export default {
                     id: null,
                     tipo_cliente_id: null,
                 },
-            },
+            }
         };
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        onClienteSeleccionado(cliente) {
+            console.log("Cliente seleccionado:", cliente);
+            // do whatever you need — e.g. fill a form or close popup
+            this.form.id = cliente.id;
+            this.form.tipo_cliente_id = cliente.tipo_cliente_id;
+            this.ShowBuscadorClientes = false;
+        },
         cancelar() {
             this.limpiarVentana();
             this.$emit("closeVentana");
         },
-        limpiarVentana() {},
+        limpiarVentana() { },
         //opening form programarSeguimientos
         CloseFormProgramarSeguimientos() {
             this.ShowFormProgramarSeguimientos = false;
@@ -143,6 +136,7 @@ export default {
         this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
             this.cancelar();
         };
+        this.ShowBuscadorClientes = true;
     },
     beforeDestroy() {
         this.$popupManager.unregister(this.$options.name);
