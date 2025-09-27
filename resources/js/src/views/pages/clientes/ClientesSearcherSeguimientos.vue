@@ -55,7 +55,7 @@
                                 <!-- Main columns -->
                                 <vs-td>{{ tr.id }}</vs-td>
                                 <vs-td>{{ tr.nombre }}</vs-td>
-                                <vs-td>{{ tr.source }}</vs-td>
+                                <vs-td>{{ tr.tipo_cliente }}</vs-td>
                                 <vs-td>
                                     <div class="flex justify-center">
                                         <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg"

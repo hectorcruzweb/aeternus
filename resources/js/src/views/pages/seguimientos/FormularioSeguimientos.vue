@@ -103,6 +103,10 @@ export default {
             form: {
                 cliente: {
                     id: null,
+                    nombre: null,
+                    email: null,
+                    telefono: '',
+                    tipo_cliente: '',
                     tipo_cliente_id: null,
                 },
             }
@@ -114,6 +118,10 @@ export default {
             console.log("Cliente seleccionado:", cliente);
             // do whatever you need — e.g. fill a form or close popup
             this.form.id = cliente.id;
+            this.form.nombre = cliente.nombre;
+            this.form.telefono = cliente.telefono;
+            this.form.email = cliente.email;
+            this.form.tipo_cliente = cliente.tipo_cliente;
             this.form.tipo_cliente_id = cliente.tipo_cliente_id;
             this.ShowBuscadorClientes = false;
         },

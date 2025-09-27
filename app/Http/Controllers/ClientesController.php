@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Clientes;
@@ -96,8 +97,8 @@ class ClientesController extends ApiController
                         $q->where('clientes.nacionalidades_id', '=', $nacionalidad);
                     }
                 })
-            /**descartando el cliente publico en general */
-            //->whereNotIn('clientes.id', [1, 193])
+                /**descartando el cliente publico en general */
+                //->whereNotIn('clientes.id', [1, 193])
                 ->orderBy('clientes.id', 'desc')
                 ->get()
         );
@@ -111,13 +112,13 @@ class ClientesController extends ApiController
     {
         $cliente_id = $request->cliente_id;
         $resultado  =
-        Clientes::select(
-            '*',
-            'vivo_b as vivo_b_raw',
-            DB::Raw('IF(clientes.vivo_b=1 , "VIVO","FALLECIDO" ) as vivo_b'),
-            'nacionalidades_id',
-            'generos_id'
-        )->where('clientes.id', '=', $cliente_id)->with('nacionalidad')->with('genero')->with('regimen')
+            Clientes::select(
+                '*',
+                'vivo_b as vivo_b_raw',
+                DB::Raw('IF(clientes.vivo_b=1 , "VIVO","FALLECIDO" ) as vivo_b'),
+                'nacionalidades_id',
+                'generos_id'
+            )->where('clientes.id', '=', $cliente_id)->with('nacionalidad')->with('genero')->with('regimen')
             ->first();
         //se retorna el resultado
         return $resultado;
@@ -359,18 +360,40 @@ class ClientesController extends ApiController
 
     public function get_clientes_seguimientos(Request $request)
     {
-        $nameFilter = trim($request->nombre ?? '');
-        $idFilter   = trim($request->id ?? '');
-        $filtro     = $request->filtro_especifico; // null, 1, or 2
-        $queries    = [];
+        $nameFilter       = trim($request->nombre ?? '');
+        $idFilter         = trim($request->id ?? '');
+        $tipoClienteFilter = $request->tipo_cliente_id; // null, 1, or 2
+        $queries          = [];
 
-// Clientes query
-        if (is_null($filtro) || $filtro == 1) {
+        if (!is_null($tipoClienteFilter) && !($tipoClienteFilter == 1 ||  $tipoClienteFilter == 2)) {
+            return $this->errorResponse("Error de filtrado en parámatro de tipo de cliente.", 409);
+        }
+        // Clientes query
+        if (is_null($tipoClienteFilter) || $tipoClienteFilter == 1) {
             $clientesQuery = Clientes::select(
                 'id',
                 'nombre',
-                DB::raw('"cliente con operaciones" as source'),
-                DB::raw('1 as tipo_cliente_id')
+                DB::raw('"cliente con operaciones" as tipo_cliente'),
+                DB::raw('1 as tipo_cliente_id'),
+                DB::raw("
+                CASE
+                    WHEN TRIM(COALESCE(celular, '')) != '' 
+                         AND TRIM(COALESCE(telefono, '')) != '' 
+                        THEN CONCAT(celular, ' / ', telefono)
+                    WHEN TRIM(COALESCE(celular, '')) != '' 
+                        THEN celular
+                    WHEN TRIM(COALESCE(telefono, '')) != '' 
+                        THEN telefono
+                    ELSE 'N/A'
+                END as telefono
+            "),
+                DB::raw("
+                CASE 
+                    WHEN TRIM(COALESCE(email, '')) = '' 
+                        THEN NULL
+                    ELSE LOWER(email)
+                END as email
+            ")
             )
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('nombre', 'like', "%{$nameFilter}%");
@@ -378,15 +401,31 @@ class ClientesController extends ApiController
                 ->when($idFilter != '', function ($q) use ($idFilter) {
                     $q->where('id', $idFilter);
                 });
+
             $queries[] = $clientesQuery;
         }
-// Cotizaciones query
-        if (is_null($filtro) || $filtro == 2) {
+
+        // Cotizaciones query
+        if (is_null($tipoClienteFilter) || $tipoClienteFilter == 2) {
             $cotizacionesQuery = Cotizaciones::select(
                 'id',
                 'cliente_nombre as nombre',
-                DB::raw('"bajo cotización" as source'),
-                DB::raw('2 as tipo_cliente_id')
+                DB::raw('"bajo cotización" as tipo_cliente'),
+                DB::raw('2 as tipo_cliente_id'),
+                DB::raw("
+                CASE
+                    WHEN TRIM(COALESCE(cliente_telefono, '')) != '' 
+                        THEN cliente_telefono
+                    ELSE 'N/A'
+                END as telefono
+            "),
+                DB::raw("
+                CASE 
+                    WHEN TRIM(COALESCE(cliente_email, '')) = '' 
+                        THEN NULL
+                    ELSE LOWER(cliente_email)
+                END as email
+            ")
             )
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('cliente_nombre', 'like', "%{$nameFilter}%");
@@ -397,20 +436,25 @@ class ClientesController extends ApiController
 
             $queries[] = $cotizacionesQuery;
         }
-// Combine with unionAll
+
+
+        // Combine with unionAll
         if (count($queries) == 2) {
             $combinedQuery = $queries[0]->unionAll($queries[1]);
         } else {
             $combinedQuery = $queries[0];
         }
-// Wrap in subquery for sorting
+
+        // Wrap in subquery for sorting
         $sql = DB::table(DB::raw("({$combinedQuery->toSql()}) as combined"))
             ->mergeBindings($combinedQuery->getQuery())
-            ->orderBy('id', 'asc')                                            // sort by id first
-            ->orderByRaw("CASE source WHEN 'cliente' THEN 0 ELSE 1 END ASC"); // Clientes first within same id
+            ->orderBy('id', 'asc')
+            ->orderByRaw("CASE tipo_cliente_id WHEN 1 THEN 0 ELSE 1 END ASC")->get(); // Clientes first within same id
 
-        return $this->showAllPaginated($sql->get());
 
+        if (!is_null($tipoClienteFilter)) {
+            return $this->successResponse($sql, 200);
+        }
+        return $this->showAllPaginated($sql);
     }
-
 }
