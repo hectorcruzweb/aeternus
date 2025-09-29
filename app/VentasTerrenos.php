@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\Cuotas;
+use App\Operaciones;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,7 +30,6 @@ class VentasTerrenos extends Model
     }
 
 
-
     public function tipo_propiedad()
     {
         return $this->belongsTo('App\tipoPropiedades', 'tipo_propiedades_id', 'id')
@@ -38,7 +39,6 @@ class VentasTerrenos extends Model
                 'capacidad'
             );
     }
-
 
     public function servicios_por_terreno()
     {
@@ -54,5 +54,14 @@ class VentasTerrenos extends Model
             )
             ->where('inhumacion_b', 1)
             ->orderBy('fechahora_inhumacion', 'desc');
+    }
+
+    public function terrenosCuotas()
+    {
+        return $this->hasMany(Operaciones::class, 'ventas_terrenos_id')
+            ->where('empresa_operaciones_id', 2)
+            ->whereHas('cuotasCementerios', function ($q) {
+                $q->where('status', 1);
+            });
     }
 }

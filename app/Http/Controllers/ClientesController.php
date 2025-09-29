@@ -7,6 +7,7 @@ use App\Cotizaciones;
 use App\Nacionalidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\CementerioController;
 
 class ClientesController extends ApiController
 {
@@ -360,20 +361,42 @@ class ClientesController extends ApiController
 
     public function get_clientes_seguimientos(Request $request)
     {
-        $nameFilter       = trim($request->nombre ?? '');
-        $idFilter         = trim($request->id ?? '');
-        $tipoClienteFilter = $request->tipo_cliente_id; // null, 1, or 2
-        $queries          = [];
-
-        if (!is_null($tipoClienteFilter) && !($tipoClienteFilter == 1 ||  $tipoClienteFilter == 2)) {
-            return $this->errorResponse("Error de filtrado en parámatro de tipo de cliente.", 409);
+        $nameFilter        = trim($request->nombre ?? '');
+        $idFilter          = trim($request->id ?? '');
+        $tipoClienteFilter = $request->filtro_especifico; // null, 1, or 2
+        $queries           = [];
+        $filtrar_x_operaciones = trim($request->filtrar_x_operaciones ?? '');
+        $summary = trim($request->summary ?? ''); //null or 1;
+        //validations to show operaciones for seguimientos
+        if (
+            $filtrar_x_operaciones !== ''
+            && (
+                $filtrar_x_operaciones !== '1'
+                || !in_array($tipoClienteFilter, ['1', '2'], true)
+                || $idFilter <= 0
+            )
+        ) {
+            return $this->errorResponse("Validation error, code:seguimientos.", 409);
         }
-        // Clientes query
+        if (!is_null($tipoClienteFilter) && !(in_array($tipoClienteFilter, ['1', '2'], true))) {
+            return $this->errorResponse("Validation error, code:type_of_clients.", 409);
+        }
+        if ($summary !== '') {
+            if (!($summary === '1'
+                && $filtrar_x_operaciones === '1'
+                && $idFilter > 0
+                && $tipoClienteFilter === '1')) {
+                return $this->errorResponse("Validation error, code:summary.", 409);
+            }
+        }
+
+        // === CLIENTES ===
         if (is_null($tipoClienteFilter) || $tipoClienteFilter == 1) {
             $clientesQuery = Clientes::select(
                 'id',
+                'status',
                 'nombre',
-                DB::raw('"cliente con operaciones" as tipo_cliente'),
+                DB::raw('"cliente registrado" as tipo_cliente'),
                 DB::raw('1 as tipo_cliente_id'),
                 DB::raw("
                 CASE
@@ -395,6 +418,7 @@ class ClientesController extends ApiController
                 END as email
             ")
             )
+                ->where('status', 1) // ✅ filter clientes
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('nombre', 'like', "%{$nameFilter}%");
                 })
@@ -402,13 +426,109 @@ class ClientesController extends ApiController
                     $q->where('id', $idFilter);
                 });
 
+            if ($filtrar_x_operaciones === '1') {
+                // 👇 only eager load operaciones if filtering specifically by clientes
+                $CementerioController = new CementerioController();
+                $clientes = $clientesQuery->with(['operaciones' => function ($q) {
+                    $q->where('empresa_operaciones_id', '!=', 2) // exclude type 2
+                        ->with([
+                            'ventasTerrenos.terrenosCuotas.cuotasCementerios', // nested cuotas
+                            'serviciosFunerarios',
+                            'ventasPlanes',
+                            'ventasGenerales'
+                        ]);
+                }])->get();
+
+                if ($clientes->isEmpty()) {
+                    return $this->errorResponse('Error code: client not found.', 404); // or return null directly
+                } else {
+                    $clientes = $clientes->toArray();
+                }
+
+                //Filtrar x Operaciones y ID, para mostrar directo en form de seguimientos
+                $operaciones_list = [];
+                foreach ($clientes as &$cliente) {
+                    if (isset($cliente['operaciones'])) {
+                        $empresaOperaciones = [
+                            1 => 'VENTA DE ESPACIO EN CEMENTERIO',
+                            2 => 'CUOTA ANUAL',
+                            3 => 'SERVICIO FUNERARIO',
+                            4 => 'VENTA DE PLANES FUNERARIOS A FUTURO',
+                            5 => 'VENTAS EN GRAL.'
+                        ];
+                        foreach ($cliente['operaciones'] as &$operacion) {
+                            //making a description
+                            $descripcion = '';
+                            $ubicacion = '';
+                            $tipo_operacion = $empresaOperaciones[$operacion['empresa_operaciones_id']];
+                            $id_numero_control = '';
+                            switch ($operacion['empresa_operaciones_id']) {
+                                case 1:
+                                    $ubicacion = ' Ubic. ' . $CementerioController->ubicacion_texto($operacion['ventas_terrenos']['ubicacion'])['ubicacion_texto'];
+                                    $descripcion = $tipo_operacion . $ubicacion;
+                                    $id_numero_control = $operacion['ventas_terrenos_id'];
+                                    break;
+                                case 3:
+                                    $descripcion = $tipo_operacion . ' Fallecido(a) ' . $operacion['servicios_funerarios']['nombre_afectado'];
+                                    $id_numero_control = $operacion['servicios_funerarios_id'];
+                                    break;
+                                case 4:
+                                    $descripcion = $tipo_operacion . ' ' . $operacion['ventas_planes']['nombre_original'];
+                                    $id_numero_control = $operacion['ventas_planes_id'];
+                                    break;
+                                case 5:
+                                    $descripcion = $tipo_operacion;
+                                    $id_numero_control = $operacion['ventas_generales_id'];
+                                    break;
+                                default:
+                                    $descripcion = '';
+                                    break;
+                            }
+                            $descripcion .= ', ' . fecha_abr($operacion['fecha_operacion']) . '.';
+
+                            $operaciones_list[] = [
+                                'operacion_id' => $operacion['id'],
+                                'id_numero_control' => $id_numero_control,
+                                'saldo' => '$' . number_format($operacion['saldo'], 2, '.', ',') . ' MXN',       // example static value
+                                'descripcion' => $descripcion, // example static value
+                                'status' => $operacion['status'],
+                                'cuotas' => null
+                            ];
+
+
+                            if ($operacion['empresa_operaciones_id'] == 1) {
+                                $operaciones_cuota = [];
+                                //could have cuotas de cementerio
+                                if (isset($operacion['ventas_terrenos']['terrenos_cuotas'])) {
+                                    foreach ($operacion['ventas_terrenos']['terrenos_cuotas'] as $cuota) {
+                                        $ubicacion = !$summary ? $ubicacion : '';
+                                        $operaciones_cuota[] = [
+                                            'operacion_id' => $cuota['id'],
+                                            'id_numero_control' => $cuota['cuotas_cementerios']['id'],
+                                            'saldo' => '$' . number_format($cuota['saldo'], 2, '.', ',') . ' MXN',       // example static value
+                                            'descripcion' => $empresaOperaciones[$cuota['empresa_operaciones_id']] . ', ' . $cuota['cuotas_cementerios']['descripcion'] . $ubicacion . '.', // example static value
+                                            'status' => $cuota['status']
+                                        ];
+                                    }
+                                }
+                                if (!$summary)
+                                    $operaciones_list = array_merge($operaciones_list, $operaciones_cuota);
+                                else
+                                    $operaciones_list[count($operaciones_list) - 1]['cuotas'] = $operaciones_cuota;
+                            }
+                        }
+                    }
+                    $cliente['operaciones'] = $operaciones_list;
+                    return $this->successResponse($cliente, 200);
+                }
+            }
             $queries[] = $clientesQuery;
         }
-
-        // Cotizaciones query
+        // === COTIZACIONES ===
         if (is_null($tipoClienteFilter) || $tipoClienteFilter == 2) {
             $cotizacionesQuery = Cotizaciones::select(
                 'id',
+                'status',
                 'cliente_nombre as nombre',
                 DB::raw('"bajo cotización" as tipo_cliente'),
                 DB::raw('2 as tipo_cliente_id'),
@@ -427,34 +547,47 @@ class ClientesController extends ApiController
                 END as email
             ")
             )
+                ->where('status', 1) // ✅ filter cotizaciones
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('cliente_nombre', 'like', "%{$nameFilter}%");
                 })
                 ->when($idFilter != '', function ($q) use ($idFilter) {
                     $q->where('id', $idFilter);
                 });
+            if ($filtrar_x_operaciones === '1') {
+                $cotizacionesQuery = $cotizacionesQuery->first();
 
+
+                if ($cotizacionesQuery) {
+                    $cotizacionesQuery = $cotizacionesQuery->toArray();
+                } else {
+                    return $this->errorResponse('Error code: client not found.', 404); // or return null directly
+                }
+
+
+                $cotizacionesQuery['operaciones'][] = [
+                    'operacion_id' => $cotizacionesQuery['id'],
+                    'id_numero_control' => $cotizacionesQuery['id'],
+                    'saldo' => ' N/A',       // example static value
+                    'descripcion' => "Cotización de servicio.", // example static value
+                    'status' => $cotizacionesQuery['status']
+                ];
+                return $this->successResponse($cotizacionesQuery, 200);
+            }
             $queries[] = $cotizacionesQuery;
         }
-
-
-        // Combine with unionAll
+        // === UNION MODE ===
         if (count($queries) == 2) {
             $combinedQuery = $queries[0]->unionAll($queries[1]);
         } else {
             $combinedQuery = $queries[0];
         }
-
-        // Wrap in subquery for sorting
+        // === FINAL EXECUTION ===
         $sql = DB::table(DB::raw("({$combinedQuery->toSql()}) as combined"))
             ->mergeBindings($combinedQuery->getQuery())
             ->orderBy('id', 'asc')
-            ->orderByRaw("CASE tipo_cliente_id WHEN 1 THEN 0 ELSE 1 END ASC")->get(); // Clientes first within same id
+            ->orderByRaw("CASE tipo_cliente_id WHEN 1 THEN 0 ELSE 1 END ASC");
 
-
-        if (!is_null($tipoClienteFilter)) {
-            return $this->successResponse($sql, 200);
-        }
-        return $this->showAllPaginated($sql);
+        return $this->showAllPaginated($sql->get());
     }
 }

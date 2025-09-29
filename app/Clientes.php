@@ -22,4 +22,9 @@ class Clientes extends Model
     {
         return $this->hasOne('App\Generos', 'id', 'generos_id');
     }
+
+    public function operaciones()
+    {
+        return $this->hasMany(Operaciones::class, 'clientes_id')->select('id', 'empresa_operaciones_id', 'clientes_id', 'ventas_terrenos_id', 'servicios_funerarios_id', 'ventas_planes_id', 'ventas_generales_id', 'saldo', 'status', 'fecha_operacion'); // include clientes_id for proper relation
+    }
 }

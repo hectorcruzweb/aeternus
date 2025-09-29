@@ -23,6 +23,7 @@
 </template>
 <script>
 export default {
+    name: "ConfirmarDanger",
     props: {
         show: {
             type: Boolean,
@@ -54,6 +55,16 @@ export default {
     data() {
         return {};
     },
+    watch: {
+        show(newVal) {
+            // Only listen when visible = true
+            if (newVal) {
+                this.$popupManager.register(this.$options.name, this.cancel);
+            } else {
+                this.$popupManager.unregister(this.$options.name);
+            }
+        },
+    },
     computed: {
         showChecker: {
             get() {
@@ -84,7 +95,7 @@ export default {
     },
     mounted() {
         //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
+        /*document.body.addEventListener("keyup", (e) => {
             if (e.keyCode === 27) {
                 if (this.showChecker) {
                     //CIERRO EL CONFIRMAR AL PRESONAR ESC
@@ -101,6 +112,10 @@ export default {
             }
           }
         });*/
+    },
+
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
     },
 };
 </script>

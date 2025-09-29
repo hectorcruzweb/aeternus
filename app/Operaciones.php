@@ -2,8 +2,10 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Cuotas;
+use App\VentasGral;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 
 class Operaciones extends Model
 {
@@ -58,18 +60,18 @@ class Operaciones extends Model
             'ventas_terrenos_id',
             'ventas_terrenos_id'
         )->where('status', '<>', 0)->select(
-                'ventas_terrenos_id',
-                'nombre_afectado',
-                'fechahora_defuncion',
-                'fechahora_inhumacion',
-                'id as servicios_funerarios_id',
-                DB::raw(
-                    '(NULL) AS fecha_defuncion_texto'
-                ),
-                DB::raw(
-                    '(NULL) AS fecha_inhumacion_texto'
-                )
-            );
+            'ventas_terrenos_id',
+            'nombre_afectado',
+            'fechahora_defuncion',
+            'fechahora_inhumacion',
+            'id as servicios_funerarios_id',
+            DB::raw(
+                '(NULL) AS fecha_defuncion_texto'
+            ),
+            DB::raw(
+                '(NULL) AS fecha_inhumacion_texto'
+            )
+        );
     }
 
     public function cuota_cementerio()
@@ -322,6 +324,32 @@ class Operaciones extends Model
             ->join('articulos', 'articulos.id', '=', 'articulos_venta_general_temporal.articulos_id')
             ->join('sat_productos_servicios', 'articulos.sat_productos_servicios_id', '=', 'sat_productos_servicios.id')
             ->join('sat_unidades', 'articulos.sat_unidades_venta', '=', 'sat_unidades.id');
+    }
+
+    // Each operación can link to one of these depending on empresa_operaciones_id
+    public function ventasTerrenos()
+    {
+        return $this->belongsTo(VentasTerrenos::class, 'ventas_terrenos_id');
+    }
+
+    public function cuotasCementerios()
+    {
+        return $this->belongsTo(Cuotas::class, 'cuotas_cementerio_id');
+    }
+
+    public function serviciosFunerarios()
+    {
+        return $this->belongsTo(ServiciosFunerarios::class, 'servicios_funerarios_id');
+    }
+
+    public function ventasPlanes()
+    {
+        return $this->belongsTo(VentasPlanes::class, 'ventas_planes_id');
+    }
+
+    public function ventasGenerales()
+    {
+        return $this->belongsTo(VentasGral::class, 'ventas_generales_id');
     }
 }
 /*

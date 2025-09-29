@@ -10,19 +10,29 @@
 
 <template>
     <div id="app" :class="vueAppClasses">
+        <PopupDebug v-if="isDev"></PopupDebug>
         <router-view @setAppClasses="setAppClasses" />
     </div>
 </template>
 
 <script>
+import PopupDebug from './views/PopupDebug.vue';
 import themeConfig from '@/../themeConfig.js'
 import jwt from "@/http/requests/auth/jwt/index.js"
 
 export default {
+    components: {
+        PopupDebug,
+    },
     data() {
         return {
             vueAppClasses: [],
         }
+    },
+    computed: {
+        isDev() {
+            return process.env.NODE_ENV === "development";
+        },
     },
     watch: {
         '$store.state.theme'(val) {
