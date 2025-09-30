@@ -108,8 +108,10 @@ export default {
             }
         },
         actual: function (newValue, oldValue) {
-            this.serverOptions.page = newValue;
-            this._fetchData();
+            if (this.localShow) {
+                this.serverOptions.page = newValue;
+                this._fetchData();
+            }
         },
     },
     computed: {
@@ -184,6 +186,7 @@ export default {
             this.$emit("closeVentana");
         },
         async _fetchData() {
+            if (!this.show) return; // stop here if not visible
             // Validate all fields first
             const isValid = await this.$validator.validateAll(); // returns true if all valid
             if (!isValid) {
@@ -247,12 +250,12 @@ export default {
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        //console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         // Debounced version, called on typing or filter changes
         this.fetchData = debounce(this._fetchData, 400);
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        //console.log("Component mounted! " + this.$options.name); // DOM is ready
         this.$refs[this.$options.name].$el.querySelector(".vs-icon").onclick =
             () => {
                 this.cancelar();
@@ -262,7 +265,7 @@ export default {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        //console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

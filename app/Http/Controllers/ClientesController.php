@@ -436,25 +436,23 @@ class ClientesController extends ApiController
                             'serviciosFunerarios',
                             'ventasPlanes',
                             'ventasGenerales'
-                        ]);
+                        ])->orderBy('id', 'desc'); // 👈 order by operaciones.id desc
                 }])->get();
-
                 if ($clientes->isEmpty()) {
                     return $this->errorResponse('Error code: client not found.', 404); // or return null directly
                 } else {
                     $clientes = $clientes->toArray();
                 }
-
                 //Filtrar x Operaciones y ID, para mostrar directo en form de seguimientos
                 $operaciones_list = [];
                 foreach ($clientes as &$cliente) {
                     if (isset($cliente['operaciones'])) {
                         $empresaOperaciones = [
                             1 => 'VENTA DE ESPACIO EN CEMENTERIO',
-                            2 => 'CUOTA ANUAL',
+                            2 => 'CUOTA',
                             3 => 'SERVICIO FUNERARIO',
-                            4 => 'VENTA DE PLANES FUNERARIOS A FUTURO',
-                            5 => 'VENTAS EN GRAL.'
+                            4 => 'PLANES FUNERARIO A FUTURO',
+                            5 => 'VENTA EN GRAL.'
                         ];
                         foreach ($cliente['operaciones'] as &$operacion) {
                             //making a description

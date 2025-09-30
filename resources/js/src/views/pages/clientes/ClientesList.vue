@@ -48,7 +48,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                         <div class="w-full input-text pb-2">
                             <label class="">{{
                                 this.filtroEspecifico.label
-                                }}</label>
+                            }}</label>
 
                             <vs-input class="w-full" icon="search" maxlength="75"
                                 placeholder="Filtrar por dato específico" v-model="serverOptions.numero_control"
@@ -78,7 +78,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
 
         <br />
         <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
-            :max-items="serverOptions.per_page.value" :data="clientes" noDataText="0 Resultados" class="tabla-datos">
+            :max-items="this.mostrar.value" :data="clientes" noDataText="0 Resultados" class="tabla-datos">
             <template slot="header">
                 <h3>Listado de Clientes Registrados</h3>
             </template>
@@ -89,6 +89,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                 <vs-th>Celular</vs-th>
                 <vs-th>Status</vs-th>
                 <vs-th>Servicios Gratis</vs-th>
+                <vs-th>Seguimientos</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
             <template slot-scope="{ data }">
@@ -98,10 +99,10 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">{{
                         data[indextr].nombre
-                        }}</vs-td>
+                    }}</vs-td>
                     <vs-td :data="data[indextr].direccion">{{
                         data[indextr].direccion
-                        }}</vs-td>
+                    }}</vs-td>
                     <vs-td :data="data[indextr].celular">
                         {{ data[indextr].celular }}
                     </vs-td>
@@ -120,6 +121,12 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                             <img v-else class="img-btn-24 mx-2" src="@assets/images/free_no.svg"
                                 title="Ver servicios gratis de este cliente"
                                 @click="verServiciosGratis(data[indextr])" />
+                        </div>
+                    </vs-td>
+                    <vs-td :data="data[indextr].id_user">
+                        <div class="flex justify-center">
+                            <img class="img-btn-24 mx-2" src="@assets/images/seguimientos.svg"
+                                title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
                         </div>
                     </vs-td>
                     <vs-td :data="data[indextr].id_user">
@@ -160,13 +167,16 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         <ServiciosGratis :show="openServiciosGratis" :datos="datosCliente"
             @closeServiciosGratis="closeEntregarConvenio">
         </ServiciosGratis>
+        <FormularioSeguimientos :show="openSeguimientos" :filters="filtersSeguimientos"
+            @closeVentana="CloseFormProgramarSeguimientos">
+        </FormularioSeguimientos>
     </div>
 </template>
 
 <script>
 //planes de venta
 import Reporteador from "@pages/Reporteador";
-
+import FormularioSeguimientos from "../seguimientos/FormularioSeguimientos.vue";
 import clientes from "@services/clientes";
 
 import FormularioClientes from "@pages/clientes/FormularioClientes";
@@ -185,7 +195,8 @@ export default {
         Password,
         FormularioClientes,
         Reporteador,
-        ServiciosGratis
+        ServiciosGratis,
+        FormularioSeguimientos
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -200,6 +211,13 @@ export default {
     },
     data() {
         return {
+            openSeguimientos: false,
+            filtersSeguimientos: {
+                cliente_id: null,
+                tipo_cliente_id: null,
+                operacion_id: null,
+                origen: 1//Formulario de Origen. 1-seguim
+            },
             //control de servicios gratis
             openServiciosGratis: false,
             datosCliente: [],
@@ -277,6 +295,15 @@ export default {
         };
     },
     methods: {
+        OpenFormSeguimientos(cliente) {
+            this.filtersSeguimientos.cliente_id = cliente.id;
+            this.filtersSeguimientos.tipo_cliente_id = 1;
+            this.filtersSeguimientos.origen = 2;//clientes
+            this.openSeguimientos = true;
+        },
+        CloseFormProgramarSeguimientos() {
+            this.openSeguimientos = false;
+        },
         closeEntregarConvenio() {
             this.openServiciosGratis = false;
 

@@ -1,13 +1,13 @@
 <template>
     <div>
         <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" title="Control de Seguimientos"
-            :active.sync="showVentana" ref="formulario">
+            :active="localShow" ref="formulario">
             <div class="contenido lg:h-full">
                 <div class="dashboard-container grid w-full lg:h-full gap-4
             grid-cols-1 grid-rows-4
             lg:grid-cols-2 lg:grid-rows-2">
                     <!-- Top-left -->
-                    <div class=" p-2">
+                    <div class="py-2">
                         <!-- Form -->
                         <div class="form-group flex flex-col h-full">
                             <div class="title-form-group">Datos del Cliente</div>
@@ -23,8 +23,9 @@
                                             </button>
                                             <button v-else class=" btn-select btn-select--selected px-2">
                                                 <div>
-                                                    <span class="block">Clave: 3220, Nombre: VALENTIN AYALA
-                                                        MUÑOZ</span>
+                                                    <span class="block"><span class="bold">Clave</span>: {{ cliente.id
+                                                    }}, <span class="bold">Nombre</span>: {{ cliente.nombre
+                                                        }}</span>
                                                 </div>
                                                 <span class="action" data-tooltip="Cambiar Cliente" @click="
                                                     quitarCliente()
@@ -35,24 +36,31 @@
                                         <div class="w-full flex flex-wrap">
                                             <div class="w-full xl:w-6/12 px-2 input-text">
                                                 <label>
-                                                    Nombre del cliente
+                                                    Tipo de cliente
                                                 </label>
-                                                <vs-input ref="cliente" name="cliente" type="text" class="w-full"
-                                                    placeholder="" v-model="cliente.nombre" maxlength="100" />
+                                                <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
+                                                    class="w-full" placeholder="" v-model="cliente.tipo_cliente"
+                                                    maxlength="100" :readonly="true" />
                                             </div>
                                             <div class="w-full xl:w-6/12 px-2 input-text">
                                                 <label>
-                                                    Nombre del cliente
+                                                    Tel. / Celular
                                                 </label>
-                                                <vs-input ref="cliente" name="cliente" type="text" class="w-full"
-                                                    placeholder="" v-model="cliente.nombre" maxlength="100" />
+                                                <vs-input ref="telefono" name="telefono" type="text" class="w-full"
+                                                    placeholder="" v-model="cliente.telefono" maxlength="100"
+                                                    :readonly="true" />
                                             </div>
+
                                             <div class="w-full px-2 input-text">
                                                 <label>
                                                     Email del cliente
                                                 </label>
-                                                <vs-input ref="cliente" name="cliente" type="text" class="w-full"
-                                                    placeholder="" v-model="cliente.nombre" maxlength="100" />
+                                                <vs-input ref="email" name="email" type="text" class="w-full"
+                                                    placeholder="" v-model="cliente.email" maxlength="100"
+                                                    v-validate="'email'" data-vv-as="Email del cliente" />
+                                                <span>
+                                                    {{ errors.first('email') }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -74,21 +82,43 @@
                     </div>
 
                     <!-- Top-right -->
-                    <div class="p-2">
+                    <div class="py-2 mt-2">
                         <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
                         <div v-else-if="OperacionesList.length === 0"
                             class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No results found</span>
+                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
                         </div>
-                        <div v-else class="bg-gray-300 overflow-auto">
-                            <!-- Table here -->
+                        <div v-else class="border-children h-full overflow-auto p-2">
+                            <vs-table :sst="false" :data="OperacionesList" stripe pagination max-items="8"
+                                noDataText="0 Resultados" class="tabla-datos">
+                                <template slot="header">
+                                    <h3>Operaciones del Cliente</h3>
+                                </template>
+                                <template slot="thead">
+                                    <vs-th>Operación</vs-th>
+                                    <vs-th>$ Saldo</vs-th>
+                                    <vs-th>Seguimientos</vs-th>
+                                </template>
+                                <template slot-scope="{ data }">
+                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                        <!-- Main columns -->
+                                        <vs-td>{{ tr.descripcion }}</vs-td>
+                                        <vs-td>{{ tr.saldo }}</vs-td>
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                <img class="cursor-pointer img-btn-20 mx-3"
+                                                    src="@assets/images/checked.svg" />
+                                            </div>
+                                        </vs-td>
+                                    </vs-tr>
+                                </template>
+                            </vs-table>
                         </div>
                     </div>
-
                     <!-- Bottom-left -->
-                    <div class="p-2">
+                    <div class="p-2 border-children">
                         <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
@@ -96,13 +126,14 @@
                             class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">No results found</span>
                         </div>
-                        <div v-else class="bg-gray-300 overflow-auto">
+                        <div v-else class=" overflow-auto">
                             <!-- Table here -->
+
                         </div>
                     </div>
 
                     <!-- Bottom-right -->
-                    <div class="p-2">
+                    <div class="p-2 border-children">
                         <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
@@ -110,8 +141,9 @@
                             class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">No results found</span>
                         </div>
-                        <div v-else class="bg-gray-300 overflow-auto">
+                        <div v-else class=" overflow-auto">
                             <!-- Table here -->
+
                         </div>
                     </div>
                 </div>
@@ -150,31 +182,56 @@ export default {
             required: false,
             default: "z-index54k",
         },
-    },
-    // Computed properties: derived reactive data
-    computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
+        filters: {
+            type: Object,
+            required: false,
+            default: {
+                cliente_id: null,
+                tipo_cliente_id: null,
+                operacion_id: null,
+                origen: 1//Formulario de Origen. 1-seguimientos,2-clientes,3-operacion
             },
         },
     },
+    // Computed properties: derived reactive data
+    computed: {
+
+    },
     watch: {
-        show(newVal) {
+        async show(newVal) {
             // Only listen when visible = true
             if (newVal) {
                 this.$popupManager.register(this.$options.name, this.cancelar);
+                //verificamos el origen del form para determinar que haremos justo al abrir el form.
+                if (this.filters.origen == 1) {
+                    //abeierto desde seguimientos
+                    //await this.simularClienteSeleccionado();
+                } else if (this.filters.origen == 2) {
+                    //abeierto desde clientes
+                    this.cliente.id = this.filters.cliente_id;
+                    this.cliente.tipo_cliente_id = this.filters.tipo_cliente_id;
+                }
+                //obtener datos del cliente
+                this.localShow = true;
             } else {
                 this.$popupManager.unregister(this.$options.name);
+                this.resetData();
+                this.localShow = false;
+            }
+        },
+        async 'cliente.id'(newVal) {
+            //cliente seleccionado
+            if (newVal && this.show) {
+                console.log("se asigno cliente");
+                let cliente = await this._fetchData();
+                this.onClienteSeleccionado(cliente);
             }
         },
     },
     // Data function returns the component's reactive state
     data() {
         return {
+            localShow: false, // controls popup visibility
             openConfirmarSinPassword: false,
             callBackConfirmar: Function,
             OperacionesList: [],
@@ -194,8 +251,34 @@ export default {
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        async _fetchData() {
+            if (!this.show) return; // stop here if not visible
+            const params = {
+                id: this.cliente.id,
+                filtro_especifico: this.cliente.tipo_cliente_id,
+                filtrar_x_operaciones: 1
+            }
+            this.$vs.loading();
+            try {
+                // Call the API from clientes service
+                const result = await clientes.fetchClientes(params);
+                const data = result.length ? result[0] : result;
+                return data;
+            } catch (error) {
+                console.error("Error fetching clientes:", error);
+            } finally {
+                this.$vs.loading.close();
+            }
+        },
+        simularClienteSeleccionado() {
+            this.cliente.id = 12;
+            this.cliente.tipo_cliente_id = 1;
+            //this.cliente.nombre = "ALICIA TORRES FLORES";
+            //this.cliente.email = 'maria_torres47@hotmail.com';
+            //this.cliente.telefono = "6691304247 / 9130791";
+            //this.cliente.tipo_cliente = "cliente registrado";
+        },
         onClienteSeleccionado(cliente) {
-            console.log("Cliente seleccionado:", cliente);
             // do whatever you need — e.g. fill a form or close popup
             this.cliente.id = cliente.id;
             this.cliente.nombre = cliente.nombre;
@@ -203,21 +286,27 @@ export default {
             this.cliente.email = cliente.email;
             this.cliente.tipo_cliente = cliente.tipo_cliente;
             this.cliente.tipo_cliente_id = cliente.tipo_cliente_id;
+
+            //operaciones
+            this.OperacionesList = cliente.operaciones;
+
             this.ShowBuscadorClientes = false;
         },
         quitarCliente() {
-            this.callBackConfirmar = this.limpiarCliente;
+            this.callBackConfirmar = this.resetData;
             this.openConfirmarSinPassword = true;
-        },
-        limpiarCliente() {
-            this.cliente.id = "";
         },
         cancelar() {
             this.resetData();
             this.$emit("closeVentana");
         },
         resetData() {
-            // Clear VeeValidate errors
+            this.cliente.id = "";
+            // reset data
+            this.cliente.email = '';
+            this.cliente.telefono = "";
+            this.cliente.tipo_cliente = "";
+            this.$validator.reset();
         },
         //opening form programarSeguimientos
         CloseFormProgramarSeguimientos() {
@@ -226,20 +315,19 @@ export default {
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        //console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        //console.log("Component mounted! " + this.$options.name); // DOM is ready
         this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
             this.cancelar();
         };
-        //this.ShowBuscadorClientes = true;
     },
     beforeDestroy() {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        //console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
@@ -269,6 +357,11 @@ export default {
     /* optional, if you have inner flex items */
 }
 
+.border-children {
+    border: 1px solid #e6eaed !important;
+    border-radius: 4px;
+}
+
 @media (max-width: 1024px) {
     .dashboard-container {
         grid-template-columns: 1fr;
@@ -277,7 +370,6 @@ export default {
         /* each child grows naturally */
     }
 }
-
 
 /* Skeleton animation */
 @keyframes pulse {
