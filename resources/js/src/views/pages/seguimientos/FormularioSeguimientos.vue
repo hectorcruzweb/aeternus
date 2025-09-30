@@ -7,7 +7,7 @@
             grid-cols-1 grid-rows-4
             lg:grid-cols-2 lg:grid-rows-2">
                     <!-- Top-left -->
-                    <div class="py-2">
+                    <div class="">
                         <!-- Form -->
                         <div class="form-group flex flex-col h-full">
                             <div class="title-form-group">Datos del Cliente</div>
@@ -64,17 +64,40 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Buttons -->
-                                    <div
-                                        class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0 px-4">
-                                        <vs-button class="w-full md:w-1/2 text-center" color="primary"
-                                            :disabled="!cliente || !cliente.id">
-                                            Programar Seguimiento
-                                        </vs-button>
-                                        <vs-button class="w-full md:w-1/2 text-center" color="success"
-                                            :disabled="!cliente || !cliente.id">
-                                            Registrar Seguimiento
-                                        </vs-button>
+                                    <div class="px-4 mt-1">
+                                        <div v-if="!cliente || !cliente.id"
+                                            class="skeleton h-full flex items-center justify-center">
+                                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                                        </div>
+                                        <div v-else class="">
+                                            <!-- Table here -->
+                                            <div class="flex flex-wrap justify-center">
+                                                <div class="w-full text-center disabled-info justify-center py-4  font-medium"
+                                                    v-if="!selectedRow">
+                                                    Registro de Seguimientos Libres
+                                                </div>
+                                                <div class="w-full alerta" v-else>
+                                                    <div class="w-full info">
+                                                        <h3>Operación Seleccionada</h3>
+                                                        <p>
+                                                            {{ selectedRow.descripcion }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <!-- Buttons -->
+                                                <div
+                                                    class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
+                                                    <vs-button class="w-full md:w-1/2 text-center" color="primary"
+                                                        :disabled="!cliente || !cliente.id">
+                                                        Programar
+                                                    </vs-button>
+                                                    <vs-button class="w-full md:w-1/2 text-center" color="success"
+                                                        :disabled="!cliente || !cliente.id">
+                                                        Registrar
+                                                    </vs-button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -82,16 +105,16 @@
                     </div>
 
                     <!-- Top-right -->
-                    <div class="py-2 mt-2">
-                        <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
+                    <div class="p-2 mt-2  border-children">
+                        <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
                         <div v-else-if="OperacionesList.length === 0"
                             class="skeleton  flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
                         </div>
-                        <div v-else class="border-children h-full overflow-auto p-2">
-                            <vs-table :sst="false" :data="OperacionesList" stripe pagination max-items="8"
+                        <div v-else class=" h-full overflow-auto p-2">
+                            <vs-table :sst="false" :data="OperacionesList" stripe pagination max-items="9"
                                 noDataText="0 Resultados" class="tabla-datos">
                                 <template slot="header">
                                     <h3>Operaciones del Cliente</h3>
@@ -99,19 +122,16 @@
                                 <template slot="thead">
                                     <vs-th>Operación</vs-th>
                                     <vs-th>$ Saldo</vs-th>
-                                    <vs-th>Seguimientos</vs-th>
                                 </template>
                                 <template slot-scope="{ data }">
-                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data"
+                                        @click.native="toggleRow(tr)" :class="[
+                                            'cursor-pointer',
+                                            selectedRow && selectedRow.operacion_id === tr.operacion_id ? 'text-primary' : ''
+                                        ]">
                                         <!-- Main columns -->
                                         <vs-td>{{ tr.descripcion }}</vs-td>
                                         <vs-td>{{ tr.saldo }}</vs-td>
-                                        <vs-td>
-                                            <div class="flex justify-center">
-                                                <img class="cursor-pointer img-btn-20 mx-3"
-                                                    src="@assets/images/checked.svg" />
-                                            </div>
-                                        </vs-td>
                                     </vs-tr>
                                 </template>
                             </vs-table>
@@ -124,7 +144,7 @@
                         </div>
                         <div v-else-if="OperacionesList.length === 0"
                             class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No results found</span>
+                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
                         </div>
                         <div v-else class=" overflow-auto">
                             <!-- Table here -->
@@ -139,7 +159,7 @@
                         </div>
                         <div v-else-if="OperacionesList.length === 0"
                             class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No results found</span>
+                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
                         </div>
                         <div v-else class=" overflow-auto">
                             <!-- Table here -->
@@ -205,7 +225,7 @@ export default {
                 //verificamos el origen del form para determinar que haremos justo al abrir el form.
                 if (this.filters.origen == 1) {
                     //abeierto desde seguimientos
-                    //await this.simularClienteSeleccionado();
+                    await this.simularClienteSeleccionado();
                 } else if (this.filters.origen == 2) {
                     //abeierto desde clientes
                     this.cliente.id = this.filters.cliente_id;
@@ -213,10 +233,12 @@ export default {
                 }
                 //obtener datos del cliente
                 this.localShow = true;
+                document.body.classList.add("overflow-hidden");
             } else {
                 this.$popupManager.unregister(this.$options.name);
                 this.resetData();
                 this.localShow = false;
+                document.body.classList.remove("overflow-hidden");
             }
         },
         async 'cliente.id'(newVal) {
@@ -247,10 +269,21 @@ export default {
                 tipo_cliente: "",
                 tipo_cliente_id: null,
             },
+            selectedRow: null, // keep track of selection
         };
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        toggleRow(row) {
+            // if row already selected → deselect it
+            if (this.selectedRow && this.selectedRow.operacion_id === row.operacion_id) {
+                this.selectedRow = null;
+                console.log("Row deselected");
+            } else {
+                this.selectedRow = row;
+                console.log("Row selected:", row);
+            }
+        },
         async _fetchData() {
             if (!this.show) return; // stop here if not visible
             const params = {
@@ -293,6 +326,19 @@ export default {
             this.ShowBuscadorClientes = false;
         },
         quitarCliente() {
+            if (this.filters.origen != 1) {
+                /**no se puede cambiar de cliente */
+                this.$vs.notify({
+                    title: "Cambio de Cliente",
+                    text:
+                        "Para cambiar de cliente abra el módulo desde el apartado de Seguimientos.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 8000
+                });
+                return;
+            }
             this.callBackConfirmar = this.resetData;
             this.openConfirmarSinPassword = true;
         },
@@ -306,6 +352,7 @@ export default {
             this.cliente.email = '';
             this.cliente.telefono = "";
             this.cliente.tipo_cliente = "";
+            this.selectedRow = null;
             this.$validator.reset();
         },
         //opening form programarSeguimientos

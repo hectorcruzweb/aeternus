@@ -1,13 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            :class="['forms-popup', 'popup-85', z_index]"
-            fullscreen
-            close="cancelar"
-            :title="title"
-            :active.sync="showVentana"
-            ref="formulario"
-        >
+        <vs-popup :class="['forms-popup', 'popup-85', z_index]" fullscreen close="cancelar" :title="title"
+            :active.sync="showVentana" ref="formulario">
             <!--Datos de contacto-->
             <div class="form-group">
                 <div class="title-form-group">
@@ -15,26 +9,15 @@
                 </div>
                 <div class="form-group-content">
                     <div class="flex flex-wrap">
-                        <div
-                            class="w-full md:w-12/12 lg:w-6/12 xl:w-6/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-12/12 lg:w-6/12 xl:w-6/12 px-2 input-text">
                             <label class="">
                                 Nombre completo
                                 <span>(*)</span>
                             </label>
 
-                            <vs-input
-                                ref="nombre_cliente"
-                                name="nombre"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                v-validate="'required'"
-                                maxlength="85"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese el nombre del cliente"
-                                v-model="form.nombre"
-                            />
+                            <vs-input ref="nombre_cliente" name="nombre" data-vv-as=" " data-vv-validate-on="blur"
+                                v-validate="'required'" maxlength="85" type="text" class="w-full"
+                                placeholder="Ingrese el nombre del cliente" v-model="form.nombre" />
                             <span class="">
                                 {{ errors.first("nombre") }}
                             </span>
@@ -43,17 +26,10 @@
                             </span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text">
                             <label class="">Fecha Nac. (Año-Mes-Dia)</label>
-                            <flat-pickr
-                                name="fecha_nacimiento"
-                                :config="configdateTimePicker"
-                                v-model="form.fecha_nac"
-                                placeholder="Seleccione una fecha"
-                                class="w-full"
-                            />
+                            <flat-pickr name="fecha_nacimiento" :config="configdateTimePicker" v-model="form.fecha_nac"
+                                placeholder="Seleccione una fecha" class="w-full" />
 
                             <span class="">
                                 {{ errors.first("fecha_nacimiento") }}
@@ -64,25 +40,14 @@
                             </span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text">
                             <label class="">
                                 Género
                                 <span class="">(*)</span>
                             </label>
-                            <v-select
-                                :options="generos"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="form.genero"
-                                class="w-full"
-                                v-validate:genero_computed.immediate="
-                                    'required'
-                                "
-                                name="genero"
-                                data-vv-as=" "
-                            >
+                            <v-select :options="generos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="form.genero" class="w-full" v-validate:genero_computed.immediate="'required'
+                                    " name="genero" data-vv-as=" ">
                                 <div slot="no-options">
                                     Seleccione una opción
                                 </div>
@@ -90,31 +55,17 @@
                             <span class="">
                                 {{ errors.first("genero") }}
                             </span>
-                            <span
-                                class=""
-                                v-if="this.errores['genero.value']"
-                                >{{ errores["genero.value"][0] }}</span
-                            >
+                            <span class="" v-if="this.errores['genero.value']">{{ errores["genero.value"][0] }}</span>
                         </div>
 
-                        <div
-                            class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text"
-                        >
+                        <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
                             <label class="">
                                 Domicilio Completo
                                 <span>(*)</span>
                             </label>
-                            <vs-input
-                                name="direccion"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                v-validate="'required'"
-                                maxlength="150"
-                                type="text"
-                                class="w-full"
-                                placeholder="Domicilio Completo"
-                                v-model="form.direccion"
-                            />
+                            <vs-input name="direccion" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required'"
+                                maxlength="150" type="text" class="w-full" placeholder="Domicilio Completo"
+                                v-model="form.direccion" />
                             <span class="">
                                 {{ errors.first("direccion") }}
                             </span>
@@ -123,25 +74,14 @@
                             </span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">
                                 Nacionalidad
                                 <span class="">(*)</span>
                             </label>
-                            <v-select
-                                :options="nacionalidades"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="form.nacionalidad"
-                                class="w-full"
-                                v-validate:nacionalidad_computed.immediate="
-                                    'required'
-                                "
-                                name="nacionalidades_id"
-                                data-vv-as=" "
-                            >
+                            <v-select :options="nacionalidades" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="form.nacionalidad" class="w-full" v-validate:nacionalidad_computed.immediate="'required'
+                                    " name="nacionalidades_id" data-vv-as=" ">
                                 <div slot="no-options">
                                     Seleccione una opción
                                 </div>
@@ -149,31 +89,18 @@
                             <span class="">
                                 {{ errors.first("nacionalidades_id") }}
                             </span>
-                            <span
-                                class=""
-                                v-if="this.errores['nacionalidad.value']"
-                                >{{ errores["nacionalidad.value"][0] }}</span
-                            >
+                            <span class="" v-if="this.errores['nacionalidad.value']">{{ errores["nacionalidad.value"][0]
+                                }}</span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">
                                 Ciudad
                                 <span>(*)</span>
                             </label>
-                            <vs-input
-                                name="ciudad"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                v-validate="'required'"
-                                maxlength="45"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese la ciudad"
-                                v-model="form.ciudad"
-                            />
+                            <vs-input name="ciudad" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required'"
+                                maxlength="45" type="text" class="w-full" placeholder="Ingrese la ciudad"
+                                v-model="form.ciudad" />
                             <span class="">
                                 {{ errors.first("ciudad") }}
                             </span>
@@ -182,24 +109,14 @@
                             </span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label>
                                 Estado
                                 <span class="">(*)</span>
                             </label>
-                            <vs-input
-                                name="estado"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                v-validate="'required'"
-                                maxlength="45"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese el estado"
-                                v-model="form.estado"
-                            />
+                            <vs-input name="estado" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required'"
+                                maxlength="45" type="text" class="w-full" placeholder="Ingrese el estado"
+                                v-model="form.estado" />
                             <span class="">
                                 {{ errors.first("estado") }}
                             </span>
@@ -208,62 +125,30 @@
                             </span>
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">Tél. Domicilio</label>
-                            <vs-input
-                                maxlength="25"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese el teléfono del domicilio"
-                                v-model.trim="form.telefono"
-                            />
+                            <vs-input maxlength="25" type="text" class="w-full"
+                                placeholder="Ingrese el teléfono del domicilio" v-model.trim="form.telefono" />
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">Celular</label>
-                            <vs-input
-                                name="celular"
-                                data-vv-as=" "
-                                maxlength="25"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese un número de celular"
-                                v-model.trim="form.celular"
-                            />
+                            <vs-input name="celular" data-vv-as=" " maxlength="25" type="text" class="w-full"
+                                placeholder="Ingrese un número de celular" v-model.trim="form.celular" />
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">Tél. Extra (Trabajo)</label>
-                            <vs-input
-                                maxlength="25"
-                                type="text"
-                                class="w-full"
+                            <vs-input maxlength="25" type="text" class="w-full"
                                 placeholder="Ingrese un teléfono extra, del trabajo por ejemplo."
-                                v-model="form.telefono_extra"
-                            />
+                                v-model="form.telefono_extra" />
                         </div>
 
-                        <div
-                            class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text"
-                        >
+                        <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
                             <label class="">Correo Electrónico</label>
-                            <vs-input
-                                name="email"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                v-validate="'email'"
-                                maxlength="85"
-                                type="email"
-                                class="w-full"
-                                placeholder="Ingrese el email"
-                                v-model.trim="form.email"
-                            />
+                            <vs-input name="email" data-vv-as=" " data-vv-validate-on="blur" v-validate="'email'"
+                                maxlength="85" type="email" class="w-full" placeholder="Ingrese el email"
+                                v-model.trim="form.email" />
                             <span class="">{{ errors.first("email") }}</span>
                             <span class="" v-if="this.errores.email">
                                 {{ errores.email[0] }}
@@ -281,34 +166,20 @@
                 </div>
                 <div class="form-group-content">
                     <div class="flex flex-wrap">
-                         <div class="w-full  px-2 text-danger">
-                           COPIAR RFC PÚBLICO EN GRAL.
-                                <img
-                                    width="16"
-                                    class="cursor-pointer"
-                                    src="@assets/images/copytoclipboard.svg"
-                                    v-clipboard:copy="'XAXX010101000'"
-                                    v-clipboard:success="onCopy"
-                                    v-clipboard:error="onError"
-                                />
-                         </div>
+                        <div class="w-full  px-2 text-danger">
+                            COPIAR RFC PÚBLICO EN GRAL.
+                            <img width="16" class="cursor-pointer" src="@assets/images/copytoclipboard.svg"
+                                v-clipboard:copy="'XAXX010101000'" v-clipboard:success="onCopy"
+                                v-clipboard:error="onError" />
+                        </div>
                         <div class="w-full md:w-4/12  px-2 input-text">
                             <label class="">
                                 RFC
-                                <span v-if="datos_fiscales_validacion_computed"
-                                    >(*)</span
-                                >
+                                <span v-if="datos_fiscales_validacion_computed">(*)</span>
                             </label>
-                            <vs-input
-                                data-vv-as=" "
-                                name="rfc"
-                                maxlength="13"
-                                type="text"
-                                class="w-full"
-                                placeholder="e.j. MELM8305281H0"
-                                v-model="form.rfc"
-                                v-validate:rfc_validacion_computed="'required'"
-                            />
+                            <vs-input data-vv-as=" " name="rfc" maxlength="13" type="text" class="w-full"
+                                placeholder="e.j. MELM8305281H0" v-model="form.rfc"
+                                v-validate:rfc_validacion_computed="'required'" />
                             <span class="">{{ errors.first("rfc") }}</span>
                             <span class="" v-if="this.errores.rfc">
                                 {{ errores.rfc[0] }}
@@ -318,48 +189,27 @@
                         <div class="w-full md:w-4/12  px-2 input-text">
                             <label class="">
                                 Razón Social
-                                <span v-if="datos_fiscales_validacion_computed"
-                                    >(*)</span
-                                >
+                                <span v-if="datos_fiscales_validacion_computed">(*)</span>
                             </label>
-                            <vs-input
-                                name="razon_social"
-                                data-vv-as=" "
-                                v-validate:razon_social_validacion_computed="
-                                    'required'
-                                "
-                                maxlength="95"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ej. Mi Empresa SA DE CV"
-                                v-model="form.razon_social"
-                            />
+                            <vs-input name="razon_social" data-vv-as=" " v-validate:razon_social_validacion_computed="'required'
+                                " maxlength="95" type="text" class="w-full" placeholder="Ej. Mi Empresa SA DE CV"
+                                v-model="form.razon_social" />
                             <span class="">
                                 {{ errors.first("razon_social") }}
                             </span>
                             <span class="" v-if="this.errores.razon_social">{{
                                 errores.razon_social[0]
-                            }}</span>
+                                }}</span>
                         </div>
 
                         <div class="w-full md:w-4/12  px-2 input-text">
                             <label class="">
                                 Régimen Fiscal
-                                <span v-if="datos_fiscales_validacion_computed"
-                                    >(*)</span
-                                >
+                                <span v-if="datos_fiscales_validacion_computed">(*)</span>
                             </label>
-                            <v-select
-                                v-validate:regimen_validacion_computed.immediate="
-                                    'required'
-                                "
-                                :options="regimenes"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="form.regimen"
-                                class="mb-4 sm:mb-0"
-                                name="regimen"
-                            >
+                            <v-select v-validate:regimen_validacion_computed.immediate="'required'
+                                " :options="regimenes" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="form.regimen" class="mb-4 sm:mb-0" name="regimen">
                                 <div slot="no-options">Seleccione 1</div>
                             </v-select>
                             <span class="">
@@ -367,68 +217,36 @@
                             </span>
                             <span class="" v-if="this.errores.regimen">{{
                                 errores.regimen[0]
-                            }}</span>
+                                }}</span>
                         </div>
 
-                        <div
-                            class="w-full sm:w-12/12 md:w-6/12  px-2 input-text"
-                        >
+                        <div class="w-full sm:w-12/12 md:w-6/12  px-2 input-text">
                             <label>
                                 Dirección Fiscal
-                                <span v-if="datos_fiscales_validacion_computed"
-                                    >(*)</span
-                                >
+                                <span v-if="datos_fiscales_validacion_computed">(*)</span>
                             </label>
-                            <vs-input
-                                name="direccion_fiscal"
-                                data-vv-as=" "
-                                v-validate:direccion_fiscal_validacion_computed="
-                                    'required'
-                                "
-                                maxlength="95"
-                                type="text"
-                                class="w-full"
+                            <vs-input name="direccion_fiscal" data-vv-as=" "
+                                v-validate:direccion_fiscal_validacion_computed="'required'
+                                    " maxlength="95" type="text" class="w-full"
                                 placeholder="Ej. Av. Américas #405, Col. Lomas C.P. 30404 Mazatlán, Sin."
-                                v-model="form.direccion_fiscal"
-                            />
+                                v-model="form.direccion_fiscal" />
                             <span class="">
                                 {{ errors.first("direccion_fiscal") }}
                             </span>
-                            <span
-                                class=""
-                                v-if="this.errores.direccion_fiscal"
-                                >{{ errores.direccion_fiscal[0] }}</span
-                            >
+                            <span class="" v-if="this.errores.direccion_fiscal">{{ errores.direccion_fiscal[0] }}</span>
                         </div>
-                        <div
-                            class="w-full sm:w-12/12 md:w-6/12  px-2 input-text"
-                        >
+                        <div class="w-full sm:w-12/12 md:w-6/12  px-2 input-text">
                             <label>
                                 CÓDIGO POSTAL
-                                <span v-if="datos_fiscales_validacion_computed"
-                                    >(*)</span
-                                >
+                                <span v-if="datos_fiscales_validacion_computed">(*)</span>
                             </label>
-                            <vs-input
-                                name="direccion_fiscal_cp"
-                                data-vv-as=" "
-                                v-validate:direccion_fiscal_cp_validacion_computed="
-                                    'required'
-                                "
-                                maxlength="8"
-                                type="text"
-                                class="w-full"
-                                placeholder="82140"
-                                v-model="form.cp"
-                            />
+                            <vs-input name="direccion_fiscal_cp" data-vv-as=" "
+                                v-validate:direccion_fiscal_cp_validacion_computed="'required'
+                                    " maxlength="8" type="text" class="w-full" placeholder="82140" v-model="form.cp" />
                             <span class="">
                                 {{ errors.first("direccion_fiscal") }}
                             </span>
-                            <span
-                                class=""
-                                v-if="this.errores.direccion_fiscal"
-                                >{{ errores.direccion_fiscal[0] }}</span
-                            >
+                            <span class="" v-if="this.errores.direccion_fiscal">{{ errores.direccion_fiscal[0] }}</span>
                         </div>
                     </div>
                 </div>
@@ -443,46 +261,20 @@
                 <div class="form-group-content">
                     <div class="flex flex-wrap">
                         <div class="w-full lg:w-4/12 xl:w-4/12 px-2 input-text">
-                            <label class=""
-                                >Nombre de un contacto de referencia</label
-                            >
-                            <vs-input
-                                name="nombre_contacto"
-                                maxlength="150"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ej. Papá, Mamá, Hermano, Conocido, etc."
-                                v-model="form.nombre_contacto"
-                            />
+                            <label class="">Nombre de un contacto de referencia</label>
+                            <vs-input name="nombre_contacto" maxlength="150" type="text" class="w-full"
+                                placeholder="Ej. Papá, Mamá, Hermano, Conocido, etc." v-model="form.nombre_contacto" />
                         </div>
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">Parentesco con el contacto</label>
-                            <vs-input
-                                name="parentesco_contacto"
-                                data-vv-as=" "
-                                maxlength="45"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ej. Hermano"
-                                v-model="form.parentesco_contacto"
-                            />
+                            <vs-input name="parentesco_contacto" data-vv-as=" " maxlength="45" type="text"
+                                class="w-full" placeholder="Ej. Hermano" v-model="form.parentesco_contacto" />
                         </div>
 
-                        <div
-                            class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text"
-                        >
+                        <div class="w-full md:w-6/12 lg:w-4/12 xl:w-4/12 px-2 input-text">
                             <label class="">Teléfono del contacto</label>
-                            <vs-input
-                                name="telefono_contacto"
-                                data-vv-as=" "
-                                maxlength="35"
-                                type="text"
-                                class="w-full"
-                                placeholder="Ingrese un teléfono"
-                                v-model.trim="form.telefono_contacto"
-                            />
+                            <vs-input name="telefono_contacto" data-vv-as=" " maxlength="35" type="text" class="w-full"
+                                placeholder="Ingrese un teléfono" v-model.trim="form.telefono_contacto" />
                         </div>
                     </div>
                 </div>
@@ -497,46 +289,23 @@
                 </div>
 
                 <div class="w-full">
-                    <vs-button
-                        class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-                        color="primary"
-                        @click="acceptAlert()"
-                    >
-                        <span
-                            class=""
-                            v-if="this.getTipoformulario == 'agregar'"
-                            >Guardar Datos</span
-                        >
+                    <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+                        @click="acceptAlert()">
+                        <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Datos</span>
                         <span class="" v-else>Modificar Datos</span>
                     </vs-button>
                 </div>
             </div>
         </vs-popup>
-        <Password
-            :show="operConfirmar"
-            :callback-on-success="callback"
-            @closeVerificar="closeChecker"
-            :accion="accionNombre"
-        ></Password>
-        <ConfirmarDanger
-            :z_index="'z-index59k'"
-            :show="openConfirmarSinPassword"
-            :callback-on-success="callBackConfirmar"
-            @closeVerificar="openConfirmarSinPassword = false"
-            :accion="accionConfirmarSinPassword"
-            :confirmarButton="botonConfirmarSinPassword"
-        ></ConfirmarDanger>
+        <Password :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+            :accion="accionNombre"></Password>
+        <ConfirmarDanger :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+            :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+            :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-        <ConfirmarAceptar
-            :z_index="'z-index59k'"
-            :show="openConfirmarAceptar"
-            :callback-on-success="callBackConfirmarAceptar"
-            @closeVerificar="openConfirmarAceptar = false"
-            :accion="
-                'He revisado la información y quiero registrar a este cliente'
-            "
-            :confirmarButton="'Guardar Cliente'"
-        ></ConfirmarAceptar>
+        <ConfirmarAceptar :z_index="'z-index59k'" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar a este cliente'
+                " :confirmarButton="'Guardar Cliente'"></ConfirmarAceptar>
     </div>
 </template>
 <script>
@@ -583,7 +352,7 @@ export default {
         }
     },
     watch: {
-        show: function(newValue, oldValue) {
+        show: function (newValue, oldValue) {
             if (newValue == true) {
                 //cargo nacionalidades
 
@@ -609,6 +378,9 @@ export default {
                         this.title = "Registrar Nuevo Cliente";
                     }
                 })();
+                document.body.classList.add("overflow-hidden");
+            } else {
+                document.body.classList.remove("overflow-hidden");
             }
         }
     },
@@ -638,16 +410,16 @@ export default {
             }
         },
 
-        nacionalidad_computed: function() {
+        nacionalidad_computed: function () {
             return this.form.nacionalidad.value;
         },
-        genero_computed: function() {
+        genero_computed: function () {
             return this.form.genero.value;
         },
-        fecha_nacimiento_validacion_computed: function() {
+        fecha_nacimiento_validacion_computed: function () {
             return this.form.fecha_nac;
         },
-        datos_fiscales_validacion_computed: function() {
+        datos_fiscales_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -658,7 +430,7 @@ export default {
                 return true;
             else return false;
         },
-        rfc_validacion_computed: function() {
+        rfc_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -669,7 +441,7 @@ export default {
                 return this.form.rfc;
             else return true;
         },
-        razon_social_validacion_computed: function() {
+        razon_social_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -680,7 +452,7 @@ export default {
                 return this.form.razon_social;
             else return true;
         },
-        direccion_fiscal_validacion_computed: function() {
+        direccion_fiscal_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -692,7 +464,7 @@ export default {
             else return true;
         },
 
-        direccion_fiscal_cp_validacion_computed: function() {
+        direccion_fiscal_cp_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -703,7 +475,7 @@ export default {
                 return this.form.cp;
             else return true;
         },
-        regimen_validacion_computed: function() {
+        regimen_validacion_computed: function () {
             if (
                 this.form.rfc.trim() != "" ||
                 this.form.razon_social.trim() != "" ||
@@ -786,7 +558,7 @@ export default {
         };
     },
     methods: {
-         onCopy: function(e) {
+        onCopy: function (e) {
             this.$vs.notify({
                 title: "Seleccionar CFDI",
                 text: "RFC Copiado " + e.text,
@@ -797,7 +569,7 @@ export default {
                 position: "bottom-right"
             });
         },
-        onError: function(e) {
+        onError: function (e) {
             this.$vs.notify({
                 title: "Seleccionar RFC",
                 text: "Error al copiar, por favor reintente.",
@@ -964,7 +736,7 @@ export default {
                         }
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         },
 
         guardar_cliente() {
@@ -1155,6 +927,6 @@ export default {
             this.operConfirmar = false;
         }
     },
-    created() {}
+    created() { }
 };
 </script>

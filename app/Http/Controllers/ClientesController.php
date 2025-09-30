@@ -418,7 +418,7 @@ class ClientesController extends ApiController
                 END as email
             ")
             )
-                ->where('status', 1) // ✅ filter clientes
+                //->where('status', 1) // ✅ filter clientes
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('nombre', 'like', "%{$nameFilter}%");
                 })
@@ -545,7 +545,7 @@ class ClientesController extends ApiController
                 END as email
             ")
             )
-                ->where('status', 1) // ✅ filter cotizaciones
+                //->where('status', 1) // ✅ filter cotizaciones
                 ->when($nameFilter != '', function ($q) use ($nameFilter) {
                     $q->where('cliente_nombre', 'like', "%{$nameFilter}%");
                 })
