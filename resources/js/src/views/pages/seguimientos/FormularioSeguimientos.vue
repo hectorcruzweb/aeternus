@@ -320,8 +320,12 @@
             </div>
             <FormularioProgramarSeguimiento
                 :show="ShowFormProgramarSeguimientos"
-                :cliente="cliente"
-                :operacion="selectedRow"
+                :filters="{
+                    cliente_id: cliente.id,
+                    tipo_cliente_id: cliente.tipo_cliente_id,
+                    operacion_id: selectedRow ? selectedRow.operacion_id : '',
+                }"
+                :tipo="'agregar'"
                 @closeVentana="CloseFormProgramarSeguimientos"
             />
             <ClientesSearcherSeguimientos
