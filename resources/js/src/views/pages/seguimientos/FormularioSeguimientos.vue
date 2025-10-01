@@ -1,98 +1,207 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" title="Control de Seguimientos"
-            :active="localShow" ref="formulario">
+        <vs-popup
+            :class="['forms-popup', z_index]"
+            fullscreen
+            close="cancelar"
+            title="Control de Seguimientos"
+            :active="localShow"
+            ref="formulario"
+        >
             <div class="contenido lg:h-full">
-                <div class="dashboard-container grid w-full lg:h-full gap-4
-            grid-cols-1 grid-rows-4
-            lg:grid-cols-2 lg:grid-rows-2">
+                <div
+                    class="dashboard-container grid w-full lg:h-full gap-4 grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2"
+                >
                     <!-- Top-left -->
                     <div class="">
                         <!-- Form -->
                         <div class="form-group flex flex-col h-full">
-                            <div class="title-form-group">Datos del Cliente</div>
-                            <div class="form-group-content flex flex-col justify-between flex-1 overflow-auto">
+                            <div class="title-form-group">
+                                Datos del Cliente
+                            </div>
+                            <div
+                                class="form-group-content flex flex-col justify-between flex-1 overflow-auto"
+                            >
                                 <!-- Cliente buttons and inputs -->
-                                <div class="w-full h-full flex flex-col justify-between pt-4">
+                                <div
+                                    class="w-full h-full flex flex-col justify-between pt-4"
+                                >
                                     <!-- Cliente buttons -->
-                                    <div class="px-2 w-full space-y-4">
-                                        <div class="flex justify-center px-2">
-                                            <button v-if="!cliente.id" class=" btn-select btn-select--unselected"
-                                                @click="ShowBuscadorClientes = true">
-                                                <span class="">Seleccione un cliente</span>
+                                    <div class="w-full">
+                                        <div class="flex justify-center px-4">
+                                            <button
+                                                v-if="!cliente.id"
+                                                class="btn-select btn-select--unselected"
+                                                @click="
+                                                    ShowBuscadorClientes = true
+                                                "
+                                            >
+                                                <span class=""
+                                                    >Seleccione un cliente</span
+                                                >
                                             </button>
-                                            <button v-else class=" btn-select btn-select--selected px-2">
-                                                <div>
-                                                    <span class="block"><span class="bold">Clave</span>: {{ cliente.id
-                                                    }}, <span class="bold">Nombre</span>: {{ cliente.nombre
-                                                        }}</span>
-                                                </div>
-                                                <span class="action" data-tooltip="Cambiar Cliente" @click="
-                                                    quitarCliente()
-                                                    "></span>
-                                            </button>
-                                        </div>
-                                        <!-- Input fields -->
-                                        <div class="w-full flex flex-wrap">
-                                            <div class="w-full xl:w-6/12 px-2 input-text">
-                                                <label>
-                                                    Tipo de cliente
-                                                </label>
-                                                <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
-                                                    class="w-full" placeholder="" v-model="cliente.tipo_cliente"
-                                                    maxlength="100" :readonly="true" />
-                                            </div>
-                                            <div class="w-full xl:w-6/12 px-2 input-text">
-                                                <label>
-                                                    Tel. / Celular
-                                                </label>
-                                                <vs-input ref="telefono" name="telefono" type="text" class="w-full"
-                                                    placeholder="" v-model="cliente.telefono" maxlength="100"
-                                                    :readonly="true" />
-                                            </div>
-
-                                            <div class="w-full px-2 input-text">
-                                                <label>
-                                                    Email del cliente
-                                                </label>
-                                                <vs-input ref="email" name="email" type="text" class="w-full"
-                                                    placeholder="" v-model="cliente.email" maxlength="100"
-                                                    v-validate="'email'" data-vv-as="Email del cliente" />
-                                                <span>
-                                                    {{ errors.first('email') }}
-                                                </span>
+                                            <div v-else class="w-full px-2">
+                                                <button
+                                                    class="btn-select btn-select--selected"
+                                                >
+                                                    <div>
+                                                        <span class="block"
+                                                            ><span class="bold"
+                                                                >Clave</span
+                                                            >: {{ cliente.id }},
+                                                            <span class="bold"
+                                                                >Nombre</span
+                                                            >:
+                                                            {{
+                                                                cliente.nombre
+                                                            }}</span
+                                                        >
+                                                    </div>
+                                                    <span
+                                                        class="action"
+                                                        data-tooltip="Cambiar Cliente"
+                                                        @click="quitarCliente()"
+                                                    ></span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="px-4 mt-1">
-                                        <div v-if="!cliente || !cliente.id"
-                                            class="skeleton h-full flex items-center justify-center">
-                                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                                    <div class="px-4 mt-3 h-full">
+                                        <div
+                                            v-if="!cliente || !cliente.id"
+                                            class="skeleton h-full flex items-center justify-center"
+                                        >
+                                            <span
+                                                class="text-gray-600 text-lg font-normal"
+                                                >Seleccione 1 Cliente</span
+                                            >
                                         </div>
-                                        <div v-else class="">
-                                            <!-- Table here -->
-                                            <div class="flex flex-wrap justify-center">
-                                                <div class="w-full text-center disabled-info justify-center py-4  font-medium"
-                                                    v-if="!selectedRow">
-                                                    Registro de Seguimientos Libres
+                                        <div
+                                            v-else
+                                            class="h-full flex flex-col justify-between"
+                                        >
+                                            <!-- Input fields -->
+                                            <div class="w-full flex flex-wrap">
+                                                <div
+                                                    class="w-full xl:w-6/12 px-2 input-text"
+                                                >
+                                                    <label>
+                                                        Tipo de cliente
+                                                    </label>
+                                                    <vs-input
+                                                        ref="tipo_cliente"
+                                                        name="tipo_cliente"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.tipo_cliente
+                                                        "
+                                                        maxlength="100"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
                                                 </div>
-                                                <div class="w-full alerta" v-else>
+                                                <div
+                                                    class="w-full xl:w-6/12 px-2 input-text"
+                                                >
+                                                    <label>
+                                                        Tel. / Celular
+                                                    </label>
+                                                    <vs-input
+                                                        ref="telefono"
+                                                        name="telefono"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.telefono
+                                                        "
+                                                        maxlength="100"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
+                                                </div>
+
+                                                <div
+                                                    class="w-full px-2 input-text"
+                                                >
+                                                    <label> Dirección </label>
+                                                    <vs-input
+                                                        ref="direccion_completa"
+                                                        name="direccion_completa"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.direccion_completa
+                                                        "
+                                                        maxlength="250"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="flex flex-wrap justify-center px-2"
+                                            >
+                                                <div
+                                                    class="w-full text-center disabled-info justify-center py-4 font-medium"
+                                                    v-if="!selectedRow"
+                                                >
+                                                    Registro de Seguimientos
+                                                    Libres
+                                                </div>
+                                                <div
+                                                    class="w-full alerta"
+                                                    v-else
+                                                >
                                                     <div class="w-full info">
-                                                        <h3>Operación Seleccionada</h3>
+                                                        <h3>
+                                                            Operación
+                                                            Seleccionada
+                                                        </h3>
                                                         <p>
-                                                            {{ selectedRow.descripcion }}
+                                                            {{
+                                                                selectedRow.descripcion
+                                                            }}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <!-- Buttons -->
                                                 <div
-                                                    class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
-                                                    <vs-button class="w-full md:w-1/2 text-center" color="primary"
-                                                        :disabled="!cliente || !cliente.id">
+                                                    class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0"
+                                                >
+                                                    <vs-button
+                                                        class="w-full md:w-1/2 text-center"
+                                                        color="primary"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                        @click.stop="
+                                                            ShowFormProgramarSeguimientos = true
+                                                        "
+                                                    >
                                                         Programar
                                                     </vs-button>
-                                                    <vs-button class="w-full md:w-1/2 text-center" color="success"
-                                                        :disabled="!cliente || !cliente.id">
+                                                    <vs-button
+                                                        class="w-full md:w-1/2 text-center"
+                                                        color="success"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    >
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -105,17 +214,33 @@
                     </div>
 
                     <!-- Top-right -->
-                    <div class="p-2 mt-2  border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                    <div class="p-2 mt-2 border-children">
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="OperacionesList.length === 0"
-                            class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div
+                            v-else-if="OperacionesList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay operaciones que mostrar</span
+                            >
                         </div>
-                        <div v-else class=" h-full overflow-auto p-2">
-                            <vs-table :sst="false" :data="OperacionesList" stripe pagination max-items="9"
-                                noDataText="0 Resultados" class="tabla-datos">
+                        <div v-else class="h-full overflow-auto p-2">
+                            <vs-table
+                                :sst="false"
+                                :data="OperacionesList"
+                                stripe
+                                pagination
+                                max-items="9"
+                                noDataText="0 Resultados"
+                                class="tabla-datos"
+                            >
                                 <template slot="header">
                                     <h3>Operaciones del Cliente</h3>
                                 </template>
@@ -124,11 +249,20 @@
                                     <vs-th>$ Saldo</vs-th>
                                 </template>
                                 <template slot-scope="{ data }">
-                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data"
-                                        @click.native="toggleRow(tr)" :class="[
+                                    <vs-tr
+                                        :data="tr"
+                                        :key="indextr"
+                                        v-for="(tr, indextr) in data"
+                                        @click.native="toggleRow(tr)"
+                                        :class="[
                                             'cursor-pointer',
-                                            selectedRow && selectedRow.operacion_id === tr.operacion_id ? 'text-primary' : ''
-                                        ]">
+                                            selectedRow &&
+                                            selectedRow.operacion_id ===
+                                                tr.operacion_id
+                                                ? 'text-primary'
+                                                : '',
+                                        ]"
+                                    >
                                         <!-- Main columns -->
                                         <vs-td>{{ tr.descripcion }}</vs-td>
                                         <vs-td>{{ tr.saldo }}</vs-td>
@@ -139,42 +273,70 @@
                     </div>
                     <!-- Bottom-left -->
                     <div class="p-2 border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="OperacionesList.length === 0"
-                            class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div
+                            v-else-if="OperacionesList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay operaciones que mostrar</span
+                            >
                         </div>
-                        <div v-else class=" overflow-auto">
+                        <div v-else class="overflow-auto">
                             <!-- Table here -->
-
                         </div>
                     </div>
 
                     <!-- Bottom-right -->
                     <div class="p-2 border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="OperacionesList.length === 0"
-                            class="skeleton  flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div
+                            v-else-if="OperacionesList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay operaciones que mostrar</span
+                            >
                         </div>
-                        <div v-else class=" overflow-auto">
+                        <div v-else class="overflow-auto">
                             <!-- Table here -->
-
                         </div>
                     </div>
                 </div>
             </div>
-            <FormularioProgramarSeguimiento :show="ShowFormProgramarSeguimientos"
-                @closeVentana="CloseFormProgramarSeguimientos" />
-            <ClientesSearcherSeguimientos :show="ShowBuscadorClientes" @closeVentana="ShowBuscadorClientes = false"
-                @cliente-seleccionado="onClienteSeleccionado"></ClientesSearcherSeguimientos>
-            <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
-                :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
-                :accion="'QUITAR EL CLIENTE SELECCIONADO'" :confirmarButton="'Continuar'"></ConfirmarDanger>
+            <FormularioProgramarSeguimiento
+                :show="ShowFormProgramarSeguimientos"
+                :cliente="cliente"
+                :operacion="selectedRow"
+                @closeVentana="CloseFormProgramarSeguimientos"
+            />
+            <ClientesSearcherSeguimientos
+                :show="ShowBuscadorClientes"
+                @closeVentana="ShowBuscadorClientes = false"
+                @cliente-seleccionado="onClienteSeleccionado"
+            ></ClientesSearcherSeguimientos>
+            <ConfirmarDanger
+                :z_index="'z-index58k'"
+                :show="openConfirmarSinPassword"
+                :callback-on-success="callBackConfirmar"
+                @closeVerificar="openConfirmarSinPassword = false"
+                :accion="'QUITAR EL CLIENTE SELECCIONADO'"
+                :confirmarButton="'Continuar'"
+            ></ConfirmarDanger>
         </vs-popup>
     </div>
 </template>
@@ -209,14 +371,12 @@ export default {
                 cliente_id: null,
                 tipo_cliente_id: null,
                 operacion_id: null,
-                origen: 1//Formulario de Origen. 1-seguimientos,2-clientes,3-operacion
+                origen: 1, //Formulario de Origen. 1-seguimientos,2-clientes,3-operacion
             },
         },
     },
     // Computed properties: derived reactive data
-    computed: {
-
-    },
+    computed: {},
     watch: {
         async show(newVal) {
             // Only listen when visible = true
@@ -241,7 +401,7 @@ export default {
                 document.body.classList.remove("overflow-hidden");
             }
         },
-        async 'cliente.id'(newVal) {
+        async "cliente.id"(newVal) {
             //cliente seleccionado
             if (newVal && this.show) {
                 console.log("se asigno cliente");
@@ -268,6 +428,7 @@ export default {
                 telefono: "",
                 tipo_cliente: "",
                 tipo_cliente_id: null,
+                direccion_completa: null,
             },
             selectedRow: null, // keep track of selection
         };
@@ -276,7 +437,10 @@ export default {
     methods: {
         toggleRow(row) {
             // if row already selected → deselect it
-            if (this.selectedRow && this.selectedRow.operacion_id === row.operacion_id) {
+            if (
+                this.selectedRow &&
+                this.selectedRow.operacion_id === row.operacion_id
+            ) {
                 this.selectedRow = null;
                 console.log("Row deselected");
             } else {
@@ -289,8 +453,8 @@ export default {
             const params = {
                 id: this.cliente.id,
                 filtro_especifico: this.cliente.tipo_cliente_id,
-                filtrar_x_operaciones: 1
-            }
+                filtrar_x_operaciones: 1,
+            };
             this.$vs.loading();
             try {
                 // Call the API from clientes service
@@ -319,10 +483,9 @@ export default {
             this.cliente.email = cliente.email;
             this.cliente.tipo_cliente = cliente.tipo_cliente;
             this.cliente.tipo_cliente_id = cliente.tipo_cliente_id;
-
+            this.cliente.direccion_completa = cliente.direccion_completa;
             //operaciones
             this.OperacionesList = cliente.operaciones;
-
             this.ShowBuscadorClientes = false;
         },
         quitarCliente() {
@@ -330,12 +493,11 @@ export default {
                 /**no se puede cambiar de cliente */
                 this.$vs.notify({
                     title: "Cambio de Cliente",
-                    text:
-                        "Para cambiar de cliente abra el módulo desde el apartado de Seguimientos.",
+                    text: "Para cambiar de cliente abra el módulo desde el apartado de Seguimientos.",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "warning",
-                    time: 8000
+                    time: 8000,
                 });
                 return;
             }
@@ -349,9 +511,10 @@ export default {
         resetData() {
             this.cliente.id = "";
             // reset data
-            this.cliente.email = '';
+            this.cliente.email = "";
             this.cliente.telefono = "";
             this.cliente.tipo_cliente = "";
+            this.cliente.direccion_completa = "";
             this.selectedRow = null;
             this.$validator.reset();
         },
@@ -392,7 +555,7 @@ export default {
     /* spacing between children */
 }
 
-.dashboard-container>div {
+.dashboard-container > div {
     min-height: 0;
     /* allows shrinking */
     min-width: 0;
@@ -420,7 +583,6 @@ export default {
 
 /* Skeleton animation */
 @keyframes pulse {
-
     0%,
     100% {
         opacity: 1;

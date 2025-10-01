@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Clientes;
 use App\Cotizaciones;
+use App\Http\Controllers\CementerioController;
 use App\Nacionalidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\CementerioController;
 
 class ClientesController extends ApiController
 {
@@ -361,28 +361,28 @@ class ClientesController extends ApiController
 
     public function get_clientes_seguimientos(Request $request)
     {
-        $nameFilter        = trim($request->nombre ?? '');
-        $idFilter          = trim($request->id ?? '');
-        $tipoClienteFilter = $request->filtro_especifico; // null, 1, or 2
-        $queries           = [];
+        $nameFilter            = trim($request->nombre ?? '');
+        $idFilter              = trim($request->id ?? '');
+        $tipoClienteFilter     = $request->filtro_especifico; // null, 1, or 2
+        $queries               = [];
         $filtrar_x_operaciones = trim($request->filtrar_x_operaciones ?? '');
-        $summary = trim($request->summary ?? ''); //null or 1;
+        $summary               = trim($request->summary ?? ''); //null or 1;
         //validations to show operaciones for seguimientos
         if (
             $filtrar_x_operaciones !== ''
             && (
                 $filtrar_x_operaciones !== '1'
-                || !in_array($tipoClienteFilter, ['1', '2'], true)
+                || ! in_array($tipoClienteFilter, ['1', '2'], true)
                 || $idFilter <= 0
             )
         ) {
             return $this->errorResponse("Validation error, code:seguimientos.", 409);
         }
-        if (!is_null($tipoClienteFilter) && !(in_array($tipoClienteFilter, ['1', '2'], true))) {
+        if (! is_null($tipoClienteFilter) && ! (in_array($tipoClienteFilter, ['1', '2'], true))) {
             return $this->errorResponse("Validation error, code:type_of_clients.", 409);
         }
         if ($summary !== '') {
-            if (!($summary === '1'
+            if (! ($summary === '1'
                 && $filtrar_x_operaciones === '1'
                 && $idFilter > 0
                 && $tipoClienteFilter === '1')) {
@@ -396,23 +396,32 @@ class ClientesController extends ApiController
                 'id',
                 'status',
                 'nombre',
-                DB::raw('"cliente registrado" as tipo_cliente'),
+                DB::raw('UPPER("cliente registrado") as tipo_cliente'),
                 DB::raw('1 as tipo_cliente_id'),
                 DB::raw("
+                    CONCAT(
+                        COALESCE(direccion, ''),
+                        CASE WHEN direccion IS NOT NULL AND TRIM(direccion) != '' THEN ', ' ELSE '' END,
+                        COALESCE(ciudad, ''),
+                        CASE WHEN ciudad IS NOT NULL AND TRIM(ciudad) != '' THEN ', ' ELSE '' END,
+                        COALESCE(estado, '')
+                    ) as direccion_completa
+                "),
+                DB::raw("
                 CASE
-                    WHEN TRIM(COALESCE(celular, '')) != '' 
-                         AND TRIM(COALESCE(telefono, '')) != '' 
+                    WHEN TRIM(COALESCE(celular, '')) != ''
+                         AND TRIM(COALESCE(telefono, '')) != ''
                         THEN CONCAT(celular, ' / ', telefono)
-                    WHEN TRIM(COALESCE(celular, '')) != '' 
+                    WHEN TRIM(COALESCE(celular, '')) != ''
                         THEN celular
-                    WHEN TRIM(COALESCE(telefono, '')) != '' 
+                    WHEN TRIM(COALESCE(telefono, '')) != ''
                         THEN telefono
                     ELSE 'N/A'
                 END as telefono
             "),
                 DB::raw("
-                CASE 
-                    WHEN TRIM(COALESCE(email, '')) = '' 
+                CASE
+                    WHEN TRIM(COALESCE(email, '')) = ''
                         THEN NULL
                     ELSE LOWER(email)
                 END as email
@@ -429,13 +438,13 @@ class ClientesController extends ApiController
             if ($filtrar_x_operaciones === '1') {
                 // 👇 only eager load operaciones if filtering specifically by clientes
                 $CementerioController = new CementerioController();
-                $clientes = $clientesQuery->with(['operaciones' => function ($q) {
+                $clientes             = $clientesQuery->with(['operaciones' => function ($q) {
                     $q->where('empresa_operaciones_id', '!=', 2) // exclude type 2
                         ->with([
                             'ventasTerrenos.terrenosCuotas.cuotasCementerios', // nested cuotas
                             'serviciosFunerarios',
                             'ventasPlanes',
-                            'ventasGenerales'
+                            'ventasGenerales',
                         ])->orderBy('id', 'desc'); // 👈 order by operaciones.id desc
                 }])->get();
                 if ($clientes->isEmpty()) {
@@ -452,30 +461,30 @@ class ClientesController extends ApiController
                             2 => 'CUOTA',
                             3 => 'SERVICIO FUNERARIO',
                             4 => 'PLANES FUNERARIO A FUTURO',
-                            5 => 'VENTA EN GRAL.'
+                            5 => 'VENTA EN GRAL.',
                         ];
                         foreach ($cliente['operaciones'] as &$operacion) {
                             //making a description
-                            $descripcion = '';
-                            $ubicacion = '';
-                            $tipo_operacion = $empresaOperaciones[$operacion['empresa_operaciones_id']];
+                            $descripcion       = '';
+                            $ubicacion         = '';
+                            $tipo_operacion    = $empresaOperaciones[$operacion['empresa_operaciones_id']];
                             $id_numero_control = '';
                             switch ($operacion['empresa_operaciones_id']) {
                                 case 1:
-                                    $ubicacion = ' Ubic. ' . $CementerioController->ubicacion_texto($operacion['ventas_terrenos']['ubicacion'])['ubicacion_texto'];
-                                    $descripcion = $tipo_operacion . $ubicacion;
+                                    $ubicacion         = ' Ubic. ' . $CementerioController->ubicacion_texto($operacion['ventas_terrenos']['ubicacion'])['ubicacion_texto'];
+                                    $descripcion       = $tipo_operacion . $ubicacion;
                                     $id_numero_control = $operacion['ventas_terrenos_id'];
                                     break;
                                 case 3:
-                                    $descripcion = $tipo_operacion . ' Fallecido(a) ' . $operacion['servicios_funerarios']['nombre_afectado'];
+                                    $descripcion       = $tipo_operacion . ' Fallecido(a) ' . $operacion['servicios_funerarios']['nombre_afectado'];
                                     $id_numero_control = $operacion['servicios_funerarios_id'];
                                     break;
                                 case 4:
-                                    $descripcion = $tipo_operacion . ' ' . $operacion['ventas_planes']['nombre_original'];
+                                    $descripcion       = $tipo_operacion . ' ' . $operacion['ventas_planes']['nombre_original'];
                                     $id_numero_control = $operacion['ventas_planes_id'];
                                     break;
                                 case 5:
-                                    $descripcion = $tipo_operacion;
+                                    $descripcion       = $tipo_operacion;
                                     $id_numero_control = $operacion['ventas_generales_id'];
                                     break;
                                 default:
@@ -485,34 +494,34 @@ class ClientesController extends ApiController
                             $descripcion .= ', ' . fecha_abr($operacion['fecha_operacion']) . '.';
 
                             $operaciones_list[] = [
-                                'operacion_id' => $operacion['id'],
+                                'operacion_id'      => $operacion['id'],
                                 'id_numero_control' => $id_numero_control,
-                                'saldo' => '$' . number_format($operacion['saldo'], 2, '.', ',') . ' MXN',       // example static value
-                                'descripcion' => $descripcion, // example static value
-                                'status' => $operacion['status'],
-                                'cuotas' => null
+                                'saldo'             => '$' . number_format($operacion['saldo'], 2, '.', ',') . ' MXN', // example static value
+                                'descripcion'       => $descripcion,                                                   // example static value
+                                'status'            => $operacion['status'],
+                                'cuotas'            => null,
                             ];
-
 
                             if ($operacion['empresa_operaciones_id'] == 1) {
                                 $operaciones_cuota = [];
                                 //could have cuotas de cementerio
                                 if (isset($operacion['ventas_terrenos']['terrenos_cuotas'])) {
                                     foreach ($operacion['ventas_terrenos']['terrenos_cuotas'] as $cuota) {
-                                        $ubicacion = !$summary ? $ubicacion : '';
+                                        $ubicacion           = ! $summary ? $ubicacion : '';
                                         $operaciones_cuota[] = [
-                                            'operacion_id' => $cuota['id'],
+                                            'operacion_id'      => $cuota['id'],
                                             'id_numero_control' => $cuota['cuotas_cementerios']['id'],
-                                            'saldo' => '$' . number_format($cuota['saldo'], 2, '.', ',') . ' MXN',       // example static value
-                                            'descripcion' => $empresaOperaciones[$cuota['empresa_operaciones_id']] . ', ' . $cuota['cuotas_cementerios']['descripcion'] . $ubicacion . '.', // example static value
-                                            'status' => $cuota['status']
+                                            'saldo'             => '$' . number_format($cuota['saldo'], 2, '.', ',') . ' MXN',                                                                    // example static value
+                                            'descripcion'       => $empresaOperaciones[$cuota['empresa_operaciones_id']] . ', ' . $cuota['cuotas_cementerios']['descripcion'] . $ubicacion . '.', // example static value
+                                            'status'            => $cuota['status'],
                                         ];
                                     }
                                 }
-                                if (!$summary)
+                                if (! $summary) {
                                     $operaciones_list = array_merge($operaciones_list, $operaciones_cuota);
-                                else
+                                } else {
                                     $operaciones_list[count($operaciones_list) - 1]['cuotas'] = $operaciones_cuota;
+                                }
                             }
                         }
                     }
@@ -528,18 +537,19 @@ class ClientesController extends ApiController
                 'id',
                 'status',
                 'cliente_nombre as nombre',
-                DB::raw('"bajo cotización" as tipo_cliente'),
+                DB::raw('UPPER("bajo cotización") as tipo_cliente'),
                 DB::raw('2 as tipo_cliente_id'),
+                DB::raw('"N/A, CLIENTE EN PROCESO DE COTIZACIÓN" as direccion_completa'),
                 DB::raw("
                 CASE
-                    WHEN TRIM(COALESCE(cliente_telefono, '')) != '' 
+                    WHEN TRIM(COALESCE(cliente_telefono, '')) != ''
                         THEN cliente_telefono
                     ELSE 'N/A'
                 END as telefono
             "),
                 DB::raw("
-                CASE 
-                    WHEN TRIM(COALESCE(cliente_email, '')) = '' 
+                CASE
+                    WHEN TRIM(COALESCE(cliente_email, '')) = ''
                         THEN NULL
                     ELSE LOWER(cliente_email)
                 END as email
@@ -555,20 +565,18 @@ class ClientesController extends ApiController
             if ($filtrar_x_operaciones === '1') {
                 $cotizacionesQuery = $cotizacionesQuery->first();
 
-
                 if ($cotizacionesQuery) {
                     $cotizacionesQuery = $cotizacionesQuery->toArray();
                 } else {
                     return $this->errorResponse('Error code: client not found.', 404); // or return null directly
                 }
 
-
                 $cotizacionesQuery['operaciones'][] = [
-                    'operacion_id' => $cotizacionesQuery['id'],
+                    'operacion_id'      => $cotizacionesQuery['id'],
                     'id_numero_control' => $cotizacionesQuery['id'],
-                    'saldo' => ' N/A',       // example static value
-                    'descripcion' => "Cotización de servicio.", // example static value
-                    'status' => $cotizacionesQuery['status']
+                    'saldo'             => ' N/A',                     // example static value
+                    'descripcion'       => "Cotización de servicio.", // example static value
+                    'status'            => $cotizacionesQuery['status'],
                 ];
                 return $this->successResponse($cotizacionesQuery, 200);
             }
