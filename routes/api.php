@@ -13,6 +13,9 @@
 
 /**en pruebas */
 Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_clientes_seguimientos');
+Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimientos');
+Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
+Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
 
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
@@ -99,7 +102,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('monedas/', 'SATMonedasController@getAll');
 
     /**CLIENTES */
-    Route::post('/clientes/programar_segumientos/{tipo_request}', 'ClientesController@programar_segumientos');
+    Route::post('/seguimientos/programar_segumientos/{tipo_request}', 'SeguimientosController@programar_segumientos');
     Route::get('/clientes/get_nacionalidades', 'ClientesController@get_nacionalidades');
     Route::post('/clientes/guardar_cliente', 'ClientesController@guardar_cliente');
     Route::post('/clientes/modificar_cliente', 'ClientesController@modificar_cliente');

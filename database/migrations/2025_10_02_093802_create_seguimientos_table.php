@@ -27,13 +27,11 @@ class CreateSeguimientosTable extends Migration
             $table->text('comentario_programado')->nullable();
             $table->dateTime('fechahora_registro_programado')->nullable();
             $table->unsignedBigInteger('registro_programado_id')->nullable(); // usuarios.id
-            $table->boolean('enviar_x_email_programado_b')->default(false);
             $table->string('email_programado')->nullable();
 
             $table->dateTime('fechahora_seguimiento')->nullable();
             $table->tinyInteger('resultado_id')->unsigned()->nullable(); // 1-6
             $table->tinyInteger('medio_seguimiento_id')->unsigned()->nullable(); // 1-6
-            $table->boolean('enviar_x_email_seguimiento_b')->nullable();
             $table->string('email_seguimiento')->nullable();
             $table->text('comentario_seguimiento')->nullable();
             $table->unsignedBigInteger('realizo_seguimiento_id')->nullable(); // usuarios.id
