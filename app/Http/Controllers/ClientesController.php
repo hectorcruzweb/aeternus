@@ -674,6 +674,30 @@ class ClientesController extends ApiController
             $validaciones,
             $mensajes
         );
+
+        /**
+         * {
+  "seguimiento_id": null,                  // only needed if modifying
+  "tipo_cliente_id": 1,                  // 1 = Cliente, 2 = Cotización
+  "cliente_id": 12,                      // existing client or cotizacion id
+  "operacion_id": null,                     // optional, must belong to cliente if tipo_cliente_id=1
+  "fecha_a_contactar": "2025-10-02 14:00:00",  // must be >= current date/time
+  "enviar_x_email": 1,                   // 1 = yes, 0 = no
+  "motivo": {
+    "value": "10"
+  },
+  "medio": {
+    "value": "1"
+  },
+  "email": "cliente@example.com",        // required if enviar_x_email=1
+  "comentario_programado": "Llamar al cliente para recordatorio de pago."
+}
+         */
+
+
+
+
+
         return $this->errorResponse("aqui", 409);
     }
 }
