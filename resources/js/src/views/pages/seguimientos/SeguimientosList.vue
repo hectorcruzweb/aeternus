@@ -5,7 +5,7 @@
                 <span>Registrar Seguimiento</span>
             </vs-button>
         </div>
-        <FormularioSeguimientos :show="verFormSeguimientos" @closeVentana="reloadList">
+        <FormularioSeguimientos v-if="verFormSeguimientos" :show="verFormSeguimientos" @closeVentana="reloadList">
         </FormularioSeguimientos>
     </div>
 </template>
@@ -28,9 +28,7 @@ export default {
             this.verFormSeguimientos = true;
         },
         reloadList() {
-            (async () => {
-                this.verFormSeguimientos = false;
-            })();
+            this.verFormSeguimientos = false;
         },
     },
     mounted() {

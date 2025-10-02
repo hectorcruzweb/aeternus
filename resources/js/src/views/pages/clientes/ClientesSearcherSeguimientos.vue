@@ -1,6 +1,6 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['forms-popup popup-70', z_index]" fullscreen title="Catálogo de clientes" :active="localShow"
+        <vs-popup :class="['forms-popup popup-85', z_index]" fullscreen title="Catálogo de clientes" :active="localShow"
             :ref="this.$options.name">
             <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
                 <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
@@ -90,29 +90,34 @@ export default {
         z_index: {
             type: String,
             required: false,
-            default: "z-index54k",
+            default: "z-index55k",
         },
     },
     watch: {
-        async show(newVal) {
-            // Only listen when visible = true
-            if (newVal) {
-                this.$popupManager.register(this.$options.name, this.cancelar);
-                // Initial load (immediate, not debounced)
-                await this._fetchData();
-                this.localShow = true;
-            } else {
-                this.resetData();
-                this.$popupManager.unregister(this.$options.name);
-                this.localShow = false;
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newVal) {
+                // Only listen when visible = true
+                if (newVal) {
+                    this.$popupManager.register(this.$options.name, this.cancelar);
+                    // Initial load (immediate, not debounced)
+                    await this._fetchData();
+                } else {
+                    this.resetData();
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newVal;
             }
         },
-        actual: function (newValue, oldValue) {
-            if (this.localShow) {
-                this.serverOptions.page = newValue;
-                this._fetchData();
+        actual: {
+            immediate: true, // runs when component is mounted too
+            async handler(newVal) {
+                if (this.localShow) {
+                    this.serverOptions.page = newVal;
+                    await this._fetchData();
+                }
             }
-        },
+        }
     },
     computed: {
     },
@@ -193,7 +198,6 @@ export default {
                 console.log("Validation failed. API call skipped.");
                 return; // stop here if validation fails
             }
-
             if (this.isLoading) {
                 console.log("Validation failed. API call skipped due to loading.");
                 return; // ✅ Prevents multiple calls while loading
@@ -205,17 +209,17 @@ export default {
                 id: this.serverOptions.id.trim(),
                 nombre: this.serverOptions.nombre.trim()
             }
-            console.log('Fetching data with params:', params)
             this.isLoading = true
             this.$vs.loading();
             try {
                 // Call the API from clientes service
                 const data = await clientes.fetchClientes(params);
                 this.clientesList = data.data; // assuming API returns { items: [], total: 100 }
+                //console.log("🚀 ~ _fetchData ~ this.clientesList:", this.clientesList)
                 this.total = data.last_page;
                 this.actual = data.current_page;
-                console.log("🚀 ~ fetchData ~ this.clientesList:", this.clientesList)
             } catch (error) {
+                this.cancelar();
                 console.error("Error fetching clientes:", error);
             } finally {
                 this.isLoading = false;
@@ -228,10 +232,10 @@ export default {
             this.fetchData(); // debounced
         },
         // Enter key triggers immediate fetch
-        onEnterPress(field) {
+        async onEnterPress(field) {
             const value = this.serverOptions[field].trim();
             this.serverOptions.page = 1;
-            this._fetchData();
+            await this._fetchData();
             // Update previous value
             this.previousServerOptions[field] = value;
         },
@@ -240,7 +244,7 @@ export default {
             const value = this.serverOptions[field].trim();
             if (value !== this.previousServerOptions[field]) {
                 this.serverOptions.page = 1;
-                this._fetchData();
+                this.fetchData();
                 this.previousServerOptions[field] = value; // update tracker
             }
         },
@@ -250,22 +254,26 @@ export default {
     },
     // Lifecycle hooks
     created() {
-        //console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         // Debounced version, called on typing or filter changes
         this.fetchData = debounce(this._fetchData, 400);
     },
     mounted() {
-        //console.log("Component mounted! " + this.$options.name); // DOM is ready
-        this.$refs[this.$options.name].$el.querySelector(".vs-icon").onclick =
-            () => {
+        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        const icon = this.$refs[this.$options.name].$el.querySelector(".vs-icon");
+        if (icon) {
+            icon.addEventListener("click", (e) => {
+                e.preventDefault(); // stop form submission / page reload
+                e.stopPropagation(); // stop bubbling if needed
                 this.cancelar();
-            };
+            });
+        }
     },
     beforeDestroy() {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        //console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

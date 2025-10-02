@@ -99,7 +99,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('monedas/', 'SATMonedasController@getAll');
 
     /**CLIENTES */
-
+    Route::post('/clientes/programar_segumientos/{tipo_request}', 'ClientesController@programar_segumientos');
     Route::get('/clientes/get_nacionalidades', 'ClientesController@get_nacionalidades');
     Route::post('/clientes/guardar_cliente', 'ClientesController@guardar_cliente');
     Route::post('/clientes/modificar_cliente', 'ClientesController@modificar_cliente');

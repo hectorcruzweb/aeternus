@@ -62,6 +62,11 @@ import VeeValidate, { Validator } from "vee-validate";
 import es from "vee-validate/dist/locale/es";
 Vue.use(VeeValidate);
 Validator.localize("es", es);
+// Register custom validator globally
+VeeValidate.Validator.extend("required-select", {
+    getMessage: (field) => `El dato(${field}) es obligatorio.`,
+    validate: (value) => !!value && value.value !== "",
+});
 
 // Google Maps
 import * as VueGoogleMaps from "vue2-google-maps";

@@ -143,4 +143,9 @@ export default {
             throw error; // propagate the error so Vue can handle it
         }
     },
+
+    servicios_gratis(datos) {
+        let call = "/clientes/programar_segumiento";
+        return axios.post(call, datos);
+    },
 };

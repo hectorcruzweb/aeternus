@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Clientes;
+use App\Operaciones;
 use App\Cotizaciones;
-use App\Http\Controllers\CementerioController;
 use App\Nacionalidades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\CementerioController;
 
 class ClientesController extends ApiController
 {
@@ -595,5 +596,84 @@ class ClientesController extends ApiController
             ->orderByRaw("CASE tipo_cliente_id WHEN 1 THEN 0 ELSE 1 END ASC");
 
         return $this->showAllPaginated($sql->get());
+    }
+
+    public function programar_segumientos(Request $request, $tipo_request = '')
+    {
+        if (!(trim($tipo_request) == 'agregar' || trim($tipo_request) == 'modificar')) {
+            return $this->errorResponse('Error, debe especificar que tipo de control está solicitando.', 409);
+        }
+        $validaciones = [
+            'seguimiento_id' => trim($tipo_request) == 'modificar' ? 'required' : '', // only required if modifying
+            'tipo_cliente_id' => 'required|in:1,2', // only 1 or 2 allowed
+            'cliente_id' => [
+                'required',
+                function ($attribute, $value, $fail) use ($request) {
+                    $tipo = $request->tipo_cliente_id;
+                    if ($tipo == 1 && !Clientes::where('id', $value)->exists()) {
+                        $fail("El cliente seleccionado no ha sido registrado.");
+                    }
+                    if ($tipo == 2 && !Cotizaciones::where('id', $value)->exists()) {
+                        $fail("El cliente seleccionado no cuenta con Cotizaciones.");
+                    }
+                }
+            ],
+            'operacion_id' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    // Only validate if operacion_id is provided
+                    if (!is_null($value) && $value !== '') {
+                        $tipo = $request->tipo_cliente_id;
+                        $clienteId = $request->cliente_id;
+
+                        if ($tipo == 1) {
+                            $exists = Operaciones::where('id', $value)
+                                ->where('clientes_id', $clienteId)
+                                ->exists();
+                            if (!$exists) {
+                                $fail("La operación indicada no existe o no pertenece a este cliente.");
+                            }
+                        }
+                        if ($tipo == 2) {
+                            $exists = Cotizaciones::where('id', $value)->exists();
+                            if (!$exists) {
+                                $fail("La cotización indicada no existe.");
+                            }
+                        }
+                    }
+                }
+            ],
+            //datos del seguimiento
+            'fecha_a_contactar' => 'required|date|after_or_equal:now', // >= current time
+            'enviar_x_email' => 'required',
+            'motivo.value'      => 'required|integer|between:1,10', // required and between 1-10
+            'medio.value'       => 'required|integer|between:1,6',  // required and between 1-6
+            'email' => 'required_if:enviar_x_email,1|email', // required if enviar_x_email is 1
+            'comentario_programado' => ''
+        ];
+        $mensajes = [
+            'seguimiento_id.required'      => 'El ID del seguimiento es requerido si se va a modificar.',
+            'cliente_id.required'          => 'Seleccione un cliente.',
+            'tipo_cliente_id.required'     => 'Seleccione el tipo de cliente.',
+            'tipo_cliente_id.in'           => 'El tipo de cliente debe ser 1 o 2.',
+            'operacion_id.*'               => 'La operación indicada no es válida para este cliente.',
+            'fecha_a_contactar.required'   => 'Ingrese la fecha a contactar.',
+            'fecha_a_contactar.date'       => 'Ingrese una fecha válida.',
+            'fecha_a_contactar.after_or_equal' => 'La fecha a contactar debe ser igual o posterior a la fecha y hora actual.',
+            'enviar_x_email.required'      => 'Indique si desea enviar por correo electrónico.',
+            'motivo.value.required'        => 'Seleccione un motivo de seguimiento.',
+            'motivo.value.integer'         => 'El valor del motivo debe ser un número.',
+            'motivo.value.between'         => 'El valor del motivo debe estar entre 1 y 10.',
+            'medio.value.required'         => 'Seleccione un medio de contacto.',
+            'medio.value.integer'          => 'El valor del medio debe ser un número.',
+            'medio.value.between'          => 'El valor del medio debe estar entre 1 y 6.',
+            'email.required_if'            => 'Ingrese un correo electrónico válido.',
+            'email.email'                  => 'Ingrese un correo electrónico válido.',
+            'comentario_programado.required' => 'Ingrese un comentario para el seguimiento.'
+        ];
+        request()->validate(
+            $validaciones,
+            $mensajes
+        );
+        return $this->errorResponse("aqui", 409);
     }
 }

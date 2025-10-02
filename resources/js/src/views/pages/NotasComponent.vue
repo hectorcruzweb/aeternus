@@ -1,6 +1,6 @@
 <template>
     <div>
-        <vue-editor placeholder="Comentarios..." :id="get_editor_id" v-model="nota" useCustomImageHandler
+        <vue-editor class="w-full" placeholder="Comentarios..." :id="get_editor_id" v-model="nota" useCustomImageHandler
             @image-added="handleImageAdded" :editorOptions="editorSettings" :editorToolbar="customToolbar"></vue-editor>
     </div>
 </template>
