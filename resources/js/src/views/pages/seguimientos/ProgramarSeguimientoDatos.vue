@@ -4,16 +4,9 @@
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>Fecha y Hora a Contactar</label>
                 <span>(*)</span>
-                <flat-pickr
-                    name="fecha_a_contactar"
-                    data-vv-as="Fecha a Contactar"
-                    v-validate="'required'"
-                    :config="configdateTimePickerWithTime"
-                    v-model="proxy.fecha_a_contactar"
-                    placeholder="Fecha de Contacto"
-                    class="w-full"
-                    @input="clearAllErrors"
-                />
+                <flat-pickr name="fecha_a_contactar" data-vv-as="Fecha a Contactar" v-validate="'required'"
+                    :config="configdateTimePickerWithTime" v-model="proxy.fecha_a_contactar"
+                    placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors" />
                 <span v-show="errors.has('fecha_a_contactar')" class="">
                     {{ errors.first("fecha_a_contactar") }}
                 </span>
@@ -26,17 +19,9 @@
                     Motivo
                     <span>(*)</span>
                 </label>
-                <v-select
-                    :options="motivos"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="proxy.motivo"
-                    class="w-full"
-                    name="motivo"
-                    data-vv-as="Motivo"
-                    v-validate="'required-select'"
-                    @input="clearAllErrors"
-                >
+                <v-select :options="motivos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="proxy.motivo"
+                    class="w-full" name="motivo" data-vv-as="Motivo" v-validate="'required-select'"
+                    @input="clearAllErrors">
                     <div slot="no-options">
                         No Se Ha Seleccionado Ningún Motivo
                     </div>
@@ -53,17 +38,9 @@
                     Medio de Contacto
                     <span>(*)</span>
                 </label>
-                <v-select
-                    :options="medios"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="proxy.medio"
-                    class="w-full"
-                    name="medio"
-                    data-vv-as="Medio de Contacto"
-                    v-validate="'required-select'"
-                    @input="clearAllErrors"
-                >
+                <v-select :options="medios" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="proxy.medio"
+                    class="w-full" name="medio" data-vv-as="Medio de Contacto" v-validate="'required-select'"
+                    @input="clearAllErrors">
                     <div slot="no-options">
                         No Se Ha Seleccionado Ningún Medio
                     </div>
@@ -80,35 +57,22 @@
                     Email
                     <span></span>
                 </label>
-                <vs-input
-                    v-validate="
-                        proxy.enviar_x_email ? 'required|email' : 'email'
-                    "
-                    name="email"
-                    type="email"
-                    class="w-full"
-                    placeholder="Ej. cliente@gmail.com"
-                    v-model="proxy.email"
-                    maxlength="100"
-                    @input="clearAllErrors"
-                />
+                <vs-input v-validate="proxy.enviar_x_email ? 'required|email' : 'email'
+                    " name="email" type="email" class="w-full" placeholder="Ej. cliente@gmail.com"
+                    v-model="proxy.email" maxlength="100" @input="clearAllErrors" />
                 <span v-show="errors.has('email')" class="">
                     {{ errors.first("email") }}
                 </span>
-                {{ errores }}
                 <span v-if="this.errores.email" class="block">{{
                     errores.email[0]
                 }}</span>
             </div>
             <div class="w-full px-2 pt-2 small-editor">
-                <NotasComponent
-                    :value="proxy.comentario_programado"
-                    @input="
-                        (val) => {
-                            proxy.comentario_programado = val;
-                        }
-                    "
-                />
+                <NotasComponent :value="proxy.comentario_programado" @input="
+                    (val) => {
+                        proxy.comentario_programado = val;
+                    }
+                " />
             </div>
         </div>
     </div>
@@ -223,7 +187,7 @@ export default {
     mounted() {
         console.log("Component mounted! " + this.$options.name); // DOM is ready
     },
-    beforeDestroy() {},
+    beforeDestroy() { },
     destroyed() {
         console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

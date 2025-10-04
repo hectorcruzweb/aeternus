@@ -57,6 +57,9 @@ class SeguimientosController extends ApiController
         if (!(trim($tipo_request) == 'agregar' || trim($tipo_request) == 'modificar')) {
             return $this->errorResponse('Error, debe especificar que tipo de control está solicitando.', 409);
         }
+        $request->merge([
+            'enviar_x_email' => $request->enviar_x_email ? 1 : 0
+        ]);
         $validaciones = [
             'seguimiento_id' => [
                 trim($tipo_request) === 'modificar' ? 'required' : '', // required only if modifying
@@ -111,10 +114,10 @@ class SeguimientosController extends ApiController
             ],
             //datos del seguimiento
             'fecha_a_contactar' => 'required|date|after_or_equal:now', // >= current time
-            'enviar_x_email' => 'required',
+            'enviar_x_email' => 'required|in:1,0',
             'motivo.value'      => 'required|integer|between:1,10', // required and between 1-10
             'medio.value'       => 'required|integer|between:1,6',  // required and between 1-6
-            'email' => 'required_if:enviar_x_email,1|nullable|email',
+            'email' => 'required_if:enviar_x_email,1|email|nullable',
             'comentario_programado' => ''
         ];
         $mensajes = [
@@ -133,8 +136,8 @@ class SeguimientosController extends ApiController
             'medio.value.required'         => 'Seleccione un medio de contacto.',
             'medio.value.integer'          => 'El valor del medio debe ser un número.',
             'medio.value.between'          => 'El valor del medio debe estar entre 1 y 6.',
-            'email.required_if'            => 'Ingrese un correo electrónico válido.',
-            'email.email'                  => 'Ingrese un correo electrónico válido.',
+            'email.required_if' => 'Debe ingresar un correo electrónico cuando se selecciona enviar por email.',
+            'email.email' => 'Debe ingresar un correo electrónico válido.',
             'comentario_programado.required' => 'Ingrese un comentario para el seguimiento.'
         ];
         // return $this->errorResponse(gettype($request->enviar_x_email), 500);
@@ -143,7 +146,7 @@ class SeguimientosController extends ApiController
             $mensajes
         );
 
-        try {
+        $queryClosure = function () use ($request, $tipo_request) {
             // Prepare the common seguimiento data
             $seguimientoData = [
                 'tipo_cliente_id' => $request->tipo_cliente_id,
@@ -163,7 +166,7 @@ class SeguimientosController extends ApiController
                 return $this->successResponse([
                     'message' => 'Seguimiento agregado correctamente.',
                     'seguimiento_id' => $seguimientoId
-                ], 201);
+                ], 200);
             } elseif (trim($tipo_request) === 'modificar') {
                 // Limit update to only allowed fields
                 $updateData = [
@@ -176,10 +179,18 @@ class SeguimientosController extends ApiController
                     ->update($updateData);
                 return $this->successResponse("Seguimiento actualizado correctamente.", 200);
             }
-        } catch (\Exception $e) {
-            // Catch any DB or unexpected error
-            //Log::error("Error en programar seguimientos: " . $e->getMessage());
-            return $this->errorResponse("Ocurrió un error al procesar el seguimiento.", 500);
+        };
+        // Check debug mode
+        if (!config('app.debug')) {
+            try {
+                return $queryClosure();
+            } catch (\Exception $e) {
+                // Catch any DB or unexpected error
+                //Log::error("Error en programar seguimientos: " . $e->getMessage());
+                return $this->errorResponse("Ocurrió un error al procesar el seguimiento.", 500);
+            }
+        } else {
+            return $queryClosure(); // directly run without try-catch
         }
     }
 

@@ -1,13 +1,7 @@
 <template>
     <div>
-        <vs-popup
-            :class="['forms-popup popup-70', z_index]"
-            close="cancelar"
-            title="Programar Seguimiento"
-            :active="localShow"
-            :fullscreen="false"
-            :ref="this.$options.name"
-        >
+        <vs-popup :class="['forms-popup popup-70', z_index]" close="cancelar" title="Programar Seguimiento"
+            :active="localShow" :fullscreen="false" :ref="this.$options.name">
             <div class="pb-4">
                 <div class="form-group">
                     <div class="title-form-group">
@@ -16,50 +10,24 @@
                     <div class="form-group-content">
                         <div class="px-2 mb-2">
                             <div class="highlighted-inputs-blue">
-                                <span
-                                    v-if="
-                                        this.errores.cliente_id ||
-                                        this.errores.tipo_cliente_id
-                                    "
-                                    class="text-danger text-sm block"
-                                    >Verifique que el cliente seleccionado sea
-                                    válido.</span
-                                >
-                                <span
-                                    v-if="this.errores.operacion_id"
-                                    class="text-danger text-sm block"
-                                    >{{ errores.operacion_id[0] }}</span
-                                >
-                                <InfoOperacion
-                                    v-if="show"
-                                    :filters="filters"
-                                    @resultado="resultado_datos_cliente"
-                                >
+                                <span v-if="
+                                    this.errores.cliente_id ||
+                                    this.errores.tipo_cliente_id
+                                " class="text-danger text-sm block">Verifique que el cliente seleccionado sea
+                                    válido.</span>
+                                <span v-if="this.errores.operacion_id" class="text-danger text-sm block">{{
+                                    errores.operacion_id[0] }}</span>
+                                <InfoOperacion v-if="show" :filters="filters" @resultado="resultado_datos_cliente">
                                 </InfoOperacion>
                             </div>
                         </div>
                         <!-- Contenido Formulario -->
-                        <ProgramarSeguimientoDatos
-                            ref="seguimientoForm"
-                            v-model="formData"
-                            :errores="errores"
-                            @resultado="resultado_seguimientos_datos"
-                        ></ProgramarSeguimientoDatos>
-                        <div
-                            class="flex flex-wrap items-center justify-between pr-2 pt-4"
-                        >
-                            <vs-checkbox
-                                color="success"
-                                class="size-small text-info"
-                                v-model="formData.enviar_x_email"
-                                :vs-value="formData.enviar_x_email"
-                                >¿Enviar por correo electrónico?</vs-checkbox
-                            >
-                            <vs-button
-                                class=""
-                                color="success"
-                                @click="submitForm"
-                            >
+                        <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formData" :errores="errores"
+                            @resultado="resultado_seguimientos_datos"></ProgramarSeguimientoDatos>
+                        <div class="flex flex-wrap items-center justify-between pr-2 pt-4">
+                            <vs-checkbox color="success" class="size-small text-info" v-model="formData.enviar_x_email"
+                                :vs-value="formData.enviar_x_email">¿Enviar por correo electrónico?</vs-checkbox>
+                            <vs-button class="" color="success" @click="submitForm">
                                 Registrar
                             </vs-button>
                         </div>
@@ -185,7 +153,6 @@ export default {
         },
         async submitForm() {
             this.errores = [];
-            /*
             const isValid = await this.$refs.seguimientoForm.validate();
             if (!isValid) {
                 this.$vs.notify({
@@ -196,7 +163,6 @@ export default {
                 return;
             }
             // ✅ Continue submit logic here
-            console.log("Form is valid:", this.formData);*/
             this.$vs.loading();
             try {
                 // Merge formData + filters into one object
