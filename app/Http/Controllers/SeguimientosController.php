@@ -8,7 +8,9 @@ use App\Operaciones;
 use App\Cotizaciones;
 use App\Seguimientos;
 use Illuminate\Http\Request;
+use App\Mail\SeguimientoMail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SeguimientosController extends ApiController
 {
@@ -163,6 +165,10 @@ class SeguimientosController extends ApiController
             if (trim($tipo_request) === 'agregar') {
                 // Insert a new seguimiento
                 $seguimientoId = Seguimientos::insertGetId($seguimientoData);
+                // Send email if requested
+                if ($request->enviar_x_email == 1 && $request->email) {
+                    $this->email_sender($request->email);
+                }
                 return $this->successResponse([
                     'message' => 'Seguimiento agregado correctamente.',
                     'seguimiento_id' => $seguimientoId
@@ -191,6 +197,16 @@ class SeguimientosController extends ApiController
             }
         } else {
             return $queryClosure(); // directly run without try-catch
+        }
+    }
+
+    private function email_sender($email = '', $id_seguimiento = '', $tipo = '')
+    {
+        try {
+            Mail::to($email)->send(new SeguimientoMail([]));
+        } catch (\Exception $e) {
+            // Log the error, but do NOT stop the process
+            //\Log::error("Error sending seguimiento email: " . $e->getMessage());
         }
     }
 
