@@ -114,7 +114,7 @@ class SeguimientosController extends ApiController
             'enviar_x_email' => 'required',
             'motivo.value'      => 'required|integer|between:1,10', // required and between 1-10
             'medio.value'       => 'required|integer|between:1,6',  // required and between 1-6
-            'email' => 'required_if:enviar_x_email,1|email', // required if enviar_x_email is 1
+            'email' => 'required_if:enviar_x_email,1|nullable|email',
             'comentario_programado' => ''
         ];
         $mensajes = [
@@ -137,11 +137,11 @@ class SeguimientosController extends ApiController
             'email.email'                  => 'Ingrese un correo electrónico válido.',
             'comentario_programado.required' => 'Ingrese un comentario para el seguimiento.'
         ];
+        // return $this->errorResponse(gettype($request->enviar_x_email), 500);
         request()->validate(
             $validaciones,
             $mensajes
         );
-
 
         try {
             // Prepare the common seguimiento data

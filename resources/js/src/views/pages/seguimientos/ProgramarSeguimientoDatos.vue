@@ -17,6 +17,9 @@
                 <span v-show="errors.has('fecha_a_contactar')" class="">
                     {{ errors.first("fecha_a_contactar") }}
                 </span>
+                <span v-if="this.errores.fecha_a_contactar" class="block">{{
+                    errores.fecha_a_contactar[0]
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -41,6 +44,9 @@
                 <span v-show="errors.has('motivo')" class="">
                     {{ errors.first("motivo") }}
                 </span>
+                <span v-if="this.errores['motivo.value']" class="block">{{
+                    errores["motivo.value"][0]
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -65,6 +71,9 @@
                 <span v-show="errors.has('medio')" class="">
                     {{ errors.first("medio") }}
                 </span>
+                <span v-if="this.errores['medio.value']" class="block">{{
+                    errores["medio.value"][0]
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -86,6 +95,10 @@
                 <span v-show="errors.has('email')" class="">
                     {{ errors.first("email") }}
                 </span>
+                {{ errores }}
+                <span v-if="this.errores.email" class="block">{{
+                    errores.email[0]
+                }}</span>
             </div>
             <div class="w-full px-2 pt-2 small-editor">
                 <NotasComponent
@@ -165,6 +178,13 @@ export default {
             try {
                 let motivos = await seguimientos.getMotivos();
                 let medios = await seguimientos.getMedios();
+                // ✅ Validate responses
+                if (!motivos || typeof motivos !== "object") {
+                    throw new Error("Respuesta inválida en motivos");
+                }
+                if (!medios || typeof medios !== "object") {
+                    throw new Error("Respuesta inválida en medios");
+                }
                 // build array with default + API values
                 this.motivos = [
                     { value: "", label: "Seleccione 1" }, // 👈 default blank
@@ -182,15 +202,14 @@ export default {
                 ];
                 this.$emit("resultado", true);
             } catch (error) {
+                this.$emit("resultado", false);
                 this.$vs.notify({
                     title: "Programar Seguimientos",
-                    text: "Error al cargar formulario de Seguimientos.",
+                    text: error,
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "danger",
-                    time: 8000,
                 });
-                this.$emit("resultado", false);
             } finally {
                 this.$vs.loading.close();
             }

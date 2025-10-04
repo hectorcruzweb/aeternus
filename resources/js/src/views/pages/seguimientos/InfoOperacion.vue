@@ -93,6 +93,9 @@ export default {
             try {
                 // Call the API from clientes service
                 const result = await clientes.fetchClientes(params);
+                if (!result || typeof result !== "object") {
+                    throw new Error("Respuesta inválida al consultar cliente");
+                }
                 const data = result.length ? result[0] : result;
                 if (data) {
                     this.cliente.id = data.id;
@@ -117,11 +120,10 @@ export default {
             } catch (error) {
                 this.$vs.notify({
                     title: "Datos del Cliente",
-                    text: "Error al cargar los datos del cliente.",
+                    text: error,
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "danger",
-                    time: 8000,
                 });
                 this.$emit("resultado", false);
             } finally {
