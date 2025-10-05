@@ -269,7 +269,7 @@ export default {
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
-                        //await this.simularClienteSeleccionado();
+                        await this.simularClienteSeleccionado();
                     } else if (this.filters.origen == 2) {
                         //abeierto desde clientes
                         this.cliente.id = this.filters.cliente_id;
@@ -286,20 +286,19 @@ export default {
                 }
             }
         },
+        /*
         "cliente.id": {
             immediate: true, // runs when component is mounted too
             async handler(newVal) {
-                if (newVal && this.show) {
-                    //cliente seleccionado
-                    let cliente = await this._fetchData();
-                    await this.onClienteSeleccionado(cliente);
+                if (!newVal && this.show) {
+                    console.log("🚀 ~ handler ~ newVal:", newVal)/cliente seleccionado
                     await this._getSeguimientosProgramados();
                 } else {
-                    this.OperacionesList = [];
-                    this.ProgramadosList = [];
+                     
                 }
             }
-        },
+                
+        },*/
     },
     // Data function returns the component's reactive state
     data() {
@@ -375,12 +374,12 @@ export default {
             try {
                 // Call the API from seguimientos service
                 const result = await seguimientos.getSeguimientosProgramados(params);
+                console.log("🚀 ~ _getSeguimientosProgramados ~ result:", result)
                 if (!result || typeof result !== "object") {
                     throw new Error("Respuesta inválida en _getSeguimientosProgramados");
                 }
-                const data = result.length ? result : null;
-                this.ProgramadosList = data;
-                console.log("🚀 ~ _getSeguimientosProgramados ~ this.ProgramadosList:", this.ProgramadosList)
+                return result.length ? result : [];
+
             } catch (error) {
                 console.error("Error fetching seguimientos:", error);
                 this.cancelar();
@@ -388,22 +387,26 @@ export default {
                 this.$vs.loading.close();
             }
         },
-        simularClienteSeleccionado() {
+        async simularClienteSeleccionado() {
             this.cliente.id = 12;
             this.cliente.tipo_cliente_id = 1;
+            await this.onClienteSeleccionado(this.cliente);
+        },
+        async updateClienteInfo() {
+            let operaciones = await this._fetchData();
+            this.OperacionesList = operaciones.operaciones;
+            this.ProgramadosList = await this._getSeguimientosProgramados();
         },
         async onClienteSeleccionado(cliente) {
-            // do whatever you need — e.g. fill a form or close popup
-            this.cliente.id = cliente.id;
-            this.cliente.nombre = cliente.nombre;
-            this.cliente.telefono = cliente.telefono;
-            this.cliente.email = cliente.email;
-            this.cliente.tipo_cliente = cliente.tipo_cliente;
-            this.cliente.tipo_cliente_id = cliente.tipo_cliente_id;
-            this.cliente.direccion_completa = cliente.direccion_completa;
-            //operaciones
-            this.OperacionesList = cliente.operaciones;
-            this.ShowBuscadorClientes = false;
+            //this.cliente.id = cliente.id;
+            //this.cliente.tipo_cliente_id = cliente.tipo_cliente_id;
+            this.cliente = { ...cliente };
+            //get all cliente data
+            console.log("✅ Cliente seleccionado:", cliente);
+            await this.updateClienteInfo();
+            setTimeout(() => {
+                this.ShowBuscadorClientes = false;
+            }, 50);
         },
         quitarCliente() {
             if (this.filters.origen != 1) {
@@ -431,8 +434,11 @@ export default {
             this.cliente.email = "";
             this.cliente.telefono = "";
             this.cliente.tipo_cliente = "";
+            this.cliente.tipo_cliente_id = "";
             this.cliente.direccion_completa = "";
             this.selectedRow = null;
+            this.OperacionesList = [];
+            this.ProgramadosList = [];
         },
         //opening form programarSeguimientos
         CloseFormProgramarSeguimientos() {
@@ -440,7 +446,7 @@ export default {
         },
         async agregar_modificar_success_seguimiento() {
             //success after insert or update ()
-            await this._getSeguimientosProgramados();
+            await this.updateClienteInfo();
             this.ShowFormProgramarSeguimientos = false;
         }
     },

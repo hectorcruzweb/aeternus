@@ -103,7 +103,7 @@ export default {
                     // Initial load (immediate, not debounced)
                     await this._fetchData();
                 } else {
-                    this.resetData();
+                    //this.resetData();
                     this.$popupManager.unregister(this.$options.name);
                 }
                 this.localShow = newVal;
@@ -215,7 +215,7 @@ export default {
                 // Call the API from clientes service
                 const data = await clientes.fetchClientes(params);
                 this.clientesList = data.data; // assuming API returns { items: [], total: 100 }
-                //console.log("🚀 ~ _fetchData ~ this.clientesList:", this.clientesList)
+                console.log("🚀 ~ _fetchData ~ this.clientesList:", this.clientesList)
                 this.total = data.last_page;
                 this.actual = data.current_page;
             } catch (error) {
