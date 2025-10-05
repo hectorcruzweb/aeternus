@@ -84,16 +84,23 @@
                                                     Libres
                                                 </div>
                                                 <div class="w-full alerta" v-else>
-                                                    <div class="w-full info">
-                                                        <h3>
-                                                            Operación
-                                                            Seleccionada
-                                                        </h3>
-                                                        <p>
-                                                            {{
-                                                                selectedRow.descripcion
-                                                            }}
-                                                        </p>
+                                                    <div
+                                                        class="w-full info operacion-seleccionada flex flex-wrap items-center justify-between">
+                                                        <span>
+                                                            <h3>
+                                                                Operación
+                                                                Seleccionada
+                                                            </h3>
+                                                            <p>
+                                                                {{
+                                                                    selectedRow.descripcion
+                                                                }}
+                                                            </p>
+                                                        </span>
+                                                        <span class="action-quitar"
+                                                            data-tooltip="Quitar Operación Seleccionada"
+                                                            @click="selectedRow = null">
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <!-- Buttons -->
@@ -182,22 +189,41 @@
                         </div>
                         <div v-else class="overflow-auto">
                             <!-- Table here -->
-                            <vs-table :sst="false" :data="ProgramadosList" stripe pagination max-items="9"
+                            <vs-table :sst="false" :data="ProgramadosList" stripe pagination max-items="8"
                                 noDataText="0 Resultados" class="w-full tabla-datos">
                                 <template slot="header">
                                     <h3>Seguimientos Programados Pendientes</h3>
                                 </template>
                                 <template slot="thead">
+                                    <vs-th>Acciones</vs-th>
                                     <vs-th>Motivo </vs-th>
                                     <vs-th>Fecha Programada</vs-th>
-                                    <vs-th>Acciones</vs-th>
+                                    <vs-th>Cancelar</vs-th>
                                 </template>
                                 <template slot-scope="{ data }">
                                     <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
                                         <!-- Main columns -->
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                <img class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/folder.svg" title="Ver detalle"
+                                                    @click="openModificar(data[indextr].id)" />
+                                                <img class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/edit.svg" title="Modificar Seguimiento"
+                                                    @click="openModificar(data[indextr].id)" />
+                                                <img class="img-btn-20 mx-4" src="@assets/images/seguimientos.svg"
+                                                    title="Atender Seguimiento" @click="OpenFormSeguimientos(tr)" />
+                                            </div>
+                                        </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
-                                        <vs-td>{{ tr.fechahora_programada_texto }}</vs-td>
-                                        <vs-td>{{ tr.id }}</vs-td>
+                                        <vs-td>{{ tr.fechahora_programada_texto_abr }}</vs-td>
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
+                                                    title="Cancelar Seguimiento"
+                                                    @click="cancelarCotizacion(data[indextr])" />
+                                            </div>
+                                        </vs-td>
                                     </vs-tr>
                                 </template>
                             </vs-table>
@@ -274,6 +300,7 @@ export default {
                         //abeierto desde clientes
                         this.cliente.id = this.filters.cliente_id;
                         this.cliente.tipo_cliente_id = this.filters.tipo_cliente_id;
+                        await this.updateClienteInfo();
                     }
                     //obtener datos del cliente
                     this.localShow = true;
@@ -343,7 +370,7 @@ export default {
                 tipo_cliente_id: this.cliente.tipo_cliente_id,
                 filtrar_x_operaciones: 1,
             };
-            this.$vs.loading();
+            //this.$vs.loading();
             try {
                 // Call the API from clientes service
                 const result = await clientes.fetchClientes(params);
@@ -357,7 +384,7 @@ export default {
                 console.error("Error fetching clientes:", error);
                 this.cancelar();
             } finally {
-                this.$vs.loading.close();
+                //this.$vs.loading.close();
             }
         },
 
@@ -370,7 +397,7 @@ export default {
                 status: 1
             };
             console.log("🚀 ~ _getSeguimientosProgramados ~ params:", params)
-            this.$vs.loading();
+            //this.$vs.loading();
             try {
                 // Call the API from seguimientos service
                 const result = await seguimientos.getSeguimientosProgramados(params);
@@ -384,7 +411,7 @@ export default {
                 console.error("Error fetching seguimientos:", error);
                 this.cancelar();
             } finally {
-                this.$vs.loading.close();
+                //this.$vs.loading.close();
             }
         },
         async simularClienteSeleccionado() {
@@ -393,9 +420,17 @@ export default {
             await this.onClienteSeleccionado(this.cliente);
         },
         async updateClienteInfo() {
-            let operaciones = await this._fetchData();
-            this.OperacionesList = operaciones.operaciones;
-            this.ProgramadosList = await this._getSeguimientosProgramados();
+            this.$vs.loading();
+            try {
+                let cliente = await this._fetchData();
+                this.cliente = { ...cliente };
+                this.OperacionesList = cliente.operaciones;
+                this.ProgramadosList = await this._getSeguimientosProgramados();
+            } catch (error) {
+                console.log("🚀 ~ updateClienteInfo ~ error:", error)
+            } finally {
+                this.$vs.loading.close();
+            }
         },
         async onClienteSeleccionado(cliente) {
             //this.cliente.id = cliente.id;

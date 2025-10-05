@@ -16,7 +16,7 @@ class Seguimientos extends Model
     }
 
 
-    protected $appends = ['fechahora_programada_texto', 'status_texto']; // 👈 this tells Laravel to include it in JSON
+    protected $appends = ['fechahora_programada_texto', 'status_texto', 'fechahora_programada_texto_abr']; // 👈 this tells Laravel to include it in JSON
 
     public function getFechahoraProgramadaTextoAttribute()
     {
@@ -49,5 +49,14 @@ class Seguimientos extends Model
             $status = "Atendido";
         }
         return $status;
+    }
+
+    public function getFechahoraProgramadaTextoAbrAttribute()
+    {
+        if (!$this->fechahora_programada) {
+            return null;
+        }
+        // Example format: "04 October 2025, 2:30 PM"
+        return fecha_abr($this->fechahora_programada);
     }
 }
