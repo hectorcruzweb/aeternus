@@ -118,9 +118,10 @@ export default {
     // Methods: functions you can call in template or other hooks
     methods: {
         // Called when InfoOperacion is ready
-        resultado_datos_cliente(success) {
+        resultado_datos_cliente(success, email) {
             if (success) {
                 this.ready.InfoOperacion = true;
+                this.formData.email = email;
                 this.checkReady();
             } else {
                 this.cancelar();
@@ -179,7 +180,10 @@ export default {
                     title: "Éxito",
                     text: "Seguimiento programado correctamente",
                     color: "success",
+                    time: 5000,
                 });
+                //close form and call the api to reload the form
+                this.$emit("agregar_modificar_success_seguimiento");
             } catch (err) {
                 console.log("🚀 ~ submitForm ~ err:", err);
                 const status = err.status || 500;

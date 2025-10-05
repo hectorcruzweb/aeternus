@@ -8,7 +8,7 @@
                     <div class="flex flex-wrap pb-6">
                         <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
                             <label>Filtrar x Tipo de Clientes</label>
-                            <v-select :options="filtrosEspecificos" v-model="serverOptions.filtro_especifico"
+                            <v-select :options="filtrosEspecificos" v-model="serverOptions.tipo_cliente_id"
                                 :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" data-vv-as=" "
                                 @input="onFilterChange">
                                 <div slot="no-options">Seleccione 1</div>
@@ -145,7 +145,7 @@ export default {
             serverOptions: {
                 page: 1,
                 per_page: 15,
-                filtro_especifico: {
+                tipo_cliente_id: {
                     label: "Listar Todos",
                     value: "",
                 },
@@ -153,7 +153,7 @@ export default {
                 nombre: "",
             },
             previousServerOptions: {
-                filtro_especifico: {
+                tipo_cliente_id: {
                     label: "Listar Todos",
                     value: "",
                 },
@@ -170,7 +170,7 @@ export default {
             this.serverOptions = {
                 page: 1,               // reset page
                 per_page: 15,           // default per page
-                filtro_especifico: {    // default select option
+                tipo_cliente_id: {    // default select option
                     label: "Listar Todos",
                     value: "",
                 },
@@ -205,7 +205,7 @@ export default {
             const params = {
                 page: this.serverOptions.page || 1,
                 per_page: this.serverOptions.per_page || 15,
-                filtro_especifico: this.serverOptions.filtro_especifico.value || '',
+                tipo_cliente_id: this.serverOptions.tipo_cliente_id.value || '',
                 id: this.serverOptions.id.trim(),
                 nombre: this.serverOptions.nombre.trim()
             }

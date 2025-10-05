@@ -56,13 +56,25 @@
             {{ env('MAIL_FROM_NAME') }} | Seguimiento a Clientes
         </div>
         <div class="content">
-            <p>Hola {{ $seguimiento['cliente'] ?? 'Cliente' }},</p>
-            <p>Se ha {{ $seguimiento['action'] ?? 'agregado' }} un seguimiento con los siguientes detalles:</p>
+            <p>Hola {{ $seguimiento['cliente'] }},</p>
+            <p>Se ha
+                @if ($seguimiento['tipo'] === 'programar seguimiento')
+                    agendado un seguimiento programado
+                @elseif ($seguimiento['tipo'] === 'reprogramar seguimiento')
+                    actualizado un seguimiento programado
+                @else
+                    registrado un seguimiento
+                @endif con los siguientes detalles:
+            </p>
             <ul>
-                <li><strong>Fecha a contactar:</strong> {{ $seguimiento['fecha'] ?? 'N/A' }}</li>
+                <li><strong>Fecha a contactar:</strong> {{ $seguimiento['fechahora_programada'] ?? 'N/A' }}</li>
                 <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
-                <li><strong>Medio:</strong> {{ $seguimiento['medio'] ?? 'N/A' }}</li>
-                <li><strong>Comentario:</strong> {{ $seguimiento['comentario'] ?? 'N/A' }}</li>
+                <li><strong>Posible Medio de Contacto:</strong> {{ $seguimiento['medio'] ?? 'N/A' }}</li>
+                @if (isset($seguimiento['operacion']))
+                    <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+                @endif
+                <li><strong>Fecha de registro:</strong> {{ $seguimiento['fechahora_registro_programado'] ?? 'N/A' }}
+                </li>
             </ul>
             <div class="info-contacto size-14px text-black">
                 Para dudas o más información puedes contactarnos a través de los siguientes datos:

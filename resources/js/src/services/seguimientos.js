@@ -9,7 +9,6 @@ export default {
             const response = await axios.get("/seguimientos/get_motivos");
             return response.data; // return only the data
         } catch (error) {
-            console.error("Error fetching motivos seguimientos:", error);
             throw error; // propagate the error so Vue can handle it
         }
     },
@@ -18,7 +17,6 @@ export default {
             const response = await axios.get("/seguimientos/get_medios");
             return response.data; // return only the data
         } catch (error) {
-            console.error("Error fetching medios seguimientos:", error);
             throw error; // propagate the error so Vue can handle it
         }
     },
@@ -52,6 +50,18 @@ export default {
                 status: (error.response && error.response.status) || 500,
                 data: (error.response && error.response.data) || null,
             };
+        }
+    },
+
+    /**obtiene la informacion del paginado de clientes para segumientos*/
+    async getSeguimientosProgramados(params) {
+        try {
+            const response = await axios.get("/seguimientos/get_seguimientos", {
+                params,
+            });
+            return response.data; // return only the data
+        } catch (error) {
+            throw error; // propagate the error so Vue can handle it
         }
     },
 };

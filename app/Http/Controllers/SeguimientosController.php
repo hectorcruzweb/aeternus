@@ -160,6 +160,7 @@ class SeguimientosController extends ApiController
                 'fechahora_programada' => $request->fecha_a_contactar,
                 'comentario_programado' => $request->comentario_programado,
                 'programado_b' => 1,
+                'fechahora_registro_programado' => now(),
             ];
 
             if (trim($tipo_request) === 'agregar') {
@@ -167,7 +168,7 @@ class SeguimientosController extends ApiController
                 $seguimientoId = Seguimientos::insertGetId($seguimientoData);
                 // Send email if requested
                 if ($request->enviar_x_email == 1 && $request->email) {
-                    $this->email_sender($request->email);
+                    $this->email_sender($seguimientoId, $request->email, 'programar seguimiento');
                 }
                 return $this->successResponse([
                     'message' => 'Seguimiento agregado correctamente.',
@@ -183,6 +184,9 @@ class SeguimientosController extends ApiController
                 ];
                 Seguimientos::where('id', $request->seguimiento_id)
                     ->update($updateData);
+                if ($request->enviar_x_email == 1 && $request->email) {
+                    $this->email_sender($request->seguimiento_id, $request->email, 'reprogramar seguimiento');
+                }
                 return $this->successResponse("Seguimiento actualizado correctamente.", 200);
             }
         };
@@ -200,10 +204,71 @@ class SeguimientosController extends ApiController
         }
     }
 
-    private function email_sender($email = '', $id_seguimiento = '', $tipo = '')
+    private function email_sender($id_seguimiento = '', $email = '', $tipo = '')
     {
+        $get_info_function = function () use ($id_seguimiento, $email, $tipo) {
+            // 🧩 Create a fake Request instance to reuse your existing method
+            $request = new \Illuminate\Http\Request([
+                'id' => $id_seguimiento,
+                'programado_b' => 1, // or 0, depending on what you need
+            ]);
+            // 📨 Get seguimiento data by calling your own public method
+            $seguimiento = $this->get_seguimientos($request);
+
+            $seguimiento = json_decode($seguimiento->getContent(), true);
+            if (!$seguimiento) {
+                // No seguimiento found — do nothing
+                return;
+            } else $seguimiento = $seguimiento[0];
+            // 🧩 Create a fake Request instance to reuse your existing method
+            $request = new \Illuminate\Http\Request([
+                'id' => $seguimiento['clientes_id'],
+                'tipo_cliente_id' => var_export($seguimiento['tipo_cliente_id'], true), // or 0, depending on what you need
+                'filtrar_x_operaciones' => '1'
+            ]);
+            $cliente = new ClientesController();
+            // 📨 Get seguimiento data by calling your own public method
+            $cliente = $cliente->get_clientes_seguimientos($request);
+            if (!$cliente) { // No seguimiento found — do nothing
+                return;
+            }
+            $cliente = json_decode($cliente->getContent(), true);
+            //From here, I Collect the data required to send the email
+            $data['cliente'] = $cliente['nombre'];
+            $data['medio'] = $seguimiento['medio_texto'];
+            $data['motivo'] = $seguimiento['motivo_texto'];
+            $data['fechahora_programada'] = fechahora($seguimiento['fechahora_programada']);
+            $data['fechahora_registro_programado'] = fechahora($seguimiento['fechahora_registro_programado']);
+
+            if ($seguimiento['tipo_cliente_id'] == 1 && !empty($seguimiento['operaciones_id']) && $seguimiento['operaciones_id'] > 0) {
+                //cliente con operaciones
+                $data['operacion'] = collect($cliente['operaciones'])
+                    ->firstWhere('operacion_id', $seguimiento['operaciones_id'])['descripcion'] ?? null;
+            }
+            if ($seguimiento['tipo_cliente_id'] == 2) {
+                //cliente bajo presupuesto
+                $data['operacion'] = $cliente['operaciones'][0]['descripcion'];
+            }
+            $data['tipo'] = $tipo;
+            // 🧠 Build email content using seguimiento info
+            //Send Mail
+            Mail::to(!config('app.debug') ? $email : 'hectorcrzprz@gmail.com')->send(new SeguimientoMail($data));
+        };
+
+        // Check debug mode
+        if (!config('app.debug')) {
+            try {
+                return  $get_info_function();
+            } catch (\Exception $e) {
+                // Catch any DB or unexpected error
+                //Log::error("Error en programar seguimientos: " . $e->getMessage());
+                return $this->errorResponse("Ocurrió un error al procesar el seguimiento.", 500);
+            }
+        } else {
+            return $get_info_function(); // directly run without try-catch
+        }
+
         try {
-            Mail::to($email)->send(new SeguimientoMail([]));
         } catch (\Exception $e) {
             // Log the error, but do NOT stop the process
             //\Log::error("Error sending seguimiento email: " . $e->getMessage());
@@ -218,7 +283,7 @@ class SeguimientosController extends ApiController
             'cliente_id' => 'sometimes|integer',
             'tipo_cliente_id' => 'sometimes|in:1,2',
             'operaciones_id' => 'sometimes|integer',
-            'status' => 'sometimes|in:0,1,2',
+            'status' => 'sometimes|in:0,1,2'
         ];
 
         $mensajes = [
@@ -233,8 +298,13 @@ class SeguimientosController extends ApiController
 
         $request->validate($validaciones, $mensajes);
 
-        $queryClosure = function () use ($request) {
-            $query = Seguimientos::query();
+        // Load lookups once
+        $motivos = $this->getMotivos();
+        $medios = $this->getMedios();
+
+        $queryClosure = function () use ($request, $motivos, $medios) {
+            $query = Seguimientos::query()
+                ->with(['cliente:id,nombre']); // 👈 load cliente info automatically
 
             if ($request->has('id')) {
                 $query->where('id', $request->id);
@@ -243,13 +313,14 @@ class SeguimientosController extends ApiController
             if ($request->has('programado_b')) {
                 $query->where('programado_b', $request->programado_b);
                 $query->select([
+                    'id',
                     'tipo_cliente_id',
                     'clientes_id',
                     'operaciones_id',
                     'fechahora_programada',
                     'motivo_id',
                     'medio_preferido_programado_id',
-                    'comentario_programado',
+                    //'comentario_programado',
                     'fechahora_registro_programado',
                     'registro_programado_id',
                     'email_programado',
@@ -275,7 +346,14 @@ class SeguimientosController extends ApiController
                 $query->where('operaciones_id', $request->operaciones_id);
             }
 
-            return $query->get();
+            // Retrieve data
+            $seguimientos = $query->orderByDesc('id')->get();
+            // Append readable text fields
+            return $seguimientos->map(function ($item) use ($motivos, $medios) {
+                $item->motivo_texto = $motivos[$item->motivo_id] ?? 'Desconocido';
+                $item->medio_texto = $medios[$item->medio_preferido_programado_id] ?? 'Desconocido';
+                return $item;
+            });
         };
 
         // Check debug mode
@@ -287,9 +365,12 @@ class SeguimientosController extends ApiController
                 return $this->errorResponse("Ocurrió un error al obtener los seguimientos.", 500);
             }
         } else {
-            $seguimientos = $queryClosure(); // directly run without try-catch
+            $seguimientos = $queryClosure();
         }
 
+        if (isset($request->paginated_b) && $request->paginated_b == 1) {
+            return $this->showAllPaginated($seguimientos);
+        }
         return $this->successResponse($seguimientos, 200);
     }
 }

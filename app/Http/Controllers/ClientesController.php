@@ -366,7 +366,7 @@ class ClientesController extends ApiController
     {
         $nameFilter            = trim($request->nombre ?? '');
         $idFilter              = trim($request->id ?? '');
-        $tipoClienteFilter     = $request->filtro_especifico; // null, 1, or 2
+        $tipoClienteFilter     = $request->tipo_cliente_id; // null, 1, or 2
         $queries               = [];
         $filtrar_x_operaciones = trim($request->filtrar_x_operaciones ?? '');
         $summary               = trim($request->summary ?? ''); //null or 1;

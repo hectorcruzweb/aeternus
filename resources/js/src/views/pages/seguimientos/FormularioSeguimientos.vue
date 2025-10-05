@@ -168,6 +168,7 @@
                         </div>
                         <div v-else class="overflow-auto">
                             <!-- Table here -->
+
                         </div>
                     </div>
 
@@ -176,11 +177,30 @@
                         <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
-                        <div v-else-if="OperacionesList.length === 0" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div v-else-if="ProgramadosList.length === 0" class="skeleton flex items-center justify-center">
+                            <span class="text-gray-600 text-lg font-normal">No hay seguimientos programados</span>
                         </div>
                         <div v-else class="overflow-auto">
                             <!-- Table here -->
+                            <vs-table :sst="false" :data="ProgramadosList" stripe pagination max-items="9"
+                                noDataText="0 Resultados" class="w-full tabla-datos">
+                                <template slot="header">
+                                    <h3>Seguimientos Programados Pendientes</h3>
+                                </template>
+                                <template slot="thead">
+                                    <vs-th>Motivo </vs-th>
+                                    <vs-th>Fecha Programada</vs-th>
+                                    <vs-th>Acciones</vs-th>
+                                </template>
+                                <template slot-scope="{ data }">
+                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                        <!-- Main columns -->
+                                        <vs-td>{{ tr.motivo_texto }}</vs-td>
+                                        <vs-td>{{ tr.fechahora_programada_texto }}</vs-td>
+                                        <vs-td>{{ tr.id }}</vs-td>
+                                    </vs-tr>
+                                </template>
+                            </vs-table>
                         </div>
                     </div>
                 </div>
@@ -190,7 +210,8 @@
                     cliente_id: cliente.id,
                     tipo_cliente_id: cliente.tipo_cliente_id,
                     operacion_id: selectedRow ? selectedRow.operacion_id : '',
-                }" :tipo="'agregar'" @closeVentana="CloseFormProgramarSeguimientos" />
+                }" :tipo="'agregar'" @closeVentana="CloseFormProgramarSeguimientos"
+                @agregar_modificar_success_seguimiento="agregar_modificar_success_seguimiento" />
             <ClientesSearcherSeguimientos v-if="ShowBuscadorClientes" :show="ShowBuscadorClientes"
                 @closeVentana="ShowBuscadorClientes = false" @cliente-seleccionado="onClienteSeleccionado">
             </ClientesSearcherSeguimientos>
@@ -205,6 +226,7 @@ import ConfirmarDanger from "@pages/ConfirmarDanger";
 import FormularioProgramarSeguimiento from "./FormularioProgramarSeguimiento";
 import ClientesSearcherSeguimientos from "../clientes/ClientesSearcherSeguimientos.vue";
 import clientes from "../../../services/clientes";
+import seguimientos from "../../../services/seguimientos";
 export default {
     components: {
         ClientesSearcherSeguimientos,
@@ -247,7 +269,7 @@ export default {
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
-                        await this.simularClienteSeleccionado();
+                        //await this.simularClienteSeleccionado();
                     } else if (this.filters.origen == 2) {
                         //abeierto desde clientes
                         this.cliente.id = this.filters.cliente_id;
@@ -270,7 +292,11 @@ export default {
                 if (newVal && this.show) {
                     //cliente seleccionado
                     let cliente = await this._fetchData();
-                    this.onClienteSeleccionado(cliente);
+                    await this.onClienteSeleccionado(cliente);
+                    await this._getSeguimientosProgramados();
+                } else {
+                    this.OperacionesList = [];
+                    this.ProgramadosList = [];
                 }
             }
         },
@@ -315,7 +341,7 @@ export default {
             if (!this.show) return; // stop here if not visible
             const params = {
                 id: this.cliente.id,
-                filtro_especifico: this.cliente.tipo_cliente_id,
+                tipo_cliente_id: this.cliente.tipo_cliente_id,
                 filtrar_x_operaciones: 1,
             };
             this.$vs.loading();
@@ -323,9 +349,41 @@ export default {
                 // Call the API from clientes service
                 const result = await clientes.fetchClientes(params);
                 const data = result.length ? result[0] : result;
+                if (!data || typeof data !== "object") {
+                    throw new Error("Respuesta inválida en _fetchData");
+                }
+                console.log("🚀 ~ _fetchData ~ data:", data)
                 return data;
             } catch (error) {
                 console.error("Error fetching clientes:", error);
+                this.cancelar();
+            } finally {
+                this.$vs.loading.close();
+            }
+        },
+
+        async _getSeguimientosProgramados() {
+            if (!this.show) return; // stop here if not visible
+            const params = {
+                cliente_id: this.cliente.id,
+                tipo_cliente_id: this.cliente.tipo_cliente_id,
+                programado_b: 1,
+                status: 1
+            };
+            console.log("🚀 ~ _getSeguimientosProgramados ~ params:", params)
+            this.$vs.loading();
+            try {
+                // Call the API from seguimientos service
+                const result = await seguimientos.getSeguimientosProgramados(params);
+                if (!result || typeof result !== "object") {
+                    throw new Error("Respuesta inválida en _getSeguimientosProgramados");
+                }
+                const data = result.length ? result : null;
+                this.ProgramadosList = data;
+                console.log("🚀 ~ _getSeguimientosProgramados ~ this.ProgramadosList:", this.ProgramadosList)
+            } catch (error) {
+                console.error("Error fetching seguimientos:", error);
+                this.cancelar();
             } finally {
                 this.$vs.loading.close();
             }
@@ -334,7 +392,7 @@ export default {
             this.cliente.id = 12;
             this.cliente.tipo_cliente_id = 1;
         },
-        onClienteSeleccionado(cliente) {
+        async onClienteSeleccionado(cliente) {
             // do whatever you need — e.g. fill a form or close popup
             this.cliente.id = cliente.id;
             this.cliente.nombre = cliente.nombre;
@@ -380,6 +438,11 @@ export default {
         CloseFormProgramarSeguimientos() {
             this.ShowFormProgramarSeguimientos = false;
         },
+        async agregar_modificar_success_seguimiento() {
+            //success after insert or update ()
+            await this._getSeguimientosProgramados();
+            this.ShowFormProgramarSeguimientos = false;
+        }
     },
     // Lifecycle hooks
     created() {
