@@ -144,6 +144,7 @@
                                     <h3>Operaciones del Cliente</h3>
                                 </template>
                                 <template slot="thead">
+                                    <vs-th>Acciones</vs-th>
                                     <vs-th>Operación</vs-th>
                                     <vs-th>$ Saldo</vs-th>
                                 </template>
@@ -158,6 +159,16 @@
                                                 : '',
                                         ]">
                                         <!-- Main columns -->
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                <img class="cursor-pointer img-btn-18 mx-4"
+                                                    src="@assets/images/seguimientos.svg" title="Registrar Seguimiento"
+                                                    @click="programarSeguimiento('consultar', tr)" />
+                                                <img class="cursor-pointer img-btn-18 mx-4"
+                                                    src="@assets/images/appointment.svg" title="Programar Seguimiento"
+                                                    @click="programarSeguimientoOperacion(tr)" />
+                                            </div>
+                                        </vs-td>
                                         <vs-td>{{ tr.descripcion }}</vs-td>
                                         <vs-td>{{ tr.saldo }}</vs-td>
                                     </vs-tr>
@@ -369,6 +380,18 @@ export default {
                     seguimiento_id: datos_seguimiento.id,
                 }
             }
+            this.ShowFormProgramarSeguimientos = true
+        },
+        programarSeguimientoOperacion(datos_seguimiento = null) {
+            console.log("🚀 ~ programarSeguimientoOperacion ~ datos_seguimiento:", datos_seguimiento)
+            this.tipoFormProgramarSeguimiento = 'agregar';
+            //es agregar
+            this.FormularioProgramarSeguimientoFilters = {
+                cliente_id: this.cliente.id,
+                tipo_cliente_id: this.cliente.tipo_cliente_id,
+                operacion_id: datos_seguimiento.operacion_id,
+            }
+
             this.ShowFormProgramarSeguimientos = true
         },
         toggleRow(row) {

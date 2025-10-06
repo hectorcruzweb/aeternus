@@ -213,7 +213,7 @@ class SeguimientosController extends ApiController
 
     private function email_sender($id_seguimiento = '', $email = '', $tipo = '')
     {
-        $get_info_function = function () use ($id_seguimiento, $email, $tipo) {
+        $send_email_function = function () use ($id_seguimiento, $email, $tipo) {
             // 🧩 Create a fake Request instance to reuse your existing method
             $request = new \Illuminate\Http\Request([
                 'id' => $id_seguimiento,
@@ -265,14 +265,14 @@ class SeguimientosController extends ApiController
         // Check debug mode
         if (!config('app.debug')) {
             try {
-                return  $get_info_function();
+                return  $send_email_function();
             } catch (\Exception $e) {
                 // Catch any DB or unexpected error
                 //Log::error("Error en programar seguimientos: " . $e->getMessage());
                 return $this->errorResponse("Ocurrió un error al procesar el seguimiento.", 500);
             }
         } else {
-            return $get_info_function(); // directly run without try-catch
+            return $send_email_function(); // directly run without try-catch
         }
 
         try {
