@@ -6,7 +6,7 @@
                 <span>(*)</span>
                 <flat-pickr name="fecha_a_contactar" data-vv-as="Fecha a Contactar" v-validate="'required'"
                     :config="configdateTimePickerWithTime" v-model="proxy.fecha_a_contactar"
-                    placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors" />
+                    placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors" :disabled="isReadOnly" />
                 <span v-show="errors.has('fecha_a_contactar')" class="">
                     {{ errors.first("fecha_a_contactar") }}
                 </span>
@@ -21,7 +21,7 @@
                 </label>
                 <v-select :options="motivos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="proxy.motivo"
                     class="w-full" name="motivo" data-vv-as="Motivo" v-validate="'required-select'"
-                    @input="clearAllErrors">
+                    @input="clearAllErrors" :disabled="isReadOnly">
                     <div slot="no-options">
                         No Se Ha Seleccionado Ningún Motivo
                     </div>
@@ -40,7 +40,7 @@
                 </label>
                 <v-select :options="medios" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="proxy.medio"
                     class="w-full" name="medio" data-vv-as="Medio de Contacto" v-validate="'required-select'"
-                    @input="clearAllErrors">
+                    @input="clearAllErrors" :disabled="isReadOnly">
                     <div slot="no-options">
                         No Se Ha Seleccionado Ningún Medio
                     </div>
@@ -59,7 +59,7 @@
                 </label>
                 <vs-input v-validate="proxy.enviar_x_email ? 'required|email' : 'email'
                     " name="email" type="email" class="w-full" placeholder="Ej. cliente@gmail.com"
-                    v-model="proxy.email" maxlength="100" @input="clearAllErrors" />
+                    v-model="proxy.email" maxlength="100" @input="clearAllErrors" :disabled="isReadOnly" />
                 <span v-show="errors.has('email')" class="">
                     {{ errors.first("email") }}
                 </span>
@@ -68,7 +68,7 @@
                 }}</span>
             </div>
             <div class="w-full px-2 pt-2 small-editor">
-                <NotasComponent :value="proxy.comentario_programado" @input="
+                <NotasComponent :readonly="isReadOnly" :value="proxy.comentario_programado" @input="
                     (val) => {
                         proxy.comentario_programado = val;
                     }
@@ -103,6 +103,11 @@ export default {
             type: Object,
             default: () => ({}),
         },
+        tipo: {
+            type: String,
+            required: true,
+            default: "agregar", //agregar, modificar, consulta
+        },
     },
     emits: ["update:modelValue"],
     // Computed properties: derived reactive data
@@ -114,6 +119,9 @@ export default {
             set(val) {
                 this.$emit("input", val);
             },
+        },
+        isReadOnly() {
+            return this.tipo !== "agregar" && this.tipo !== "modificar";
         },
     },
     watch: {},

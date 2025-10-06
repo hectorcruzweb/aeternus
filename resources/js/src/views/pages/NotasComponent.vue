@@ -1,7 +1,10 @@
 <template>
     <div>
-        <vue-editor class="w-full" placeholder="Comentarios..." :id="get_editor_id" v-model="nota" useCustomImageHandler
-            @image-added="handleImageAdded" :editorOptions="editorSettings" :editorToolbar="customToolbar"></vue-editor>
+        <vue-editor class="w-full" :placeholder="!readonly ? 'Comentarios...' : ''" :id="get_editor_id" v-model="nota"
+            useCustomImageHandler @image-added="handleImageAdded" :editorOptions="{
+                ...editorSettings,
+                readOnly: readonly
+            }" :editorToolbar="customToolbar"></vue-editor>
     </div>
 </template>
 <script>
@@ -25,6 +28,11 @@ export default {
         value: {
             required: false,
             default: "",
+        },
+        readonly: {
+            type: Boolean,
+            required: false,
+            default: false
         },
     },
     watch: {

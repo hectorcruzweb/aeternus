@@ -23,12 +23,13 @@
                         </div>
                         <!-- Contenido Formulario -->
                         <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formData" :errores="errores"
-                            @resultado="resultado_seguimientos_datos"></ProgramarSeguimientoDatos>
-                        <div class="flex flex-wrap items-center justify-between pr-2 pt-4">
+                            @resultado="resultado_seguimientos_datos" :tipo="tipo"></ProgramarSeguimientoDatos>
+                        <div v-if="!isReadOnly" class="flex flex-wrap items-center justify-between pr-2 pt-4">
                             <vs-checkbox color="success" class="size-small text-info" v-model="formData.enviar_x_email"
-                                :vs-value="formData.enviar_x_email">¿Enviar por correo electrónico?</vs-checkbox>
+                                :vs-value="formData.enviar_x_email">¿Enviar por correo
+                                electrónico?</vs-checkbox>
                             <vs-button class="" color="success" @click="submitForm">
-                                Registrar
+                                {{ buttonTitle }}
                             </vs-button>
                         </div>
                     </div>
@@ -79,14 +80,25 @@ export default {
     },
     // Computed properties: derived reactive data
     computed: {
+        isReadOnly() {
+            return this.tipo !== "agregar" && this.tipo !== "modificar";
+        },
         popupTitle() {
             switch (this.tipo) {
                 case 'agregar':
                     return 'Programar Seguimiento';
                 case 'modificar':
                     return 'Modificar Seguimiento Programado';
-                case 'consulta':
+                case 'consultar':
                     return 'Consultar Seguimiento Programado';
+                default:
+                    return 'Programar Seguimiento';
+            }
+        },
+        buttonTitle() {
+            switch (this.tipo) {
+                case 'modificar':
+                    return 'Modificar Seguimiento';
                 default:
                     return 'Programar Seguimiento';
             }

@@ -206,7 +206,8 @@
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="cursor-pointer img-btn-20 mx-4"
-                                                    src="@assets/images/folder.svg" title="Ver detalle" />
+                                                    src="@assets/images/folder.svg" title="Consultar Seguimiento"
+                                                    @click="programarSeguimiento('consultar', tr)" />
                                                 <img class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/edit.svg" title="Modificar Seguimiento"
                                                     @click="programarSeguimiento('modificar', tr)" />
