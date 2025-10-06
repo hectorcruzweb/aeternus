@@ -1,7 +1,7 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup popup-70', z_index]" close="cancelar" title="Programar Seguimiento"
-            :active="localShow" :fullscreen="false" :ref="this.$options.name">
+        <vs-popup :class="['forms-popup popup-70', z_index]" close="cancelar" :title="popupTitle" :active="localShow"
+            :fullscreen="false" :ref="this.$options.name">
             <div class="pb-4">
                 <div class="form-group">
                     <div class="title-form-group">
@@ -68,6 +68,7 @@ export default {
                 cliente_id: null,
                 tipo_cliente_id: null,
                 operacion_id: null,
+                seguimiento_id: null//to modify
             },
         },
         tipo: {
@@ -77,7 +78,20 @@ export default {
         },
     },
     // Computed properties: derived reactive data
-    computed: {},
+    computed: {
+        popupTitle() {
+            switch (this.tipo) {
+                case 'agregar':
+                    return 'Programar Seguimiento';
+                case 'modificar':
+                    return 'Modificar Seguimiento Programado';
+                case 'consulta':
+                    return 'Consultar Seguimiento Programado';
+                default:
+                    return 'Programar Seguimiento';
+            }
+        },
+    },
     watch: {
         show: {
             immediate: true, // runs when component is mounted too
@@ -88,6 +102,12 @@ export default {
                         this.$options.name,
                         this.cancelar
                     );
+                    //i have to load data if not 'agregar'
+                    if (this.tipo != 'agregar') {
+                        console.log("buscar datos")
+                        this.formData.seguimiento_id = this.filters.seguimiento_id;
+                        await this._loadSeguimientosDatos();
+                    }
                 } else {
                     this.$popupManager.unregister(this.$options.name);
                     this.localShow = false;
@@ -101,6 +121,7 @@ export default {
             localShow: false, // controls popup visibility
             //Datos del Formulario
             formData: {
+                seguimiento_id: null,
                 fecha_a_contactar: "",
                 enviar_x_email: false,
                 motivo: { label: "Seleccione 1", value: "" },
@@ -112,16 +133,62 @@ export default {
             ready: {
                 InfoOperacion: false,
                 ProgramarSeguimientoDatos: false,
+                loadSeguimientoDatos: false
             },
         };
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+
+        async _loadSeguimientosDatos() {
+            if (!this.show) return; // stop here if not visible
+            const params = {
+                cliente_id: this.filters.cliente_id,
+                tipo_cliente_id: this.filters.tipo_cliente_id,
+                programado_b: 1,
+                status: 1,
+                id: this.filters.seguimiento_id
+            };
+            console.log("🚀 ~ _getSeguimientosProgramados ~ params:", params)
+            //this.$vs.loading();
+            try {
+                // Call the API from seguimientos service
+                const result = await seguimientos.getSeguimientosProgramados(params);
+                console.log("🚀 ~ _getSeguimientosProgramados ~ result:", result)
+                if (!result || typeof result !== "object") {
+                    throw new Error("Respuesta inválida en _getSeguimientosProgramados");
+                }
+                this.formData.email = result[0].email_programado;
+                this.formData.comentario_programado = result[0].comentario_programado;
+                this.formData.motivo = { label: result[0].motivo_texto, value: result[0].motivo_id };
+                this.formData.medio = { label: result[0].medio_texto, value: result[0].medio_preferido_programado_id };
+                let fecha_contacto = result[0].fecha_programada.split("-");
+                let hora_contacto = result[0].hora_programada.split(":");
+                //yyyy-mm-dd hh:mm
+                this.formData.fecha_a_contactar = new Date(
+                    fecha_contacto[0],
+                    fecha_contacto[1] - 1,
+                    fecha_contacto[2],
+                    hora_contacto[0],
+                    hora_contacto[1]
+                );
+                this.ready.loadSeguimientoDatos = true;
+                this.checkReady();
+            } catch (error) {
+                console.error("Error fetching seguimientos:", error);
+                this.cancelar();
+            } finally {
+                //this.$vs.loading.close();
+            }
+        },
+
         // Called when InfoOperacion is ready
         resultado_datos_cliente(success, email) {
             if (success) {
                 this.ready.InfoOperacion = true;
-                this.formData.email = email;
+                if (this.tipo == 'agregar') {
+                    this.formData.email = email;
+                }
                 this.checkReady();
             } else {
                 this.cancelar();
@@ -141,7 +208,13 @@ export default {
                 this.ready.InfoOperacion &&
                 this.ready.ProgramarSeguimientoDatos
             ) {
-                this.localShow = true;
+                if (this.tipo == 'agregar')
+                    this.localShow = true;
+                else {
+                    if (this.ready.loadSeguimientoDatos) {
+                        this.localShow = true
+                    }
+                }
             }
         },
         cancelar() {
@@ -154,7 +227,7 @@ export default {
         },
         async submitForm() {
             this.errores = [];
-            const isValid = await this.$refs.seguimientoForm.validate();
+            /*const isValid = await this.$refs.seguimientoForm.validate();
             if (!isValid) {
                 this.$vs.notify({
                     title: "Error",
@@ -162,7 +235,7 @@ export default {
                     color: "danger",
                 });
                 return;
-            }
+            }*/
             // ✅ Continue submit logic here
             this.$vs.loading();
             try {
@@ -176,9 +249,10 @@ export default {
                     payload
                 );
                 console.log("Success:", response);
+                let success_text = this.tipo == 'agregar' ? "Seguimiento programado correctamente" : "Seguimiento programado actualizado correctamente";
                 this.$vs.notify({
                     title: "Éxito",
-                    text: "Seguimiento programado correctamente",
+                    text: success_text,
                     color: "success",
                     time: 5000,
                 });

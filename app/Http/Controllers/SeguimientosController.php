@@ -181,13 +181,20 @@ class SeguimientosController extends ApiController
                     'motivo_id' => $seguimientoData['motivo_id'],
                     'medio_preferido_programado_id' => $seguimientoData['medio_preferido_programado_id'],
                     'fechahora_programada' => $seguimientoData['fechahora_programada'],
+                    'comentario_programado' => $seguimientoData['comentario_programado'],
                 ];
                 Seguimientos::where('id', $request->seguimiento_id)
                     ->update($updateData);
                 if ($request->enviar_x_email == 1 && $request->email) {
                     $this->email_sender($request->seguimiento_id, $request->email, 'reprogramar seguimiento');
                 }
-                return $this->successResponse("Seguimiento actualizado correctamente.", 200);
+                return $this->successResponse(
+                    [
+                        'message' => "Seguimiento actualizado correctamente.",
+                        'seguimiento_id' => $request->seguimiento_id
+                    ],
+                    200
+                );
             }
         };
         // Check debug mode
@@ -312,20 +319,32 @@ class SeguimientosController extends ApiController
 
             if ($request->has('programado_b')) {
                 $query->where('programado_b', $request->programado_b);
-                $query->select([
+                // Base select
+                $select = [
                     'id',
                     'tipo_cliente_id',
                     'clientes_id',
                     'operaciones_id',
                     'fechahora_programada',
+                    DB::raw(
+                        'DATE(fechahora_programada) as fecha_programada'
+                    ),
+                    DB::raw(
+                        'TIME(fechahora_programada) as hora_programada'
+                    ),
                     'motivo_id',
                     'medio_preferido_programado_id',
-                    //'comentario_programado',
                     'fechahora_registro_programado',
                     'registro_programado_id',
                     'email_programado',
-                    'status'
-                ]);
+                    'status',
+                ];
+                // ✅ Add comentario_programado *only if ID was requested*
+                if ($request->has('id')) {
+                    $select[] = 'comentario_programado';
+                }
+
+                $query->select($select);
             }
 
             if ($request->has('status')) {

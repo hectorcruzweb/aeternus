@@ -85,7 +85,7 @@
                                                 </div>
                                                 <div class="w-full alerta" v-else>
                                                     <div
-                                                        class="w-full info operacion-seleccionada flex flex-wrap items-center justify-between">
+                                                        class="w-full info operacion-seleccionada flex flex-nowrap items-center justify-between">
                                                         <span>
                                                             <h3>
                                                                 Operación
@@ -109,8 +109,8 @@
                                                     <vs-button class="w-full md:w-1/2 text-center" color="primary"
                                                         :disabled="!cliente ||
                                                             !cliente.id
-                                                            " @click.stop="
-                                                                ShowFormProgramarSeguimientos = true
+                                                            " @click="
+                                                                programarSeguimiento('agregar', null)
                                                                 ">
                                                         Programar
                                                     </vs-button>
@@ -206,13 +206,12 @@
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="cursor-pointer img-btn-20 mx-4"
-                                                    src="@assets/images/folder.svg" title="Ver detalle"
-                                                    @click="openModificar(data[indextr].id)" />
+                                                    src="@assets/images/folder.svg" title="Ver detalle" />
                                                 <img class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/edit.svg" title="Modificar Seguimiento"
-                                                    @click="openModificar(data[indextr].id)" />
+                                                    @click="programarSeguimiento('modificar', tr)" />
                                                 <img class="img-btn-20 mx-4" src="@assets/images/seguimientos.svg"
-                                                    title="Atender Seguimiento" @click="OpenFormSeguimientos(tr)" />
+                                                    title="Atender Seguimiento" />
                                             </div>
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
@@ -232,11 +231,8 @@
                 </div>
             </div>
             <FormularioProgramarSeguimiento v-if="ShowFormProgramarSeguimientos" :show="ShowFormProgramarSeguimientos"
-                :filters="{
-                    cliente_id: cliente.id,
-                    tipo_cliente_id: cliente.tipo_cliente_id,
-                    operacion_id: selectedRow ? selectedRow.operacion_id : '',
-                }" :tipo="'agregar'" @closeVentana="CloseFormProgramarSeguimientos"
+                :filters="FormularioProgramarSeguimientoFilters" :tipo="tipoFormProgramarSeguimiento"
+                @closeVentana="CloseFormProgramarSeguimientos"
                 @agregar_modificar_success_seguimiento="agregar_modificar_success_seguimiento" />
             <ClientesSearcherSeguimientos v-if="ShowBuscadorClientes" :show="ShowBuscadorClientes"
                 @closeVentana="ShowBuscadorClientes = false" @cliente-seleccionado="onClienteSeleccionado">
@@ -330,6 +326,7 @@ export default {
     // Data function returns the component's reactive state
     data() {
         return {
+            tipoFormProgramarSeguimiento: null,
             localShow: false, // controls popup visibility
             openConfirmarSinPassword: false,
             callBackConfirmar: Function,
@@ -347,11 +344,32 @@ export default {
                 tipo_cliente_id: null,
                 direccion_completa: null,
             },
-            selectedRow: null, // keep track of selection
+            selectedRow: null, // keep track of selection,
+            FormularioProgramarSeguimientoFilters: null,
         };
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        programarSeguimiento(tipo = '', datos_seguimiento = null) {
+            this.tipoFormProgramarSeguimiento = tipo;
+            //es agregar
+            if (tipo === 'agregar') {
+                this.FormularioProgramarSeguimientoFilters = {
+                    cliente_id: this.cliente.id,
+                    tipo_cliente_id: this.cliente.tipo_cliente_id,
+                    operacion_id: this.selectedRow ? this.selectedRow.operacion_id : '',
+                }
+            } else {
+                //modificar o consultar
+                this.FormularioProgramarSeguimientoFilters = {
+                    cliente_id: this.cliente.id,
+                    tipo_cliente_id: this.cliente.tipo_cliente_id,
+                    operacion_id: datos_seguimiento.operaciones_id,
+                    seguimiento_id: datos_seguimiento.id,
+                }
+            }
+            this.ShowFormProgramarSeguimientos = true
+        },
         toggleRow(row) {
             // if row already selected → deselect it
             if (
