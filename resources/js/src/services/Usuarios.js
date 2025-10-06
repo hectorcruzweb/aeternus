@@ -11,15 +11,15 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get("/get_usuarios", {
-                    cancelToken: new CancelToken(c => {
+                    cancelToken: new CancelToken((c) => {
                         self.cancel = c;
                     }),
-                    params: param
+                    params: param,
                 })
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     if (axiosSuper.isCancel(error)) {
                         reject(error.message);
                     } else {
@@ -33,10 +33,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -46,10 +46,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -59,10 +59,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/add_rol", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -72,10 +72,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/update_rol", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -87,10 +87,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -103,17 +103,17 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call, {
-                    cancelToken: new CancelToken(c => {
+                    cancelToken: new CancelToken((c) => {
                         self.cancel = c;
                     }),
                     params: {
-                        rol_id: param
-                    }
+                        rol_id: param,
+                    },
                 })
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -126,17 +126,17 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call, {
-                    cancelToken: new CancelToken(c => {
+                    cancelToken: new CancelToken((c) => {
                         self.cancel = c;
                     }),
                     params: {
-                        user_id: param
-                    }
+                        user_id: param,
+                    },
                 })
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -147,10 +147,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/add_usuario", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -161,10 +161,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/update_usuario", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -175,10 +175,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/delete_usuario", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -189,36 +189,27 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/activate_usuario", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
     },
 
-    /**obtener los permisos por modulo y rol */
-    confirmPassword(param) {
-        let call = "/verificar_password";
-        let self = this;
-        return new Promise((resolve, reject) => {
-            axios
-                .post(call, {
-                    cancelToken: new CancelToken(c => {
-                        self.cancel = c;
-                    }),
-                    params: {
-                        password: param
-                    }
-                })
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
+    async confirmPassword(password) {
+        const call = "/verificar_password";
+        try {
+            const response = await axios.post(
+                call,
+                { password: password } // ✅ correct body
+            );
+            return response;
+        } catch (error) {
+            // Rethrow normal API errors
+            throw error;
+        }
     },
 
     //update perfil personal
@@ -226,12 +217,12 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/usuarios/actualizar_perfil", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
-    }
+    },
 };

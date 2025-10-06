@@ -28,17 +28,22 @@
                             <vs-checkbox color="success" class="size-small text-info" v-model="formData.enviar_x_email"
                                 :vs-value="formData.enviar_x_email">¿Enviar por correo
                                 electrónico?</vs-checkbox>
-                            <vs-button class="" color="success" @click="submitForm">
+                            <vs-button class="" color="success" @click="EnviarForm">
                                 {{ buttonTitle }}
                             </vs-button>
                         </div>
                     </div>
                 </div>
             </div>
+            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callback"
+                @closeVerificar="openPassword = false" :accion="accionNombre">
+            </Password>
         </vs-popup>
     </div>
 </template>
 <script>
+//componente de password
+import Password from "@pages/confirmar_password";
 import seguimientos from "../../../services/seguimientos";
 import ProgramarSeguimientoDatos from "./ProgramarSeguimientoDatos.vue";
 import InfoOperacion from "./InfoOperacion.vue";
@@ -50,6 +55,7 @@ export default {
         "v-select": vSelect,
         ProgramarSeguimientoDatos,
         InfoOperacion,
+        Password
     },
     // Props: data passed from parent
     props: {
@@ -116,7 +122,6 @@ export default {
                     );
                     //i have to load data if not 'agregar'
                     if (this.tipo != 'agregar') {
-                        console.log("buscar datos")
                         this.formData.seguimiento_id = this.filters.seguimiento_id;
                         await this._loadSeguimientosDatos();
                     }
@@ -130,6 +135,9 @@ export default {
     // Data function returns the component's reactive state
     data() {
         return {
+            callback: Function,
+            accionNombre: "",
+            openPassword: false,
             localShow: false, // controls popup visibility
             //Datos del Formulario
             formData: {
@@ -151,7 +159,6 @@ export default {
     },
     // Methods: functions you can call in template or other hooks
     methods: {
-
         async _loadSeguimientosDatos() {
             if (!this.show) return; // stop here if not visible
             const params = {
@@ -193,7 +200,6 @@ export default {
                 //this.$vs.loading.close();
             }
         },
-
         // Called when InfoOperacion is ready
         resultado_datos_cliente(success, email) {
             if (success) {
@@ -237,6 +243,17 @@ export default {
             this.localShow = false;
             this.ready = { info: false, seguimiento: false }; // reset state
         },
+        async EnviarForm() {
+            if (this.tipo === 'modificar') {
+                this.accionNombre = 'Actualizar Seguimiento Programado'
+                this.callback = await this.submitForm;
+                this.openPassword = true;
+                return;
+            }
+            await this.submitForm();
+        },
+
+
         async submitForm() {
             this.errores = [];
             /*const isValid = await this.$refs.seguimientoForm.validate();

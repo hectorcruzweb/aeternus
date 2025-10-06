@@ -403,7 +403,7 @@ class UsuariosController extends ApiController
                 ->where('status', '=', 1)
                 ->get();
             if (count($resultado) > 0) {
-                if (Hash::check($request->params['password'], $resultado[0]->password)) {
+                if (Hash::check($request->password, $resultado[0]->password)) {
                     return $this->successResponse('Operación autorizada', 200);
                 }
             }

@@ -249,7 +249,7 @@
             <ClientesSearcherSeguimientos v-if="ShowBuscadorClientes" :show="ShowBuscadorClientes"
                 @closeVentana="ShowBuscadorClientes = false" @cliente-seleccionado="onClienteSeleccionado">
             </ClientesSearcherSeguimientos>
-            <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+            <ConfirmarDanger :z_index="'z-index58k'" v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword"
                 :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
                 :accion="'QUITAR EL CLIENTE SELECCIONADO'" :confirmarButton="'Continuar'"></ConfirmarDanger>
         </vs-popup>
