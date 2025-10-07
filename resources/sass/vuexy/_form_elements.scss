@@ -1,3 +1,85 @@
+// Base highlighted input
+.highlighted-inputs {
+    padding: 1rem;
+    label {
+        font-weight: 500;
+    }
+
+    input {
+        border-radius: 4px;
+    }
+}
+
+// Function to lighten/darken border slightly
+@function border-color($color) {
+    @return darken($color, 10%);
+}
+
+// Primary (already exists)
+.highlighted-inputs-primary {
+    @extend .highlighted-inputs;
+    background-color: #f6ebcb; // you can adjust for primary
+    label {
+        color: $dark;
+    }
+    input {
+        background-color: $white;
+        border: 1px solid border-color(#e9cd7d) !important;
+        color: $dark;
+    }
+}
+
+// Secondary Optional (blue)
+.highlighted-inputs-blue {
+    @extend .highlighted-inputs;
+    background-color: lighten($secondary-optional, 40%) !important;
+    label {
+        color: $dark;
+    }
+    input {
+        background-color: $white;
+        border: 1px solid border-color($secondary-optional) !important;
+        color: $dark;
+    }
+}
+
+// Success (green)
+.highlighted-inputs-success {
+    @extend .highlighted-inputs;
+    background-color: lighten($success, 40%) !important;
+    label {
+        color: $dark;
+    }
+    input {
+        background-color: $white;
+        border: 1px solid border-color($success) !important;
+        color: $dark;
+    }
+}
+
+// Danger (red)
+.highlighted-inputs-danger {
+    @extend .highlighted-inputs;
+    background-color: #fbdddd !important;
+    label {
+        color: $dark;
+    }
+}
+
+// Warning (orange)
+.highlighted-inputs-warning {
+    @extend .highlighted-inputs;
+    background-color: lighten($warning, 40%) !important;
+    label {
+        color: $dark;
+    }
+    input {
+        background-color: $white;
+        border: 1px solid border-color($warning) !important;
+        color: $dark;
+    }
+}
+
 /*aplica para todos las cajas de texto, selects, emails, passwords.*/
 .input-cantidad {
     margin: 0 auto !important;
@@ -30,7 +112,7 @@
         @extend .size-base, .color-copy, .font-normal;
         text-transform: uppercase;
         padding: 5px 0px 5px 7px;
-        border: 1px solid rgba(var(--vs-default_color), 1);
+        border: 1px solid rgba(var(--vs-default_color), 1) !important;
         &::placeholder {
             @extend .size-small, .color-dark-300, .font-light;
             padding: 5px 0px 5px 7px;
@@ -48,6 +130,7 @@
         border-radius: 0 !important;
         line-height: 1rem !important;
         max-height: 47px !important;
+        background-color: $white;
     }
     padding-top: 0.25rem !important;
     padding-bottom: 0.25rem !important;
@@ -70,7 +153,6 @@
         @extend .size-base, .color-copy, .font-normal;
         text-transform: capitalize !important;
     }
-
     &.large-size {
         input {
             height: 47px !important;
@@ -89,6 +171,14 @@
             margin-top: 0px !important;
         }
     }
+    .vs__dropdown-toggle {
+        // margin-top: 0.1rem !important;
+    }
+    input[type="text"]:disabled,
+    input[type="email"]:disabled,
+    .vs--disabled .vs__dropdown-toggle {
+        background-color: #f5f5f5 !important; /* Tailwind gray-300 */
+    }
 }
 //estilos del vue-editor
 .ql-editor {
@@ -100,6 +190,11 @@
     }
     overflow-y: auto;
 }
+
+.ql-editor[contenteditable="false"] {
+    background-color: #f5f5f5 !important; // Tailwind gray-300
+}
+
 .ql-formats button svg {
     @media (max-width: 992px) {
         max-width: 14px !important;
@@ -117,25 +212,4 @@
 .small-editor .ql-editor {
     min-height: 200px !important;
     max-height: 250px !important;
-}
-
-.highlighted-inputs-blue {
-    background-color: #f6ebcb; // strong blue
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-
-    label {
-        color: #333; // contrast text
-        font-weight: 500;
-    }
-
-    input {
-        background-color: #fff; // keep input white for readability
-        border: 1px solid darken(#e9cd7d, 10%) !important;
-        border-radius: 4px;
-        padding: 0.5rem;
-        color: #333;
-    }
 }

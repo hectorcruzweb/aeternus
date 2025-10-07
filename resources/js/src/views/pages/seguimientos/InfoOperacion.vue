@@ -22,7 +22,11 @@
 </template>
 <script>
 import clientes from "../../../services/clientes";
+import vSelect from "vue-select";
 export default {
+    components: {
+        "v-select": vSelect
+    },
     // Name of the component (optional)
     name: "InfoOperacion",
     // Props: data passed from parent

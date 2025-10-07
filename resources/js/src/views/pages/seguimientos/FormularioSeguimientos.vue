@@ -184,7 +184,7 @@
                         <div v-else-if="OperacionesList.length === 0" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
                         </div>
-                        <div v-else class="overflow-auto">
+                        <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
 
                         </div>
@@ -198,7 +198,7 @@
                         <div v-else-if="ProgramadosList.length === 0" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">No hay seguimientos programados</span>
                         </div>
-                        <div v-else class="overflow-auto">
+                        <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
                             <vs-table :sst="false" :data="ProgramadosList" stripe pagination max-items="8"
                                 noDataText="0 Resultados" class="w-full tabla-datos">
@@ -232,7 +232,7 @@
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
                                                     title="Cancelar Seguimiento"
-                                                    @click="cancelarCotizacion(data[indextr])" />
+                                                    @click="programarSeguimiento('cancelar', tr)" />
                                             </div>
                                         </vs-td>
                                     </vs-tr>

@@ -12,7 +12,7 @@
                 </span>
                 <span v-if="this.errores.fecha_a_contactar" class="block">{{
                     errores.fecha_a_contactar[0]
-                }}</span>
+                    }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -31,7 +31,7 @@
                 </span>
                 <span v-if="this.errores['motivo.value']" class="block">{{
                     errores["motivo.value"][0]
-                }}</span>
+                    }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -50,7 +50,7 @@
                 </span>
                 <span v-if="this.errores['medio.value']" class="block">{{
                     errores["medio.value"][0]
-                }}</span>
+                    }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -65,7 +65,7 @@
                 </span>
                 <span v-if="this.errores.email" class="block">{{
                     errores.email[0]
-                }}</span>
+                    }}</span>
             </div>
             <div class="w-full px-2 pt-2 small-editor">
                 <NotasComponent :readonly="isReadOnly" :value="proxy.comentario_programado" @input="
@@ -73,6 +73,49 @@
                         proxy.comentario_programado = val;
                     }
                 " />
+            </div>
+
+            <div v-if="tipo === 'cancelar'" class="w-full px-2 mt-2">
+                <div class="w-full flex flex-wrap highlighted-inputs-danger pt-2 pb-4">
+                    <div class="w-full py-2 px-2">
+                        <div class="w-full text-center uppercase py-2 bg-danger text-white">
+                            Motivo de Cancelación
+                        </div>
+                    </div>
+                    <div class="w-full md:w-6/12 px-2 input-text">
+                        <label>
+                            Motivo de Cancelación
+                            <span>(*)</span>
+                        </label>
+                        <v-select :options="motivos_de_cancelacion" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="proxy.motivo_cancelacion" class="w-full" name="motivo_cancelacion"
+                            data-vv-as="Motivo de Cancelación" v-validate="'required-select'" @input="clearAllErrors">
+                            <div slot="no-options">
+                                No hay Motivos de Cancelación
+                            </div>
+                        </v-select>
+                        <span v-show="errors.has('motivo_cancelacion')" class="">
+                            {{ errors.first("motivo_cancelacion") }}
+                        </span>
+                        <span v-if="this.errores['motivo_cancelacion.value']" class="block">{{
+                            errores["motivo_cancelacion.value"][0]
+                        }}</span>
+                    </div>
+                    <div class="w-full md:w-6/12 px-2 input-text">
+                        <label>
+                            Comentario / Descripción
+                            <span></span>
+                        </label>
+                        <vs-input v-validate="" name="comentario_cancelacion" type="text" class="w-full" placeholder=""
+                            v-model="proxy.comentario_cancelacion" maxlength="250" @input="clearAllErrors" />
+                        <span v-show="errors.has('comentario_cancelacion')" class="">
+                            {{ errors.first("comentario_cancelacion") }}
+                        </span>
+                        <span v-if="this.errores.comentario_cancelacion" class="block">{{
+                            errores.comentario_cancelacion[0]
+                        }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -134,6 +177,7 @@ export default {
             // alternatively: JSON.parse(JSON.stringify(this.value || {}))
             motivos: [],
             medios: [],
+            motivos_de_cancelacion: [],
         };
     },
     // Methods: functions you can call in template or other hooks
@@ -157,6 +201,22 @@ export default {
                 if (!medios || typeof medios !== "object") {
                     throw new Error("Respuesta inválida en medios");
                 }
+
+                if (this.tipo === 'cancelar') {
+                    let motivosCancelar = await seguimientos.getMotivosCancelacion();
+                    // ✅ Validate responses
+                    if (!motivosCancelar || typeof motivosCancelar !== "object") {
+                        throw new Error("Respuesta inválida en motivos de cancelación");
+                    }
+                    this.motivos_de_cancelacion = [
+                        { value: "", label: "Seleccione 1" }, // 👈 default blank
+                        ...Object.entries(motivosCancelar).map(([key, label]) => ({
+                            value: key,
+                            label,
+                        })),
+                    ];
+                }
+
                 // build array with default + API values
                 this.motivos = [
                     { value: "", label: "Seleccione 1" }, // 👈 default blank

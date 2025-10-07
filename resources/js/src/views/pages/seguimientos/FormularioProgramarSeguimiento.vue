@@ -9,7 +9,7 @@
                     </div>
                     <div class="form-group-content">
                         <div class="px-2 mb-2">
-                            <div class="highlighted-inputs-blue">
+                            <div class="highlighted-inputs-primary">
                                 <span v-if="
                                     this.errores.cliente_id ||
                                     this.errores.tipo_cliente_id
@@ -25,10 +25,10 @@
                         <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formData" :errores="errores"
                             @resultado="resultado_seguimientos_datos" :tipo="tipo"></ProgramarSeguimientoDatos>
                         <div v-if="!isReadOnly" class="flex flex-wrap items-center justify-between pr-2 pt-4">
-                            <vs-checkbox color="success" class="size-small text-info" v-model="formData.enviar_x_email"
-                                :vs-value="formData.enviar_x_email">¿Enviar por correo
+                            <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
+                                v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
                                 electrónico?</vs-checkbox>
-                            <vs-button class="" color="success" @click="EnviarForm">
+                            <vs-button class="ml-auto" :color="buttonColor" @click="EnviarForm">
                                 {{ buttonTitle }}
                             </vs-button>
                         </div>
@@ -87,7 +87,13 @@ export default {
     // Computed properties: derived reactive data
     computed: {
         isReadOnly() {
-            return this.tipo !== "agregar" && this.tipo !== "modificar";
+            return this.tipo !== "agregar" && this.tipo !== "modificar" && this.tipo !== "cancelar";
+        },
+        verEnviarEmailChk() {
+            if (this.tipo === 'cancelar') {
+                return this.formData.email ? true : false;
+            } else
+                return true;
         },
         popupTitle() {
             switch (this.tipo) {
@@ -97,16 +103,40 @@ export default {
                     return 'Modificar Seguimiento Programado';
                 case 'consultar':
                     return 'Consultar Seguimiento Programado';
+                case 'cancelar':
+                    return 'Cancelar Seguimiento Programado';
                 default:
                     return 'Programar Seguimiento';
+            }
+        },
+        successTextRespnse() {
+            switch (this.tipo) {
+                case 'agregar':
+                    return 'Seguimiento programado correctamente';
+                case 'modificar':
+                    return 'Seguimiento actualizado correctamente';
+                case 'cancelar':
+                    return 'Seguimiento cancelado correctamente';
+                default:
+                    return 'N/A';
             }
         },
         buttonTitle() {
             switch (this.tipo) {
                 case 'modificar':
                     return 'Modificar Seguimiento';
+                case 'cancelar':
+                    return 'Cancelar Seguimiento';
                 default:
                     return 'Programar Seguimiento';
+            }
+        },
+        buttonColor() {
+            switch (this.tipo) {
+                case 'cancelar':
+                    return 'danger';
+                default:
+                    return 'success';
             }
         },
     },
@@ -146,8 +176,10 @@ export default {
                 enviar_x_email: false,
                 motivo: { label: "Seleccione 1", value: "" },
                 medio: { label: "Seleccione 1", value: "" },
+                motivo_cancelacion: { label: "Seleccione 1", value: "" },
                 email: "",
                 comentario_programado: "",
+                comentario_cancelacion: ''
             },
             errores: [], //from backend
             ready: {
@@ -249,6 +281,11 @@ export default {
                 this.callback = await this.submitForm;
                 this.openPassword = true;
                 return;
+            } else if (this.tipo === 'cancelar') {
+                this.accionNombre = 'Cancelar Seguimiento Programado'
+                this.callback = await this.submitForm;
+                this.openPassword = true;
+                return;
             }
             await this.submitForm();
         },
@@ -256,7 +293,7 @@ export default {
 
         async submitForm() {
             this.errores = [];
-            /*const isValid = await this.$refs.seguimientoForm.validate();
+            const isValid = await this.$refs.seguimientoForm.validate();
             if (!isValid) {
                 this.$vs.notify({
                     title: "Error",
@@ -264,7 +301,7 @@ export default {
                     color: "danger",
                 });
                 return;
-            }*/
+            }
             // ✅ Continue submit logic here
             this.$vs.loading();
             try {
@@ -278,7 +315,7 @@ export default {
                     payload
                 );
                 console.log("Success:", response);
-                let success_text = this.tipo == 'agregar' ? "Seguimiento programado correctamente" : "Seguimiento programado actualizado correctamente";
+                let success_text = this.successTextRespnse;
                 this.$vs.notify({
                     title: "Éxito",
                     text: success_text,

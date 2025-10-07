@@ -16,6 +16,8 @@ Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_client
 Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimientos');
 Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
 Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
+Route::get('/seguimientos/get_motivos_cancelacion', 'SeguimientosController@getMotivosCancelacion');
+
 
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');

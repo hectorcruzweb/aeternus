@@ -52,48 +52,67 @@ class SeguimientosController extends ApiController
         ];
     }
 
-
+    /**
+     * Get motivos de cancelación.
+     *
+     * @return array
+     */
+    public function getMotivosCancelacion()
+    {
+        return [
+            1 => "Seguimiento generado por error",
+            2 => "El cliente contrató con otro proveedor",
+            3 => "No se logró contactar al cliente después de varios intentos",
+            4 => "El cliente ya no está interesado en el servicio o producto",
+            5 => "El cliente solicitó cancelar el seguimiento voluntariamente",
+        ];
+    }
 
     public function programar_segumientos(Request $request, $tipo_request = '')
     {
-        if (!(trim($tipo_request) == 'agregar' || trim($tipo_request) == 'modificar')) {
-            return $this->errorResponse('Error, debe especificar que tipo de control está solicitando.', 409);
+        // ✅ Validate tipo_request
+        if (!in_array(trim($tipo_request), ['agregar', 'modificar', 'cancelar'])) {
+            return $this->errorResponse('Error, debe especificar qué tipo de control está solicitando.', 409);
         }
+        // Normalize enviar_x_email
         $request->merge([
             'enviar_x_email' => $request->enviar_x_email ? 1 : 0
         ]);
+        // ✅ Base validation rules
         $validaciones = [
             'seguimiento_id' => [
-                trim($tipo_request) === 'modificar' ? 'required' : '', // required only if modifying
+                (in_array(trim($tipo_request), ['modificar', 'cancelar']) ? 'required' : ''),
                 function ($attribute, $value, $fail) use ($tipo_request) {
-                    if (trim($tipo_request) === 'modificar' && $value) {
+                    if (in_array($tipo_request, ['modificar', 'cancelar']) && $value) {
                         $exists = DB::table('seguimientos')
                             ->where('id', $value)
                             ->where('status', 1)
+                            ->where('programado_b', 1)
                             ->exists();
                         if (!$exists) {
-                            $fail("El seguimiento indicado no existe o no se puede modificar.");
+                            $fail("El seguimiento indicado no existe, o no está activo para poder {$tipo_request}.");
                         }
                     }
                 }
             ],
-            'tipo_cliente_id' => 'required|in:1,2', // only 1 or 2 allowed
+            'tipo_cliente_id' => ($tipo_request === 'cancelar') ? '' : 'required|in:1,2',
             'cliente_id' => [
-                'required',
-                function ($attribute, $value, $fail) use ($request) {
-                    $tipo = $request->tipo_cliente_id;
-                    if ($tipo == 1 && !Clientes::where('id', $value)->exists()) {
-                        $fail("El cliente seleccionado no ha sido registrado.");
-                    }
-                    if ($tipo == 2 && !Cotizaciones::where('id', $value)->exists()) {
-                        $fail("El cliente seleccionado no cuenta con Cotizaciones.");
+                ($tipo_request === 'cancelar') ? '' : 'required',
+                function ($attribute, $value, $fail) use ($request, $tipo_request) {
+                    if ($tipo_request !== 'cancelar') {
+                        $tipo = $request->tipo_cliente_id;
+                        if ($tipo == 1 && !Clientes::where('id', $value)->exists()) {
+                            $fail("El cliente seleccionado no ha sido registrado.");
+                        }
+                        if ($tipo == 2 && !Cotizaciones::where('id', $value)->exists()) {
+                            $fail("El cliente seleccionado no cuenta con Cotizaciones.");
+                        }
                     }
                 }
             ],
             'operacion_id' => [
-                function ($attribute, $value, $fail) use ($request) {
-                    // Only validate if operacion_id is provided
-                    if (!is_null($value) && $value !== '') {
+                function ($attribute, $value, $fail) use ($request, $tipo_request) {
+                    if ($tipo_request !== 'cancelar' && !is_null($value) && $value !== '') {
                         $tipo = $request->tipo_cliente_id;
                         $clienteId = $request->cliente_id;
 
@@ -114,59 +133,51 @@ class SeguimientosController extends ApiController
                     }
                 }
             ],
-            //datos del seguimiento
-            'fecha_a_contactar' => 'required|date|after_or_equal:now', // >= current time
-            'enviar_x_email' => 'required|in:1,0',
-            'motivo.value'      => 'required|integer|between:1,10', // required and between 1-10
-            'medio.value'       => 'required|integer|between:1,6',  // required and between 1-6
-            'email' => 'required_if:enviar_x_email,1|email|nullable',
+            'fecha_a_contactar' => ($tipo_request === 'cancelar') ? '' : 'required|date|after_or_equal:now',
+            'enviar_x_email' => ($tipo_request === 'cancelar') ? '' : 'required|in:1,0',
+            'motivo.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,10',
+            'medio.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,6',
+            'motivo_cancelacion.value' => !($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,5',
+            'email' => ($tipo_request === 'cancelar') ? '' : 'required_if:enviar_x_email,1|email|nullable',
             'comentario_programado' => ''
         ];
+
         $mensajes = [
-            'seguimiento_id.required'      => 'El ID del seguimiento es requerido si se va a modificar.',
-            'cliente_id.required'          => 'Seleccione un cliente.',
-            'tipo_cliente_id.required'     => 'Seleccione el tipo de cliente.',
-            'tipo_cliente_id.in'           => 'El tipo de cliente debe ser 1 o 2.',
-            'operacion_id.*'               => 'La operación indicada no es válida para este cliente.',
-            'fecha_a_contactar.required'   => 'Ingrese la fecha a contactar.',
-            'fecha_a_contactar.date'       => 'Ingrese una fecha válida.',
-            'fecha_a_contactar.after_or_equal' => 'La fecha a contactar debe ser igual o posterior a la fecha y hora actual.',
-            'enviar_x_email.required'      => 'Indique si desea enviar por correo electrónico.',
-            'motivo.value.required'        => 'Seleccione un motivo de seguimiento.',
-            'motivo.value.integer'         => 'El valor del motivo debe ser un número.',
-            'motivo.value.between'         => 'El valor del motivo debe estar entre 1 y 10.',
-            'medio.value.required'         => 'Seleccione un medio de contacto.',
-            'medio.value.integer'          => 'El valor del medio debe ser un número.',
-            'medio.value.between'          => 'El valor del medio debe estar entre 1 y 6.',
+            'seguimiento_id.required' => 'El ID del seguimiento es requerido si se va a modificar o cancelar.',
+            'cliente_id.required' => 'Seleccione un cliente.',
+            'tipo_cliente_id.required' => 'Seleccione el tipo de cliente.',
+            'tipo_cliente_id.in' => 'El tipo de cliente debe ser 1 o 2.',
+            'fecha_a_contactar.required' => 'Ingrese la fecha a contactar.',
+            'fecha_a_contactar.date' => 'Ingrese una fecha válida.',
+            'fecha_a_contactar.after_or_equal' => 'La fecha debe ser igual o posterior a la actual.',
+            'motivo.value.required' => 'Seleccione un motivo.',
+            'medio.value.required' => 'Seleccione un medio de contacto.',
+            'motivo_cancelacion.value.required' => 'Seleccione un motivo de cancelación.',
             'email.required_if' => 'Debe ingresar un correo electrónico cuando se selecciona enviar por email.',
-            'email.email' => 'Debe ingresar un correo electrónico válido.',
-            'comentario_programado.required' => 'Ingrese un comentario para el seguimiento.'
+            'email.email' => 'Debe ingresar un correo electrónico válido.'
         ];
-        // return $this->errorResponse(gettype($request->enviar_x_email), 500);
-        request()->validate(
-            $validaciones,
-            $mensajes
-        );
+
+        // ✅ Run validation
+        request()->validate($validaciones, $mensajes);
 
         $queryClosure = function () use ($request, $tipo_request) {
-            // Prepare the common seguimiento data
+            // Common seguimiento data
             $seguimientoData = [
                 'tipo_cliente_id' => $request->tipo_cliente_id,
                 'clientes_id' => $request->cliente_id,
                 'operaciones_id' => $request->operacion_id ?? null,
                 'email_programado' => $request->email,
-                'motivo_id' => $request->motivo['value'],
-                'medio_preferido_programado_id' => $request->medio['value'],
-                'fechahora_programada' => $request->fecha_a_contactar,
-                'comentario_programado' => $request->comentario_programado,
+                'motivo_id' => $request->motivo['value'] ?? null,
+                'medio_preferido_programado_id' => $request->medio['value'] ?? null,
+                'fechahora_programada' => $request->fecha_a_contactar ?? null,
+                'comentario_programado' => $request->comentario_programado ?? null,
                 'programado_b' => 1,
                 'fechahora_registro_programado' => now(),
             ];
 
-            if (trim($tipo_request) === 'agregar') {
-                // Insert a new seguimiento
+            // === AGREGAR ===
+            if ($tipo_request === 'agregar') {
                 $seguimientoId = Seguimientos::insertGetId($seguimientoData);
-                // Send email if requested
                 if ($request->enviar_x_email == 1 && $request->email) {
                     $this->email_sender($seguimientoId, $request->email, 'programar seguimiento');
                 }
@@ -174,8 +185,10 @@ class SeguimientosController extends ApiController
                     'message' => 'Seguimiento agregado correctamente.',
                     'seguimiento_id' => $seguimientoId
                 ], 200);
-            } elseif (trim($tipo_request) === 'modificar') {
-                // Limit update to only allowed fields
+            }
+
+            // === MODIFICAR ===
+            if ($tipo_request === 'modificar') {
                 $updateData = [
                     'email_programado' => $seguimientoData['email_programado'],
                     'motivo_id' => $seguimientoData['motivo_id'],
@@ -183,18 +196,50 @@ class SeguimientosController extends ApiController
                     'fechahora_programada' => $seguimientoData['fechahora_programada'],
                     'comentario_programado' => $seguimientoData['comentario_programado'],
                 ];
-                Seguimientos::where('id', $request->seguimiento_id)
-                    ->update($updateData);
+
+                Seguimientos::where('id', $request->seguimiento_id)->update($updateData);
+
                 if ($request->enviar_x_email == 1 && $request->email) {
                     $this->email_sender($request->seguimiento_id, $request->email, 'reprogramar seguimiento');
                 }
-                return $this->successResponse(
-                    [
-                        'message' => "Seguimiento actualizado correctamente.",
-                        'seguimiento_id' => $request->seguimiento_id
-                    ],
-                    200
-                );
+
+                return $this->successResponse([
+                    'message' => 'Seguimiento actualizado correctamente.',
+                    'seguimiento_id' => $request->seguimiento_id
+                ], 200);
+            }
+
+            // === CANCELAR ===
+            if ($tipo_request === 'cancelar') {
+                $cancelarData = [
+                    'comentario_cancelacion' => $request->comentario_cancelacion,
+                    'motivo_cancelacion_id' => $request->motivo_cancelacion['value'] ?? null
+                ];
+                $seguimiento = Seguimientos::where('id', $request->seguimiento_id)
+                    ->where('status', 1)
+                    ->where('programado_b', 1)
+                    ->first();
+
+                if (!$seguimiento) {
+                    return $this->errorResponse("El seguimiento no existe o ya fue cancelado.", 409);
+                }
+
+                Seguimientos::where('id', $request->seguimiento_id)
+                    ->update([
+                        'status' => 0, // Cancelled
+                        'fechahora_cancelacion' => now(),
+                        'comentario_cancelacion' => $cancelarData['comentario_cancelacion'],
+                        'motivo_cancelacion_id' => $cancelarData['motivo_cancelacion_id']
+                    ]);
+                if ($seguimiento->email_programado) {
+                    if ($request->enviar_x_email == 1 && $request->email) {
+                        $this->email_sender($request->seguimiento_id, $request->email, 'cancelar seguimiento programado');
+                    }
+                }
+                return $this->successResponse([
+                    'message' => 'Seguimiento cancelado correctamente.',
+                    'seguimiento_id' => $request->seguimiento_id
+                ], 200);
             }
         };
         // Check debug mode
