@@ -117,7 +117,9 @@
                                                     <vs-button class="w-full md:w-1/2 text-center" color="success"
                                                         :disabled="!cliente ||
                                                             !cliente.id
-                                                            ">
+                                                            " @click="
+                                                                registrarSeguimiento('agregar', null)
+                                                                ">
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -223,7 +225,8 @@
                                                     src="@assets/images/edit.svg" title="Modificar Seguimiento"
                                                     @click="programarSeguimiento('modificar', tr)" />
                                                 <img class="img-btn-20 mx-4" src="@assets/images/seguimientos.svg"
-                                                    title="Atender Seguimiento" />
+                                                    title="Atender Seguimiento"
+                                                    @click="registrarSeguimiento('atender_seguimiento_programado', tr)" />
                                             </div>
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
@@ -252,6 +255,10 @@
             <ConfirmarDanger :z_index="'z-index58k'" v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword"
                 :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
                 :accion="'QUITAR EL CLIENTE SELECCIONADO'" :confirmarButton="'Continuar'"></ConfirmarDanger>
+            <FormularioRegistrarSeguimiento v-if="ShowFormRegistrarSeguimientos" :show="ShowFormRegistrarSeguimientos"
+                :filters="FormularioRegistrarSeguimientoFilters" :tipo="tipoFormRegistrarSeguimiento"
+                @closeVentana="ShowFormRegistrarSeguimientos = false"
+                @agregar_modificar_success_seguimiento="agregar_modificar_success_registrar_seguimiento" />
         </vs-popup>
     </div>
 </template>
@@ -261,11 +268,13 @@ import FormularioProgramarSeguimiento from "./FormularioProgramarSeguimiento";
 import ClientesSearcherSeguimientos from "../clientes/ClientesSearcherSeguimientos.vue";
 import clientes from "../../../services/clientes";
 import seguimientos from "../../../services/seguimientos";
+import FormularioRegistrarSeguimiento from "./FormularioRegistrarSeguimiento.vue";
 export default {
     components: {
         ClientesSearcherSeguimientos,
         FormularioProgramarSeguimiento,
         ConfirmarDanger,
+        FormularioRegistrarSeguimiento
     },
     // Name of the component (optional)
     name: "FormularioSeguimientos",
@@ -339,6 +348,7 @@ export default {
     data() {
         return {
             tipoFormProgramarSeguimiento: null,
+
             localShow: false, // controls popup visibility
             openConfirmarSinPassword: false,
             callBackConfirmar: Function,
@@ -358,6 +368,11 @@ export default {
             },
             selectedRow: null, // keep track of selection,
             FormularioProgramarSeguimientoFilters: null,
+
+            //Registrar Seguimiento Data
+            FormularioRegistrarSeguimientoFilters: null,
+            ShowFormRegistrarSeguimientos: false,
+            tipoFormRegistrarSeguimiento: null,
         };
     },
     // Methods: functions you can call in template or other hooks
@@ -525,6 +540,29 @@ export default {
             //success after insert or update ()
             await this.updateClienteInfo();
             this.ShowFormProgramarSeguimientos = false;
+        },
+        //Registrar Seguimientos Methods
+        registrarSeguimiento(tipo = '', datos_seguimiento = null) {
+            this.tipoFormRegistrarSeguimiento = tipo;
+            this.FormularioRegistrarSeguimientoFilters = {
+                cliente_id: this.cliente.id,
+                tipo_cliente_id: this.cliente.tipo_cliente_id,
+                operacion_id: this.selectedRow ? this.selectedRow.operacion_id : '',
+                seguimiento_id: null
+            };
+            // es agregar
+            if (tipo !== 'agregar' && datos_seguimiento) {
+                // modificar o consultar
+                this.FormularioRegistrarSeguimientoFilters.seguimiento_id = datos_seguimiento.id;
+            }
+            this.ShowFormRegistrarSeguimientos = true;
+        },
+
+
+        async agregar_modificar_success_registrar_seguimiento() {
+            //success after insert or update ()
+            await this.updateClienteInfo();
+            this.ShowFormRegistrarSeguimientos = false;
         }
     },
     // Lifecycle hooks

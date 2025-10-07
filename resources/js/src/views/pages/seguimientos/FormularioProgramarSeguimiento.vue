@@ -81,7 +81,7 @@ export default {
         tipo: {
             type: String,
             required: true,
-            default: "agregar", //agregar, modificar, consulta
+            default: "agregar", //agregar, modificar, consultar, cancelar
         },
     },
     // Computed properties: derived reactive data

@@ -10,7 +10,7 @@
 
 <template>
     <div id="app" :class="vueAppClasses">
-        <!--<PopupDebug v-if="isDev"></PopupDebug>-->
+        <PopupDebug v-if="isDev"></PopupDebug>
         <router-view @setAppClasses="setAppClasses" />
     </div>
 </template>
