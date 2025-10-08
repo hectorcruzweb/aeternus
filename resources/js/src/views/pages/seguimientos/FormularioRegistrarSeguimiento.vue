@@ -1,11 +1,14 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup popup-70', z_index]" fullscreen close="cancelar" :title="popupTitle"
-            :active="localShow" :ref="this.$options.name">
-            <div class="pb-4">
-                {{ filters }} / {{ tipo }}
-
-            </div>
+        <vs-popup
+            :class="['forms-popup popup-70', z_index]"
+            fullscreen
+            close="cancelar"
+            :title="popupTitle"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
+            <div class="pb-4">{{ filters }} / {{ tipo }}</div>
         </vs-popup>
     </div>
 </template>
@@ -22,7 +25,7 @@ export default {
         "v-select": vSelect,
         ProgramarSeguimientoDatos,
         InfoOperacion,
-        Password
+        Password,
     },
     // Props: data passed from parent
     props: {
@@ -49,58 +52,61 @@ export default {
     // Computed properties: derived reactive data
     computed: {
         isReadOnly() {
-            return this.tipo !== "agregar" && this.tipo !== "modificar" && this.tipo !== "cancelar";
+            return (
+                this.tipo !== "agregar" &&
+                this.tipo !== "modificar" &&
+                this.tipo !== "cancelar"
+            );
         },
         verEnviarEmailChk() {
-            if (this.tipo === 'cancelar') {
+            if (this.tipo === "cancelar") {
                 return this.formData.email ? true : false;
-            } else
-                return true;
+            } else return true;
         },
         popupTitle() {
             switch (this.tipo) {
-                case 'agregar':
-                    return 'Registrar Seguimiento';
-                case 'modificar':
-                    return 'Modificar Seguimiento';
-                case 'consultar':
-                    return 'Consultar Seguimiento';
-                case 'cancelar':
-                    return 'Cancelar Seguimiento';
-                case 'atender_seguimiento_programado':
-                    return 'Atender Seguimiento Programado';
+                case "agregar":
+                    return "Registrar Seguimiento";
+                case "modificar":
+                    return "Modificar Seguimiento";
+                case "consultar":
+                    return "Consultar Seguimiento";
+                case "cancelar":
+                    return "Cancelar Seguimiento";
+                case "atender_seguimiento_programado":
+                    return "Atender Seguimiento Programado";
                 default:
-                    return 'N/A';
+                    return "N/A";
             }
         },
         successTextRespnse() {
             switch (this.tipo) {
-                case 'agregar':
-                    return 'Seguimiento programado correctamente';
-                case 'modificar':
-                    return 'Seguimiento actualizado correctamente';
-                case 'cancelar':
-                    return 'Seguimiento cancelado correctamente';
+                case "agregar":
+                    return "Seguimiento programado correctamente";
+                case "modificar":
+                    return "Seguimiento actualizado correctamente";
+                case "cancelar":
+                    return "Seguimiento cancelado correctamente";
                 default:
-                    return 'N/A';
+                    return "N/A";
             }
         },
         buttonTitle() {
             switch (this.tipo) {
-                case 'modificar':
-                    return 'Modificar Seguimiento';
-                case 'cancelar':
-                    return 'Cancelar Seguimiento';
+                case "modificar":
+                    return "Modificar Seguimiento";
+                case "cancelar":
+                    return "Cancelar Seguimiento";
                 default:
-                    return 'Programar Seguimiento';
+                    return "Programar Seguimiento";
             }
         },
         buttonColor() {
             switch (this.tipo) {
-                case 'cancelar':
-                    return 'danger';
+                case "cancelar":
+                    return "danger";
                 default:
-                    return 'success';
+                    return "success";
             }
         },
     },
@@ -133,15 +139,14 @@ export default {
             this.limpiarVentana();
             this.$emit("closeVentana");
         },
-        limpiarVentana() { },
-
+        limpiarVentana() {},
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        this.$log("Component mounted! " + this.$options.name); // DOM is ready
         const icon =
             this.$refs[this.$options.name].$el.querySelector(".vs-icon");
         if (icon) {
@@ -156,7 +161,7 @@ export default {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

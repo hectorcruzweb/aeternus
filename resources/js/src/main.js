@@ -12,6 +12,10 @@ import App from "./App.vue";
 import popupManager from "./plugins/popupManager.js";
 Vue.use(popupManager);
 
+import Logger from "./plugins/logger.js";
+
+Vue.use(Logger);
+
 // Vuesax Component Framework
 import Vuesax from "vuesax";
 

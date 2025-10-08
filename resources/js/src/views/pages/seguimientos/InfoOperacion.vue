@@ -4,18 +4,42 @@
         <div class="flex flex-wrap">
             <div class="w-full xl:w-6/12 px-2 input-text">
                 <label> Cliente </label>
-                <vs-input ref="nombre" name="nombre" type="text" class="w-full" placeholder="" maxlength="100"
-                    :readonly="true" v-model="cliente.nombre" />
+                <vs-input
+                    ref="nombre"
+                    name="nombre"
+                    type="text"
+                    class="w-full"
+                    placeholder=""
+                    maxlength="100"
+                    :readonly="true"
+                    v-model="cliente.nombre"
+                />
             </div>
             <div class="w-full xl:w-6/12 px-2 input-text">
                 <label> Operación Seleccionada </label>
-                <vs-input ref="operacion" name="operacion" type="text" class="w-full" placeholder="" maxlength="100"
-                    :readonly="true" v-model="operacion_descripcion" />
+                <vs-input
+                    ref="operacion"
+                    name="operacion"
+                    type="text"
+                    class="w-full"
+                    placeholder=""
+                    maxlength="100"
+                    :readonly="true"
+                    v-model="operacion_descripcion"
+                />
             </div>
             <div class="w-full px-2 input-text">
                 <label> Dirección </label>
-                <vs-input ref="direccion" name="direccion" type="text" class="w-full" placeholder="" maxlength="100"
-                    :readonly="true" v-model="cliente.direccion_completa" />
+                <vs-input
+                    ref="direccion"
+                    name="direccion"
+                    type="text"
+                    class="w-full"
+                    placeholder=""
+                    maxlength="100"
+                    :readonly="true"
+                    v-model="cliente.direccion_completa"
+                />
             </div>
         </div>
     </div>
@@ -25,7 +49,7 @@ import clientes from "../../../services/clientes";
 import vSelect from "vue-select";
 export default {
     components: {
-        "v-select": vSelect
+        "v-select": vSelect,
     },
     // Name of the component (optional)
     name: "InfoOperacion",
@@ -105,7 +129,7 @@ export default {
                     icon: "icon-alert-circle",
                     color: "danger",
                 });
-                this.$emit("resultado", false, '');
+                this.$emit("resultado", false, "");
             } finally {
                 this.$vs.loading.close();
             }
@@ -113,14 +137,14 @@ export default {
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        this.$log("Component mounted! " + this.$options.name); // DOM is ready
     },
-    beforeDestroy() { },
+    beforeDestroy() {},
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

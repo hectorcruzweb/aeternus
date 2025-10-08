@@ -1,7 +1,13 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup popup-70', z_index]" close="cancelar" :title="popupTitle" :active="localShow"
-            :fullscreen="false" :ref="this.$options.name">
+        <vs-popup
+            :class="['forms-popup popup-70', z_index]"
+            close="cancelar"
+            :title="popupTitle"
+            :active="localShow"
+            :fullscreen="false"
+            :ref="this.$options.name"
+        >
             <div class="pb-4">
                 <div class="form-group">
                     <div class="title-form-group">
@@ -10,35 +16,68 @@
                     <div class="form-group-content">
                         <div class="px-2 mb-2">
                             <div class="highlighted-inputs-primary">
-                                <span v-if="
-                                    this.errores.cliente_id ||
-                                    this.errores.tipo_cliente_id
-                                " class="text-danger text-sm block">Verifique que el cliente seleccionado sea
-                                    válido.</span>
-                                <span v-if="this.errores.operacion_id" class="text-danger text-sm block">{{
-                                    errores.operacion_id[0] }}</span>
-                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
-                                    @resultado="resultado_datos_cliente">
+                                <span
+                                    v-if="
+                                        this.errores.cliente_id ||
+                                        this.errores.tipo_cliente_id
+                                    "
+                                    class="text-danger text-sm block"
+                                    >Verifique que el cliente seleccionado sea
+                                    válido.</span
+                                >
+                                <span
+                                    v-if="this.errores.operacion_id"
+                                    class="text-danger text-sm block"
+                                    >{{ errores.operacion_id[0] }}</span
+                                >
+                                <InfoOperacion
+                                    ref="InfoOperacion"
+                                    v-if="show"
+                                    :filters="filters"
+                                    @resultado="resultado_datos_cliente"
+                                >
                                 </InfoOperacion>
                             </div>
                         </div>
                         <!-- Contenido Formulario -->
-                        <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formData" :errores="errores"
-                            @resultado="resultado_seguimientos_datos" :tipo="tipo"></ProgramarSeguimientoDatos>
-                        <div v-if="!isReadOnly" class="flex flex-wrap items-center justify-between pr-2 pt-4">
-                            <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
-                                v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
-                                electrónico?</vs-checkbox>
-                            <vs-button ref="programar_seguimiento_button" class="ml-auto" :color="buttonColor"
-                                @click="EnviarForm">
+                        <ProgramarSeguimientoDatos
+                            ref="seguimientoForm"
+                            v-model="formData"
+                            :errores="errores"
+                            @resultado="resultado_seguimientos_datos"
+                            :tipo="tipo"
+                        ></ProgramarSeguimientoDatos>
+                        <div
+                            v-if="!isReadOnly"
+                            class="flex flex-wrap items-center justify-between pr-2 pt-4"
+                        >
+                            <vs-checkbox
+                                v-show="verEnviarEmailChk"
+                                color="success"
+                                class="size-small text-info"
+                                v-model="formData.enviar_x_email"
+                                :vs-value="formData.enviar_x_email"
+                                >¿Enviar por correo electrónico?</vs-checkbox
+                            >
+                            <vs-button
+                                ref="programar_seguimiento_button"
+                                class="ml-auto"
+                                :color="buttonColor"
+                                @click="EnviarForm"
+                            >
                                 {{ buttonTitle }}
                             </vs-button>
                         </div>
                     </div>
                 </div>
             </div>
-            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callback"
-                @closeVerificar="openPassword = false" :accion="accionNombre">
+            <Password
+                v-if="openPassword"
+                :show="openPassword"
+                :callback-on-success="callback"
+                @closeVerificar="openPassword = false"
+                :accion="accionNombre"
+            >
             </Password>
         </vs-popup>
     </div>
@@ -57,7 +96,7 @@ export default {
         "v-select": vSelect,
         ProgramarSeguimientoDatos,
         InfoOperacion,
-        Password
+        Password,
     },
     // Props: data passed from parent
     props: {
@@ -77,7 +116,7 @@ export default {
                 cliente_id: null,
                 tipo_cliente_id: null,
                 operacion_id: null,
-                seguimiento_id: null//to modify
+                seguimiento_id: null, //to modify
             },
         },
         tipo: {
@@ -89,56 +128,59 @@ export default {
     // Computed properties: derived reactive data
     computed: {
         isReadOnly() {
-            return this.tipo !== "agregar" && this.tipo !== "modificar" && this.tipo !== "cancelar";
+            return (
+                this.tipo !== "agregar" &&
+                this.tipo !== "modificar" &&
+                this.tipo !== "cancelar"
+            );
         },
         verEnviarEmailChk() {
-            if (this.tipo === 'cancelar') {
+            if (this.tipo === "cancelar") {
                 return this.formData.email ? true : false;
-            } else
-                return true;
+            } else return true;
         },
         popupTitle() {
             switch (this.tipo) {
-                case 'agregar':
-                    return 'Programar Seguimiento';
-                case 'modificar':
-                    return 'Modificar Seguimiento Programado';
-                case 'consultar':
-                    return 'Consultar Seguimiento Programado';
-                case 'cancelar':
-                    return 'Cancelar Seguimiento Programado';
+                case "agregar":
+                    return "Programar Seguimiento";
+                case "modificar":
+                    return "Modificar Seguimiento Programado";
+                case "consultar":
+                    return "Consultar Seguimiento Programado";
+                case "cancelar":
+                    return "Cancelar Seguimiento Programado";
                 default:
-                    return 'Programar Seguimiento';
+                    return "Programar Seguimiento";
             }
         },
         successTextRespnse() {
             switch (this.tipo) {
-                case 'agregar':
-                    return 'Seguimiento programado correctamente';
-                case 'modificar':
-                    return 'Seguimiento actualizado correctamente';
-                case 'cancelar':
-                    return 'Seguimiento cancelado correctamente';
+                case "agregar":
+                    return "Seguimiento programado correctamente";
+                case "modificar":
+                    return "Seguimiento actualizado correctamente";
+                case "cancelar":
+                    return "Seguimiento cancelado correctamente";
                 default:
-                    return 'N/A';
+                    return "N/A";
             }
         },
         buttonTitle() {
             switch (this.tipo) {
-                case 'modificar':
-                    return 'Modificar Seguimiento';
-                case 'cancelar':
-                    return 'Cancelar Seguimiento';
+                case "modificar":
+                    return "Modificar Seguimiento";
+                case "cancelar":
+                    return "Cancelar Seguimiento";
                 default:
-                    return 'Programar Seguimiento';
+                    return "Programar Seguimiento";
             }
         },
         buttonColor() {
             switch (this.tipo) {
-                case 'cancelar':
-                    return 'danger';
+                case "cancelar":
+                    return "danger";
                 default:
-                    return 'success';
+                    return "success";
             }
         },
     },
@@ -148,10 +190,15 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    await this.$popupManager.register(this, this.cancelar, 'programar_seguimiento_button');
+                    await this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "programar_seguimiento_button"
+                    );
                     //i have to load data if not 'agregar'
-                    if (this.tipo != 'agregar') {
-                        this.formData.seguimiento_id = this.filters.seguimiento_id;
+                    if (this.tipo != "agregar") {
+                        this.formData.seguimiento_id =
+                            this.filters.seguimiento_id;
                         await this._loadSeguimientosDatos();
                     }
                 }
@@ -175,13 +222,13 @@ export default {
                 motivo_cancelacion: { label: "Seleccione 1", value: "" },
                 email: "",
                 comentario_programado: "",
-                comentario_cancelacion: ''
+                comentario_cancelacion: "",
             },
             errores: [], //from backend
             ready: {
                 InfoOperacion: false,
                 ProgramarSeguimientoDatos: false,
-                loadSeguimientoDatos: false
+                loadSeguimientoDatos: false,
             },
         };
     },
@@ -194,21 +241,32 @@ export default {
                 tipo_cliente_id: this.filters.tipo_cliente_id,
                 programado_b: 1,
                 status: 1,
-                id: this.filters.seguimiento_id
+                id: this.filters.seguimiento_id,
             };
-            console.log("🚀 ~ _getSeguimientosProgramados ~ params:", params)
+            this.$log("🚀 ~ _getSeguimientosProgramados ~ params:", params);
             //this.$vs.loading();
             try {
                 // Call the API from seguimientos service
-                const result = await seguimientos.getSeguimientosProgramados(params);
-                console.log("🚀 ~ _getSeguimientosProgramados ~ result:", result)
+                const result = await seguimientos.getSeguimientosProgramados(
+                    params
+                );
+                this.$log("🚀 ~ _getSeguimientosProgramados ~ result:", result);
                 if (!result || typeof result !== "object") {
-                    throw new Error("Respuesta inválida en _getSeguimientosProgramados");
+                    throw new Error(
+                        "Respuesta inválida en _getSeguimientosProgramados"
+                    );
                 }
                 this.formData.email = result[0].email_programado;
-                this.formData.comentario_programado = result[0].comentario_programado;
-                this.formData.motivo = { label: result[0].motivo_texto, value: result[0].motivo_id };
-                this.formData.medio = { label: result[0].medio_texto, value: result[0].medio_preferido_programado_id };
+                this.formData.comentario_programado =
+                    result[0].comentario_programado;
+                this.formData.motivo = {
+                    label: result[0].motivo_texto,
+                    value: result[0].motivo_id,
+                };
+                this.formData.medio = {
+                    label: result[0].medio_texto,
+                    value: result[0].medio_preferido_programado_id,
+                };
                 let fecha_contacto = result[0].fecha_programada.split("-");
                 let hora_contacto = result[0].hora_programada.split(":");
                 //yyyy-mm-dd hh:mm
@@ -222,7 +280,7 @@ export default {
                 this.ready.loadSeguimientoDatos = true;
                 this.checkReady();
             } catch (error) {
-                console.error("Error fetching seguimientos:", error);
+                this.$error("Error fetching seguimientos:", error);
                 this.cancelar();
             } finally {
                 //this.$vs.loading.close();
@@ -232,7 +290,7 @@ export default {
         resultado_datos_cliente(success, email) {
             if (success) {
                 this.ready.InfoOperacion = true;
-                if (this.tipo == 'agregar') {
+                if (this.tipo == "agregar") {
                     this.formData.email = email;
                 }
                 this.checkReady();
@@ -254,11 +312,10 @@ export default {
                 this.ready.InfoOperacion &&
                 this.ready.ProgramarSeguimientoDatos
             ) {
-                if (this.tipo == 'agregar')
-                    this.localShow = true;
+                if (this.tipo == "agregar") this.localShow = true;
                 else {
                     if (this.ready.loadSeguimientoDatos) {
-                        this.localShow = true
+                        this.localShow = true;
                     }
                 }
             }
@@ -272,20 +329,19 @@ export default {
             this.ready = { info: false, seguimiento: false }; // reset state
         },
         async EnviarForm() {
-            if (this.tipo === 'modificar') {
-                this.accionNombre = 'Actualizar Seguimiento Programado'
+            if (this.tipo === "modificar") {
+                this.accionNombre = "Actualizar Seguimiento Programado";
                 this.callback = await this.submitForm;
                 this.openPassword = true;
                 return;
-            } else if (this.tipo === 'cancelar') {
-                this.accionNombre = 'Cancelar Seguimiento Programado'
+            } else if (this.tipo === "cancelar") {
+                this.accionNombre = "Cancelar Seguimiento Programado";
                 this.callback = await this.submitForm;
                 this.openPassword = true;
                 return;
             }
             await this.submitForm();
         },
-
 
         async submitForm() {
             this.errores = [];
@@ -310,7 +366,7 @@ export default {
                     this.tipo, //tipo prompt
                     payload
                 );
-                console.log("Success:", response);
+                this.$log("Success:", response);
                 let success_text = this.successTextRespnse;
                 this.$vs.notify({
                     title: "Éxito",
@@ -321,7 +377,7 @@ export default {
                 //close form and call the api to reload the form
                 this.$emit("agregar_modificar_success_seguimiento");
             } catch (err) {
-                console.log("🚀 ~ submitForm ~ err:", err);
+                this.$log("🚀 ~ submitForm ~ err:", err);
                 const status = err.status || 500;
                 if (status === 403) {
                     // Forbidden
@@ -376,10 +432,10 @@ export default {
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        this.$log("Component mounted! " + this.$options.name); // DOM is ready
         const icon =
             this.$refs[this.$options.name].$el.querySelector(".vs-icon");
         if (icon) {
@@ -394,7 +450,7 @@ export default {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

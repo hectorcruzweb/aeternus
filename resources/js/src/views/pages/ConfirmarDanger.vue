@@ -1,9 +1,17 @@
 <template>
     <div class="centerx">
-        <vs-prompt type="confirm" title="¿Desea continuar?" :class="['confirm-form confirmarDanger', z_index]"
-            :active="show" buttons-hidden :ref="$options.name">
+        <vs-prompt
+            type="confirm"
+            title="¿Desea continuar?"
+            :class="['confirm-form confirmarDanger', z_index]"
+            :active="show"
+            buttons-hidden
+            :ref="$options.name"
+        >
             <div class="text-center icono"></div>
-            <div class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2">
+            <div
+                class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2"
+            >
                 ¿Seguro de continuar?
             </div>
 
@@ -12,10 +20,19 @@
             </div>
 
             <div class="w-full text-right px-2 mt-6 pb-3">
-                <span tabindex="0" @click="cancel" class="color-primary-900 my-2 mr-8 cursor-pointer">(Esc)
-                    Cancelar</span>
+                <span
+                    tabindex="0"
+                    @click="cancel"
+                    class="color-primary-900 my-2 mr-8 cursor-pointer"
+                    >(Esc) Cancelar</span
+                >
 
-                <vs-button class="w-auto md:ml-2 my-2 md:mt-0" ref="confirmar" :color="confirmarColor" @click="aceptar">
+                <vs-button
+                    class="w-auto md:ml-2 my-2 md:mt-0"
+                    ref="confirmar"
+                    :color="confirmarColor"
+                    @click="aceptar"
+                >
                     <span>{{ confirmarButton }}</span>
                 </vs-button>
             </div>
@@ -62,18 +79,14 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(
-                        this,
-                        this.cancel
-                    );
+                    this.$popupManager.register(this, this.cancel);
                 } else {
                     this.$popupManager.unregister(this.$options.name);
                 }
             },
-        }
+        },
     },
-    computed: {
-    },
+    computed: {},
     methods: {
         aceptar() {
             this.callbackOnSuccess();
@@ -84,10 +97,10 @@ export default {
         },
     },
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name); // DOM is ready
+        this.$log("Component mounted! " + this.$options.name); // DOM is ready
         //cerrando el confirmar con esc
         /*document.body.addEventListener("keyup", e => {
           if (e.keyCode === 13) {
@@ -102,7 +115,7 @@ export default {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

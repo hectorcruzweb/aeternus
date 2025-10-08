@@ -1,10 +1,17 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" title="Control de Seguimientos"
-            :active="localShow" :ref="this.$options.name">
+        <vs-popup
+            :class="['forms-popup', z_index]"
+            fullscreen
+            close="cancelar"
+            title="Control de Seguimientos"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="contenido lg:h-full">
                 <div
-                    class="dashboard-container grid w-full lg:h-full gap-4 grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2">
+                    class="dashboard-container grid w-full lg:h-full gap-4 grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2"
+                >
                     <!-- Top-left -->
                     <div class="">
                         <!-- Form -->
@@ -12,80 +19,155 @@
                             <div class="title-form-group">
                                 Datos del Cliente
                             </div>
-                            <div class="form-group-content flex flex-col justify-between flex-1 overflow-auto">
+                            <div
+                                class="form-group-content flex flex-col justify-between flex-1 overflow-auto"
+                            >
                                 <!-- Cliente buttons and inputs -->
-                                <div class="w-full h-full flex flex-col justify-between pt-4">
+                                <div
+                                    class="w-full h-full flex flex-col justify-between pt-4"
+                                >
                                     <!-- Cliente buttons -->
                                     <div class="w-full">
                                         <div class="flex justify-center px-4">
-                                            <button v-if="!cliente.id" class="btn-select btn-select--unselected" @click="
-                                                ShowBuscadorClientes = true
-                                                ">
-                                                <span class="">Seleccione un cliente</span>
+                                            <button
+                                                v-if="!cliente.id"
+                                                class="btn-select btn-select--unselected"
+                                                @click="
+                                                    ShowBuscadorClientes = true
+                                                "
+                                            >
+                                                <span class=""
+                                                    >Seleccione un cliente</span
+                                                >
                                             </button>
                                             <div v-else class="w-full px-2">
-                                                <button class="btn-select btn-select--selected">
+                                                <button
+                                                    class="btn-select btn-select--selected"
+                                                >
                                                     <div>
-                                                        <span class="block"><span class="bold">Clave</span>: {{
-                                                            cliente.id }},
-                                                            <span class="bold">Nombre</span>:
+                                                        <span class="block"
+                                                            ><span class="bold"
+                                                                >Clave</span
+                                                            >: {{ cliente.id }},
+                                                            <span class="bold"
+                                                                >Nombre</span
+                                                            >:
                                                             {{
                                                                 cliente.nombre
-                                                            }}</span>
+                                                            }}</span
+                                                        >
                                                     </div>
-                                                    <span class="action" data-tooltip="Cambiar Cliente"
-                                                        @click="quitarCliente()"></span>
+                                                    <span
+                                                        class="action"
+                                                        data-tooltip="Cambiar Cliente"
+                                                        @click="quitarCliente()"
+                                                    ></span>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="px-4 mt-3 h-full">
-                                        <div v-if="!cliente || !cliente.id"
-                                            class="skeleton h-full flex items-center justify-center">
-                                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                                        <div
+                                            v-if="!cliente || !cliente.id"
+                                            class="skeleton h-full flex items-center justify-center"
+                                        >
+                                            <span
+                                                class="text-gray-600 text-lg font-normal"
+                                                >Seleccione 1 Cliente</span
+                                            >
                                         </div>
-                                        <div v-else class="h-full flex flex-col justify-between">
+                                        <div
+                                            v-else
+                                            class="h-full flex flex-col justify-between"
+                                        >
                                             <!-- Input fields -->
                                             <div class="w-full flex flex-wrap">
-                                                <div class="w-full xl:w-6/12 px-2 input-text">
+                                                <div
+                                                    class="w-full xl:w-6/12 px-2 input-text"
+                                                >
                                                     <label>
                                                         Tipo de cliente
                                                     </label>
-                                                    <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
-                                                        class="w-full" placeholder="" v-model="cliente.tipo_cliente
-                                                            " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                                !cliente.id
-                                                                " />
+                                                    <vs-input
+                                                        ref="tipo_cliente"
+                                                        name="tipo_cliente"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.tipo_cliente
+                                                        "
+                                                        maxlength="100"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
                                                 </div>
-                                                <div class="w-full xl:w-6/12 px-2 input-text">
+                                                <div
+                                                    class="w-full xl:w-6/12 px-2 input-text"
+                                                >
                                                     <label>
                                                         Tel. / Celular
                                                     </label>
-                                                    <vs-input ref="telefono" name="telefono" type="text" class="w-full"
-                                                        placeholder="" v-model="cliente.telefono
-                                                            " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                                !cliente.id
-                                                                " />
+                                                    <vs-input
+                                                        ref="telefono"
+                                                        name="telefono"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.telefono
+                                                        "
+                                                        maxlength="100"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
                                                 </div>
 
-                                                <div class="w-full px-2 input-text">
+                                                <div
+                                                    class="w-full px-2 input-text"
+                                                >
                                                     <label> Dirección </label>
-                                                    <vs-input ref="direccion_completa" name="direccion_completa"
-                                                        type="text" class="w-full" placeholder="" v-model="cliente.direccion_completa
-                                                            " maxlength="250" :readonly="true" :disabled="!cliente ||
-                                                                !cliente.id
-                                                                " />
+                                                    <vs-input
+                                                        ref="direccion_completa"
+                                                        name="direccion_completa"
+                                                        type="text"
+                                                        class="w-full"
+                                                        placeholder=""
+                                                        v-model="
+                                                            cliente.direccion_completa
+                                                        "
+                                                        maxlength="250"
+                                                        :readonly="true"
+                                                        :disabled="
+                                                            !cliente ||
+                                                            !cliente.id
+                                                        "
+                                                    />
                                                 </div>
                                             </div>
-                                            <div class="flex flex-wrap justify-center px-2">
-                                                <div class="w-full text-center disabled-info justify-center py-4 font-medium"
-                                                    v-if="!selectedRow">
+                                            <div
+                                                class="flex flex-wrap justify-center px-2"
+                                            >
+                                                <div
+                                                    class="w-full text-center disabled-info justify-center py-4 font-medium"
+                                                    v-if="!selectedRow"
+                                                >
                                                     Registro de Seguimientos
                                                     Libres
                                                 </div>
-                                                <div class="w-full alerta" v-else>
+                                                <div
+                                                    class="w-full alerta"
+                                                    v-else
+                                                >
                                                     <div
-                                                        class="w-full info operacion-seleccionada flex flex-nowrap items-center justify-between">
+                                                        class="w-full info operacion-seleccionada flex flex-nowrap items-center justify-between"
+                                                    >
                                                         <span>
                                                             <h3>
                                                                 Operación
@@ -97,29 +179,51 @@
                                                                 }}
                                                             </p>
                                                         </span>
-                                                        <span class="action-quitar"
+                                                        <span
+                                                            class="action-quitar"
                                                             data-tooltip="Quitar Operación Seleccionada"
-                                                            @click="selectedRow = null">
+                                                            @click="
+                                                                selectedRow =
+                                                                    null
+                                                            "
+                                                        >
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <!-- Buttons -->
                                                 <div
-                                                    class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
-                                                    <vs-button class="w-full md:w-1/2 text-center" color="primary"
-                                                        :disabled="!cliente ||
+                                                    class="w-full pt-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0"
+                                                >
+                                                    <vs-button
+                                                        class="w-full md:w-1/2 text-center"
+                                                        color="primary"
+                                                        :disabled="
+                                                            !cliente ||
                                                             !cliente.id
-                                                            " @click="
-                                                                programarSeguimiento('agregar', null)
-                                                                ">
+                                                        "
+                                                        @click="
+                                                            programarSeguimiento(
+                                                                'agregar',
+                                                                null
+                                                            )
+                                                        "
+                                                    >
                                                         Programar
                                                     </vs-button>
-                                                    <vs-button class="w-full md:w-1/2 text-center" color="success"
-                                                        :disabled="!cliente ||
+                                                    <vs-button
+                                                        class="w-full md:w-1/2 text-center"
+                                                        color="success"
+                                                        :disabled="
+                                                            !cliente ||
                                                             !cliente.id
-                                                            " @click="
-                                                                registrarSeguimiento('agregar', null)
-                                                                ">
+                                                        "
+                                                        @click="
+                                                            registrarSeguimiento(
+                                                                'agregar',
+                                                                null
+                                                            )
+                                                        "
+                                                    >
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -133,15 +237,35 @@
 
                     <!-- Top-right -->
                     <div class="p-2 mt-2 border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="OperacionesList.length === 0" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div
+                            v-else-if="OperacionesList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay operaciones que mostrar</span
+                            >
                         </div>
-                        <div v-else class="h-full w-full flex flex-col justify-start overflow-auto p-2">
-                            <vs-table :sst="false" :data="OperacionesList" stripe pagination max-items="8"
-                                noDataText="0 Resultados" class="w-full tabla-datos">
+                        <div
+                            v-else
+                            class="h-full w-full flex flex-col justify-start overflow-auto p-2"
+                        >
+                            <vs-table
+                                :sst="false"
+                                :data="OperacionesList"
+                                stripe
+                                pagination
+                                max-items="8"
+                                noDataText="0 Resultados"
+                                class="w-full tabla-datos"
+                            >
                                 <template slot="header">
                                     <h3>Operaciones del Cliente</h3>
                                 </template>
@@ -151,24 +275,44 @@
                                     <vs-th>$ Saldo</vs-th>
                                 </template>
                                 <template slot-scope="{ data }">
-                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data"
-                                        @click.native="toggleRow(tr)" :class="[
+                                    <vs-tr
+                                        :data="tr"
+                                        :key="indextr"
+                                        v-for="(tr, indextr) in data"
+                                        @click.native="toggleRow(tr)"
+                                        :class="[
                                             'cursor-pointer',
                                             selectedRow &&
-                                                selectedRow.operacion_id ===
+                                            selectedRow.operacion_id ===
                                                 tr.operacion_id
                                                 ? 'text-primary'
                                                 : '',
-                                        ]">
+                                        ]"
+                                    >
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                <img class="cursor-pointer img-btn-18 mx-4"
-                                                    src="@assets/images/seguimientos.svg" title="Registrar Seguimiento"
-                                                    @click="programarSeguimiento('consultar', tr)" />
-                                                <img class="cursor-pointer img-btn-18 mx-4"
-                                                    src="@assets/images/appointment.svg" title="Programar Seguimiento"
-                                                    @click="programarSeguimientoOperacion(tr)" />
+                                                <img
+                                                    class="cursor-pointer img-btn-18 mx-4"
+                                                    src="@assets/images/seguimientos.svg"
+                                                    title="Registrar Seguimiento"
+                                                    @click="
+                                                        programarSeguimiento(
+                                                            'consultar',
+                                                            tr
+                                                        )
+                                                    "
+                                                />
+                                                <img
+                                                    class="cursor-pointer img-btn-18 mx-4"
+                                                    src="@assets/images/appointment.svg"
+                                                    title="Programar Seguimiento"
+                                                    @click="
+                                                        programarSeguimientoOperacion(
+                                                            tr
+                                                        )
+                                                    "
+                                                />
                                             </div>
                                         </vs-td>
                                         <vs-td>{{ tr.descripcion }}</vs-td>
@@ -180,30 +324,56 @@
                     </div>
                     <!-- Bottom-left -->
                     <div class="p-2 border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="OperacionesList.length === 0" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay operaciones que mostrar</span>
+                        <div
+                            v-else-if="OperacionesList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay operaciones que mostrar</span
+                            >
                         </div>
                         <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
-
                         </div>
                     </div>
 
                     <!-- Bottom-right -->
                     <div class="p-2 border-children">
-                        <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                        <div
+                            v-if="!cliente || !cliente.id"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >Seleccione 1 Cliente</span
+                            >
                         </div>
-                        <div v-else-if="ProgramadosList.length === 0" class="skeleton flex items-center justify-center">
-                            <span class="text-gray-600 text-lg font-normal">No hay seguimientos programados</span>
+                        <div
+                            v-else-if="ProgramadosList.length === 0"
+                            class="skeleton flex items-center justify-center"
+                        >
+                            <span class="text-gray-600 text-lg font-normal"
+                                >No hay seguimientos programados</span
+                            >
                         </div>
                         <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
-                            <vs-table :sst="false" :data="ProgramadosList" stripe pagination max-items="8"
-                                noDataText="0 Resultados" class="w-full tabla-datos">
+                            <vs-table
+                                :sst="false"
+                                :data="ProgramadosList"
+                                stripe
+                                pagination
+                                max-items="8"
+                                noDataText="0 Resultados"
+                                class="w-full tabla-datos"
+                            >
                                 <template slot="header">
                                     <h3>Seguimientos Programados Pendientes</h3>
                                 </template>
@@ -214,28 +384,66 @@
                                     <vs-th>Cancelar</vs-th>
                                 </template>
                                 <template slot-scope="{ data }">
-                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                    <vs-tr
+                                        :data="tr"
+                                        :key="indextr"
+                                        v-for="(tr, indextr) in data"
+                                    >
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                <img class="cursor-pointer img-btn-20 mx-4"
-                                                    src="@assets/images/folder.svg" title="Consultar Seguimiento"
-                                                    @click="programarSeguimiento('consultar', tr)" />
-                                                <img class="cursor-pointer img-btn-20 mx-4"
-                                                    src="@assets/images/edit.svg" title="Modificar Seguimiento"
-                                                    @click="programarSeguimiento('modificar', tr)" />
-                                                <img class="img-btn-20 mx-4" src="@assets/images/seguimientos.svg"
+                                                <img
+                                                    class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/folder.svg"
+                                                    title="Consultar Seguimiento"
+                                                    @click="
+                                                        programarSeguimiento(
+                                                            'consultar',
+                                                            tr
+                                                        )
+                                                    "
+                                                />
+                                                <img
+                                                    class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/edit.svg"
+                                                    title="Modificar Seguimiento"
+                                                    @click="
+                                                        programarSeguimiento(
+                                                            'modificar',
+                                                            tr
+                                                        )
+                                                    "
+                                                />
+                                                <img
+                                                    class="img-btn-20 mx-4"
+                                                    src="@assets/images/seguimientos.svg"
                                                     title="Atender Seguimiento"
-                                                    @click="registrarSeguimiento('atender_seguimiento_programado', tr)" />
+                                                    @click="
+                                                        registrarSeguimiento(
+                                                            'atender_seguimiento_programado',
+                                                            tr
+                                                        )
+                                                    "
+                                                />
                                             </div>
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
-                                        <vs-td>{{ tr.fechahora_programada_texto_abr }}</vs-td>
+                                        <vs-td>{{
+                                            tr.fechahora_programada_texto_abr
+                                        }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
+                                                <img
+                                                    class="img-btn-20 mx-3"
+                                                    src="@assets/images/trash.svg"
                                                     title="Cancelar Seguimiento"
-                                                    @click="programarSeguimiento('cancelar', tr)" />
+                                                    @click="
+                                                        programarSeguimiento(
+                                                            'cancelar',
+                                                            tr
+                                                        )
+                                                    "
+                                                />
                                             </div>
                                         </vs-td>
                                     </vs-tr>
@@ -245,20 +453,42 @@
                     </div>
                 </div>
             </div>
-            <FormularioProgramarSeguimiento v-if="ShowFormProgramarSeguimientos" :show="ShowFormProgramarSeguimientos"
-                :filters="FormularioProgramarSeguimientoFilters" :tipo="tipoFormProgramarSeguimiento"
+            <FormularioProgramarSeguimiento
+                v-if="ShowFormProgramarSeguimientos"
+                :show="ShowFormProgramarSeguimientos"
+                :filters="FormularioProgramarSeguimientoFilters"
+                :tipo="tipoFormProgramarSeguimiento"
                 @closeVentana="CloseFormProgramarSeguimientos"
-                @agregar_modificar_success_seguimiento="agregar_modificar_success_seguimiento" />
-            <ClientesSearcherSeguimientos v-if="ShowBuscadorClientes" :show="ShowBuscadorClientes"
-                @closeVentana="ShowBuscadorClientes = false" @cliente-seleccionado="onClienteSeleccionado">
+                @agregar_modificar_success_seguimiento="
+                    agregar_modificar_success_seguimiento
+                "
+            />
+            <ClientesSearcherSeguimientos
+                v-if="ShowBuscadorClientes"
+                :show="ShowBuscadorClientes"
+                @closeVentana="ShowBuscadorClientes = false"
+                @cliente-seleccionado="onClienteSeleccionado"
+            >
             </ClientesSearcherSeguimientos>
-            <ConfirmarDanger :z_index="'z-index58k'" v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword"
-                :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
-                :accion="'QUITAR EL CLIENTE SELECCIONADO'" :confirmarButton="'Continuar'"></ConfirmarDanger>
-            <FormularioRegistrarSeguimiento v-if="ShowFormRegistrarSeguimientos" :show="ShowFormRegistrarSeguimientos"
-                :filters="FormularioRegistrarSeguimientoFilters" :tipo="tipoFormRegistrarSeguimiento"
+            <ConfirmarDanger
+                :z_index="'z-index58k'"
+                v-if="openConfirmarSinPassword"
+                :show="openConfirmarSinPassword"
+                :callback-on-success="callBackConfirmar"
+                @closeVerificar="openConfirmarSinPassword = false"
+                :accion="'QUITAR EL CLIENTE SELECCIONADO'"
+                :confirmarButton="'Continuar'"
+            ></ConfirmarDanger>
+            <FormularioRegistrarSeguimiento
+                v-if="ShowFormRegistrarSeguimientos"
+                :show="ShowFormRegistrarSeguimientos"
+                :filters="FormularioRegistrarSeguimientoFilters"
+                :tipo="tipoFormRegistrarSeguimiento"
                 @closeVentana="ShowFormRegistrarSeguimientos = false"
-                @agregar_modificar_success_seguimiento="agregar_modificar_success_registrar_seguimiento" />
+                @agregar_modificar_success_seguimiento="
+                    agregar_modificar_success_registrar_seguimiento
+                "
+            />
         </vs-popup>
     </div>
 </template>
@@ -274,7 +504,7 @@ export default {
         ClientesSearcherSeguimientos,
         FormularioProgramarSeguimiento,
         ConfirmarDanger,
-        FormularioRegistrarSeguimiento
+        FormularioRegistrarSeguimiento,
     },
     // Name of the component (optional)
     name: "FormularioSeguimientos",
@@ -308,7 +538,11 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(this, this.cancelar, 'tipo_cliente');
+                    this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "tipo_cliente"
+                    );
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
@@ -316,7 +550,8 @@ export default {
                     } else if (this.filters.origen == 2) {
                         //abeierto desde clientes
                         this.cliente.id = this.filters.cliente_id;
-                        this.cliente.tipo_cliente_id = this.filters.tipo_cliente_id;
+                        this.cliente.tipo_cliente_id =
+                            this.filters.tipo_cliente_id;
                         await this.updateClienteInfo();
                     }
                     //obtener datos del cliente
@@ -324,7 +559,7 @@ export default {
                 } else {
                     this.localShow = false;
                 }
-            }
+            },
         },
     },
     // Data function returns the component's reactive state
@@ -360,15 +595,17 @@ export default {
     },
     // Methods: functions you can call in template or other hooks
     methods: {
-        programarSeguimiento(tipo = '', datos_seguimiento = null) {
+        programarSeguimiento(tipo = "", datos_seguimiento = null) {
             this.tipoFormProgramarSeguimiento = tipo;
             //es agregar
-            if (tipo === 'agregar') {
+            if (tipo === "agregar") {
                 this.FormularioProgramarSeguimientoFilters = {
                     cliente_id: this.cliente.id,
                     tipo_cliente_id: this.cliente.tipo_cliente_id,
-                    operacion_id: this.selectedRow ? this.selectedRow.operacion_id : '',
-                }
+                    operacion_id: this.selectedRow
+                        ? this.selectedRow.operacion_id
+                        : "",
+                };
             } else {
                 //modificar o consultar
                 this.FormularioProgramarSeguimientoFilters = {
@@ -376,21 +613,24 @@ export default {
                     tipo_cliente_id: this.cliente.tipo_cliente_id,
                     operacion_id: datos_seguimiento.operaciones_id,
                     seguimiento_id: datos_seguimiento.id,
-                }
+                };
             }
-            this.ShowFormProgramarSeguimientos = true
+            this.ShowFormProgramarSeguimientos = true;
         },
         programarSeguimientoOperacion(datos_seguimiento = null) {
-            console.log("🚀 ~ programarSeguimientoOperacion ~ datos_seguimiento:", datos_seguimiento)
-            this.tipoFormProgramarSeguimiento = 'agregar';
+            this.$log(
+                "🚀 ~ programarSeguimientoOperacion ~ datos_seguimiento:",
+                datos_seguimiento
+            );
+            this.tipoFormProgramarSeguimiento = "agregar";
             //es agregar
             this.FormularioProgramarSeguimientoFilters = {
                 cliente_id: this.cliente.id,
                 tipo_cliente_id: this.cliente.tipo_cliente_id,
                 operacion_id: datos_seguimiento.operacion_id,
-            }
+            };
 
-            this.ShowFormProgramarSeguimientos = true
+            this.ShowFormProgramarSeguimientos = true;
         },
         toggleRow(row) {
             // if row already selected → deselect it
@@ -418,10 +658,10 @@ export default {
                 if (!data || typeof data !== "object") {
                     throw new Error("Respuesta inválida en _fetchData");
                 }
-                console.log("🚀 ~ _fetchData ~ data:", data)
+                this.$log("🚀 ~ _fetchData ~ data:", data);
                 return data;
             } catch (error) {
-                console.error("Error fetching clientes:", error);
+                this.$error("Error fetching clientes:", error);
                 this.cancelar();
             } finally {
                 //this.$vs.loading.close();
@@ -434,21 +674,24 @@ export default {
                 cliente_id: this.cliente.id,
                 tipo_cliente_id: this.cliente.tipo_cliente_id,
                 programado_b: 1,
-                status: 1
+                status: 1,
             };
-            console.log("🚀 ~ _getSeguimientosProgramados ~ params:", params)
+            this.$log("🚀 ~ _getSeguimientosProgramados ~ params:", params);
             //this.$vs.loading();
             try {
                 // Call the API from seguimientos service
-                const result = await seguimientos.getSeguimientosProgramados(params);
-                console.log("🚀 ~ _getSeguimientosProgramados ~ result:", result)
+                const result = await seguimientos.getSeguimientosProgramados(
+                    params
+                );
+                this.$log("🚀 ~ _getSeguimientosProgramados ~ result:", result);
                 if (!result || typeof result !== "object") {
-                    throw new Error("Respuesta inválida en _getSeguimientosProgramados");
+                    throw new Error(
+                        "Respuesta inválida en _getSeguimientosProgramados"
+                    );
                 }
                 return result.length ? result : [];
-
             } catch (error) {
-                console.error("Error fetching seguimientos:", error);
+                this.$error("Error fetching seguimientos:", error);
                 this.cancelar();
             } finally {
                 //this.$vs.loading.close();
@@ -467,7 +710,7 @@ export default {
                 this.OperacionesList = cliente.operaciones;
                 this.ProgramadosList = await this._getSeguimientosProgramados();
             } catch (error) {
-                console.log("🚀 ~ updateClienteInfo ~ error:", error)
+                this.$log("🚀 ~ updateClienteInfo ~ error:", error);
             } finally {
                 this.$vs.loading.close();
             }
@@ -477,7 +720,7 @@ export default {
             //this.cliente.tipo_cliente_id = cliente.tipo_cliente_id;
             this.cliente = { ...cliente };
             //get all cliente data
-            console.log("✅ Cliente seleccionado:", cliente);
+            this.$log("✅ Cliente seleccionado:", cliente);
             await this.updateClienteInfo();
             setTimeout(() => {
                 this.ShowBuscadorClientes = false;
@@ -525,36 +768,38 @@ export default {
             this.ShowFormProgramarSeguimientos = false;
         },
         //Registrar Seguimientos Methods
-        registrarSeguimiento(tipo = '', datos_seguimiento = null) {
+        registrarSeguimiento(tipo = "", datos_seguimiento = null) {
             this.tipoFormRegistrarSeguimiento = tipo;
             this.FormularioRegistrarSeguimientoFilters = {
                 cliente_id: this.cliente.id,
                 tipo_cliente_id: this.cliente.tipo_cliente_id,
-                operacion_id: this.selectedRow ? this.selectedRow.operacion_id : '',
-                seguimiento_id: null
+                operacion_id: this.selectedRow
+                    ? this.selectedRow.operacion_id
+                    : "",
+                seguimiento_id: null,
             };
             // es agregar
-            if (tipo !== 'agregar' && datos_seguimiento) {
+            if (tipo !== "agregar" && datos_seguimiento) {
                 // modificar o consultar
-                this.FormularioRegistrarSeguimientoFilters.seguimiento_id = datos_seguimiento.id;
+                this.FormularioRegistrarSeguimientoFilters.seguimiento_id =
+                    datos_seguimiento.id;
             }
             this.ShowFormRegistrarSeguimientos = true;
         },
-
-
         async agregar_modificar_success_registrar_seguimiento() {
             //success after insert or update ()
             await this.updateClienteInfo();
             this.ShowFormRegistrarSeguimientos = false;
-        }
+        },
     },
     // Lifecycle hooks
     created() {
-        console.log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
     mounted() {
-        console.log("Component mounted! " + this.$options.name);
-        const icon = this.$refs[this.$options.name].$el.querySelector(".vs-icon");
+        this.$log("Component mounted! " + this.$options.name);
+        const icon =
+            this.$refs[this.$options.name].$el.querySelector(".vs-icon");
         if (icon) {
             icon.addEventListener("click", (e) => {
                 e.preventDefault(); // stop form submission / page reload
@@ -567,7 +812,7 @@ export default {
         this.$popupManager.unregister(this.$options.name);
     },
     destroyed() {
-        console.log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
@@ -585,7 +830,7 @@ export default {
     /* spacing between children */
 }
 
-.dashboard-container>div {
+.dashboard-container > div {
     min-height: 0;
     /* allows shrinking */
     min-width: 0;
@@ -613,7 +858,6 @@ export default {
 
 /* Skeleton animation */
 @keyframes pulse {
-
     0%,
     100% {
         opacity: 1;

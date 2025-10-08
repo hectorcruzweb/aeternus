@@ -49,7 +49,7 @@ export default {
             return response.data;
         } catch (error) {
             // Axios error handling
-            console.error("API Error:", error);
+            this.$error("API Error:", error);
             // Optionally return a structured error
             throw {
                 message:
