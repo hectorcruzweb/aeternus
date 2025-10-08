@@ -308,7 +308,7 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(this.$options.name, this.cancelar);
+                    this.$popupManager.register(this, this.cancelar, 'tipo_cliente');
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
@@ -321,28 +321,11 @@ export default {
                     }
                     //obtener datos del cliente
                     this.localShow = true;
-                    document.body.classList.add("overflow-hidden");
                 } else {
-                    this.$popupManager.unregister(this.$options.name);
-                    this.resetData();
                     this.localShow = false;
-                    document.body.classList.remove("overflow-hidden");
                 }
             }
         },
-        /*
-        "cliente.id": {
-            immediate: true, // runs when component is mounted too
-            async handler(newVal) {
-                if (!newVal && this.show) {
-                    console.log("🚀 ~ handler ~ newVal:", newVal)/cliente seleccionado
-                    await this._getSeguimientosProgramados();
-                } else {
-                     
-                }
-            }
-                
-        },*/
     },
     // Data function returns the component's reactive state
     data() {

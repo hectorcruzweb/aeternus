@@ -1,6 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['confirm-form', z_index]" close="cancelar" title="contraseña" :active="show" ref="contra">
+        <vs-popup :class="['confirm-form', z_index]" close="cancelar" title="contraseña" :active="show"
+            :ref="$options.name">
             <div class="text-center password_icono hidden"></div>
             <div class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2">
                 confirmar contraseña
@@ -54,18 +55,16 @@ export default {
     watch: {
         show: {
             immediate: true, // runs when component is mounted too
-            async handler(newVal) {
+            handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(this.$options.name, this.cancel);
-                    // Wait for the DOM
-                    this.$nextTick(() => {
-                        const inputEl = this.$refs["contra"].$el.querySelector("input").focus();
-                        if (inputEl) inputEl.focus();
-                    });
+                    this.$popupManager.register(
+                        this,
+                        this.cancel
+                    );
                     // Close button handling
                     this.$nextTick(() => {
-                        const icon = this.$refs["contra"].$el.querySelector(".vs-icon");
+                        const icon = this.$refs[this.$options.name].$el.querySelector(".vs-icon");
                         if (icon) icon.onclick = () => this.cancel();
                     });
                 } else {

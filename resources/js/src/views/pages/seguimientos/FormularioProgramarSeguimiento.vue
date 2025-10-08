@@ -17,7 +17,8 @@
                                     válido.</span>
                                 <span v-if="this.errores.operacion_id" class="text-danger text-sm block">{{
                                     errores.operacion_id[0] }}</span>
-                                <InfoOperacion v-if="show" :filters="filters" @resultado="resultado_datos_cliente">
+                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                                    @resultado="resultado_datos_cliente">
                                 </InfoOperacion>
                             </div>
                         </div>
@@ -28,7 +29,8 @@
                             <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
                                 v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
                                 electrónico?</vs-checkbox>
-                            <vs-button class="ml-auto" :color="buttonColor" @click="EnviarForm">
+                            <vs-button ref="programar_seguimiento_button" class="ml-auto" :color="buttonColor"
+                                @click="EnviarForm">
                                 {{ buttonTitle }}
                             </vs-button>
                         </div>
@@ -146,18 +148,12 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(
-                        this.$options.name,
-                        this.cancelar
-                    );
+                    await this.$popupManager.register(this, this.cancelar, 'programar_seguimiento_button');
                     //i have to load data if not 'agregar'
                     if (this.tipo != 'agregar') {
                         this.formData.seguimiento_id = this.filters.seguimiento_id;
                         await this._loadSeguimientosDatos();
                     }
-                } else {
-                    this.$popupManager.unregister(this.$options.name);
-                    this.localShow = false;
                 }
             },
         },

@@ -99,12 +99,9 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(this.$options.name, this.cancelar);
+                    this.$popupManager.register(this, this.cancelar);
                     // Initial load (immediate, not debounced)
                     await this._fetchData();
-                } else {
-                    //this.resetData();
-                    this.$popupManager.unregister(this.$options.name);
                 }
                 this.localShow = newVal;
             }

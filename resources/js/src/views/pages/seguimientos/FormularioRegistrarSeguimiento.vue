@@ -4,6 +4,7 @@
             :active="localShow" :ref="this.$options.name">
             <div class="pb-4">
                 {{ filters }} / {{ tipo }}
+
             </div>
         </vs-popup>
     </div>
@@ -109,19 +110,13 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(
-                        this.$options.name,
-                        this.cancelar
-                    );
+                    this.$popupManager.register(this, this.cancelar);
                     this.localShow = true;
                     //i have to load data if not 'agregar'
                     /*if (this.tipo != 'agregar') {
                         this.formData.seguimiento_id = this.filters.seguimiento_id;
                         await this._loadSeguimientosDatos();
                     }*/
-                } else {
-                    this.$popupManager.unregister(this.$options.name);
-                    this.localShow = false;
                 }
             },
         },
@@ -138,7 +133,8 @@ export default {
             this.limpiarVentana();
             this.$emit("closeVentana");
         },
-        limpiarVentana() { }
+        limpiarVentana() { },
+
     },
     // Lifecycle hooks
     created() {

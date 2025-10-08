@@ -4,15 +4,15 @@
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>Fecha y Hora a Contactar</label>
                 <span>(*)</span>
-                <flat-pickr name="fecha_a_contactar" data-vv-as="Fecha a Contactar" v-validate="'required'"
-                    :config="configdateTimePickerWithTime" v-model="proxy.fecha_a_contactar"
+                <flat-pickr ref="fecha_a_contactar" name="fecha_a_contactar" data-vv-as="Fecha a Contactar"
+                    v-validate="'required'" :config="configdateTimePickerWithTime" v-model="proxy.fecha_a_contactar"
                     placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors" :disabled="isReadOnly" />
                 <span v-show="errors.has('fecha_a_contactar')" class="">
                     {{ errors.first("fecha_a_contactar") }}
                 </span>
                 <span v-if="this.errores.fecha_a_contactar" class="block">{{
                     errores.fecha_a_contactar[0]
-                    }}</span>
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -31,7 +31,7 @@
                 </span>
                 <span v-if="this.errores['motivo.value']" class="block">{{
                     errores["motivo.value"][0]
-                    }}</span>
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -50,7 +50,7 @@
                 </span>
                 <span v-if="this.errores['medio.value']" class="block">{{
                     errores["medio.value"][0]
-                    }}</span>
+                }}</span>
             </div>
             <div class="w-full md:w-6/12 px-2 input-text">
                 <label>
@@ -65,7 +65,7 @@
                 </span>
                 <span v-if="this.errores.email" class="block">{{
                     errores.email[0]
-                    }}</span>
+                }}</span>
             </div>
             <div class="w-full px-2 pt-2 small-editor">
                 <NotasComponent :readonly="isReadOnly" :value="proxy.comentario_programado" @input="
@@ -99,7 +99,7 @@
                         </span>
                         <span v-if="this.errores['motivo_cancelacion.value']" class="block">{{
                             errores["motivo_cancelacion.value"][0]
-                        }}</span>
+                            }}</span>
                     </div>
                     <div class="w-full md:w-6/12 px-2 input-text">
                         <label>
@@ -113,7 +113,7 @@
                         </span>
                         <span v-if="this.errores.comentario_cancelacion" class="block">{{
                             errores.comentario_cancelacion[0]
-                        }}</span>
+                            }}</span>
                     </div>
                 </div>
             </div>

@@ -184,3 +184,44 @@
         opacity: 1;
     }
 }
+
+.vs-checkbox--input:focus {
+    outline: none; /* opcional, si no quieres el outline por defecto */
+    box-shadow: 0 0 6px 2px rgba(0, 0, 0, 0.3); /* sombra negra semitransparente */
+    transition: box-shadow 0.2s ease-in-out; /* suaviza la animación */
+}
+
+// Colores definidos
+$button-colors: (
+    primary: $primary,
+    success: $success,
+    danger: $danger,
+    warning: $warning,
+);
+
+// Mixin genérico de focus
+@mixin focus-button($shadow-color: rgba(0, 0, 0, 0.3)) {
+    outline: none;
+    box-shadow: 0 0 6px 3px $shadow-color;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+@each $name, $color in $button-colors {
+    .vs-button-#{$name}:focus,
+    .vs-switch-#{$name}:focus {
+        @include focus-button(
+            rgba(red($color), green($color), blue($color), 0.4)
+        );
+    }
+}
+
+@each $name, $color in $button-colors {
+    .vs-checkbox-#{$name} .vs-checkbox--input:focus + .vs-checkbox {
+        outline: none;
+        box-shadow: 0
+            0
+            6px
+            2px
+            rgba(red($color), green($color), blue($color), 0.4);
+    }
+}
