@@ -2,6 +2,7 @@ import axios from "@/axios.js";
 import axiosSuper from "axios";
 const CancelToken = axiosSuper.CancelToken;
 const source = CancelToken.source();
+import { error } from "@/plugins/logger";
 
 export default {
     async getMotivos() {
@@ -47,18 +48,18 @@ export default {
                 throw new Error("Invalid JSON response");
             }
             return response.data;
-        } catch (error) {
+        } catch (err) {
             // Axios error handling
-            this.$error("API Error:", error);
+            error("API Error:", err);
             // Optionally return a structured error
             throw {
                 message:
-                    (error.response &&
-                        error.response.data &&
-                        error.response.data.message) ||
-                    error.message,
-                status: (error.response && error.response.status) || 500,
-                data: (error.response && error.response.data) || null,
+                    (err.response &&
+                        err.response.data &&
+                        err.response.data.message) ||
+                    err.message,
+                status: (err.response && err.response.status) || 500,
+                data: (err.response && err.response.data) || null,
             };
         }
     },

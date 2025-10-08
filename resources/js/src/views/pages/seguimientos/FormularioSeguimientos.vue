@@ -783,6 +783,8 @@ export default {
                 // modificar o consultar
                 this.FormularioRegistrarSeguimientoFilters.seguimiento_id =
                     datos_seguimiento.id;
+                this.FormularioRegistrarSeguimientoFilters.operacion_id =
+                    datos_seguimiento.operaciones_id;
             }
             this.ShowFormRegistrarSeguimientos = true;
         },
