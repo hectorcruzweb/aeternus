@@ -107,6 +107,55 @@
     border-radius: 0px !important;
 }
 
+.v-select {
+    &.vs--disabled {
+        .vs__search {
+            display: none !important;
+        }
+    }
+    .vs__dropdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding-top: 4px !important;
+        padding-bottom: 0px !important;
+    }
+
+    .vs__selected-options {
+        display: flex;
+        align-items: center;
+        flex: 1; // fill all remaining width
+        min-width: 0; // very important for text truncation
+    }
+
+    .vs__selected {
+        display: block;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 100%; // allows truncation
+    }
+
+    .vs__actions {
+        flex-shrink: 0; // prevents it from being squished
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: 0.5rem;
+    }
+}
+
+.v-select,
+.vs__dropdown-toggle,
+.vs__selected-options,
+.vs__selected,
+.vs__search,
+.vs__actions {
+    height: 37.59px !important ;
+}
+
 .input-text {
     .form-control {
         @extend .size-base, .color-copy, .font-normal;
@@ -126,10 +175,10 @@
 
     input[type="text"],
     input[type="email"],
+    input[type="password"],
     .vs__dropdown-toggle {
         border-radius: 0 !important;
         line-height: 1rem !important;
-        max-height: 47px !important;
         background-color: $white;
     }
     padding-top: 0.25rem !important;
@@ -171,15 +220,13 @@
             margin-top: 0px !important;
         }
     }
-    .vs__dropdown-toggle {
-        // margin-top: 0.1rem !important;
-    }
     input[type="text"]:disabled,
     input[type="email"]:disabled,
     .vs--disabled .vs__dropdown-toggle {
         background-color: #f5f5f5 !important; /* Tailwind gray-300 */
     }
 }
+
 //estilos del vue-editor
 .ql-editor {
     height: 150px !important;

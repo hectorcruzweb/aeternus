@@ -48,7 +48,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                         <div class="w-full input-text pb-2">
                             <label class="">{{
                                 this.filtroEspecifico.label
-                            }}</label>
+                                }}</label>
 
                             <vs-input class="w-full" icon="search" maxlength="75"
                                 placeholder="Filtrar por dato específico" v-model="serverOptions.numero_control"
@@ -99,10 +99,10 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">{{
                         data[indextr].nombre
-                    }}</vs-td>
+                        }}</vs-td>
                     <vs-td :data="data[indextr].direccion">{{
                         data[indextr].direccion
-                    }}</vs-td>
+                        }}</vs-td>
                     <vs-td :data="data[indextr].celular">
                         {{ data[indextr].celular }}
                     </vs-td>
@@ -167,7 +167,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         <ServiciosGratis :show="openServiciosGratis" :datos="datosCliente"
             @closeServiciosGratis="closeEntregarConvenio">
         </ServiciosGratis>
-        <FormularioSeguimientos :show="openSeguimientos" :filters="filtersSeguimientos"
+        <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
             @closeVentana="CloseFormProgramarSeguimientos">
         </FormularioSeguimientos>
     </div>

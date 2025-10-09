@@ -31,6 +31,16 @@ export default {
             throw error; // propagate the error so Vue can handle it
         }
     },
+    async getResultadosContacto() {
+        try {
+            const response = await axios.get(
+                "/seguimientos/get_resultados_obtenidos"
+            );
+            return response.data; // return only the data
+        } catch (error) {
+            throw error; // propagate the error so Vue can handle it
+        }
+    },
 
     /**
      * Programar Seguimiento

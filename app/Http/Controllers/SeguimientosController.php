@@ -32,6 +32,7 @@ class SeguimientosController extends ApiController
             8  => "Cambio de ubicación o información de contacto",
             9  => "Llamada de cortesía o atención personalizada",
             10 => "Programación de servicios adicionales",
+            11 => "Otro"
         ];
     }
 
@@ -49,6 +50,7 @@ class SeguimientosController extends ApiController
             4 => "Mensaje de texto (SMS)",
             5 => "Visita presencial",
             6 => "Redes sociales",
+            7 => "Otro"
         ];
     }
 
@@ -65,8 +67,24 @@ class SeguimientosController extends ApiController
             3 => "No se logró contactar al cliente después de varios intentos",
             4 => "El cliente ya no está interesado en el servicio o producto",
             5 => "El cliente solicitó cancelar el seguimiento voluntariamente",
+            6 => "Otro"
         ];
     }
+
+    public function getResultadosContacto()
+    {
+        return [
+            1 => "Cliente confirmado para continuar con la operación",
+            2 => "Cliente solicita más información o cotización actualizada",
+            3 => "Cliente pospone la decisión o seguimiento",
+            4 => "Cliente no interesado en este momento",
+            5 => "Cliente ya contrató el servicio con otro proveedor",
+            6 => "Cliente no respondió o fue imposible contactar nuevamente",
+            7 => "El cliente se comprometió a pagar cuanto antes",
+            8 => "Otro"
+        ];
+    }
+
 
     public function programar_segumientos(Request $request, $tipo_request = '')
     {
@@ -135,9 +153,9 @@ class SeguimientosController extends ApiController
             ],
             'fecha_a_contactar' => ($tipo_request === 'cancelar') ? '' : 'required|date|after_or_equal:now',
             'enviar_x_email' => ($tipo_request === 'cancelar') ? '' : 'required|in:1,0',
-            'motivo.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,10',
-            'medio.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,6',
-            'motivo_cancelacion.value' => !($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,5',
+            'motivo.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,11',
+            'medio.value' => ($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,7',
+            'motivo_cancelacion.value' => !($tipo_request === 'cancelar') ? '' : 'required|integer|between:1,6',
             'email' => ($tipo_request === 'cancelar') ? '' : 'required_if:enviar_x_email,1|email|nullable',
             'comentario_programado' => ''
         ];

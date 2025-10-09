@@ -17,6 +17,7 @@ Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimi
 Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
 Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
 Route::get('/seguimientos/get_motivos_cancelacion', 'SeguimientosController@getMotivosCancelacion');
+Route::get('/seguimientos/get_resultados_obtenidos', 'SeguimientosController@getResultadosContacto');
 
 
 /**ruta para obtener tokens */

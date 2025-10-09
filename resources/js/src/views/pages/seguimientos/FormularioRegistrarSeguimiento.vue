@@ -1,87 +1,82 @@
 <template>
     <div>
-        <vs-popup
-            :class="['forms-popup', fueProgramado ? '' : ' popup-70', z_index]"
-            :fullscreen="fueProgramado"
-            close="cancelar"
-            :title="popupTitle"
-            :active="localShow"
-            :ref="this.$options.name"
-        >
+        <vs-popup :class="['forms-popup', fueProgramado ? 'popup-100' : ' popup-70', z_index]" :fullscreen="false"
+            close="cancelar" :title="popupTitle" :active="localShow" :ref="this.$options.name">
             <div class="flex flex-wrap pb-4">
-                <div class="w-full hidden">{{ filters }} / {{ tipo }}</div>
+                <div class="w-full ">{{ filters }} / {{ tipo }}</div>
                 <div class="px-2 w-full mb-2" v-if="fueProgramado">
                     <div class="w-full highlighted-inputs-primary">
-                        <InfoOperacion
-                            ref="InfoOperacion"
-                            v-if="show"
-                            :filters="filters"
-                            @resultado="resultado_datos_cliente"
-                        >
+                        <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                            @resultado="resultado_datos_cliente">
                         </InfoOperacion>
                     </div>
                 </div>
-                <div
-                    :class="[
-                        'w-full p-2 form-datos-registrar',
-                        fueProgramado ? 'xl:w-6/12' : '',
-                    ]"
-                >
+                <div :class="[
+                    'w-full p-2 form-datos-registrar',
+                    fueProgramado ? 'xl:w-6/12' : '',
+                ]">
                     <div class="form-group">
                         <div class="title-form-group">
                             Datos del Seguimiento Realizado
                         </div>
                         <div class="form-group-content">
-                            <div
-                                class="w-full highlighted-inputs-primary mb-2"
-                                v-if="!fueProgramado"
-                            >
-                                <InfoOperacion
-                                    ref="InfoOperacion"
-                                    v-if="show"
-                                    :filters="filters"
-                                    @resultado="resultado_datos_cliente"
-                                >
+                            <div class="w-full highlighted-inputs-primary mb-2" v-if="!fueProgramado">
+                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                                    @resultado="resultado_datos_cliente">
                                 </InfoOperacion>
                             </div>
                             <!--Contenido Form-->
                             <div class="flex flex-wrap">
                                 <div class="w-full md:w-6/12 px-2 input-text">
-                                    <label>Fecha y Hora a Contactar</label>
+                                    <label>Fecha y Hora de Contacto</label>
                                     <span>(*)</span>
-                                    <flat-pickr
-                                        ref="fecha_a_contactar"
-                                        name="fecha_a_contactar"
-                                        data-vv-as="Fecha a Contactar"
-                                        v-validate="'required'"
-                                        :config="configdateTimePickerWithTime"
-                                        v-model="formData.fechahora_seguimiento"
-                                        placeholder="Fecha de Contacto"
-                                        class="w-full"
-                                        @input="clearAllErrors"
-                                    />
+                                    <flat-pickr ref="fechahora_seguimiento" name="fechahora_seguimiento"
+                                        data-vv-as="Fecha del Seguimiento" v-validate="'required'"
+                                        :config="configdateTimePickerWithTime" v-model="formData.fechahora_seguimiento"
+                                        placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors"
+                                        :disabled="isReadOnly" />
+                                    <span v-show="errors.has('fechahora_seguimiento')" class="">
+                                        {{ errors.first("fechahora_seguimiento") }}
+                                    </span>
+                                    <span v-if="this.errores.fechahora_seguimiento" class="block">{{
+                                        errores.fechahora_seguimiento[0]
+                                        }}</span>
+                                </div>
+                                <div class="w-full md:w-6/12 px-2 input-text">
+                                    <label>
+                                        Resultado Obtenido
+                                        <span>(*)</span>
+                                    </label>
+                                    <v-select :options="resultados" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        v-model="formData.resultado" class="w-full" name="resultado"
+                                        data-vv-as="resultado" v-validate="'required-select'" @input="clearAllErrors"
+                                        :disabled="isReadOnly">
+                                        <div slot="no-options">
+                                            No Se Ha Seleccionado Ningún Motivo
+                                        </div>
+                                    </v-select>
+                                    <span v-show="errors.has('resultado')" class="">
+                                        {{ errors.first("resultado") }}
+                                    </span>
+                                    <span v-if="this.errores['resultado.value']" class="block">{{
+                                        errores["resultado.value"][0]
+                                    }}</span>
                                 </div>
                             </div>
+                            <!--Fin Contenido Form-->
                         </div>
                     </div>
                 </div>
-                <div
-                    v-if="fueProgramado"
-                    :class="['w-full p-2 form-datos-programado', 'xl:w-6/12']"
-                >
+                <div v-if="fueProgramado" :class="['w-full p-2 form-datos-programado', 'xl:w-6/12']">
                     <div class="form-group">
                         <div class="title-form-group">
                             Datos del Seguimiento Programado
                         </div>
                         <div class="form-group-content">
                             <!--Contenido Form-->
-                            <ProgramarSeguimientoDatos
-                                ref="seguimientoForm"
-                                v-model="formDataProgramado"
-                                :errores="errores"
-                                @resultado="resultado_seguimientos_datos"
-                                :tipo="'consultar'"
-                            ></ProgramarSeguimientoDatos>
+                            <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formDataProgramado"
+                                :tipo="'consultar'">
+                            </ProgramarSeguimientoDatos>
                         </div>
                     </div>
                 </div>
@@ -138,6 +133,8 @@ export default {
                 // Only listen when visible = true
                 if (newVal) {
                     this.$popupManager.register(this, this.cancelar);
+
+                    await this._getResultadosMedios();
                     if (this.fueProgramado) {
                         //datos del seguimiento programado
                         await this._loadSeguimientosProgramadoDatos();
@@ -153,8 +150,7 @@ export default {
         },
         isReadOnly() {
             return (
-                this.tipo !== "agregar" &&
-                this.tipo !== "modificar" &&
+                this.tipo === "consultar" &&
                 this.tipo !== "cancelar"
             );
         },
@@ -216,25 +212,26 @@ export default {
             localShow: false, // controls popup visibility
             configdateTimePickerWithTime: configdateTimePickerWithTime,
             //datos del form de registro de seguimientos y atendidos
+            resultados: [],
+            medios: [],
+            motivos: [],
+            motivos_de_cancelacion: [],
             formData: {
                 seguimiento_id: null,
                 fechahora_seguimiento: "",
                 enviar_x_email: false,
                 resultado: { label: "Seleccione 1", value: "" },
-                resultados: [],
                 medio: { label: "Seleccione 1", value: "" },
-                medios: [],
                 email_seguimiento: "",
                 motivo_cancelacion: { label: "Seleccione 1", value: "" },
-                motivos_de_cancelacion: [],
                 comentario_seguimiento: "",
                 comentario_cancelacion: "",
             },
             errores: [], //from backend
             ready: {
                 InfoOperacion: false,
-                ProgramarSeguimientoDatos: false,
                 loadSeguimientoProgramadoDatos: false,
+                loadMotivosResultadosMedios: false
             },
             //Form Data de Seguimientos Programados
             formDataProgramado: {
@@ -255,7 +252,7 @@ export default {
             this.limpiarVentana();
             this.$emit("closeVentana");
         },
-        limpiarVentana() {},
+        limpiarVentana() { },
         // Called when InfoOperacion is ready
         resultado_datos_cliente(success, email = null) {
             this.$log("🚀 ~ resultado_datos_cliente ~ success:", success);
@@ -267,32 +264,21 @@ export default {
             }
         },
 
-        resultado_seguimientos_datos(success) {
-            this.$log("🚀 ~ resultado_seguimientos_datos ~ success:", success);
-            if (success) {
-                this.ready.ProgramarSeguimientoDatos = true;
-                this.checkReady();
-            } else {
-                this.cancelar();
-            }
-        },
-
         checkReady() {
             if (this.fueProgramado) {
                 if (
                     this.ready.InfoOperacion &&
-                    this.ready.ProgramarSeguimientoDatos &&
                     this.ready.loadSeguimientoProgramadoDatos
+                    && this.ready.loadMotivosResultadosMedios
                 ) {
                     this.localShow = true;
                 }
             } else {
-                if (this.ready.InfoOperacion) {
+                if (this.ready.InfoOperacion && this.ready.loadMotivosResultadosMedios) {
                     this.localShow = true;
                 }
             }
         },
-
         async _loadSeguimientosProgramadoDatos() {
             if (!this.show) return; // stop here if not visible
             const params = {
@@ -343,6 +329,89 @@ export default {
                 this.cancelar();
             } finally {
                 //this.$vs.loading.close();
+            }
+        },
+        async _getResultadosMedios() {
+            this.$vs.loading();
+            try {
+                let medios = await seguimientos.getMedios();
+                let resultados = await seguimientos.getResultadosContacto();
+                let motivos = await seguimientos.getResultadosContacto();
+                // ✅ Validate responses
+                if (!resultados || typeof resultados !== "object") {
+                    throw new Error("Respuesta inválida en resultados de contacto");
+                }
+                if (!medios || typeof medios !== "object") {
+                    throw new Error("Respuesta inválida en medios");
+                }
+                if (!motivos || typeof motivos !== "object") {
+                    throw new Error("Respuesta inválida en motivos");
+                }
+
+                if (this.tipo === "cancelar") {
+                    let motivosCancelar =
+                        await seguimientos.getMotivosCancelacion();
+                    // ✅ Validate responses
+                    if (
+                        !motivosCancelar ||
+                        typeof motivosCancelar !== "object"
+                    ) {
+                        throw new Error(
+                            "Respuesta inválida en motivos de cancelación"
+                        );
+                    }
+                    this.motivos_de_cancelacion = [
+                        { value: "", label: "Seleccione 1" }, // 👈 default blank
+                        ...Object.entries(motivosCancelar).map(
+                            ([key, label]) => ({
+                                value: key,
+                                label,
+                            })
+                        ),
+                    ];
+                }
+                // build array with default + API values
+                this.resultados = [
+                    { value: "", label: "Seleccione 1" }, // 👈 default blank
+                    ...Object.entries(resultados).map(([key, label]) => ({
+                        value: key,
+                        label,
+                    })),
+                ];
+                this.$log("🚀 ~ _getResultadosMedios ~ this.resultados:", this.resultados)
+                this.medios = [
+                    { value: "", label: "Seleccione 1" }, // 👈 default blank
+                    ...Object.entries(medios).map(([key, label]) => ({
+                        value: key,
+                        label,
+                    })),
+                ];
+                this.$log("🚀 ~ _getResultadosMedios ~ this.medios:", this.medios)
+
+                this.motivos = [
+                    { value: "", label: "Seleccione 1" }, // 👈 default blank
+                    ...Object.entries(motivos).map(([key, label]) => ({
+                        value: key,
+                        label,
+                    })),
+                ];
+                this.$log("🚀 ~ _getResultadosMedios ~ this.motivos:", this.motivos)
+
+
+
+
+                this.ready.loadMotivosResultadosMedios = true
+            } catch (error) {
+                this.$vs.notify({
+                    title: "Programar Seguimientos",
+                    text: error,
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger",
+                });
+            } finally {
+                this.$vs.loading.close();
+                this.checkReady();
             }
         },
     },
