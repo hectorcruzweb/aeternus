@@ -297,8 +297,8 @@
                                                     src="@assets/images/seguimientos.svg"
                                                     title="Registrar Seguimiento"
                                                     @click="
-                                                        programarSeguimiento(
-                                                            'consultar',
+                                                        registrarSeguimiento(
+                                                            'agregar',
                                                             tr
                                                         )
                                                     "
@@ -769,13 +769,25 @@ export default {
         },
         //Registrar Seguimientos Methods
         registrarSeguimiento(tipo = "", datos_seguimiento = null) {
+            this.$log(
+                "🚀 ~ registrarSeguimiento ~ datos_seguimiento:",
+                datos_seguimiento
+            );
+            let operacion_id = this.selectedRow
+                ? this.selectedRow.operacion_id
+                : null;
+            if (
+                datos_seguimiento &&
+                typeof datos_seguimiento.operacion_id !== "undefined"
+            ) {
+                operacion_id = datos_seguimiento.operacion_id;
+            }
+
             this.tipoFormRegistrarSeguimiento = tipo;
             this.FormularioRegistrarSeguimientoFilters = {
                 cliente_id: this.cliente.id,
                 tipo_cliente_id: this.cliente.tipo_cliente_id,
-                operacion_id: this.selectedRow
-                    ? this.selectedRow.operacion_id
-                    : "",
+                operacion_id: operacion_id,
                 seguimiento_id: null,
             };
             // es agregar

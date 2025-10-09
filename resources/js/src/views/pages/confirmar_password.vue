@@ -40,14 +40,14 @@
             </div>
             <div class="w-full text-right px-2 mt-6">
                 <span
-                    @click="cancel"
+                    @click.prevent.stop="cancel"
                     class="color-danger-900 my-2 mr-8 cursor-pointer"
                     >(Esc) Cerrar Ventana</span
                 >
                 <vs-button
                     class="w-auto md:ml-2 my-2 md:mt-0"
                     color="success"
-                    @click="acceptAlert"
+                    @click.prevent="acceptAlert"
                 >
                     <span>Continuar</span>
                 </vs-button>
@@ -86,13 +86,13 @@ export default {
                 if (newVal) {
                     this.$popupManager.register(this, this.cancel);
                     // Close button handling
-                    this.$nextTick(() => {
+                    /*this.$nextTick(() => {
                         const icon =
                             this.$refs[this.$options.name].$el.querySelector(
                                 ".vs-icon"
                             );
                         if (icon) icon.onclick = () => this.cancel();
-                    });
+                    });*/
                 } else {
                     this.$popupManager.unregister(this.$options.name);
                 }
@@ -138,7 +138,8 @@ export default {
                 );
             }
         },
-        cancel() {
+        cancel(event) {
+            if (event) event.stopPropagation();
             this.pass = "";
             this.$emit("closeVerificar");
         },
