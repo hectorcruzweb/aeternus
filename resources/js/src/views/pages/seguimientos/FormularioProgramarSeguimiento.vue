@@ -342,7 +342,6 @@ export default {
             }
             await this.submitForm();
         },
-
         async submitForm() {
             this.errores = [];
             const isValid = await this.$refs.seguimientoForm.validate();

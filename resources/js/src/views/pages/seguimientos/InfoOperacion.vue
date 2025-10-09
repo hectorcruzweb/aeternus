@@ -93,7 +93,7 @@ export default {
                 tipo_cliente_id: this.filters.tipo_cliente_id,
                 filtrar_x_operaciones: 1,
             };
-            this.$vs.loading();
+            //this.$vs.loading();
             try {
                 // Call the API from clientes service
                 const result = await clientes.fetchClientes(params);
@@ -131,7 +131,7 @@ export default {
                 });
                 this.$emit("resultado", false, "");
             } finally {
-                this.$vs.loading.close();
+                //this.$vs.loading.close();
             }
         },
     },

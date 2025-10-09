@@ -698,7 +698,7 @@ export default {
             }
         },
         async simularClienteSeleccionado() {
-            this.cliente.id = 12;
+            this.cliente.id = 4;
             this.cliente.tipo_cliente_id = 1;
             await this.onClienteSeleccionado(this.cliente);
         },
@@ -769,10 +769,6 @@ export default {
         },
         //Registrar Seguimientos Methods
         registrarSeguimiento(tipo = "", datos_seguimiento = null) {
-            this.$log(
-                "🚀 ~ registrarSeguimiento ~ datos_seguimiento:",
-                datos_seguimiento
-            );
             let operacion_id = this.selectedRow
                 ? this.selectedRow.operacion_id
                 : null;
