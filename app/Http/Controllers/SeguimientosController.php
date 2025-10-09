@@ -74,12 +74,12 @@ class SeguimientosController extends ApiController
     public function getResultadosContacto()
     {
         return [
-            1 => "Cliente confirmado para continuar con la operación",
-            2 => "Cliente solicita más información o cotización actualizada",
-            3 => "Cliente pospone la decisión o seguimiento",
-            4 => "Cliente no interesado en este momento",
-            5 => "Cliente ya contrató el servicio con otro proveedor",
-            6 => "Cliente no respondió o fue imposible contactar nuevamente",
+            1 => "Cliente confirmado",
+            2 => "Cliente solicita más información",
+            3 => "Cliente pospuesto",
+            4 => "Cliente no interesado",
+            5 => "Cliente con otro proveedor",
+            6 => "No fue posible contactar",
             7 => "El cliente se comprometió a pagar cuanto antes",
             8 => "Otro"
         ];

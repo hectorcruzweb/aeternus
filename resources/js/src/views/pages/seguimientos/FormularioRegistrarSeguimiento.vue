@@ -27,7 +27,7 @@
                             </div>
                             <!--Contenido Form-->
                             <div class="flex flex-wrap">
-                                <div class="w-full md:w-6/12 px-2 input-text">
+                                <div class="w-full md:w-4/12 px-2 input-text">
                                     <label>Fecha y Hora de Contacto</label>
                                     <span>(*)</span>
                                     <flat-pickr ref="fechahora_seguimiento" name="fechahora_seguimiento"
@@ -42,7 +42,26 @@
                                         errores.fechahora_seguimiento[0]
                                         }}</span>
                                 </div>
-                                <div class="w-full md:w-6/12 px-2 input-text">
+                                <div class="w-full md:w-4/12 px-2 input-text">
+                                    <label>
+                                        Motivo
+                                        <span>(*)</span>
+                                    </label>
+                                    <v-select :options="motivos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        v-model="formData.motivo" class="w-full" name="motivo" data-vv-as="Motivo"
+                                        v-validate="'required-select'" @input="clearAllErrors" :disabled="isReadOnly">
+                                        <div slot="no-options">
+                                            No Se Ha Seleccionado Ningún Motivo
+                                        </div>
+                                    </v-select>
+                                    <span v-show="errors.has('motivo')" class="">
+                                        {{ errors.first("motivo") }}
+                                    </span>
+                                    <span v-if="this.errores['motivo.value']" class="block">{{
+                                        errores["motivo.value"][0]
+                                        }}</span>
+                                </div>
+                                <div class="w-full md:w-4/12 px-2 input-text">
                                     <label>
                                         Resultado Obtenido
                                         <span>(*)</span>
@@ -224,6 +243,7 @@ export default {
                 medio: { label: "Seleccione 1", value: "" },
                 email_seguimiento: "",
                 motivo_cancelacion: { label: "Seleccione 1", value: "" },
+                motivo: { label: "Seleccione 1", value: "" },
                 comentario_seguimiento: "",
                 comentario_cancelacion: "",
             },
