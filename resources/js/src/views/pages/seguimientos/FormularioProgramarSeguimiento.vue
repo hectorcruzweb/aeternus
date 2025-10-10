@@ -280,6 +280,7 @@ export default {
                 this.ready.loadSeguimientoDatos = true;
                 this.checkReady();
             } catch (error) {
+                this.ready.loadSeguimientoDatos = false;
                 this.$error("Error fetching seguimientos:", error);
                 this.cancelar();
             } finally {
@@ -329,6 +330,16 @@ export default {
             this.ready = { info: false, seguimiento: false }; // reset state
         },
         async EnviarForm() {
+            this.errores = [];
+            const isValid = await this.$refs.seguimientoForm.validate();
+            if (!isValid) {
+                this.$vs.notify({
+                    title: "Error",
+                    text: "Por favor corrige los errores antes de continuar.",
+                    color: "danger",
+                });
+                return;
+            }
             if (this.tipo === "modificar") {
                 this.accionNombre = "Actualizar Seguimiento Programado";
                 this.callback = await this.submitForm;
@@ -343,16 +354,6 @@ export default {
             await this.submitForm();
         },
         async submitForm() {
-            this.errores = [];
-            const isValid = await this.$refs.seguimientoForm.validate();
-            if (!isValid) {
-                this.$vs.notify({
-                    title: "Error",
-                    text: "Por favor corrige los errores antes de continuar.",
-                    color: "danger",
-                });
-                return;
-            }
             // ✅ Continue submit logic here
             this.$vs.loading();
             try {

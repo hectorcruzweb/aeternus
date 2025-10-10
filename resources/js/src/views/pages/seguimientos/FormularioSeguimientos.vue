@@ -764,8 +764,9 @@ export default {
         },
         async agregar_modificar_success_seguimiento() {
             //success after insert or update ()
-            await this.updateClienteInfo();
             this.ShowFormProgramarSeguimientos = false;
+            this.ShowFormRegistrarSeguimientos = false;
+            await this.updateClienteInfo();
         },
         //Registrar Seguimientos Methods
         registrarSeguimiento(tipo = "", datos_seguimiento = null) {
