@@ -106,6 +106,7 @@ Route::middleware(['auth:api'])->group(function () {
 
     /**CLIENTES */
     Route::post('/seguimientos/programar_segumientos/{tipo_request}', 'SeguimientosController@programar_segumientos');
+    Route::post('/seguimientos/registrar_seguimientos/{tipo_request}', 'SeguimientosController@registrar_seguimientos');
     Route::get('/clientes/get_nacionalidades', 'ClientesController@get_nacionalidades');
     Route::post('/clientes/guardar_cliente', 'ClientesController@guardar_cliente');
     Route::post('/clientes/modificar_cliente', 'ClientesController@modificar_cliente');

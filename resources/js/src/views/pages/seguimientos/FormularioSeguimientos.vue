@@ -292,6 +292,7 @@
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
+                                                {{ tr.operacion_id }}
                                                 <img
                                                     class="cursor-pointer img-btn-18 mx-4"
                                                     src="@assets/images/seguimientos.svg"
@@ -392,6 +393,12 @@
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
+                                                {{ tr.id }} /
+                                                {{
+                                                    tr.operaciones_id
+                                                        ? tr.operaciones_id
+                                                        : "NA"
+                                                }}
                                                 <img
                                                     class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/folder.svg"
