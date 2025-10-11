@@ -74,6 +74,38 @@ export default {
         }
     },
 
+    /**
+     * Resgistar Seguimiento
+     * @param {String} tipo_request - e.g. "agregar", "modificar"
+     * @param {Object} data - the form data to send
+     * @returns {Promise<Object>} - returns response data or throws an error
+     */
+    async registrarSeguimiento(tipo_request, data) {
+        try {
+            const url = `/seguimientos/registrar_seguimientos/${tipo_request}`;
+            const response = await axios.post(url, data);
+
+            // Optional: Check if response is JSON
+            if (!response || typeof response.data !== "object") {
+                throw new Error("Invalid JSON response");
+            }
+            return response.data;
+        } catch (err) {
+            // Axios error handling
+            error("API Error:", err);
+            // Optionally return a structured error
+            throw {
+                message:
+                    (err.response &&
+                        err.response.data &&
+                        err.response.data.message) ||
+                    err.message,
+                status: (err.response && err.response.status) || 500,
+                data: (err.response && err.response.data) || null,
+            };
+        }
+    },
+
     /**obtiene la informacion del paginado de clientes para segumientos*/
     async getSeguimientosProgramados(params) {
         try {

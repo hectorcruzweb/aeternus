@@ -56,8 +56,8 @@
                                     <span v-if="
                                         this.errores.fechahora_seguimiento
                                     " class="block">{{
-                                            errores.fechahora_seguimiento[0]
-                                        }}</span>
+                                        errores.fechahora_seguimiento[0]
+                                    }}</span>
                                 </div>
                                 <div :class="[
                                     'w-full px-2 input-text',
@@ -104,7 +104,7 @@
                                     </span>
                                     <span v-if="this.errores['resultado.value']" class="block">{{
                                         errores["resultado.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -123,7 +123,7 @@
                                         {{ errors.first("medio") }}
                                     </span>
                                     <span v-if="this.errores['medio.value']" class="block">{{ errores["medio.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -132,8 +132,8 @@
                                         <span></span>
                                     </label>
                                     <vs-input v-validate="formData.enviar_x_email
-                                            ? 'required|email'
-                                            : 'email'
+                                        ? 'required|email'
+                                        : 'email'
                                         " name="email_seguimiento" type="email" class="w-full"
                                         placeholder="Ej. cliente@gmail.com" v-model="formData.email_seguimiento"
                                         maxlength="100" @input="clearAllErrors" :disabled="isReadOnly" />
@@ -142,7 +142,7 @@
                                     </span>
                                     <span v-if="this.errores.email_seguimiento" class="block">{{
                                         errores.email_seguimiento[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full px-2 pt-2 small-editor">
                                     <NotasComponent :readonly="isReadOnly" :value="formData.comentario_seguimiento"
@@ -287,6 +287,8 @@ export default {
                     return "Seguimiento actualizado correctamente";
                 case "cancelar":
                     return "Seguimiento cancelado correctamente";
+                case "atender_seguimiento_programado":
+                    return "Seguimiento atendido correctamente";
                 default:
                     return "N/A";
             }
@@ -387,7 +389,8 @@ export default {
                     ...this.formData,
                     ...this.filters, // props object
                 };
-                const response = await seguimientos.programarSeguimiento(
+                this.$log("🚀 ~ submitForm ~ payload:", payload)
+                const response = await seguimientos.registrarSeguimiento(
                     this.tipo, //tipo prompt
                     payload
                 );

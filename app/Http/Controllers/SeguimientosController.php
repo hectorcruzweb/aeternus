@@ -525,9 +525,11 @@ class SeguimientosController extends ApiController
             // === CANCELAR ===
             if ($tipo_request === 'cancelar') {
                 $cancelarData = [
+                    'status' => 0, // Cancelled
                     'comentario_cancelacion' => $request->comentario_cancelacion,
                     'motivo_cancelacion_id' => $request->motivo_cancelacion['value'] ?? null,
-                    'cancelo_programado_id' => (int) $request->user()->id
+                    'cancelo_programado_id' => (int) $request->user()->id,
+                    'fechahora_cancelacion_programado' => now(),
                 ];
                 $seguimiento = Seguimientos::where('id', $request->seguimiento_id)
                     ->where('status', 1)
@@ -539,12 +541,7 @@ class SeguimientosController extends ApiController
                 }
 
                 Seguimientos::where('id', $request->seguimiento_id)
-                    ->update([
-                        'status' => 0, // Cancelled
-                        'fechahora_cancelacion_programado' => now(),
-                        'comentario_cancelacion' => $cancelarData['comentario_cancelacion'],
-                        'motivo_cancelacion_id' => $cancelarData['motivo_cancelacion_id']
-                    ]);
+                    ->update($cancelarData);
                 if ($seguimiento->email_programado) {
                     if ($request->enviar_x_email == 1 && $request->email) {
                         $this->email_sender($request->seguimiento_id, $request->email, 'cancelar seguimiento programado');

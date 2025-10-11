@@ -54,8 +54,8 @@
                                                     <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
                                                         class="w-full" placeholder="" v-model="cliente.tipo_cliente
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                                 <div class="w-full xl:w-6/12 px-2 input-text">
                                                     <label>
@@ -64,8 +64,8 @@
                                                     <vs-input ref="telefono" name="telefono" type="text" class="w-full"
                                                         placeholder="" v-model="cliente.telefono
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
 
                                                 <div class="w-full px-2 input-text">
@@ -73,8 +73,8 @@
                                                     <vs-input ref="direccion_completa" name="direccion_completa"
                                                         type="text" class="w-full" placeholder="" v-model="cliente.direccion_completa
                                                             " maxlength="250" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                             </div>
                                             <div class="flex flex-wrap justify-center px-2">
@@ -112,22 +112,22 @@
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            programarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                programarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Programar
                                                     </vs-button>
                                                     <vs-button class="w-full md:w-1/2 text-center" color="success"
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            registrarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                registrarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -268,7 +268,7 @@
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_programada_texto_abr
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -301,7 +301,7 @@
             <FormularioRegistrarSeguimiento v-if="ShowFormRegistrarSeguimientos" :show="ShowFormRegistrarSeguimientos"
                 :filters="FormularioRegistrarSeguimientoFilters" :tipo="tipoFormRegistrarSeguimiento"
                 @closeVentana="ShowFormRegistrarSeguimientos = false" @agregar_modificar_success_seguimiento="
-                    agregar_modificar_success_registrar_seguimiento
+                    agregar_modificar_success_seguimiento
                 " />
         </vs-popup>
     </div>
@@ -610,12 +610,7 @@ export default {
                     datos_seguimiento.operaciones_id;
             }
             this.ShowFormRegistrarSeguimientos = true;
-        },
-        async agregar_modificar_success_registrar_seguimiento() {
-            //success after insert or update ()
-            await this.updateClienteInfo();
-            this.ShowFormRegistrarSeguimientos = false;
-        },
+        }
     },
     // Lifecycle hooks
     created() {
