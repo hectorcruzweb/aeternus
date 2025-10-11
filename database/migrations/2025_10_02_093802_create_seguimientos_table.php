@@ -27,6 +27,7 @@ class CreateSeguimientosTable extends Migration
             $table->text('comentario_programado')->nullable();
             $table->dateTime('fechahora_registro_programado')->nullable();
             $table->unsignedBigInteger('registro_programado_id')->nullable(); // usuarios.id
+            $table->unsignedBigInteger('modifico_programado_id')->nullable(); // usuarios.id
             $table->string('email_programado')->nullable();
 
             $table->dateTime('fechahora_seguimiento')->nullable();
@@ -35,9 +36,13 @@ class CreateSeguimientosTable extends Migration
             $table->string('email_seguimiento')->nullable();
             $table->text('comentario_seguimiento')->nullable();
             $table->unsignedBigInteger('realizo_seguimiento_id')->nullable(); // usuarios.id
+            $table->dateTime('fechahora_registro_seguimiento')->nullable();
+            $table->unsignedBigInteger('modifico_seguimiento_id')->nullable(); // usuarios.id
 
-            $table->dateTime('fechahora_cancelacion')->nullable();
-            $table->unsignedBigInteger('cancelo_id')->nullable(); // usuarios.id
+            $table->dateTime('fechahora_cancelacion_programado')->nullable();
+            $table->dateTime('fechahora_cancelacion_realizado')->nullable();
+            $table->unsignedBigInteger('cancelo_programado_id')->nullable(); // usuarios.id
+            $table->unsignedBigInteger('cancelo_realizado_id')->nullable(); // usuarios.id
             $table->tinyInteger('motivo_cancelacion_id')->unsigned()->nullable(); // 1-10
             $table->text('comentario_cancelacion')->nullable();
 
@@ -48,7 +53,10 @@ class CreateSeguimientosTable extends Migration
             $table->foreign('operaciones_id')->references('id')->on('operaciones')->onDelete('set null');
             $table->foreign('registro_programado_id')->references('id')->on('usuarios')->onDelete('set null');
             $table->foreign('realizo_seguimiento_id')->references('id')->on('usuarios')->onDelete('set null');
-            $table->foreign('cancelo_id')->references('id')->on('usuarios')->onDelete('set null');
+            $table->foreign('modifico_seguimiento_id')->references('id')->on('usuarios')->onDelete('set null');
+            $table->foreign('modifico_programado_id')->references('id')->on('usuarios')->onDelete('set null');
+            $table->foreign('cancelo_programado_id')->references('id')->on('usuarios')->onDelete('set null');
+            $table->foreign('cancelo_realizado_id')->references('id')->on('usuarios')->onDelete('set null');
         });
     }
 
