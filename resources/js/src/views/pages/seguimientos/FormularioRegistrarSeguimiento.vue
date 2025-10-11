@@ -1,201 +1,120 @@
 <template>
     <div>
-        <vs-popup
-            :class="[
-                'forms-popup',
-                fueProgramado ? 'popup-95' : ' popup-70',
-                z_index,
-            ]"
-            :fullscreen="false"
-            close="cancelar"
-            :title="popupTitle"
-            :active="localShow"
-            :ref="this.$options.name"
-        >
+        <vs-popup :class="[
+            'forms-popup',
+            fueProgramado ? 'popup-95' : ' popup-70',
+            z_index,
+        ]" :fullscreen="false" close="cancelar" :title="popupTitle" :active="localShow" :ref="this.$options.name">
             <div class="flex flex-wrap pb-4">
                 <div class="w-full">
                     {{ filters }}
                 </div>
                 <div class="px-2 w-full mb-2" v-if="fueProgramado">
                     <div class="w-full highlighted-inputs-primary">
-                        <InfoOperacion
-                            ref="InfoOperacion"
-                            v-if="show"
-                            :filters="filters"
-                            @resultado="resultado_datos_cliente"
-                        >
+                        <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                            @resultado="resultado_datos_cliente">
                         </InfoOperacion>
                     </div>
                 </div>
-                <div
-                    :class="[
-                        'w-full p-2 form-datos-registrar',
-                        fueProgramado ? 'xl:w-6/12' : '',
-                    ]"
-                    ref="seguimientoForm"
-                >
+                <div :class="[
+                    'w-full p-2 form-datos-registrar',
+                    fueProgramado ? 'xl:w-6/12' : '',
+                ]" ref="seguimientoForm">
                     <div class="form-group">
                         <div class="title-form-group">
                             Datos del Seguimiento Realizado
                         </div>
                         <div class="form-group-content">
-                            <div
-                                class="w-full highlighted-inputs-primary mb-2"
-                                v-if="!fueProgramado"
-                            >
-                                <InfoOperacion
-                                    ref="InfoOperacion"
-                                    v-if="show"
-                                    :filters="filters"
-                                    @resultado="resultado_datos_cliente"
-                                >
+                            <div class="w-full highlighted-inputs-primary mb-2" v-if="!fueProgramado">
+                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                                    @resultado="resultado_datos_cliente">
                                 </InfoOperacion>
                             </div>
                             <!--Contenido Form-->
                             <div class="flex flex-wrap">
-                                <div
-                                    :class="[
-                                        'w-full px-2 input-text',
-                                        !fueProgramado
-                                            ? 'md:w-4/12'
-                                            : 'md:w-6/12',
-                                    ]"
-                                >
+                                <div :class="[
+                                    'w-full px-2 input-text',
+                                    !fueProgramado
+                                        ? 'md:w-4/12'
+                                        : 'md:w-6/12',
+                                ]">
                                     <label>Fecha y Hora de Contacto</label>
                                     <span>(*)</span>
-                                    <flat-pickr
-                                        ref="fechahora_seguimiento"
-                                        name="fechahora_seguimiento"
-                                        data-vv-as="Fecha del Seguimiento"
-                                        v-validate="'required'"
-                                        :config="configdateTimePickerWithTime"
-                                        v-model="formData.fechahora_seguimiento"
-                                        placeholder="Fecha de Contacto"
-                                        class="w-full"
-                                        @input="clearAllErrors"
-                                        :disabled="isReadOnly"
-                                    />
-                                    <span
-                                        v-show="
-                                            errors.has('fechahora_seguimiento')
-                                        "
-                                        class=""
-                                    >
+                                    <flat-pickr ref="fechahora_seguimiento" name="fechahora_seguimiento"
+                                        data-vv-as="Fecha del Seguimiento" v-validate="'required'"
+                                        :config="configdateTimePickerWithTime" v-model="formData.fechahora_seguimiento"
+                                        placeholder="Fecha de Contacto" class="w-full" @input="clearAllErrors"
+                                        :disabled="isReadOnly" />
+                                    <span v-show="errors.has('fechahora_seguimiento')
+                                        " class="">
                                         {{
                                             errors.first(
                                                 "fechahora_seguimiento"
                                             )
                                         }}
                                     </span>
-                                    <span
-                                        v-if="
-                                            this.errores.fechahora_seguimiento
-                                        "
-                                        class="block"
-                                        >{{
+                                    <span v-if="
+                                        this.errores.fechahora_seguimiento
+                                    " class="block">{{
                                             errores.fechahora_seguimiento[0]
-                                        }}</span
-                                    >
+                                        }}</span>
                                 </div>
-                                <div
-                                    :class="[
-                                        'w-full px-2 input-text',
-                                        'md:w-4/12',
-                                    ]"
-                                    v-if="!fueProgramado"
-                                >
+                                <div :class="[
+                                    'w-full px-2 input-text',
+                                    'md:w-4/12',
+                                ]" v-if="!fueProgramado">
                                     <label>
                                         Motivo
                                         <span>(*)</span>
                                     </label>
-                                    <v-select
-                                        :options="motivos"
-                                        :clearable="false"
-                                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                        v-model="formData.motivo"
-                                        class="w-full"
-                                        name="motivo"
-                                        data-vv-as="Motivo"
-                                        v-validate="'required-select'"
-                                        @input="clearAllErrors"
-                                        :disabled="isReadOnly"
-                                    >
+                                    <v-select :options="motivos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        v-model="formData.motivo" class="w-full" name="motivo" data-vv-as="Motivo"
+                                        v-validate="'required-select'" @input="clearAllErrors" :disabled="isReadOnly">
                                         <div slot="no-options">
                                             No Se Ha Seleccionado Ningún Motivo
                                         </div>
                                     </v-select>
-                                    <span
-                                        v-show="errors.has('motivo')"
-                                        class=""
-                                    >
+                                    <span v-show="errors.has('motivo')" class="">
                                         {{ errors.first("motivo") }}
                                     </span>
-                                    <span
-                                        v-if="this.errores['motivo.value']"
-                                        class="block"
-                                        >{{ errores["motivo.value"][0] }}</span
-                                    >
+                                    <span v-if="this.errores['motivo.value']" class="block">{{
+                                        errores["motivo.value"][0] }}</span>
                                 </div>
-                                <div
-                                    :class="[
-                                        'w-full px-2 input-text',
-                                        !fueProgramado
-                                            ? 'md:w-4/12'
-                                            : 'md:w-6/12',
-                                    ]"
-                                >
+                                <div :class="[
+                                    'w-full px-2 input-text',
+                                    !fueProgramado
+                                        ? 'md:w-4/12'
+                                        : 'md:w-6/12',
+                                ]">
                                     <label>
                                         Resultado Obtenido
                                         <span>(*)</span>
                                     </label>
-                                    <v-select
-                                        :options="resultados"
-                                        :clearable="false"
-                                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                        v-model="formData.resultado"
-                                        class="w-full"
-                                        name="resultado"
-                                        data-vv-as="resultado"
-                                        v-validate="'required-select'"
-                                        @input="clearAllErrors"
-                                        :disabled="isReadOnly"
-                                    >
+                                    <v-select :options="resultados" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        v-model="formData.resultado" class="w-full" name="resultado"
+                                        data-vv-as="resultado" v-validate="'required-select'" @input="clearAllErrors"
+                                        :disabled="isReadOnly">
                                         <div slot="no-options">
                                             No Se Ha Seleccionado Ningún
                                             Resultado
                                         </div>
                                     </v-select>
-                                    <span
-                                        v-show="errors.has('resultado')"
-                                        class=""
-                                    >
+                                    <span v-show="errors.has('resultado')" class="">
                                         {{ errors.first("resultado") }}
                                     </span>
-                                    <span
-                                        v-if="this.errores['resultado.value']"
-                                        class="block"
-                                        >{{
-                                            errores["resultado.value"][0]
-                                        }}</span
-                                    >
+                                    <span v-if="this.errores['resultado.value']" class="block">{{
+                                        errores["resultado.value"][0]
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
                                         Medio de Contacto
                                         <span>(*)</span>
                                     </label>
-                                    <v-select
-                                        :options="medios"
-                                        :clearable="false"
-                                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                        v-model="formData.medio"
-                                        class="w-full"
-                                        name="medio"
-                                        data-vv-as="Medio de Contacto"
-                                        v-validate="'required-select'"
-                                        @input="clearAllErrors"
-                                        :disabled="isReadOnly"
-                                    >
+                                    <v-select :options="medios" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        v-model="formData.medio" class="w-full" name="medio"
+                                        data-vv-as="Medio de Contacto" v-validate="'required-select'"
+                                        @input="clearAllErrors" :disabled="isReadOnly">
                                         <div slot="no-options">
                                             No Se Ha Seleccionado Ningún Medio
                                         </div>
@@ -203,11 +122,8 @@
                                     <span v-show="errors.has('medio')" class="">
                                         {{ errors.first("medio") }}
                                     </span>
-                                    <span
-                                        v-if="this.errores['medio.value']"
-                                        class="block"
-                                        >{{ errores["medio.value"][0] }}</span
-                                    >
+                                    <span v-if="this.errores['medio.value']" class="block">{{ errores["medio.value"][0]
+                                        }}</span>
                                 </div>
 
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -215,89 +131,52 @@
                                         Email
                                         <span></span>
                                     </label>
-                                    <vs-input
-                                        v-validate="
-                                            formData.enviar_x_email
-                                                ? 'required|email'
-                                                : 'email'
-                                        "
-                                        name="email_seguimiento"
-                                        type="email"
-                                        class="w-full"
-                                        placeholder="Ej. cliente@gmail.com"
-                                        v-model="formData.email_seguimiento"
-                                        maxlength="100"
-                                        @input="clearAllErrors"
-                                        :disabled="isReadOnly"
-                                    />
-                                    <span
-                                        v-show="errors.has('email_seguimiento')"
-                                        class=""
-                                    >
+                                    <vs-input v-validate="formData.enviar_x_email
+                                            ? 'required|email'
+                                            : 'email'
+                                        " name="email_seguimiento" type="email" class="w-full"
+                                        placeholder="Ej. cliente@gmail.com" v-model="formData.email_seguimiento"
+                                        maxlength="100" @input="clearAllErrors" :disabled="isReadOnly" />
+                                    <span v-show="errors.has('email_seguimiento')" class="">
                                         {{ errors.first("email_seguimiento") }}
                                     </span>
-                                    <span
-                                        v-if="this.errores.email_seguimiento"
-                                        class="block"
-                                        >{{
-                                            errores.email_seguimiento[0]
-                                        }}</span
-                                    >
+                                    <span v-if="this.errores.email_seguimiento" class="block">{{
+                                        errores.email_seguimiento[0]
+                                    }}</span>
                                 </div>
                                 <div class="w-full px-2 pt-2 small-editor">
-                                    <NotasComponent
-                                        :readonly="isReadOnly"
-                                        :value="formData.comentario_seguimiento"
+                                    <NotasComponent :readonly="isReadOnly" :value="formData.comentario_seguimiento"
                                         @input="
                                             (val) => {
                                                 formData.comentario_seguimiento =
                                                     val;
                                             }
-                                        "
-                                    />
+                                        " />
                                 </div>
                             </div>
                             <!--Fin Contenido Form-->
                         </div>
                     </div>
                 </div>
-                <div
-                    v-if="fueProgramado"
-                    :class="['w-full p-2 form-datos-programado', 'xl:w-6/12']"
-                >
+                <div v-if="fueProgramado" :class="['w-full p-2 form-datos-programado', 'xl:w-6/12']">
                     <div class="form-group">
                         <div class="title-form-group">
                             Datos del Seguimiento Programado
                         </div>
                         <div class="form-group-content">
                             <!--Contenido Form-->
-                            <ProgramarSeguimientoDatos
-                                v-model="formDataProgramado"
-                                :tipo="'consultar'"
-                            >
+                            <ProgramarSeguimientoDatos v-model="formDataProgramado" :tipo="'consultar'">
                             </ProgramarSeguimientoDatos>
                         </div>
                     </div>
                 </div>
                 <!--Send Form-->
-                <div
-                    v-if="!isReadOnly"
-                    class="w-full flex flex-wrap items-center justify-between pr-2 pt-4"
-                >
-                    <vs-checkbox
-                        v-show="verEnviarEmailChk"
-                        color="success"
-                        class="size-small text-info"
-                        v-model="formData.enviar_x_email"
-                        :vs-value="formData.enviar_x_email"
-                        >¿Enviar por correo electrónico?</vs-checkbox
-                    >
-                    <vs-button
-                        ref="programar_seguimiento_button"
-                        class="ml-auto"
-                        :color="buttonColor"
-                        @click="EnviarForm"
-                    >
+                <div v-if="!isReadOnly" class="w-full flex flex-wrap items-center justify-between pr-2 pt-4">
+                    <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
+                        v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
+                        electrónico?</vs-checkbox>
+                    <vs-button ref="programar_seguimiento_button" class="ml-auto" :color="buttonColor"
+                        @click="EnviarForm">
                         {{ buttonTitle }}
                     </vs-button>
                 </div>
@@ -582,7 +461,7 @@ export default {
             this.limpiarVentana();
             this.$emit("closeVentana");
         },
-        limpiarVentana() {},
+        limpiarVentana() { },
         // Called when InfoOperacion is ready
         resultado_datos_cliente(success, email = null) {
             if (success) {

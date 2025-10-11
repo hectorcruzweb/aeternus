@@ -103,60 +103,79 @@ class SeguimientosController extends ApiController
 
         // ✅ Base validation rules
         $validaciones = [
-            'seguimiento_id' => [
-                (in_array(trim($tipo_request), ['modificar', 'cancelar', 'atender_seguimiento_programado']) ? 'required' : ''),
-                function ($attribute, $value, $fail) use ($tipo_request) {
-                    if (in_array($tipo_request, ['modificar', 'cancelar', 'atender_seguimiento_programado']) && $value) {
-                        $seguimiento = Seguimientos::where('id', $value)->first();
-                        if (!$seguimiento) {
-                            $fail("El seguimiento indicado no existe.");
+            'seguimiento_id' => array_merge(
+                in_array(trim($tipo_request), ['modificar', 'cancelar', 'atender_seguimiento_programado']) ? ['required', 'integer', 'min:1'] : ['nullable', 'integer', 'min:1'],
+                [
+                    function ($attribute, $value, $fail) use ($tipo_request) {
+                        if (in_array($tipo_request, ['modificar', 'cancelar', 'atender_seguimiento_programado'])) {
+                            // 🚫 Skip if not numeric or less than 1
+                            if (!is_numeric($value) || $value < 1) {
+                                return;
+                            }
+                            $seguimiento = Seguimientos::where('id', $value)->first();
+                            if (!$seguimiento) {
+                                $fail("El seguimiento indicado no existe.");
+                                return;
+                            }
+                            if ($tipo_request === 'atender_seguimiento_programado') {
+                                if ($seguimiento->programado_b != 1 || $seguimiento->status != 1) {
+                                    $fail("El seguimiento no está activo o no está programado para atender.");
+                                }
+                            }
+
+                            if ($tipo_request === 'modificar') {
+                                if (!($seguimiento->status == 1 || ($seguimiento->status == 2 && $seguimiento->programado_b == 1))) {
+                                    $fail("El seguimiento no puede modificarse porque no cumple las condiciones requeridas.");
+                                }
+                            }
+
+                            if ($tipo_request === 'cancelar') {
+                                if ($seguimiento->status == 0) {
+                                    $fail("El seguimiento no puede cancelarse porque ya está inactivo.");
+                                }
+                            }
+                        }
+                    }
+                ]
+            ),
+            'tipo_cliente_id' => ($tipo_request === 'agregar') ? 'required|in:1,2' : '',
+            'cliente_id' => array_merge(
+                ($tipo_request === 'agregar')
+                    ? ['required', 'integer', 'min:1']
+                    : ['nullable', 'integer', 'min:1'],
+                [
+                    function ($attribute, $value, $fail) use ($request, $tipo_request) {
+                        // 🚫 Skip if not numeric or less than 1
+                        if (!is_numeric($value) || $value < 1) {
                             return;
                         }
-                        // 🔹 atender_seguimiento_programado
-                        if ($tipo_request === 'atender_seguimiento_programado') {
-                            if ($seguimiento->programado_b != 1 || $seguimiento->status != 1) {
-                                $fail("El seguimiento no está activo o no está programado para atender.");
-                            }
-                        }
-                        // 🔹 modificar (optimized)
-                        if ($tipo_request === 'modificar') {
-                            if (!($seguimiento->status == 1 || ($seguimiento->status == 2 && $seguimiento->programado_b == 1))) {
-                                $fail("El seguimiento no puede modificarse porque no cumple las condiciones requeridas.");
-                            }
-                        }
+                        if ($tipo_request === 'agregar') {
+                            $tipo = $request->tipo_cliente_id;
 
-                        // 🔹 cancelar
-                        if ($tipo_request === 'cancelar') {
-                            if ($seguimiento->status == 0) {
-                                $fail("El seguimiento no puede cancelarse porque ya está inactivo.");
+                            if ($tipo == 1 && !Clientes::where('id', $value)->exists()) {
+                                $fail("El cliente seleccionado no ha sido registrado.");
+                            }
+
+                            if ($tipo == 2 && !Cotizaciones::where('id', $value)->exists()) {
+                                $fail("El cliente seleccionado no cuenta con Cotizaciones.");
                             }
                         }
                     }
-                }
-            ],
-            'tipo_cliente_id' => ($tipo_request === 'agregar') ? 'required|in:1,2' : '',
-            'cliente_id' => [
-                ($tipo_request === 'agregar') ? 'required' : '',
-                function ($attribute, $value, $fail) use ($request, $tipo_request) {
-                    if ($tipo_request === 'agregar') {
-                        $tipo = $request->tipo_cliente_id;
-                        if ($tipo == 1 && !Clientes::where('id', $value)->exists()) {
-                            $fail("El cliente seleccionado no ha sido registrado.");
-                        }
-                        if ($tipo == 2 && !Cotizaciones::where('id', $value)->exists()) {
-                            $fail("El cliente seleccionado no cuenta con Cotizaciones.");
-                        }
-                    }
-                }
-            ],
+                ]
+            ),
             'operacion_id' => [
-                'nullable', // siempre opcional
+                'nullable',
+                'integer',
+                'min:1', // siempre opcional
                 function ($attribute, $value, $fail) use ($request, $tipo_request) {
+                    // 🚫 Skip if not numeric or less than 1
+                    if (!is_numeric($value) || $value < 1) {
+                        return;
+                    }
                     // Validar solo si se envió un valor
                     if (!is_null($value) && $value !== '') {
                         $tipo = $request->tipo_cliente_id;
                         $clienteId = $request->cliente_id;
-
                         if ($tipo == 1) {
                             $exists = Operaciones::where('id', $value)
                                 ->where('clientes_id', $clienteId)
@@ -203,7 +222,6 @@ class SeguimientosController extends ApiController
                     }
                 },
             ],
-
             'medio.value' => (in_array($tipo_request, ['cancelar'])) ? '' : 'required|integer|between:1,7',
             'resultado.value' => (in_array($tipo_request, ['cancelar'])) ? '' : 'required|integer|between:1,8',
             'motivo_cancelacion.value' => ($tipo_request === 'cancelar') ? 'required|integer|between:1,6' : '',
@@ -239,6 +257,7 @@ class SeguimientosController extends ApiController
 
         // ✅ Run validation
         request()->validate($validaciones, $mensajes);
+        return $this->errorResponse("llego.", 500);
     }
 
 
