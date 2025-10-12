@@ -107,7 +107,7 @@ export default {
     },
 
     /**obtiene la informacion del paginado de clientes para segumientos*/
-    async getSeguimientosProgramados(params) {
+    async getSeguimientos(params) {
         try {
             const response = await axios.get("/seguimientos/get_seguimientos", {
                 params,

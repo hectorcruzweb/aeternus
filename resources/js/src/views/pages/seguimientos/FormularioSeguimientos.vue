@@ -206,6 +206,63 @@
                         </div>
                         <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
+                            <vs-table :sst="false" :data="SeguimientosList" stripe pagination max-items="8"
+                                noDataText="0 Resultados" class="w-full tabla-datos">
+                                <template slot="header">
+                                    <h3>Seguimientos Realizados</h3>
+                                </template>
+                                <template slot="thead">
+                                    <vs-th>Acciones</vs-th>
+                                    <vs-th>Motivo </vs-th>
+                                    <vs-th>Fecha Realizado</vs-th>
+                                    <vs-th>Cancelar</vs-th>
+                                </template>
+                                <template slot-scope="{ data }">
+                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                        <!-- Main columns -->
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                {{ tr.id }} /
+                                                {{
+                                                    tr.operaciones_id
+                                                        ? tr.operaciones_id
+                                                        : "NA"
+                                                }}
+                                                <img class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/folder.svg" title="Consultar Seguimiento"
+                                                    @click="
+                                                        programarSeguimiento(
+                                                            'consultar',
+                                                            tr
+                                                        )
+                                                        " />
+                                                <img class="cursor-pointer img-btn-20 mx-4"
+                                                    src="@assets/images/edit.svg" title="Modificar Seguimiento" @click="
+                                                        programarSeguimiento(
+                                                            'modificar',
+                                                            tr
+                                                        )
+                                                        " />
+                                            </div>
+                                        </vs-td>
+                                        <vs-td>{{ tr.motivo_texto }}</vs-td>
+                                        <vs-td>{{
+                                            tr.fechahora_seguimiento_texto_abr
+                                        }}</vs-td>
+                                        <vs-td>
+                                            <div class="flex justify-center">
+                                                <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
+                                                    title="Cancelar Seguimiento" @click="
+                                                        programarSeguimiento(
+                                                            'cancelar',
+                                                            tr
+                                                        )
+                                                        " />
+                                            </div>
+                                        </vs-td>
+                                    </vs-tr>
+                                </template>
+                            </vs-table>
                         </div>
                     </div>
 
@@ -494,13 +551,42 @@ export default {
             //this.$vs.loading();
             try {
                 // Call the API from seguimientos service
-                const result = await seguimientos.getSeguimientosProgramados(
+                const result = await seguimientos.getSeguimientos(
                     params
                 );
                 this.$log("🚀 ~ _getSeguimientosProgramados ~ result:", result);
                 if (!result || typeof result !== "object") {
                     throw new Error(
                         "Respuesta inválida en _getSeguimientosProgramados"
+                    );
+                }
+                return result.length ? result : [];
+            } catch (error) {
+                this.$error("Error fetching seguimientos:", error);
+                this.cancelar();
+            } finally {
+                //this.$vs.loading.close();
+            }
+        },
+        async _getSeguimientosRealizados() {
+            if (!this.show) return; // stop here if not visible
+            const params = {
+                cliente_id: this.cliente.id,
+                tipo_cliente_id: this.cliente.tipo_cliente_id,
+                programado_b: 0,
+                status: 1,
+            };
+            this.$log("🚀 ~ _getSeguimientosRealizados ~ params:", params);
+            //this.$vs.loading();
+            try {
+                // Call the API from seguimientos service
+                const result = await seguimientos.getSeguimientos(
+                    params
+                );
+                this.$log("🚀 ~ _getSeguimientosRealizados ~ result:", result);
+                if (!result || typeof result !== "object") {
+                    throw new Error(
+                        "Respuesta inválida en _getSeguimientosRealizados"
                     );
                 }
                 return result.length ? result : [];
@@ -523,6 +609,7 @@ export default {
                 this.cliente = { ...cliente };
                 this.OperacionesList = cliente.operaciones;
                 this.ProgramadosList = await this._getSeguimientosProgramados();
+                this.SeguimientosList = await this._getSeguimientosRealizados();
             } catch (error) {
                 this.$log("🚀 ~ updateClienteInfo ~ error:", error);
             } finally {

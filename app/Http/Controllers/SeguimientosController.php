@@ -641,12 +641,13 @@ class SeguimientosController extends ApiController
     public function get_seguimientos(Request $request)
     {
         $validaciones = [
-            'programado_b' => 'required|in:0,1',
+            'programado_b' => 'required|in:0,1|integer',
             'id' => 'sometimes|integer',
             'cliente_id' => 'sometimes|integer',
-            'tipo_cliente_id' => 'sometimes|in:1,2',
+            'tipo_cliente_id' => 'sometimes|in:1,2|integer',
             'operaciones_id' => 'sometimes|integer',
-            'status' => 'sometimes|in:0,1,2'
+            'status' => 'sometimes|in:0,1,2|integer',
+            'atendidos' => 'sometimes|in:0,1|integer'
         ];
 
         $mensajes = [
@@ -658,29 +659,63 @@ class SeguimientosController extends ApiController
             'operaciones_id.integer' => 'El ID de la operación debe ser un número entero válido.',
             'status.in' => 'El status solo puede ser 0, 1 o 2.'
         ];
-
         $request->validate($validaciones, $mensajes);
-
         // Load lookups once
         $motivos = $this->getMotivos();
         $medios = $this->getMedios();
+        $resultados = $this->getResultadosContacto();
 
-        $queryClosure = function () use ($request, $motivos, $medios) {
+        $queryClosure = function () use ($request, $motivos, $medios, $resultados) {
             $query = Seguimientos::query()
                 ->with(['cliente:id,nombre']); // 👈 load cliente info automatically
-
             if ($request->has('id')) {
                 $query->where('id', $request->id);
             }
-
-            if ($request->has('programado_b')) {
-                $query->where('programado_b', $request->programado_b);
-                // Base select
-                $select = [
-                    'id',
-                    'tipo_cliente_id',
-                    'clientes_id',
-                    'operaciones_id',
+            $select = [
+                'id',
+                'tipo_cliente_id',
+                'clientes_id',
+                'operaciones_id',
+                'motivo_id',
+                'status',
+                'programado_b',
+                'fechahora_programada',
+                'fechahora_seguimiento',
+                'medio_preferido_programado_id',
+                'fechahora_registro_programado',
+                'registro_programado_id',
+                'email_programado',
+                'medio_seguimiento_id',
+                'fechahora_registro_seguimiento',
+                'realizo_seguimiento_id',
+                'email_seguimiento',
+                'resultado_id',
+                DB::raw(
+                    'DATE(fechahora_programada) as fecha_programada'
+                ),
+                DB::raw(
+                    'TIME(fechahora_programada) as hora_programada'
+                ),
+                DB::raw(
+                    'DATE(fechahora_seguimiento) as fecha_seguimiento'
+                ),
+                DB::raw(
+                    'TIME(fechahora_seguimiento) as hora_seguimiento'
+                ),
+            ];
+            // Base select
+            /*
+            $select = [
+                'id',
+                'tipo_cliente_id',
+                'clientes_id',
+                'operaciones_id',
+                'motivo_id',
+                'status',
+                'programado_b'
+            ];
+            if ((int) $request->programado_b === 1) {
+                $select = array_merge($select, [
                     'fechahora_programada',
                     DB::raw(
                         'DATE(fechahora_programada) as fecha_programada'
@@ -688,49 +723,96 @@ class SeguimientosController extends ApiController
                     DB::raw(
                         'TIME(fechahora_programada) as hora_programada'
                     ),
-                    'motivo_id',
                     'medio_preferido_programado_id',
                     'fechahora_registro_programado',
                     'registro_programado_id',
                     'email_programado',
-                    'status',
-                ];
+                ]);
                 // ✅ Add comentario_programado *only if ID was requested*
                 if ($request->has('id')) {
                     $select[] = 'comentario_programado';
                 }
-
-                $query->select($select);
+            } else {
+                $select = array_merge($select, [
+                    'fechahora_seguimiento',
+                    DB::raw(
+                        'DATE(fechahora_seguimiento) as fecha_seguimiento'
+                    ),
+                    DB::raw(
+                        'TIME(fechahora_seguimiento) as hora_seguimiento'
+                    ),
+                    'medio_seguimiento_id',
+                    'fechahora_registro_seguimiento',
+                    'realizo_seguimiento_id',
+                    'email_seguimiento',
+                    'resultado_id'
+                ]);
+                // ✅ Add comentario_programado *only if ID was requested*
+                if ($request->has('id')) {
+                    $select[] = 'comentario_seguimiento';
+                }
             }
-
+                */
+            if ($request->has('id')) {
+                $select[] = 'comentario_seguimiento';
+                $select[] = 'comentario_programado';
+            }
+            $query->select($select);
+            if ((int)$request->programado_b === 1) {
+                //son programados
+                $query->where('programado_b', 1)->where('fechahora_registro_seguimiento', null);
+            } else {
+                //son seguimientos
+                $query->where(function ($q) {
+                    $q->where('programado_b', 0)
+                        ->orWhere(function ($sub) {
+                            $sub->where('programado_b', 1)
+                                ->where('fechahora_registro_seguimiento', '<>', null);
+                        });
+                });
+            }
             if ($request->has('status')) {
-                $statuses = is_array($request->status) ? $request->status : [$request->status];
-                $query->whereIn('status', $statuses);
+                if ((int)$request->programado_b === 1) {
+                    //son programados
+                    $query->where('status', $request->status);
+                } else {
+                    //son seguimientos realizados
+                    //si es status 0
+                    $query->where(function ($q) use ($request) {
+                        $q->where('status', $request->status)
+                            ->orWhere(function ($sub) use ($request) {
+                                $sub->where('programado_b', 1)
+                                    ->where('fechahora_registro_seguimiento', '<>', null);
+                                if ((int)$request->status === 0) {
+                                    $sub->where('status', $request->status);
+                                } else {
+                                    $sub->whereIn('status', [1, 2]);
+                                }
+                            });
+                    });
+                }
             }
-
             if ($request->has('cliente_id')) {
                 $query->where('clientes_id', $request->cliente_id);
             }
-
             if ($request->has('tipo_cliente_id')) {
                 $tipos = is_array($request->tipo_cliente_id) ? $request->tipo_cliente_id : [$request->tipo_cliente_id];
                 $query->whereIn('tipo_cliente_id', $tipos);
             }
-
             if ($request->has('operaciones_id')) {
                 $query->where('operaciones_id', $request->operaciones_id);
             }
-
             // Retrieve data
             $seguimientos = $query->orderByDesc('id')->get();
             // Append readable text fields
-            return $seguimientos->map(function ($item) use ($motivos, $medios) {
+            return $seguimientos->map(function ($item) use ($motivos, $medios, $resultados) {
                 $item->motivo_texto = $motivos[$item->motivo_id] ?? 'Desconocido';
                 $item->medio_texto = $medios[$item->medio_preferido_programado_id] ?? 'Desconocido';
+                $item->resultado_texto = $resultados[$item->resultado_id] ?? 'Desconocido';
+                $item->medio_seguimiento_texto = $medios[$item->medio_seguimiento_id] ?? 'Desconocido';
                 return $item;
             });
         };
-
         // Check debug mode
         if (!config('app.debug')) {
             try {
