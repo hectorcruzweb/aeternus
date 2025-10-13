@@ -197,7 +197,10 @@
                         </div>
                     </div>
                     <!-- Bottom-left -->
-                    <div class="p-2 border-children">
+                    <div class="border-children" :class="{
+                        'full-row': hasSeguimientos && !hasProgramados, // expand full width
+                        'hidden': !hasSeguimientos,    // hide both if none
+                    }">
                         <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
@@ -214,6 +217,7 @@
                                 <template slot="thead">
                                     <vs-th>Acciones</vs-th>
                                     <vs-th>Motivo </vs-th>
+                                    <vs-th v-if="!hasProgramados">Resultado Obtenido</vs-th>
                                     <vs-th>Fecha Realizado</vs-th>
                                     <vs-th>Cancelar</vs-th>
                                 </template>
@@ -246,9 +250,10 @@
                                             </div>
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
+                                        <vs-td v-if="!hasProgramados">{{ tr.resultado_texto }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
-                                        }}</vs-td>
+                                            }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -266,8 +271,11 @@
                         </div>
                     </div>
 
-                    <!-- Bottom-right -->
-                    <div class="p-2 border-children">
+                    <!-- Bottom-right Programados-->
+                    <div class="border-children" :class="{
+                        'full-row': hasProgramados && !hasSeguimientos,
+                        'hidden': !hasProgramados,
+                    }">
                         <div v-if="!cliente || !cliente.id" class="skeleton flex items-center justify-center">
                             <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
                         </div>
@@ -324,7 +332,8 @@
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
                                         <vs-td>{{
-                                            tr.fechahora_programada_texto_abr
+                                            !hasSeguimientos ? tr.fechahora_programada_texto
+                                                : tr.fechahora_programada_texto_abr
                                         }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
@@ -341,6 +350,14 @@
                                 </template>
                             </vs-table>
                         </div>
+                    </div>
+                    <!-- Skeleton / No data -->
+                    <div v-if="(!hasSeguimientos && !hasProgramados) && (!cliente || !cliente.id)"
+                        class="skeleton border-children full-row">
+                        <span class="text-gray-600 text-lg font-normal">Seleccione 1 Cliente</span>
+                    </div>
+                    <div v-else-if="!hasSeguimientos && !hasProgramados" class="skeleton border-children full-row">
+                        <span class="text-gray-600 text-lg font-normal">No hay seguimientos que mostrar</span>
                     </div>
                 </div>
             </div>
@@ -402,7 +419,14 @@ export default {
         },
     },
     // Computed properties: derived reactive data
-    computed: {},
+    computed: {
+        hasSeguimientos() {
+            return Array.isArray(this.SeguimientosList) && this.SeguimientosList.length > 0;
+        },
+        hasProgramados() {
+            return Array.isArray(this.ProgramadosList) && this.ProgramadosList.length > 0;
+        },
+    },
     watch: {
         show: {
             immediate: true, // runs when component is mounted too
@@ -598,7 +622,7 @@ export default {
             }
         },
         async simularClienteSeleccionado() {
-            this.cliente.id = 4;
+            this.cliente.id = 5;
             this.cliente.tipo_cliente_id = 1;
             await this.onClienteSeleccionado(this.cliente);
         },
@@ -760,6 +784,17 @@ export default {
         /* single column */
         grid-template-rows: auto auto auto auto;
         /* each child grows naturally */
+    }
+}
+
+.dashboard-container>.full-row {
+    grid-column: span 2;
+}
+
+/* For mobile view (single column) — ensure full width always */
+@media (max-width: 1024px) {
+    .dashboard-container>.full-row {
+        grid-column: span 1;
     }
 }
 

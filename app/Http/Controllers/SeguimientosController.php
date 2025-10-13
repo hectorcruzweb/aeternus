@@ -703,56 +703,6 @@ class SeguimientosController extends ApiController
                     'TIME(fechahora_seguimiento) as hora_seguimiento'
                 ),
             ];
-            // Base select
-            /*
-            $select = [
-                'id',
-                'tipo_cliente_id',
-                'clientes_id',
-                'operaciones_id',
-                'motivo_id',
-                'status',
-                'programado_b'
-            ];
-            if ((int) $request->programado_b === 1) {
-                $select = array_merge($select, [
-                    'fechahora_programada',
-                    DB::raw(
-                        'DATE(fechahora_programada) as fecha_programada'
-                    ),
-                    DB::raw(
-                        'TIME(fechahora_programada) as hora_programada'
-                    ),
-                    'medio_preferido_programado_id',
-                    'fechahora_registro_programado',
-                    'registro_programado_id',
-                    'email_programado',
-                ]);
-                // ✅ Add comentario_programado *only if ID was requested*
-                if ($request->has('id')) {
-                    $select[] = 'comentario_programado';
-                }
-            } else {
-                $select = array_merge($select, [
-                    'fechahora_seguimiento',
-                    DB::raw(
-                        'DATE(fechahora_seguimiento) as fecha_seguimiento'
-                    ),
-                    DB::raw(
-                        'TIME(fechahora_seguimiento) as hora_seguimiento'
-                    ),
-                    'medio_seguimiento_id',
-                    'fechahora_registro_seguimiento',
-                    'realizo_seguimiento_id',
-                    'email_seguimiento',
-                    'resultado_id'
-                ]);
-                // ✅ Add comentario_programado *only if ID was requested*
-                if ($request->has('id')) {
-                    $select[] = 'comentario_seguimiento';
-                }
-            }
-                */
             if ($request->has('id')) {
                 $select[] = 'comentario_seguimiento';
                 $select[] = 'comentario_programado';
