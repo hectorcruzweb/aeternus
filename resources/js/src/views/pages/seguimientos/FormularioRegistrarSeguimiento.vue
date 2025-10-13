@@ -57,7 +57,7 @@
                                         this.errores.fechahora_seguimiento
                                     " class="block">{{
                                         errores.fechahora_seguimiento[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div :class="[
                                     'w-full px-2 input-text',
@@ -104,7 +104,7 @@
                                     </span>
                                     <span v-if="this.errores['resultado.value']" class="block">{{
                                         errores["resultado.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -123,7 +123,7 @@
                                         {{ errors.first("medio") }}
                                     </span>
                                     <span v-if="this.errores['medio.value']" class="block">{{ errores["medio.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -142,7 +142,7 @@
                                     </span>
                                     <span v-if="this.errores.email_seguimiento" class="block">{{
                                         errores.email_seguimiento[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full px-2 pt-2 small-editor">
                                     <NotasComponent :readonly="isReadOnly" :value="formData.comentario_seguimiento"
@@ -181,6 +181,9 @@
                     </vs-button>
                 </div>
             </div>
+            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callback"
+                @closeVerificar="openPassword = false" :accion="accionNombre">
+            </Password>
         </vs-popup>
     </div>
 </template>
@@ -235,17 +238,17 @@ export default {
                 // Only listen when visible = true
                 if (newVal) {
                     await this._getResultadosMedios();
-                    if (this.fueProgramado) {
-                        //datos del seguimiento programado
-                        await this._loadSeguimientosProgramadoDatos();
+                    //solo cuando es tipo atender y sabemos que debemos cargar los datos del seguimiento programado
+                    if (this.tipo !== "agregar") {
+                        //en este caso hay que consultar la info del seguimiento
+                        await this._loadSeguimientoDatos();
                     }
-                    this.checkReady();
-
                     await this.$popupManager.register(
                         this,
                         this.cancelar,
                         "fechahora_seguimiento"
                     );
+                    this.checkReady();
                 }
             },
         },
@@ -253,7 +256,12 @@ export default {
     // Computed properties: derived reactive data
     computed: {
         fueProgramado() {
-            return this.tipo === "atender_seguimiento_programado";
+            let res = false;
+            if (this.tipo !== "agregar") {
+                //en este caso hay que consultar la info del seguimiento
+                res = (this.datos_seguimiento_request && this.datos_seguimiento_request.programado_b === 1) ? true : false;
+            }
+            return res;
         },
         isReadOnly() {
             return false;
@@ -317,11 +325,21 @@ export default {
         return {
             localShow: false, // controls popup visibility
             configdateTimePickerWithTime: configdateTimePickerWithTime,
+
+            //password form
+
+            callback: Function,
+            accionNombre: "",
+            openPassword: false,
+
+
             //datos del form de registro de seguimientos y atendidos
             resultados: [],
             medios: [],
             motivos: [],
             motivos_de_cancelacion: [],
+            //Datos del seguimiento en bruto
+            datos_seguimiento_request: [],
             formData: {
                 seguimiento_id: null,
                 fechahora_seguimiento: "",
@@ -337,7 +355,7 @@ export default {
             errores: [], //from backend
             ready: {
                 InfoOperacion: false,
-                loadSeguimientoProgramadoDatos: false,
+                loadSeguimientoDatos: false,
                 loadMotivosResultadosMedios: false,
             },
             //Form Data de Seguimientos Programados
@@ -373,7 +391,13 @@ export default {
 
             this.accionNombre = this.popupTitle;
             this.callback = await this.submitForm;
-            if (this.tipo === "modificar" || this.tipo === "cancelar") {
+            /*if (this.tipo === "modificar" || this.tipo === "cancelar") {
+                this.openPassword = true;
+                return;
+            }*/
+            if (this.tipo === "modificar") {
+                this.accionNombre = "Actualizar Seguimiento";
+                this.callback = await this.submitForm;
                 this.openPassword = true;
                 return;
             }
@@ -484,7 +508,7 @@ export default {
             if (this.fueProgramado) {
                 if (
                     this.ready.InfoOperacion &&
-                    this.ready.loadSeguimientoProgramadoDatos &&
+                    this.ready.loadSeguimientoDatos &&
                     this.ready.loadMotivosResultadosMedios
                 ) {
                     this.localShow = true;
@@ -498,12 +522,12 @@ export default {
                 }
             }
         },
-        async _loadSeguimientosProgramadoDatos() {
+        async _loadSeguimientoDatos() {
             if (!this.show) return; // stop here if not visible
             const params = {
-                cliente_id: this.filters.cliente_id,
-                tipo_cliente_id: this.filters.tipo_cliente_id,
-                programado_b: 1,
+                //cliente_id: this.filters.cliente_id,
+                //tipo_cliente_id: this.filters.tipo_cliente_id,
+                programado_b: this.tipo === "atender_seguimiento_programado" ? 1 : 0,
                 status: 1,
                 id: this.filters.seguimiento_id,
             };
@@ -520,28 +544,64 @@ export default {
                         "Respuesta inválida en _getSeguimientosProgramados"
                     );
                 }
-                this.formDataProgramado.email = result[0].email_programado;
-                this.formDataProgramado.comentario_programado =
-                    result[0].comentario_programado;
-                this.formDataProgramado.motivo = {
-                    label: result[0].motivo_texto,
-                    value: result[0].motivo_id,
-                };
-                this.formDataProgramado.medio = {
-                    label: result[0].medio_texto,
-                    value: result[0].medio_preferido_programado_id,
-                };
-                let fecha_contacto = result[0].fecha_programada.split("-");
-                let hora_contacto = result[0].hora_programada.split(":");
-                //yyyy-mm-dd hh:mm
-                this.formDataProgramado.fecha_a_contactar = new Date(
-                    fecha_contacto[0],
-                    fecha_contacto[1] - 1,
-                    fecha_contacto[2],
-                    hora_contacto[0],
-                    hora_contacto[1]
-                );
-                this.ready.loadSeguimientoProgramadoDatos = true;
+                //asigno los datos para que verifique si ha sido programado en algun momento
+                this.datos_seguimiento_request = result[0];
+                if (this.tipo !== "agregar" && this.tipo !== "atender_seguimiento_programado") {
+                    this.$nextTick(() => {
+                        //Asigno datos al formulario de seguimientos
+                        this.formData.email_seguimiento = result[0].email_seguimiento;
+                        this.formData.comentario_seguimiento =
+                            result[0].comentario_seguimiento;
+                        this.formData.motivo = {
+                            label: result[0].motivo_texto,
+                            value: result[0].motivo_id,
+                        };
+                        this.formData.medio = {
+                            label: result[0].medio_seguimiento_texto,
+                            value: result[0].medio_seguimiento_id,
+                        };
+                        this.formData.resultado = {
+                            label: result[0].resultado_texto,
+                            value: result[0].resultado_id,
+                        };
+                        let fecha_contacto = result[0].fecha_seguimiento.split("-");
+                        let hora_contacto = result[0].hora_seguimiento.split(":");
+                        //yyyy-mm-dd hh:mm
+                        this.formData.fechahora_seguimiento = new Date(
+                            fecha_contacto[0],
+                            fecha_contacto[1] - 1,
+                            fecha_contacto[2],
+                            hora_contacto[0],
+                            hora_contacto[1]
+                        );
+                    });
+                }
+
+                if (this.fueProgramado) {
+                    //asigno datos en caso de haber sido programado
+                    this.formDataProgramado.email = result[0].email_programado;
+                    this.formDataProgramado.comentario_programado =
+                        result[0].comentario_programado;
+                    this.formDataProgramado.motivo = {
+                        label: result[0].motivo_texto,
+                        value: result[0].motivo_id,
+                    };
+                    this.formDataProgramado.medio = {
+                        label: result[0].medio_texto,
+                        value: result[0].medio_preferido_programado_id,
+                    };
+                    let fecha_contacto = result[0].fecha_programada.split("-");
+                    let hora_contacto = result[0].hora_programada.split(":");
+                    //yyyy-mm-dd hh:mm
+                    this.formDataProgramado.fecha_a_contactar = new Date(
+                        fecha_contacto[0],
+                        fecha_contacto[1] - 1,
+                        fecha_contacto[2],
+                        hora_contacto[0],
+                        hora_contacto[1]
+                    );
+                }
+                this.ready.loadSeguimientoDatos = true;
             } catch (error) {
                 this.$error("Error fetching seguimientos:", error);
                 this.cancelar();
