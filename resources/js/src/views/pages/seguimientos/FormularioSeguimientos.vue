@@ -218,6 +218,7 @@
                                     <vs-th>Acciones</vs-th>
                                     <vs-th>Motivo </vs-th>
                                     <vs-th v-if="!hasProgramados">Resultado Obtenido</vs-th>
+                                    <vs-th v-if="!hasProgramados">Fue Programado</vs-th>
                                     <vs-th>Fecha Realizado</vs-th>
                                     <vs-th>Cancelar</vs-th>
                                 </template>
@@ -251,6 +252,7 @@
                                         </vs-td>
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
                                         <vs-td v-if="!hasProgramados">{{ tr.resultado_texto }}</vs-td>
+                                        <vs-td v-if="!hasProgramados">{{ tr.tipo_programado_texto }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
                                             }}</vs-td>
@@ -258,7 +260,7 @@
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
                                                     title="Cancelar Seguimiento" @click="
-                                                        programarSeguimiento(
+                                                        registrarSeguimiento(
                                                             'cancelar',
                                                             tr
                                                         )

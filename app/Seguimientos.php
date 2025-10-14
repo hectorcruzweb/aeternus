@@ -39,7 +39,7 @@ class Seguimientos extends Model
         } else
         if ($this->status == 1) {
             //just for programados_b
-            $status = "Por atender";
+            $status = $this->programado_b === 1 ? "Por atender" : "Atendido";
         } else
         if ($this->status == 2) {
             $status = "Atendido";

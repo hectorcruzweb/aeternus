@@ -2,19 +2,63 @@
     <div>
         <vs-popup :class="[
             'forms-popup',
-            fueProgramado ? 'popup-95' : ' popup-70',
+            popupSize,
             z_index,
         ]" :fullscreen="false" close="cancelar" :title="popupTitle" :active="localShow" :ref="this.$options.name">
             <div class="flex flex-wrap pb-4">
-                <div class="w-full">
-                    {{ filters }}
-                </div>
-                <div class="px-2 w-full mb-2" v-if="fueProgramado">
-                    <div class="w-full highlighted-inputs-primary">
-                        <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
-                            @resultado="resultado_datos_cliente">
-                        </InfoOperacion>
+                <div class="px-2 w-full mb-2 flex flex-wrap " v-if="fueProgramado">
+                    <div class="w-full py-1" :class="[tipo === 'cancelar' ? 'xl:w-6/12 xl:pr-2' : '']">
+                        <div class="w-full highlighted-inputs-primary px-2">
+                            <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                                @resultado="resultado_datos_cliente">
+                            </InfoOperacion>
+                        </div>
                     </div>
+                    <!--Datos de Cancelación-->
+                    <div v-if="tipo === 'cancelar' && fueProgramado" class="w-full xl:h-full xl:pl-2 py-1"
+                        :class="[tipo === 'cancelar' ? 'xl:w-6/12' : '']">
+                        <div class="w-full flex flex-wrap highlighted-inputs-danger pt-2 pb-4 xl:h-full">
+                            <div class="w-full py-2 px-2">
+                                <div class="w-full text-center uppercase py-2 bg-danger text-white">
+                                    Motivo de Cancelación
+                                </div>
+                            </div>
+                            <div class="w-full md:w-6/12 px-2 input-text">
+                                <label>
+                                    Motivo de Cancelación
+                                    <span>(*)</span>
+                                </label>
+                                <v-select :options="motivos_de_cancelacion" :clearable="false"
+                                    :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="formData.motivo_cancelacion" class="w-full"
+                                    name="motivo_cancelacion" data-vv-as="Motivo de Cancelación"
+                                    v-validate="'required-select'" @input="clearAllErrors">
+                                    <div slot="no-options">
+                                        No hay Motivos de Cancelación
+                                    </div>
+                                </v-select>
+                                <span v-show="errors.has('motivo_cancelacion')" class="">
+                                    {{ errors.first("motivo_cancelacion") }}
+                                </span>
+                                <span v-if="this.errores['motivo_cancelacion.value']" class="block">{{
+                                    errores["motivo_cancelacion.value"][0] }}</span>
+                            </div>
+                            <div class="w-full md:w-6/12 px-2 input-text">
+                                <label>
+                                    Comentario de Cancelación
+                                    <span></span>
+                                </label>
+                                <vs-input v-validate="" name="comentario_cancelacion" type="text" class="w-full"
+                                    placeholder="" v-model="formData.comentario_cancelacion" maxlength="250"
+                                    @input="clearAllErrors" />
+                                <span v-show="errors.has('comentario_cancelacion')" class="">
+                                    {{ errors.first("comentario_cancelacion") }}
+                                </span>
+                                <span v-if="this.errores.comentario_cancelacion" class="block">{{
+                                    errores.comentario_cancelacion[0] }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Fin de Datos de Cancelación-->
                 </div>
                 <div :class="[
                     'w-full p-2 form-datos-registrar',
@@ -25,11 +69,57 @@
                             Datos del Seguimiento Realizado
                         </div>
                         <div class="form-group-content">
-                            <div class="w-full highlighted-inputs-primary mb-2" v-if="!fueProgramado">
-                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
-                                    @resultado="resultado_datos_cliente">
-                                </InfoOperacion>
+                            <div class="px-2 mb-2">
+                                <div class="w-full highlighted-inputs-primary " v-if="!fueProgramado">
+                                    <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
+                                        @resultado="resultado_datos_cliente">
+                                    </InfoOperacion>
+                                </div>
                             </div>
+                            <!--Datos de Cancelación-->
+                            <div v-if="tipo === 'cancelar' && !fueProgramado" class="w-full my-2 px-2">
+                                <div class="w-full flex flex-wrap highlighted-inputs-danger pt-2 pb-4">
+                                    <div class="w-full py-2 px-2">
+                                        <div class="w-full text-center uppercase py-2 bg-danger text-white">
+                                            Motivo de Cancelación
+                                        </div>
+                                    </div>
+                                    <div class="w-full md:w-6/12 px-2 input-text">
+                                        <label>
+                                            Motivo de Cancelación
+                                            <span>(*)</span>
+                                        </label>
+                                        <v-select :options="motivos_de_cancelacion" :clearable="false"
+                                            :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="formData.motivo_cancelacion"
+                                            class="w-full" name="motivo_cancelacion" data-vv-as="Motivo de Cancelación"
+                                            v-validate="'required-select'" @input="clearAllErrors">
+                                            <div slot="no-options">
+                                                No hay Motivos de Cancelación
+                                            </div>
+                                        </v-select>
+                                        <span v-show="errors.has('motivo_cancelacion')" class="">
+                                            {{ errors.first("motivo_cancelacion") }}
+                                        </span>
+                                        <span v-if="this.errores['motivo_cancelacion.value']" class="block">{{
+                                            errores["motivo_cancelacion.value"][0] }}</span>
+                                    </div>
+                                    <div class="w-full md:w-6/12 px-2 input-text">
+                                        <label>
+                                            Comentario de Cancelación
+                                            <span></span>
+                                        </label>
+                                        <vs-input v-validate="" name="comentario_cancelacion" type="text" class="w-full"
+                                            placeholder="" v-model="formData.comentario_cancelacion" maxlength="250"
+                                            @input="clearAllErrors" />
+                                        <span v-show="errors.has('comentario_cancelacion')" class="">
+                                            {{ errors.first("comentario_cancelacion") }}
+                                        </span>
+                                        <span v-if="this.errores.comentario_cancelacion" class="block">{{
+                                            errores.comentario_cancelacion[0] }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--Fin de Datos de Cancelación-->
                             <!--Contenido Form-->
                             <div class="flex flex-wrap">
                                 <div :class="[
@@ -57,7 +147,7 @@
                                         this.errores.fechahora_seguimiento
                                     " class="block">{{
                                         errores.fechahora_seguimiento[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div :class="[
                                     'w-full px-2 input-text',
@@ -104,7 +194,7 @@
                                     </span>
                                     <span v-if="this.errores['resultado.value']" class="block">{{
                                         errores["resultado.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -123,7 +213,7 @@
                                         {{ errors.first("medio") }}
                                     </span>
                                     <span v-if="this.errores['medio.value']" class="block">{{ errores["medio.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -142,7 +232,7 @@
                                     </span>
                                     <span v-if="this.errores.email_seguimiento" class="block">{{
                                         errores.email_seguimiento[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div class="w-full px-2 pt-2 small-editor">
                                     <NotasComponent :readonly="isReadOnly" :value="formData.comentario_seguimiento"
@@ -171,7 +261,7 @@
                     </div>
                 </div>
                 <!--Send Form-->
-                <div v-if="!isReadOnly" class="w-full flex flex-wrap items-center justify-between pr-2 pt-4">
+                <div v-if="tipo !== 'consultar'" class="w-full flex flex-wrap items-center justify-between pr-2 pt-4">
                     <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
                         v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
                         electrónico?</vs-checkbox>
@@ -264,15 +354,19 @@ export default {
             return res;
         },
         isReadOnly() {
-            return (
-                this.tipo === "consultar" ||
-                this.tipo === "cancelar"
-            );
+            return this.tipo === "consultar" || this.tipo === "cancelar";
         },
         verEnviarEmailChk() {
             if (this.tipo === "cancelar") {
-                return this.formDataProgramado.email_seguimiento ? true : false;
+                return this.formData.email_seguimiento ? true : false;
             } else return true;
+        },
+        popupSize() {
+            let size = 'popup-70';
+            if ((this.fueProgramado && this.tipo === 'cancelar') || this.fueProgramado) {
+                size = 'popup-100';
+            }
+            return size;
         },
         popupTitle() {
             switch (this.tipo) {
@@ -328,14 +422,10 @@ export default {
         return {
             localShow: false, // controls popup visibility
             configdateTimePickerWithTime: configdateTimePickerWithTime,
-
             //password form
-
             callback: Function,
             accionNombre: "",
             openPassword: false,
-
-
             //datos del form de registro de seguimientos y atendidos
             resultados: [],
             medios: [],
@@ -398,8 +488,8 @@ export default {
                 this.openPassword = true;
                 return;
             }*/
-            if (this.tipo === "modificar") {
-                this.accionNombre = "Actualizar Seguimiento";
+            if (this.tipo === "modificar" || this.tipo === "cancelar") {
+                this.accionNombre = this.tipo === "modificar" ? "Actualizar Seguimiento" : "Cancelar Seguimiento";
                 this.callback = await this.submitForm;
                 this.openPassword = true;
                 return;

@@ -2,44 +2,20 @@
     <div>
         <!-- Datos del Cliente y Operación Seleccionada -->
         <div class="flex flex-wrap">
-            <div class="w-full xl:w-6/12 px-2 input-text">
+            <div class="w-full md:w-6/12 px-2 input-text">
                 <label> Cliente </label>
-                <vs-input
-                    ref="nombre"
-                    name="nombre"
-                    type="text"
-                    class="w-full"
-                    placeholder=""
-                    maxlength="100"
-                    :readonly="true"
-                    v-model="cliente.nombre"
-                />
+                <vs-input ref="nombre" name="nombre" type="text" class="w-full" placeholder="" maxlength="100"
+                    :readonly="true" v-model="cliente.nombre" />
             </div>
-            <div class="w-full xl:w-6/12 px-2 input-text">
+            <div class="w-full md:w-6/12 px-2 input-text">
                 <label> Operación Seleccionada </label>
-                <vs-input
-                    ref="operacion"
-                    name="operacion"
-                    type="text"
-                    class="w-full"
-                    placeholder=""
-                    maxlength="100"
-                    :readonly="true"
-                    v-model="operacion_descripcion"
-                />
+                <vs-input ref="operacion" name="operacion" type="text" class="w-full" placeholder="" maxlength="100"
+                    :readonly="true" v-model="operacion_descripcion" />
             </div>
             <div class="w-full px-2 input-text">
                 <label> Dirección </label>
-                <vs-input
-                    ref="direccion"
-                    name="direccion"
-                    type="text"
-                    class="w-full"
-                    placeholder=""
-                    maxlength="100"
-                    :readonly="true"
-                    v-model="cliente.direccion_completa"
-                />
+                <vs-input ref="direccion" name="direccion" type="text" class="w-full" placeholder="" maxlength="100"
+                    :readonly="true" v-model="cliente.direccion_completa" />
             </div>
         </div>
     </div>
@@ -142,7 +118,7 @@ export default {
     mounted() {
         this.$log("Component mounted! " + this.$options.name); // DOM is ready
     },
-    beforeDestroy() {},
+    beforeDestroy() { },
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

@@ -706,6 +706,7 @@ class SeguimientosController extends ApiController
             if ($request->has('id')) {
                 $select[] = 'comentario_seguimiento';
                 $select[] = 'comentario_programado';
+                $select[] = 'comentario_cancelacion';
             }
             $query->select($select);
             if ((int)$request->programado_b === 1) {
@@ -760,6 +761,8 @@ class SeguimientosController extends ApiController
                 $item->medio_texto = $medios[$item->medio_preferido_programado_id] ?? 'Desconocido';
                 $item->resultado_texto = $resultados[$item->resultado_id] ?? 'Desconocido';
                 $item->medio_seguimiento_texto = $medios[$item->medio_seguimiento_id] ?? 'Desconocido';
+                $item->tipo_programado_texto = $item->programado_b === 1 ? 'Si' : 'No';
+
                 return $item;
             });
         };
