@@ -57,7 +57,7 @@
                                         this.errores.fechahora_seguimiento
                                     " class="block">{{
                                         errores.fechahora_seguimiento[0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div :class="[
                                     'w-full px-2 input-text',
@@ -104,7 +104,7 @@
                                     </span>
                                     <span v-if="this.errores['resultado.value']" class="block">{{
                                         errores["resultado.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full md:w-6/12 px-2 input-text">
                                     <label>
@@ -123,7 +123,7 @@
                                         {{ errors.first("medio") }}
                                     </span>
                                     <span v-if="this.errores['medio.value']" class="block">{{ errores["medio.value"][0]
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <div class="w-full md:w-6/12 px-2 input-text">
@@ -142,7 +142,7 @@
                                     </span>
                                     <span v-if="this.errores.email_seguimiento" class="block">{{
                                         errores.email_seguimiento[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full px-2 pt-2 small-editor">
                                     <NotasComponent :readonly="isReadOnly" :value="formData.comentario_seguimiento"
@@ -264,7 +264,10 @@ export default {
             return res;
         },
         isReadOnly() {
-            return false;
+            return (
+                this.tipo === "consultar" ||
+                this.tipo === "cancelar"
+            );
         },
         verEnviarEmailChk() {
             if (this.tipo === "cancelar") {

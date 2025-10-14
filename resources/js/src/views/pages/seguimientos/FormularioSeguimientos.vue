@@ -235,7 +235,7 @@
                                                 <img class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/folder.svg" title="Consultar Seguimiento"
                                                     @click="
-                                                        programarSeguimiento(
+                                                        registrarSeguimiento(
                                                             'consultar',
                                                             tr
                                                         )
@@ -253,7 +253,7 @@
                                         <vs-td v-if="!hasProgramados">{{ tr.resultado_texto }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
-                                        }}</vs-td>
+                                            }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
