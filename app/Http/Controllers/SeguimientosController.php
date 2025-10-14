@@ -570,10 +570,14 @@ class SeguimientosController extends ApiController
     private function email_sender($id_seguimiento = '', $email = '', $tipo = '')
     {
         $send_email_function = function () use ($id_seguimiento, $email, $tipo) {
+            $seguimiento = Seguimientos::select('programado_b')->where('id', $id_seguimiento)->first();
+            if (!$seguimiento) {
+                return $this->errorResponse("Error al consultar los datos para el correo.", 500);
+            }
             // 🧩 Create a fake Request instance to reuse your existing method
             $request = new \Illuminate\Http\Request([
                 'id' => $id_seguimiento,
-                'programado_b' => 1, // or 0, depending on what you need
+                'programado_b' => $seguimiento->programado_b, // or 0, depending on what you need
             ]);
             // 📨 Get seguimiento data by calling your own public method
             $seguimiento = $this->get_seguimientos($request);
@@ -597,11 +601,11 @@ class SeguimientosController extends ApiController
             }
             $cliente = json_decode($cliente->getContent(), true);
             //From here, I Collect the data required to send the email
-            $data['cliente'] = $cliente['nombre'];
-            $data['medio'] = $seguimiento['medio_texto'];
-            $data['motivo'] = $seguimiento['motivo_texto'];
-            $data['fechahora_programada'] = fechahora($seguimiento['fechahora_programada']);
-            $data['fechahora_registro_programado'] = fechahora($seguimiento['fechahora_registro_programado']);
+            $data['cliente'] = $cliente['nombre'] ?? 'N/A';
+            $data['medio'] = $seguimiento['medio_texto'] ?? 'N/A';
+            $data['motivo'] = $seguimiento['motivo_texto'] ?? 'N/A';
+            $data['fechahora_programada'] = fechahora($seguimiento['fechahora_programada']) ?? 'N/A';
+            $data['fechahora_registro_programado'] = fechahora($seguimiento['fechahora_registro_programado']) ?? 'N/A';
 
             if ($seguimiento['tipo_cliente_id'] == 1 && !empty($seguimiento['operaciones_id']) && $seguimiento['operaciones_id'] > 0) {
                 //cliente con operaciones
@@ -610,7 +614,7 @@ class SeguimientosController extends ApiController
             }
             if ($seguimiento['tipo_cliente_id'] == 2) {
                 //cliente bajo presupuesto
-                $data['operacion'] = $cliente['operaciones'][0]['descripcion'];
+                $data['operacion'] = $cliente['operaciones'][0]['descripcion'] ?? 'N/A';
             }
             $data['tipo'] = $tipo;
             // 🧠 Build email content using seguimiento info
@@ -619,7 +623,7 @@ class SeguimientosController extends ApiController
         };
 
         // Check debug mode
-        if (!config('app.debug')) {
+        if (config('app.debug')) {
             try {
                 return  $send_email_function();
             } catch (\Exception $e) {

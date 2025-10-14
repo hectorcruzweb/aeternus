@@ -64,6 +64,14 @@
                     actualizado un seguimiento programado
                 @elseif ($seguimiento['tipo'] === 'cancelar seguimiento programado')
                     cancelado un seguimiento programado
+                @elseif ($seguimiento['tipo'] === 'atender seguimiento')
+                    atendido un seguimiento programado
+                @elseif ($seguimiento['tipo'] === 'registrar seguimiento')
+                    registrado un seguimiento
+                @elseif ($seguimiento['tipo'] === 'modificar seguimiento')
+                    actualizado un seguimiento
+                @elseif ($seguimiento['tipo'] === 'cancelar seguimiento realizado')
+                    cancelado un seguimiento
                 @else
                     registrado un seguimiento
                 @endif con los siguientes detalles:
