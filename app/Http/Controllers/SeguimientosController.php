@@ -300,10 +300,12 @@ class SeguimientosController extends ApiController
             // === MODIFICAR ===
             if ($tipo_request === 'modificar') {
                 $seguimientoData['modifico_seguimiento_id'] = (int) $request->user()->id;
-                Seguimientos::where('id', $request->seguimiento_id)->update($seguimientoData);
-                if ($request->enviar_x_email == 1 && $request->email_seguimiento) {
-                    $this->email_sender($request->seguimiento_id, $request->email_seguimiento, 'modificar seguimiento');
-                }
+
+                //Seguimientos::where('id', $request->seguimiento_id)->update($seguimientoData);
+                //if ($request->enviar_x_email == 1 && $request->email_seguimiento) {
+                $res = $this->email_sender($request->seguimiento_id, $request->email_seguimiento, 'modificar seguimiento');
+                return $this->errorResponse($res, 500);
+                //}
                 return $this->successResponse([
                     'message' => 'Seguimiento actualizado correctamente.',
                     'seguimiento_id' => $request->seguimiento_id
@@ -570,22 +572,24 @@ class SeguimientosController extends ApiController
     private function email_sender($id_seguimiento = '', $email = '', $tipo = '')
     {
         $send_email_function = function () use ($id_seguimiento, $email, $tipo) {
-            $seguimiento = Seguimientos::select('programado_b')->where('id', $id_seguimiento)->first();
-            if (!$seguimiento) {
+            $programado_b = Seguimientos::select('programado_b')->where('id', $id_seguimiento)->first();
+            if (!$programado_b) {
                 return $this->errorResponse("Error al consultar los datos para el correo.", 500);
+            } else {
+                $programado_b = $programado_b->programado_b;
             }
             // 🧩 Create a fake Request instance to reuse your existing method
-            $request = new \Illuminate\Http\Request([
+            $requestDatos = new \Illuminate\Http\Request([
                 'id' => $id_seguimiento,
-                'programado_b' => $seguimiento->programado_b, // or 0, depending on what you need
+                'programado_b' => $programado_b
             ]);
+            return $programado_b;
             // 📨 Get seguimiento data by calling your own public method
-            $seguimiento = $this->get_seguimientos($request);
-
+            $seguimiento = $this->get_seguimientos($requestDatos);
             $seguimiento = json_decode($seguimiento->getContent(), true);
             if (!$seguimiento) {
                 // No seguimiento found — do nothing
-                return;
+                throw new \Exception("Error, Seguimiento not found");
             } else $seguimiento = $seguimiento[0];
             // 🧩 Create a fake Request instance to reuse your existing method
             $request = new \Illuminate\Http\Request([
@@ -597,16 +601,21 @@ class SeguimientosController extends ApiController
             // 📨 Get seguimiento data by calling your own public method
             $cliente = $cliente->get_clientes_seguimientos($request);
             if (!$cliente) { // No seguimiento found — do nothing
-                return;
+                throw new \Exception("Error, Cliente not found");
             }
             $cliente = json_decode($cliente->getContent(), true);
             //From here, I Collect the data required to send the email
+            $data['programado_b'] = $programado_b;
             $data['cliente'] = $cliente['nombre'] ?? 'N/A';
             $data['medio'] = $seguimiento['medio_texto'] ?? 'N/A';
             $data['motivo'] = $seguimiento['motivo_texto'] ?? 'N/A';
-            $data['fechahora_programada'] = fechahora($seguimiento['fechahora_programada']) ?? 'N/A';
-            $data['fechahora_registro_programado'] = fechahora($seguimiento['fechahora_registro_programado']) ?? 'N/A';
-
+            $data['fechahora_programada'] = $seguimiento['fechahora_programada'] ? fechahora($seguimiento['fechahora_programada']) : 'N/A';
+            $data['fechahora_registro_programado'] = $seguimiento['fechahora_registro_programado'] ? fechahora($seguimiento['fechahora_registro_programado']) : 'N/A';
+            //datos de seguimientos atendidos / realizados
+            $data['medio_seguimiento_texto'] = $seguimiento['medio_seguimiento_texto'] ?? 'N/A';
+            $data['resultado_texto'] = $seguimiento['resultado_texto'] ?? 'N/A';
+            $data['fechahora_seguimiento_texto'] = $seguimiento['fechahora_seguimiento'] ? fechahora($seguimiento['fechahora_seguimiento']) : 'N/A';
+            $data['fechahora_registro_seguimiento'] = $seguimiento['fechahora_registro_seguimiento'] ? fechahora($seguimiento['fechahora_registro_seguimiento']) : 'N/A';
             if ($seguimiento['tipo_cliente_id'] == 1 && !empty($seguimiento['operaciones_id']) && $seguimiento['operaciones_id'] > 0) {
                 //cliente con operaciones
                 $data['operacion'] = collect($cliente['operaciones'])
@@ -623,7 +632,7 @@ class SeguimientosController extends ApiController
         };
 
         // Check debug mode
-        if (config('app.debug')) {
+        if (!config('app.debug')) {
             try {
                 return  $send_email_function();
             } catch (\Exception $e) {
@@ -634,7 +643,6 @@ class SeguimientosController extends ApiController
         } else {
             return $send_email_function(); // directly run without try-catch
         }
-
         try {
         } catch (\Exception $e) {
             // Log the error, but do NOT stop the process

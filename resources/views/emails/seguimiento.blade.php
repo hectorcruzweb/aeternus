@@ -76,16 +76,46 @@
                     registrado un seguimiento
                 @endif con los siguientes detalles:
             </p>
-            <ul>
-                <li><strong>Fecha a contactar:</strong> {{ $seguimiento['fechahora_programada'] ?? 'N/A' }}</li>
-                <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
-                <li><strong>Posible Medio de Contacto:</strong> {{ $seguimiento['medio'] ?? 'N/A' }}</li>
-                @if (isset($seguimiento['operacion']))
-                    <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+            <!--Contenido del mensaje, segun sea el caso.-->
+            @if (
+                $seguimiento['tipo'] === 'atender seguimiento' ||
+                    $seguimiento['tipo'] === 'registrar seguimiento' ||
+                    $seguimiento['tipo'] === 'modificar seguimiento' ||
+                    $seguimiento['tipo'] === 'cancelar seguimiento realizado')
+                <ul>
+                    <li><strong>Fecha de atención:</strong> {{ $seguimiento['fechahora_seguimiento_texto'] ?? 'N/A' }}
+                    </li>
+                    <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
+                    <li><strong>Medio de Contacto:</strong> {{ $seguimiento['medio_seguimiento_texto'] ?? 'N/A' }}</li>
+                    @if (isset($seguimiento['operacion']))
+                        <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+                    @endif
+                    <li><strong>Resultado Obtenido:</strong> {{ $seguimiento['resultado_texto'] ?? 'N/A' }}</li>
+                    <li><strong>Fecha de registro:</strong>
+                        {{ $seguimiento['fechahora_registro_seguimiento'] ?? 'N/A' }}
+                    </li>
+                </ul>
+                @if ($seguimiento['programado_b'] === 1)
+                    <p>Datos del Seguimiento Programado</p>
                 @endif
-                <li><strong>Fecha de registro:</strong> {{ $seguimiento['fechahora_registro_programado'] ?? 'N/A' }}
-                </li>
-            </ul>
+            @endif
+            @if (
+                $seguimiento['tipo'] === 'programar seguimiento' ||
+                    $seguimiento['tipo'] === 'reprogramar seguimiento' ||
+                    $seguimiento['tipo'] === 'cancelar seguimiento programado' ||
+                    $seguimiento['programado_b'] === 1)
+                <ul>
+                    <li><strong>Fecha a contactar:</strong> {{ $seguimiento['fechahora_programada'] ?? 'N/A' }}</li>
+                    <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
+                    <li><strong>Posible Medio de Contacto:</strong> {{ $seguimiento['medio'] ?? 'N/A' }}</li>
+                    @if (isset($seguimiento['operacion']))
+                        <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+                    @endif
+                    <li><strong>Fecha de registro:</strong>
+                        {{ $seguimiento['fechahora_registro_programado'] ?? 'N/A' }}
+                    </li>
+                </ul>
+            @endif
             <div class="info-contacto size-14px text-black">
                 Para dudas o más información puedes contactarnos a través de los siguientes datos:
                 <div>
