@@ -212,9 +212,9 @@ export default {
                     params
                 );
                 this.$log("🚀 ~ _getSeguimientosProgramados ~ result:", result);
-                if (!result || typeof result !== "object") {
+                if (!result || typeof result !== "object" || Object.keys(result).length === 0) {
                     throw new Error(
-                        "Respuesta inválida en _getSeguimientosProgramados"
+                        "Respuesta inválida en al obtener los datos."
                     );
                 }
                 this.formData.email = result[0].email_programado;
@@ -241,6 +241,14 @@ export default {
                 this.ready.loadSeguimientoDatos = true;
                 this.checkReady();
             } catch (error) {
+                this.$vs.notify({
+                    title: "Error inesperado",
+                    text: error,
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger",
+                    time: 5000,
+                });
                 this.ready.loadSeguimientoDatos = false;
                 this.$error("Error fetching seguimientos:", error);
                 this.cancelar();

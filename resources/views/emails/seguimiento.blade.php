@@ -85,10 +85,16 @@
                 <ul>
                     <li><strong>Fecha de atención:</strong> {{ $seguimiento['fechahora_seguimiento_texto'] ?? 'N/A' }}
                     </li>
-                    <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
+                    @if (!$seguimiento['programado_b'])
+                        <li><strong>Motivo:</strong> {{ $seguimiento['motivo'] ?? 'N/A' }}</li>
+                    @endif
+
+
                     <li><strong>Medio de Contacto:</strong> {{ $seguimiento['medio_seguimiento_texto'] ?? 'N/A' }}</li>
-                    @if (isset($seguimiento['operacion']))
-                        <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+                    @if (!$seguimiento['programado_b'])
+                        @if (isset($seguimiento['operacion']))
+                            <li><strong>Operación en Cuestión:</strong> {{ $seguimiento['operacion'] ?? 'N/A' }}</li>
+                        @endif
                     @endif
                     <li><strong>Resultado Obtenido:</strong> {{ $seguimiento['resultado_texto'] ?? 'N/A' }}</li>
                     <li><strong>Fecha de registro:</strong>

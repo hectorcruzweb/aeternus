@@ -302,10 +302,9 @@ class SeguimientosController extends ApiController
                 $seguimientoData['modifico_seguimiento_id'] = (int) $request->user()->id;
 
                 //Seguimientos::where('id', $request->seguimiento_id)->update($seguimientoData);
-                //if ($request->enviar_x_email == 1 && $request->email_seguimiento) {
-                $res = $this->email_sender($request->seguimiento_id, $request->email_seguimiento, 'modificar seguimiento');
-                return $this->errorResponse($res, 500);
-                //}
+                if ($request->enviar_x_email == 1 && $request->email_seguimiento) {
+                    $this->email_sender($request->seguimiento_id, $request->email_seguimiento, 'modificar seguimiento');
+                }
                 return $this->successResponse([
                     'message' => 'Seguimiento actualizado correctamente.',
                     'seguimiento_id' => $request->seguimiento_id
@@ -581,9 +580,9 @@ class SeguimientosController extends ApiController
             // 🧩 Create a fake Request instance to reuse your existing method
             $requestDatos = new \Illuminate\Http\Request([
                 'id' => $id_seguimiento,
-                'programado_b' => $programado_b
+                'programado_b' => $programado_b,
+                'atendido' => 1
             ]);
-            return $programado_b;
             // 📨 Get seguimiento data by calling your own public method
             $seguimiento = $this->get_seguimientos($requestDatos);
             $seguimiento = json_decode($seguimiento->getContent(), true);
@@ -659,7 +658,7 @@ class SeguimientosController extends ApiController
             'tipo_cliente_id' => 'sometimes|in:1,2|integer',
             'operaciones_id' => 'sometimes|integer',
             'status' => 'sometimes|in:0,1,2|integer',
-            'atendidos' => 'sometimes|in:0,1|integer'
+            'atendido' => 'sometimes|in:0,1|integer'
         ];
 
         $mensajes = [
@@ -678,6 +677,10 @@ class SeguimientosController extends ApiController
         $resultados = $this->getResultadosContacto();
 
         $queryClosure = function () use ($request, $motivos, $medios, $resultados) {
+            // Normalize enviar_x_email
+            $request->merge([
+                'atendido' => $request->atendido ? 1 : 0
+            ]);
             $query = Seguimientos::query()
                 ->with(['cliente:id,nombre']); // 👈 load cliente info automatically
             if ($request->has('id')) {
@@ -723,14 +726,20 @@ class SeguimientosController extends ApiController
             $query->select($select);
             if ((int)$request->programado_b === 1) {
                 //son programados
-                $query->where('programado_b', 1)->where('fechahora_registro_seguimiento', null);
+
+                $query->where('programado_b', 1);
+                if ($request->atendido !== 1) {
+                    $query->where('fechahora_registro_seguimiento', null);
+                }
             } else {
                 //son seguimientos
-                $query->where(function ($q) {
+                $query->where(function ($q) use ($request) {
                     $q->where('programado_b', 0)
-                        ->orWhere(function ($sub) {
-                            $sub->where('programado_b', 1)
-                                ->where('fechahora_registro_seguimiento', '<>', null);
+                        ->orWhere(function ($sub) use ($request) {
+                            if ($request->atendido !== 1) {
+                                $sub->where('programado_b', 1)
+                                    ->where('fechahora_registro_seguimiento', '<>', null);
+                            }
                         });
                 });
             }
