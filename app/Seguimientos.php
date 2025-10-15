@@ -15,6 +15,11 @@ class Seguimientos extends Model
         return $this->belongsTo(Clientes::class, 'clientes_id', 'id');
     }
 
+    public function operacion()
+    {
+        return $this->belongsTo(Operaciones::class, 'operaciones_id', 'id');
+    }
+
 
     protected $appends = ['fechahora_programada_texto', 'status_texto', 'fechahora_programada_texto_abr', 'fechahora_seguimiento_texto_abr']; // 👈 this tells Laravel to include it in JSON
 

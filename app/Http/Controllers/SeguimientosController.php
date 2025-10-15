@@ -682,7 +682,30 @@ class SeguimientosController extends ApiController
                 'atendido' => $request->atendido ? 1 : 0
             ]);
             $query = Seguimientos::query()
-                ->with(['cliente:id,nombre']); // 👈 load cliente info automatically
+                ->with(['cliente:id,nombre'])
+                ->when($request->filled('cliente_nombre'), function ($q) use ($request) {
+                    $q->whereHas('cliente', function ($q2) use ($request) {
+                        if (trim($request->cliente_nombre))
+                            $q2->where('nombre', 'like', '%' . $request->cliente_nombre . '%');
+                    });
+                }); // 👈 load cliente info automatically
+            $query->with(['operacion:id,empresa_operaciones_id'])
+                ->when($request->filled('empresa_operaciones_id'), function ($q) use ($request) {
+                    $q->whereHas('operacion', function ($q2) use ($request) {
+                        if (trim($request->empresa_operaciones_id) && $request->empresa_operaciones_id > 0)
+                            $q2->where('empresa_operaciones_id', $request->empresa_operaciones_id);
+                    });
+                }); // 👈 load cliente info automatically
+
+
+            if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
+                if ((int)$request->programado_b === 1) {
+                    $query->whereDate('fechahora_programada', '>=', $request->fecha_inicio)->whereDate('fechahora_programada', '<=', $request->fecha_fin);
+                } else {
+                    $query->whereDate('fechahora_seguimiento', '>=', $request->fecha_inicio)->whereDate('fechahora_seguimiento', '<=', $request->fecha_fin);
+                }
+            }
+
             if ($request->has('id')) {
                 $query->where('id', $request->id);
             }
@@ -726,7 +749,6 @@ class SeguimientosController extends ApiController
             $query->select($select);
             if ((int)$request->programado_b === 1) {
                 //son programados
-
                 $query->where('programado_b', 1);
                 if ($request->atendido !== 1) {
                     $query->where('fechahora_registro_seguimiento', null);
