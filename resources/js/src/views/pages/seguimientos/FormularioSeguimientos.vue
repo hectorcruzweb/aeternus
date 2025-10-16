@@ -255,7 +255,7 @@
                                         <vs-td v-if="!hasProgramados">{{ tr.tipo_programado_texto }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -749,89 +749,3 @@ export default {
     },
 };
 </script>
-<style scoped>
-.dashboard-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    /* 2 columns */
-    grid-template-rows: auto auto;
-    /* rows grow with content */
-    width: 100%;
-    height: 100%;
-    /* fill popup */
-    gap: 1rem;
-    /* spacing between children */
-}
-
-.dashboard-container>div {
-    min-height: 0;
-    /* allows shrinking */
-    min-width: 0;
-    /* prevents overflow */
-    overflow: visible;
-    /* so content defines height */
-    display: flex;
-    flex-direction: column;
-    /* optional, if you have inner flex items */
-}
-
-.border-children {
-    border: 1px solid #e6eaed !important;
-    border-radius: 4px;
-}
-
-@media (max-width: 1024px) {
-    .dashboard-container {
-        grid-template-columns: 1fr;
-        /* single column */
-        grid-template-rows: auto auto auto auto;
-        /* each child grows naturally */
-    }
-}
-
-.dashboard-container>.full-row {
-    grid-column: span 2;
-}
-
-/* For mobile view (single column) — ensure full width always */
-@media (max-width: 1024px) {
-    .dashboard-container>.full-row {
-        grid-column: span 1;
-    }
-}
-
-/* Skeleton animation */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.skeleton {
-    display: flex;
-    align-items: center;
-    /* vertical center */
-    justify-content: center;
-    /* horizontal center */
-    width: 100%;
-    height: 100% !important;
-    /* fills the grid cell */
-    min-height: 150px;
-    /* optional: ensures some height on very small cells */
-    background-color: #f5f5f5;
-    /* very light gray */
-    border-radius: 4px;
-    animation: pulse 5s ease-in-out infinite;
-    /* optional: add padding for small screens */
-    text-align: center;
-    /* ensure text wraps nicely */
-    box-sizing: border-box;
-    /* padding included in size */
-}
-</style>

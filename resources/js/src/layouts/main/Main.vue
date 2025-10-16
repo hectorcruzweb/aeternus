@@ -77,7 +77,7 @@
 
                             <transition :name="routerTransition" mode="out-in">
                                 <router-view @changeRouteTitle="changeRouteTitle" @setAppClasses="(classesStr) => $emit('setAppClasses', classesStr)
-                                    " />
+                                " />
                             </transition>
                         </div>
                     </div>
