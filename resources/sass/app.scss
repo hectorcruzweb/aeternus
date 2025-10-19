@@ -9,3 +9,39 @@
 
 @import "main";
 @import "vuexy/estilos";
+#content-area {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* full viewport */
+}
+
+.content-wrapper {
+    flex: 1; /* take remaining space above footer */
+    display: flex;
+    flex-direction: column;
+}
+
+.router-view,
+.router-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-area__content {
+    flex: 1; /* grow with content */
+    display: flex;
+    flex-direction: column; /* needed if child grows vertically */
+}
+
+.content-area__content > div {
+    flex: 1; /* take all height of .content-area__content */
+    display: flex;
+    flex-direction: column; /* allow nested children to fill */
+}
+
+.the-footer {
+    flex-shrink: 0; /* Never shrink */
+    background: #f8f8f8;
+    border-top: 1px solid #ddd;
+}

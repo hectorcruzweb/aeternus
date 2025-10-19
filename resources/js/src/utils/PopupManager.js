@@ -78,11 +78,17 @@ const PopupManager = {
     },
 
     unregister(popupId) {
-        const index = state.stack.findIndex((p) => p.popupId === popupId);
-        if (index !== -1) {
-            state.stack.splice(index, 1);
-            this.updateFocusAndScroll();
-        }
+        Vue.nextTick(() => {
+            setTimeout(() => {
+                const index = state.stack.findIndex(
+                    (p) => p.popupId === popupId
+                );
+                if (index !== -1) {
+                    state.stack.splice(index, 1);
+                    this.updateFocusAndScroll();
+                }
+            }, 50); // espera 50ms extra a que el DOM interno del vs-popup se monte
+        });
     },
 
     handleEsc(e) {
