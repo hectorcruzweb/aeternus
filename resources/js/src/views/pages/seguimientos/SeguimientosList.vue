@@ -86,7 +86,8 @@
                                                 " />
                                     </div>
                                 </vs-td>
-                                <vs-td>{{ tr.cliente.nombre }}</vs-td>
+                                <vs-td><span v-if="tr.tipo_cliente_id === 1">{{ tr.cliente.nombre }}</span> <span
+                                        v-else>{{ tr.cotizacion.nombre }}</span></vs-td>
                                 <vs-td>{{ tr.motivo_texto }}</vs-td>
                                 <vs-td>{{
                                     !hasSeguimientos
@@ -149,13 +150,14 @@
                                                 " />
                                     </div>
                                 </vs-td>
-                                <vs-td>{{ tr.cliente.nombre }}</vs-td>
+                                <vs-td><span v-if="tr.tipo_cliente_id === 1">{{ tr.cliente.nombre }}</span> <span
+                                        v-else>{{ tr.cotizacion.nombre }}</span></vs-td>
                                 <vs-td>{{ tr.motivo_texto }}</vs-td>
                                 <vs-td>{{ tr.resultado_texto }}</vs-td>
                                 <vs-td>{{ tr.tipo_programado_texto }}</vs-td>
                                 <vs-td>{{
                                     tr.fechahora_seguimiento_texto_abr
-                                    }}</vs-td>
+                                }}</vs-td>
                                 <vs-td>
                                     <div class="flex justify-center">
                                         <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -492,6 +494,7 @@ export default {
             // Reset all fields to their default values
             this.empresa_operacion = this.empresaOperaciones[0];
             this.tipo_seguimiento = this.tipoSeguimientos[0];
+            this.rango_fechas = [];
             this.serverOptions.cliente_nombre = "";
             this.serverOptions.fecha_inicio = "";
             this.serverOptions.fecha_fin = "";

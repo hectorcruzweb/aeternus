@@ -67,6 +67,7 @@
                 <vs-th>Fecha de Vencimiento</vs-th>
                 <vs-th>Tipo</vs-th>
                 <vs-th>Estatus</vs-th>
+                <vs-th>Seguimientos</vs-th>
                 <vs-th>Acciones</vs-th>
             </template>
             <template slot-scope="{ data }">
@@ -121,6 +122,12 @@
                             <span class="dot-danger"></span>
                         </p>
                     </vs-td>
+                    <vs-td :data="data[indextr].id_user">
+                        <div class="flex justify-center">
+                            <img class="img-btn-24 mx-2" src="@assets/images/seguimientos.svg"
+                                title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
+                        </div>
+                    </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
                             <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/pdf.svg" title="Expediente"
@@ -152,9 +159,13 @@
         <Reporteador :header="'consultar cotizaciones'" :show="openReportesLista" :listadereportes="ListaReportes"
             :request="request" @closeReportes="openReportesLista = false">
         </Reporteador>
+        <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
+            @closeVentana="openSeguimientos = false;">
+        </FormularioSeguimientos>
     </div>
 </template>
 <script>
+import FormularioSeguimientos from "../seguimientos/FormularioSeguimientos.vue";
 import Reporteador from "@pages/Reporteador";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
@@ -171,7 +182,8 @@ export default {
         FormularioCotizaciones,
         flatPickr,
         Cancelar,
-        Reporteador
+        Reporteador,
+        FormularioSeguimientos
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -195,12 +207,19 @@ export default {
     },
     data() {
         return {
+            openSeguimientos: false,
             openReportesLista: false,
             ListaReportes: [],
             request: {
                 id_cotizacion: "",
                 email: "",
                 destinatario: "",
+            },
+            filtersSeguimientos: {
+                cliente_id: null,
+                tipo_cliente_id: null,
+                operacion_id: null,
+                origen: 1//Formulario de Origen. 1-seguim
             },
             verCancelar: false,
             datos_cancelar: {},
@@ -248,6 +267,12 @@ export default {
         }
     },
     methods: {
+        OpenFormSeguimientos(cliente) {
+            this.filtersSeguimientos.cliente_id = cliente.id;
+            this.filtersSeguimientos.tipo_cliente_id = 2; //cotizaciones
+            this.filtersSeguimientos.origen = 2;//clientes
+            this.openSeguimientos = true;
+        },
         ConsultarCotizacion(cotizacion) {
             (async () => {
                 this.verCancelar = false;

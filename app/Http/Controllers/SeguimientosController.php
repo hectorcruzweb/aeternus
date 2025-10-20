@@ -682,13 +682,23 @@ class SeguimientosController extends ApiController
                 'atendido' => $request->atendido ? 1 : 0
             ]);
             $query = Seguimientos::query()
-                ->with(['cliente:id,nombre'])
+                ->with(['cliente:id,nombre', 'cotizacion'])
                 ->when($request->filled('cliente_nombre'), function ($q) use ($request) {
-                    $q->whereHas('cliente', function ($q2) use ($request) {
-                        if (trim($request->cliente_nombre))
-                            $q2->where('nombre', 'like', '%' . $request->cliente_nombre . '%');
+                    $q->where(function ($sub) use ($request) {
+                        $sub->where(function ($inner) use ($request) {
+                            $inner->where('tipo_cliente_id', 1)
+                                ->whereHas('cliente', function ($has) use ($request) {
+                                    $has->where('nombre', 'like', '%' . $request->cliente_nombre . '%');
+                                });
+                        })
+                            ->orWhere(function ($inner) use ($request) {
+                                $inner->where('tipo_cliente_id', 2)
+                                    ->whereHas('cotizacion', function ($has) use ($request) {
+                                        $has->where('cliente_nombre', 'like', '%' . $request->cliente_nombre . '%');
+                                    });
+                            });
                     });
-                }); // 👈 load cliente info automatically
+                });
             $query->with(['operacion:id,empresa_operaciones_id'])
                 ->when($request->filled('empresa_operaciones_id'), function ($q) use ($request) {
                     $q->whereHas('operacion', function ($q2) use ($request) {
@@ -696,8 +706,6 @@ class SeguimientosController extends ApiController
                             $q2->where('empresa_operaciones_id', $request->empresa_operaciones_id);
                     });
                 }); // 👈 load cliente info automatically
-
-
             if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
                 if ((int)$request->programado_b === 1) {
                     $query->whereDate('fechahora_programada', '>=', $request->fecha_inicio)->whereDate('fechahora_programada', '<=', $request->fecha_fin);

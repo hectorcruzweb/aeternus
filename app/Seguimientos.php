@@ -69,4 +69,17 @@ class Seguimientos extends Model
         // Example format: "04 October 2025, 2:30 PM"
         return fecha_abr($this->fechahora_seguimiento);
     }
+
+
+    public function cotizacion()
+    {
+        return $this->belongsTo(Cotizaciones::class, 'clientes_id')->select('id', 'cliente_nombre as nombre');
+    }
+
+    public function getClienteAttribute()
+    {
+        return $this->tipo_cliente_id == 1
+            ? $this->cliente
+            : $this->cotizacion;
+    }
 }
