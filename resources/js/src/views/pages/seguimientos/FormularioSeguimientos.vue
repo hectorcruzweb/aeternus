@@ -99,9 +99,8 @@
                                                         </span>
                                                         <span class="action-quitar"
                                                             data-tooltip="Quitar Operación Seleccionada" @click="
-                                                                selectedRow =
-                                                                null
-                                                                ">
+                                                                quitarOperacion
+                                                            ">
                                                         </span>
                                                     </div>
                                                 </div>
@@ -211,7 +210,7 @@
                         </div>
                         <div v-else class="overflow-auto p-2">
                             <!-- Table here -->
-                            <vs-table :sst="false" :data="SeguimientosList" stripe pagination max-items="8"
+                            <vs-table :sst="false" :data="filteredSeguimientos" stripe pagination max-items="8"
                                 noDataText="0 Resultados" class="w-full tabla-datos">
                                 <template slot="header">
                                     <h3>Seguimientos Realizados</h3>
@@ -257,13 +256,13 @@
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
                                         <vs-td v-if="!hasProgramados">{{
                                             tr.resultado_texto
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td v-if="!hasProgramados">{{
                                             tr.tipo_programado_texto
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -448,6 +447,23 @@ export default {
                 this.ProgramadosList.length > 0
             );
         },
+
+        filteredProgramados() {
+            if (this.selectedRow) {
+                return this.ProgramadosList.filter(
+                    s => s.operaciones_id === this.selectedRow.operacion_id
+                );
+            }
+            return this.ProgramadosList;
+        },
+        filteredSeguimientos() {
+            if (this.selectedRow) {
+                return this.SeguimientosList.filter(
+                    s => s.operaciones_id === this.selectedRow.operacion_id
+                );
+            }
+            return this.SeguimientosList;
+        }
     },
     watch: {
         show: {
@@ -478,13 +494,12 @@ export default {
                     this.localShow = false;
                 }
             },
-        },
+        }
     },
     // Data function returns the component's reactive state
     data() {
         return {
             tipoFormProgramarSeguimiento: null,
-
             localShow: false, // controls popup visibility
             openConfirmarSinPassword: false,
             callBackConfirmar: Function,
@@ -504,7 +519,6 @@ export default {
             },
             selectedRow: null, // keep track of selection,
             FormularioProgramarSeguimientoFilters: null,
-
             //Registrar Seguimiento Data
             FormularioRegistrarSeguimientoFilters: null,
             ShowFormRegistrarSeguimientos: false,
@@ -551,6 +565,8 @@ export default {
             this.ShowFormProgramarSeguimientos = true;
         },
         toggleRow(row) {
+            if (this.quitarOperacion()) return;
+
             // if row already selected → deselect it
             if (
                 this.selectedRow &&
@@ -560,6 +576,7 @@ export default {
             } else {
                 this.selectedRow = row;
             }
+
         },
         async _fetchData() {
             if (!this.show) return; // stop here if not visible
@@ -650,9 +667,40 @@ export default {
             try {
                 let cliente = await this._fetchData();
                 this.cliente = { ...cliente };
-                this.OperacionesList = cliente.operaciones;
-                this.ProgramadosList = await this._getSeguimientosProgramados();
-                this.SeguimientosList = await this._getSeguimientosRealizados();
+
+                // Filter programados and realizados
+                const allProgramados = await this._getSeguimientosProgramados();
+                const allRealizados = await this._getSeguimientosRealizados();
+
+                if (this.filters.operacion_id !== null) {
+                    //operciones selecioanda
+                    const selectedOperacion = cliente.operaciones.find(
+                        op => op.operacion_id === this.filters.operacion_id
+                    );
+                    if (selectedOperacion) {
+                        // do something with the selected operation
+                        this.$log("✅ Found operation:", selectedOperacion);
+                        // Example: set as selected
+                        this.OperacionesList = [selectedOperacion];
+                        this.selectedRow = selectedOperacion; // optional: pre-select it
+                        this.ProgramadosList = allProgramados.filter(
+                            s => s.operaciones_id === this.filters.operacion_id
+                        );
+                        this.SeguimientosList = allRealizados.filter(
+                            s => s.operaciones_id === this.filters.operacion_id
+                        );
+                    } else {
+                        this.$warn("⚠️ Operation ID not found:", this.filters.operacion_id);
+                        this.OperacionesList = [];
+                        this.ProgramadosList = [];
+                        this.SeguimientosList = [];
+                    }
+                } else {
+                    //todas las operaciones
+                    this.OperacionesList = cliente.operaciones;
+                    this.ProgramadosList = allProgramados;
+                    this.SeguimientosList = allRealizados;
+                }
             } catch (error) {
                 this.$log("🚀 ~ updateClienteInfo ~ error:", error);
             } finally {
@@ -685,6 +733,24 @@ export default {
             }
             this.callBackConfirmar = this.resetData;
             this.openConfirmarSinPassword = true;
+        },
+        quitarOperacion() {
+            if (this.filters.operacion_id !== null) {
+                /**no se puede cambiar de operacion */
+                this.$vs.notify({
+                    title: "Cambio de Operación",
+                    text: "Para cambiar de operación abra el módulo desde el apartado de Seguimientos.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "warning",
+                    time: 8000,
+                });
+                return false;
+            } else {
+                this.selectedRow = null;
+                return true;
+            }
+
         },
         cancelar() {
             this.resetData();

@@ -136,6 +136,8 @@
 
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
+                            <img class="img-btn-24 mr-6" src="@assets/images/seguimientos.svg"
+                                title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
                             <img v-if="data[indextr].sepultados.length > 0" class="cursor-pointer img-btn-24 mr-6"
                                 src="@assets/images/conserviciosfunerarios.svg"
                                 title="Propiedad con servicios Funerarios"
@@ -202,13 +204,16 @@
         <Entregarconvenio :show="openEntregarconvenio" :datos="datosConvenio"
             @closeEntregarConvenio="closeEntregarConvenio">
         </Entregarconvenio>
+        <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
+            @closeVentana="openSeguimientos = false">
+        </FormularioSeguimientos>
     </div>
 </template>
 
 <script>
 //planes de venta
 import cementerio from "@services/cementerio";
-
+import FormularioSeguimientos from "../../seguimientos/FormularioSeguimientos.vue";
 import FormularioVentas from "../ventas/FormularioVentas";
 
 import ReportesVentas from "../ventas/ReportesVentas";
@@ -237,6 +242,7 @@ export default {
         VerNotas,
         Entregarconvenio,
         FallecidosList,
+        FormularioSeguimientos
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -257,6 +263,13 @@ export default {
     },
     data() {
         return {
+            openSeguimientos: false,
+            filtersSeguimientos: {
+                cliente_id: null,
+                tipo_cliente_id: null,
+                operacion_id: null,
+                origen: 1//Formulario de Origen. 1-seguim
+            },
             fallecidos: [],
             verAcuse: false,
             openPlanesVenta: false,
@@ -354,6 +367,13 @@ export default {
         };
     },
     methods: {
+        OpenFormSeguimientos(venta) {
+            this.filtersSeguimientos.cliente_id = venta.cliente_id;
+            this.filtersSeguimientos.tipo_cliente_id = 1;
+            this.filtersSeguimientos.operacion_id = venta.operacion_id;
+            this.filtersSeguimientos.origen = 2;//clientes
+            this.openSeguimientos = true;
+        },
         verNota(nota, title) {
             this.openVerNotas = true;
             this.nota_contenido = nota;
