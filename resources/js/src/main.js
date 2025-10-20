@@ -8,6 +8,8 @@
 ==========================================================================================*/
 
 import Vue from "vue";
+import EnvPlugin from "./plugins/env";
+Vue.use(EnvPlugin);
 import App from "./App.vue";
 import Logger from "./plugins/logger.js";
 

@@ -54,8 +54,8 @@
                                                     <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
                                                         class="w-full" placeholder="" v-model="cliente.tipo_cliente
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                                 <div class="w-full xl:w-6/12 px-2 input-text">
                                                     <label>
@@ -64,8 +64,8 @@
                                                     <vs-input ref="telefono" name="telefono" type="text" class="w-full"
                                                         placeholder="" v-model="cliente.telefono
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
 
                                                 <div class="w-full px-2 input-text">
@@ -73,8 +73,8 @@
                                                     <vs-input ref="direccion_completa" name="direccion_completa"
                                                         type="text" class="w-full" placeholder="" v-model="cliente.direccion_completa
                                                             " maxlength="250" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                             </div>
                                             <div class="flex flex-wrap justify-center px-2">
@@ -112,22 +112,22 @@
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            programarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                programarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Programar
                                                     </vs-button>
                                                     <vs-button class="w-full md:w-1/2 text-center" color="success"
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            registrarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                registrarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -171,7 +171,9 @@
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                {{ tr.operacion_id }}
+                                                <span v-if="$isDev">
+                                                    {{ tr.operacion_id }}
+                                                </span>
                                                 <img class="cursor-pointer img-btn-18 mx-4"
                                                     src="@assets/images/seguimientos.svg" title="Registrar Seguimiento"
                                                     @click="
@@ -227,12 +229,14 @@
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                {{ tr.id }} /
-                                                {{
-                                                    tr.operaciones_id
-                                                        ? tr.operaciones_id
-                                                        : "NA"
-                                                }}
+                                                <span v-if="$isDev">
+                                                    {{ tr.id }} /
+                                                    {{
+                                                        tr.operaciones_id
+                                                            ? tr.operaciones_id
+                                                            : "NA"
+                                                    }}
+                                                </span>
                                                 <img class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/folder.svg" title="Consultar Seguimiento"
                                                     @click="
@@ -306,12 +310,14 @@
                                         <!-- Main columns -->
                                         <vs-td>
                                             <div class="flex justify-center">
-                                                {{ tr.id }} /
-                                                {{
-                                                    tr.operaciones_id
-                                                        ? tr.operaciones_id
-                                                        : "NA"
-                                                }}
+                                                <span v-if="$isDev">
+                                                    {{ tr.id }} /
+                                                    {{
+                                                        tr.operaciones_id
+                                                            ? tr.operaciones_id
+                                                            : "NA"
+                                                    }}
+                                                </span>
                                                 <img class="cursor-pointer img-btn-20 mx-4"
                                                     src="@assets/images/folder.svg" title="Consultar Seguimiento"
                                                     @click="
@@ -457,7 +463,8 @@ export default {
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
-                        await this.simularClienteSeleccionado();
+                        if (this.$isDev)
+                            await this.simularClienteSeleccionado();
                     } else if (this.filters.origen == 2) {
                         //abeierto desde clientes
                         this.cliente.id = this.filters.cliente_id;

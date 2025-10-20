@@ -521,7 +521,8 @@ export default {
 
         this.fetchDataSeguimientos();
 
-        //this.OpenFormSeguimientos();
+        if (this.$isDev)
+            this.OpenFormSeguimientos();
     },
     beforeDestroy() {
         this.$log("Before Component destroyed! " + this.$options.name);

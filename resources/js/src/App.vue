@@ -10,7 +10,7 @@
 
 <template>
     <div id="app" :class="vueAppClasses">
-        <PopupDebug v-if="isDev"></PopupDebug>
+        <PopupDebug v-if="$isDev"></PopupDebug>
         <router-view @setAppClasses="setAppClasses" />
     </div>
 </template>
@@ -30,9 +30,6 @@ export default {
         }
     },
     computed: {
-        isDev() {
-            return process.env.NODE_ENV === "development";
-        },
     },
     watch: {
         '$store.state.theme'(val) {
