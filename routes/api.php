@@ -12,13 +12,6 @@
  */
 
 /**en pruebas */
-Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_clientes_seguimientos');
-Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimientos');
-Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
-Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
-Route::get('/seguimientos/get_motivos_cancelacion', 'SeguimientosController@getMotivosCancelacion');
-Route::get('/seguimientos/get_resultados_obtenidos', 'SeguimientosController@getResultadosContacto');
-
 
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
@@ -107,6 +100,11 @@ Route::middleware(['auth:api'])->group(function () {
     /**CLIENTES */
     Route::post('/seguimientos/programar_segumientos/{tipo_request}', 'SeguimientosController@programar_segumientos');
     Route::post('/seguimientos/registrar_seguimientos/{tipo_request}', 'SeguimientosController@registrar_seguimientos');
+    Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimientos');
+    Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
+    Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
+    Route::get('/seguimientos/get_motivos_cancelacion', 'SeguimientosController@getMotivosCancelacion');
+    Route::get('/seguimientos/get_resultados_obtenidos', 'SeguimientosController@getResultadosContacto');
     Route::get('/clientes/get_nacionalidades', 'ClientesController@get_nacionalidades');
     Route::post('/clientes/guardar_cliente', 'ClientesController@guardar_cliente');
     Route::post('/clientes/modificar_cliente', 'ClientesController@modificar_cliente');
@@ -115,6 +113,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/clientes/alta_cliente', 'ClientesController@alta_cliente');
     Route::post('/clientes/servicios_gratis', 'ClientesController@servicios_gratis');
     Route::get('/clientes/get_clientes', 'ClientesController@get_clientes');
+    Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_clientes_seguimientos');
     /**rutas del cementerio */
     Route::get('generarNumeroTitulo', 'CementerioController@generarNumeroTitulo');
     Route::post('cementerio/control_ventas/{tipo_servicio}', 'CementerioController@control_ventas'); //agregar,modificar
