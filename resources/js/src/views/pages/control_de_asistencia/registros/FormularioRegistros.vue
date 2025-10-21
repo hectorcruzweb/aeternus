@@ -1,12 +1,7 @@
 <template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup', 'popup-40', z_index]"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup', 'popup-50', z_index]" :fullscreen="false" close="cancelar" :title="title"
+      :active="localShow" :ref="this.$options.name">
       <!--Datos de contacto-->
       <div class="form-group">
         <div class="title-form-group">
@@ -15,15 +10,10 @@
         <div class="form-group-content">
           <div class="flex flex-wrap">
             <div class="w-full md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text">
-              <label class="">Fecha del Registro. (Año-Mes-Dia Hora:Min)</label>
-              <flat-pickr
-                name="fechahora"
-                :config="configdateTimePickerWithTime"
-                v-model="form.fechahora"
-                placeholder="Seleccione una fecha y hora"
-                v-validate:fechahora_computed.immediate="'required'"
-                class="w-full"
-              />
+              <label class="">Fecha del Registro.</label>
+              <flat-pickr name="fechahora" :config="configdateTimePickerWithTime" v-model="form.fechahora"
+                placeholder="Seleccione una fecha y hora" v-validate:fechahora_computed.immediate="'required'"
+                class="w-full" />
               <span class="">
                 {{ errors.first("fechahora") }}
               </span>
@@ -36,16 +26,8 @@
                 Tipo de Registro
                 <span class="">(*)</span>
               </label>
-              <v-select
-                :options="tipos"
-                :clearable="false"
-                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                v-model="form.tipo"
-                class="w-full"
-                v-validate:tipo_computed.immediate="'required'"
-                name="tipo_registro_id"
-                data-vv-as=" "
-              >
+              <v-select :options="tipos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.tipo"
+                class="w-full" v-validate:tipo_computed.immediate="'required'" name="tipo_registro_id" data-vv-as=" ">
                 <div slot="no-options">Seleccione una opción</div>
               </v-select>
               <span class="">
@@ -53,27 +35,17 @@
               </span>
               <span class="" v-if="this.errores['tipo_registro_id.value']">{{
                 errores["tipo_registro_id.value"][0]
-              }}</span>
+                }}</span>
             </div>
 
-            <div
-              class="w-full md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text"
-            >
+            <div class="w-full md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
               <label class="">
                 Empleado
                 <span class="">(*)</span>
               </label>
-              <v-select
-                :options="empleados"
-                :clearable="false"
-                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                v-model="form.empleado"
-                class="w-full"
-                v-validate="'required'"
-                v-validate:empleado_computed.immediate="'required'"
-                name="empleado"
-                data-vv-as=" "
-              >
+              <v-select :options="empleados" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.empleado"
+                class="w-full" v-validate="'required'" v-validate:empleado_computed.immediate="'required'"
+                name="empleado" data-vv-as=" ">
                 <div slot="no-options">Seleccione una opción</div>
               </v-select>
               <span class="">
@@ -81,7 +53,7 @@
               </span>
               <span class="" v-if="this.errores['empleado.value']">{{
                 errores["empleado.value"][0]
-              }}</span>
+                }}</span>
             </div>
           </div>
         </div>
@@ -96,42 +68,23 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Registro</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Registro</span>
             <span class="" v-else>Modificar Registro</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index59k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index59k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar a este cliente'"
-      :confirmarButton="'Guardar Registro'"
-    ></ConfirmarAceptar>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar a este cliente'" :confirmarButton="'Guardar Registro'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -150,6 +103,7 @@ import { configdateTimePickerWithTime } from "@/VariablesGlobales";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioRegistrosChecador",
   components: {
     "v-select": vSelect,
     Password,
@@ -178,18 +132,12 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        //cargo nacionalidades
-
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["registro"].$el.querySelector("input").focus()
-        );
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          // Only listen when visible = true
+          /**obtengo los datos para llenar el form con los permisos segun su modulo */
           await this.get_empleados();
           if (this.getTipoformulario == "modificar") {
             this.title = "Modificar Datos del Registro";
@@ -198,8 +146,14 @@ export default {
           } else {
             this.title = "Crear Nuevo Registro";
           }
-        })();
-      }
+          this.$popupManager.register(
+            this,
+            this.cancelar,
+            "fechahora"
+          );
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
@@ -239,6 +193,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       configdateTimePickerWithTime: configdateTimePickerWithTime,
       title: "",
       accionConfirmarSinPassword: "",
@@ -387,7 +342,7 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     guardar_registro_administrativo() {
@@ -556,15 +511,20 @@ export default {
     },
 
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario === "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.cerrarVentana();
+      }
+
     },
     cerrarVentana() {
-      this.openConfirmarSinPassword = false;
-      this.limpiarVentana();
+      //this.openConfirmarSinPassword = false;
+      //this.limpiarVentana();
       this.$emit("closeVentana");
     },
     //regresa los datos a su estado inicial
@@ -576,6 +536,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

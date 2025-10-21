@@ -2,64 +2,37 @@
   <div>
     <vs-tabs alignment="left" position="top" v-model="activeTab">
       <vs-tab label="REGISTROS DEL CHECADOR" class=""></vs-tab>
-      <!--<vs-tab label="PERMISOS"></vs-tab>-->
       <vs-tab label="TARJETAS DE ASISTENCIA"></vs-tab>
     </vs-tabs>
     <div class="" v-show="activeTab == 0">
-      <Registros
-        :datos="datosEmpresa"
-        :erroresForm="erroresRegistros"
-        @actualizar="actualizar"
-        scope="this api replaced by slot-scope in 2.5.0+"
-      ></Registros>
+      <Registros :datos="datosEmpresa" :erroresForm="erroresRegistros" @actualizar="actualizar"
+        scope="this api replaced by slot-scope in 2.5.0+"></Registros>
     </div>
-    <!--
-    <div class="" v-show="activeTab == 1">
-      <RegistroPublico
-        :datos="datosEmpresa"
-        :erroresForm="erroresRegistroPublico"
-        @actualizar="actualizar"
-      ></RegistroPublico>
-    </div>
-  -->
     <div class=" " v-show="activeTab == 1">
       <Tarjetas></Tarjetas>
     </div>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="operConfirmar = false"
-      :accion="accionNombre"
-    ></Password>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+      @closeVerificar="operConfirmar = false" :accion="accionNombre"></Password>
     <pdf :show="verPdf" :pdf="pdfLink" @closePdf="verPdf = false"></pdf>
   </div>
 </template>
 
 <script>
 import Tarjetas from "../control_de_asistencia/tarjetas";
-import RegistroPublico from "../control_de_asistencia/registro_publico";
 import Registros from "../control_de_asistencia/registros";
 import pdf from "../pdf_viewer.vue";
 
 //componente de password
 import Password from "../confirmar_password";
-
-import empresa from "@services/empresa";
-/**VARIABLES GLOBALES */
-import {
-  mostrarOptions,
-  estadosOptions,
-  rolesOptions,
-} from "@/VariablesGlobales";
 import vSelect from "vue-select";
 
 export default {
+  name: "ChecadorList",
   components: {
     "v-select": vSelect,
     Password,
     pdf,
     Tarjetas,
-    RegistroPublico,
     Registros,
   },
   watch: {},
@@ -85,6 +58,19 @@ export default {
   methods: {
     //obtengo todos los datos de la empresa
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+    this.get_data(this.actual);
+  },
+  beforeDestroy() {
+    this.$log("Before Component destroyed! " + this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

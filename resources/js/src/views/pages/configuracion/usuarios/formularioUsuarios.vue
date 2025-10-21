@@ -29,7 +29,7 @@
                                             <span class="">{{ errors.first("Nombre") }}</span>
                                             <span class="" v-if="this.errores.nombre">{{
                                                 errores.nombre[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full md:w-6/12 xl:w-4/12 px-2 input-text">
                                             <label class="">
@@ -40,7 +40,7 @@
                                                 :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="roles" class="w-full" />
                                             <span class="" v-if="this.errores.rol_id">{{
                                                 errores.rol_id[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full md:w-6/12 xl:w-2/12 px-2 input-text">
                                             <label class="">
@@ -51,7 +51,7 @@
                                                 :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="genero" class="w-full" />
                                             <span class="" v-if="this.errores.genero">{{
                                                 errores.genero[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full md:w-6/12 xl:w-2/12 px-2 input-text">
                                             <label class="">
@@ -62,7 +62,7 @@
                                                 :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="area" class="w-full" />
                                             <span class="" v-if="this.errores.area">{{
                                                 errores.area[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
 
                                         <div class="w-full lg:w-12/12 xl:w-4/12 px-2 input-text">
@@ -76,11 +76,11 @@
 
                                             <span class="">{{
                                                 errors.first("Usuario (email)")
-                                            }}</span>
+                                                }}</span>
 
                                             <span class="" v-if="this.errores.usuario">{{
                                                 errores.usuario[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full md:w-6/12 lg:w-6/12 xl:w-4/12 px-2 input-text">
                                             <label class="">
@@ -95,7 +95,7 @@
 
                                             <span class="" v-if="this.errores.password">{{
                                                 errores.password[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="w-full md:w-6/12 lg:w-6/12 xl:w-4/12 px-2 input-text">
                                             <label class="">
@@ -108,11 +108,11 @@
 
                                             <span class="">{{
                                                 errors.first("Repetir Password")
-                                            }}</span>
+                                                }}</span>
 
                                             <span class="" v-if="this.errores.repetir">{{
                                                 errores.repetir[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
 
                                         <div class="w-full lg:w-12/12 xl:w-4/12 px-2 input-text">
@@ -148,13 +148,13 @@
                                                 :vs-value="puesto.id">
                                                 <label class="size-small color-copy font-medium">{{
                                                     puesto.puesto
-                                                }}</label>
+                                                    }}</label>
                                             </vs-checkbox>
                                         </div>
                                         <div class="w-full px-2 mt-2">
                                             <span class="" v-if="this.errores.puestos">{{
                                                 errores.puestos[0]
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -222,12 +222,12 @@
                                         </div>
                                         <div class="w-full text-center mt-6" v-if="!form.firma_registrada">
                                             <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                                                color="danger" @click="undo" size="small">
+                                                color="danger" @click="undo">
                                                 <span>Limpiar</span>
                                             </vs-button>
                                             <vs-button
                                                 class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0 hidden"
-                                                color="success" size="small">
+                                                color="success">
                                                 <span>Guardar Firma</span>
                                             </vs-button>
                                         </div>

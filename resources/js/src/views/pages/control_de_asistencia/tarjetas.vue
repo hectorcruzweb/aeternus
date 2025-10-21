@@ -93,14 +93,15 @@
             <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
         <pre ref="pre"></pre>
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'consultar reporte de registros'" :show="openReportesLista"
+        <Reporteador v-if="openReportesLista" :header="'consultar reporte de registros'" :show="openReportesLista"
             :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
         </Reporteador>
-        <FormularioDiasDescanso :usuario_id="usuario_id" :show="verFormularioDiasDescanso"
-            @CloseFormularioDiasDescanso="verFormularioDiasDescanso = false"></FormularioDiasDescanso>
+        <FormularioDiasDescanso v-if="verFormularioDiasDescanso" :usuario_id="usuario_id"
+            :show="verFormularioDiasDescanso" @CloseFormularioDiasDescanso="verFormularioDiasDescanso = false">
+        </FormularioDiasDescanso>
     </div>
 </template>
 

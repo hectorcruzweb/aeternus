@@ -1,8 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup :title="HeaderNombre" :class="['forms-popup', z_index]" fullscreen :active.sync="showChecker"
-            ref="formulario">
-            <!-- <img style="width:100px;" src="@assets/images/pdf.svg" alt />-->
+        <vs-popup :title="HeaderNombre" :class="['forms-popup', z_index]" fullscreen :active="localShow"
+            :ref="this.$options.name">
             <div class="flex flex-wrap">
                 <div class="w-full xl:w-3/12 px-2">
                     <div class="form-group">
@@ -19,9 +18,10 @@
                                 </div>
                                 <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
                                     <label class="">Nombre destinatario</label>
-                                    <vs-input name="destinatario" data-vv-as=" " data-vv-validate-on="blur"
-                                        v-validate="'required'" maxlength="75" type="text" class="w-full"
-                                        placeholder="Nombre destinatario" v-model="request_datos.destinatario" />
+                                    <vs-input ref="destinatario" name="destinatario" data-vv-as=" "
+                                        data-vv-validate-on="blur" v-validate="'required'" maxlength="75" type="text"
+                                        class="w-full" placeholder="Nombre destinatario"
+                                        v-model="request_datos.destinatario" />
                                     <span class="">{{ errors.first("destinatario") }}</span>
                                     <span class="" v-if="this.errores.destinatario">{{
                                         errores.destinatario[0]
@@ -62,9 +62,10 @@
                     </div>
                 </div>
             </div>
-            <ConfirmarAceptar :show="openConfirmarAceptar" :callback-on-success="callBackConfirmar"
-                @closeVerificar="openConfirmarAceptar = false" :accion="'Enviar el documento por correo'"
-                :confirmarButton="'Enviar Documento'" :z_index="'z-index70k'"></ConfirmarAceptar>
+            <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar"
+                :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarAceptar = false"
+                :accion="'Enviar el documento por correo'" :confirmarButton="'Enviar Documento'"
+                :z_index="'z-index70k'"></ConfirmarAceptar>
         </vs-popup>
     </div>
 </template>
@@ -73,39 +74,52 @@ import pdf from "@services/pdf";
 import vSelect from "vue-select";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 export default {
+    name: 'Reporteador',
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == false) {
-                this.pdf_iframe_source = "";
-            } else {
-                this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-                    this.cancel();
-                };
-                this.request_datos.request_parent = [];
-                this.request_datos.destinatario = this.Request.destinatario;
-                this.request_datos.email_address = this.Request.email;
-                this.request_datos.request_parent.push(this.Request);
-            }
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    this.request_datos.request_parent = [];
+                    this.request_datos.destinatario = this.Request.destinatario;
+                    this.request_datos.email_address = this.Request.email;
+                    this.request_datos.request_parent.push(this.Request);
+                    this.$popupManager.register(
+                        this,
+                        this.cancel,
+                        "destinatario"
+                    );
+                } else {
+                    this.pdf_iframe_source = "";
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
-        listadereportes: function (newValue, oldValue) {
-            if (newValue.length > 0) {
-                this.reportesDisponible = [];
-                newValue.forEach((element) => {
-                    this.reportesDisponible.push({
-                        label: element.nombre,
-                        value: element.url,
+        listadereportes: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue.length > 0) {
+                    this.reportesDisponible = [];
+                    newValue.forEach((element) => {
+                        this.reportesDisponible.push({
+                            label: element.nombre,
+                            value: element.url,
+                        });
                     });
-                });
-                this.reporteSeleccionado = this.reportesDisponible[0];
-            }
+                    this.reporteSeleccionado = this.reportesDisponible[0];
+                }
+            },
         },
-        reporteSeleccionado: function (newValue, oldValue) {
-            this.request_datos.email_send = false;
-            (async () => {
+        reporteSeleccionado: {
+            immediate: true,
+            async handler(newVal) {
+                this.request_datos.email_send = false;
                 await this.get_pdf();
-            })();
-        },
-    },
+            }
+        }
+    }
+    ,
     props: {
         show: {
             type: Boolean,
@@ -138,6 +152,7 @@ export default {
 
     data() {
         return {
+            localShow: false,
             openConfirmarAceptar: false,
             callBackConfirmar: Function,
             reportesDisponible: [],
@@ -153,14 +168,6 @@ export default {
         };
     },
     computed: {
-        showChecker: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
         HeaderNombre: {
             get() {
                 return this.header;
@@ -343,25 +350,18 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            /*if (e.keyCode === 27) {
-              if (this.showChecker) {
-                //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                this.cancel();
-              }
-            }*/
-        });
-
-        /*document.body.addEventListener("keyup", e => {
-          if (e.keyCode === 13) {
-            if (this.showChecker) {
-              //CIERRO EL CONFIRMAR AL PRESONAR ESC
-              this.aceptar();
-            }
-          }
-        });*/
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

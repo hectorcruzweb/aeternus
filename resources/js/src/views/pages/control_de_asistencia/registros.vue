@@ -109,14 +109,15 @@
             <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
         <pre ref="pre"></pre>
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'consultar reporte de registros'" :show="openReportesLista"
+        <Reporteador v-if="openReportesLista" :header="'consultar reporte de registros'" :show="openReportesLista"
             :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
         </Reporteador>
-        <FormularioRegistros :id_registro="registro_id" :tipo="tipoFormulario" :show="verFormularioRegistros"
-            @closeVentana="verFormularioRegistros = false" @retornar_id="retorno_id"></FormularioRegistros>
+        <FormularioRegistros v-if="verFormularioRegistros" :id_registro="registro_id" :tipo="tipoFormulario"
+            :show="verFormularioRegistros" @closeVentana="verFormularioRegistros = false" @retornar_id="retorno_id">
+        </FormularioRegistros>
     </div>
 </template>
 
@@ -545,7 +546,17 @@ export default {
             /**verificandoque tipo de pago es */
             let url = "/checador/lista_registros/";
             if (this.serverOptions.fecha_inicio == "") {
-                url += "all/all/";
+                //url += "all/all/";
+                /**FORBIDDEN ERROR */
+                this.$vs.notify({
+                    title: "Checador",
+                    text: "Seleccione el periodo de fechas.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger",
+                    time: 8000,
+                });
+                return;
             } else {
                 url +=
                     this.serverOptions.fecha_inicio +
@@ -564,6 +575,8 @@ export default {
                 nombre: "Lista de Registros",
                 url: url,
             });
+            this.$log(this.request);
+            this.$log(this.ListaReportes);
             this.openReportesLista = true;
         },
     },

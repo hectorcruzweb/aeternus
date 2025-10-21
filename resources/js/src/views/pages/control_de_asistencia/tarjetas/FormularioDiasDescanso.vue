@@ -1,12 +1,7 @@
 <template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup', 'popup-60', z_index]"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup', 'popup-60', z_index]" close="cancelar" :title="title" :active="localShow"
+      :ref="this.$options.name">
       <!--Datos de contacto-->
       <div class="form-group">
         <div class="title-form-group">
@@ -19,31 +14,17 @@
             </div>
             <table class="w-full mx-auto my-6">
               <tr>
-                <td
-                  v-for="(dias, index) in form.dias"
-                  :key="dias.id"
-                  class="text-center"
-                >
+                <td v-for="(dias, index) in form.dias" :key="dias.id" class="text-center">
                   <div class="font-medium">{{ dias.dia }}</div>
                   <div>
-                    <img
-                      v-if="dias.seleccionado == 1"
-                      class="img-btn-32 mx-2 cursor-pointer"
-                      src="@assets/images/switchon.svg"
-                      title="Deshabilitar"
-                      @click="
+                    <img v-if="dias.seleccionado == 1" class="img-btn-32 mx-2 cursor-pointer"
+                      src="@assets/images/switchon.svg" title="Deshabilitar" @click="
                         dias.seleccionado = dias.seleccionado == 1 ? 0 : 1
-                      "
-                    />
-                    <img
-                      v-else
-                      class="img-btn-32 mx-2 cursor-pointer"
-                      src="@assets/images/switchoff.svg"
-                      title="Habilitar"
-                      @click="
+                        " />
+                    <img v-else class="img-btn-32 mx-2 cursor-pointer" src="@assets/images/switchoff.svg"
+                      title="Habilitar" @click="
                         dias.seleccionado = dias.seleccionado == 1 ? 0 : 1
-                      "
-                    />
+                        " />
                   </div>
                 </td>
               </tr>
@@ -59,39 +40,22 @@
           click en el "Botón de Abajo”.
         </div>
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
             <span class="">Guardar Cambios</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index59k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index59k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar a este cliente'"
-      :confirmarButton="'Guardar Cambios'"
-    ></ConfirmarAceptar>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar a este cliente'" :confirmarButton="'Guardar Cambios'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -106,6 +70,7 @@ import { configdateTimePickerWithTime } from "@/VariablesGlobales";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: 'FormularioDiasDescanso',
   components: {
     "v-select": vSelect,
     Password,
@@ -129,20 +94,23 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["registro"].$el.querySelector("input").focus()
-        );
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          // Only listen when visible = true
+          /**obtengo los datos para llenar el form con los permisos segun su modulo */
           this.title = "Actualizar Días de Descanso";
           /**se cargan los datos al formulario */
           await this.get_dias_descanso_empleado();
-        })();
-      }
+          this.$popupManager.register(
+            this,
+            this.cancelar,
+            "input"
+          );
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
@@ -165,6 +133,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       title: "",
       accionConfirmarSinPassword: "",
       botonConfirmarSinPassword: "",
@@ -305,16 +274,18 @@ export default {
     cancel() {
       this.$emit("CloseFormularioDiasDescanso");
     },
-    cancelar() {
+    cancelar() {/*
       this.botonConfirmarSinPassword = "Salir y limpiar";
       this.accionConfirmarSinPassword =
         "Esta acción limpiará los datos que capturó en el formulario.";
       this.openConfirmarSinPassword = true;
       this.callBackConfirmar = this.cerrarVentana;
+      */
+      this.cerrarVentana();
     },
     cerrarVentana() {
-      this.openConfirmarSinPassword = false;
-      this.limpiarVentana();
+      //this.openConfirmarSinPassword = false;
+      //this.limpiarVentana();
       this.$emit("CloseFormularioDiasDescanso");
     },
     //regresa los datos a su estado inicial
@@ -333,6 +304,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>
