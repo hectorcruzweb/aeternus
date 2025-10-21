@@ -1,11 +1,37 @@
 /*barra de usuario top del dashboard*/
 .menu-dropdown-aeternus {
+    .vs-dropdown--custom.vs-dropdown--menu {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        padding: 0.25rem 0;
+        min-width: 9rem;
+        transform-origin: top right;
+        transition: all 0.18s ease;
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
     ul li {
         @extend .color-copy;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        transition: background-color 0.12s ease, color 0.12s ease;
+
         &:hover {
             cursor: pointer;
             @extend .bg-primary-50;
             @extend .color-primary-900;
         }
+    }
+
+    .vs-divider {
+        margin: 0.5rem 0 !important;
     }
 }
