@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
         <vs-popup :class="['forms-popup', 'popup-85', z_index]" fullscreen close="cancelar" :title="title"
-            :active.sync="showVentana" ref="formulario">
+            :active="localShow" :ref="this.$options.name">
             <!--Datos de contacto-->
             <div class="form-group">
                 <div class="title-form-group">
@@ -297,13 +297,13 @@
                 </div>
             </div>
         </vs-popup>
-        <Password :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
-            :accion="accionNombre"></Password>
-        <ConfirmarDanger :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+        <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+            @closeVerificar="closeChecker" :accion="accionNombre"></Password>
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-        <ConfirmarAceptar :z_index="'z-index59k'" :show="openConfirmarAceptar"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar a este cliente'
                 " :confirmarButton="'Guardar Cliente'"></ConfirmarAceptar>
     </div>
@@ -324,6 +324,7 @@ import { configdateTimePicker } from "@/VariablesGlobales";
 /**VARIABLES GLOBALES */
 
 export default {
+    name: "FormularioClientes",
     components: {
         "v-select": vSelect,
         Password,
@@ -352,47 +353,35 @@ export default {
         }
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                //cargo nacionalidades
-
-                this.$refs["formulario"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-                this.$nextTick(() =>
-                    this.$refs["nombre_cliente"].$el
-                        .querySelector("input")
-                        .focus()
-                );
-
-                (async () => {
-                    await this.get_nacionalidades();
-                    await this.get_regimenes();
-                    if (this.getTipoformulario == "modificar") {
-                        this.title = "Modificar Datos del Cliente";
-                        /**se cargan los datos al formulario */
-                        await this.get_cliente_by_id(this.get_cliente_id);
-                    } else {
-                        this.title = "Registrar Nuevo Cliente";
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    if (newValue == true) {
+                        //cargo nacionalidades
+                        await this.get_nacionalidades();
+                        await this.get_regimenes();
+                        if (this.getTipoformulario == "modificar") {
+                            this.title = "Modificar Datos del Cliente";
+                            /**se cargan los datos al formulario */
+                            await this.get_cliente_by_id(this.get_cliente_id);
+                        } else {
+                            this.title = "Registrar Nuevo Cliente";
+                        }
                     }
-                })();
-                document.body.classList.add("overflow-hidden");
-            } else {
-                document.body.classList.remove("overflow-hidden");
-            }
-        }
+                    this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "nombre_cliente"
+                    );
+                    //verificamos el origen del form para determinar que haremos justo al abrir el form.
+                    //obtener datos del cliente
+                }
+                this.localShow = newValue;
+            },
+        },
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            }
-        },
         getTipoformulario: {
             get() {
                 return this.tipo;
@@ -488,6 +477,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             configdateTimePicker: configdateTimePicker,
             title: "",
             accionConfirmarSinPassword: "",
@@ -877,15 +867,19 @@ export default {
         },
 
         cancelar() {
-            this.botonConfirmarSinPassword = "Salir y limpiar";
-            this.accionConfirmarSinPassword =
-                "Esta acción limpiará los datos que capturó en el formulario.";
-            this.openConfirmarSinPassword = true;
-            this.callBackConfirmar = this.cerrarVentana;
+            if (this.getTipoformulario === "modificar") {
+                this.botonConfirmarSinPassword = "Salir y limpiar";
+                this.accionConfirmarSinPassword =
+                    "Esta acción limpiará los datos que capturó en el formulario.";
+                this.openConfirmarSinPassword = true;
+                this.callBackConfirmar = this.cerrarVentana;
+            } else {
+                this.cerrarVentana();
+            }
         },
         cerrarVentana() {
-            this.openConfirmarSinPassword = false;
-            this.limpiarVentana();
+            //this.openConfirmarSinPassword = false;
+            //this.limpiarVentana();
             this.$emit("closeVentana");
         },
         //regresa los datos a su estado inicial
@@ -927,6 +921,18 @@ export default {
             this.operConfirmar = false;
         }
     },
-    created() { }
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

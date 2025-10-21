@@ -48,7 +48,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                         <div class="w-full input-text pb-2">
                             <label class="">{{
                                 this.filtroEspecifico.label
-                                }}</label>
+                            }}</label>
 
                             <vs-input class="w-full" icon="search" maxlength="75"
                                 placeholder="Filtrar por dato específico" v-model="serverOptions.numero_control"
@@ -99,10 +99,10 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </vs-td>
                     <vs-td :data="data[indextr].nombre">{{
                         data[indextr].nombre
-                        }}</vs-td>
+                    }}</vs-td>
                     <vs-td :data="data[indextr].direccion">{{
                         data[indextr].direccion
-                        }}</vs-td>
+                    }}</vs-td>
                     <vs-td :data="data[indextr].celular">
                         {{ data[indextr].celular }}
                     </vs-td>
@@ -157,14 +157,16 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         </div>
         <pre ref="pre"></pre>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'consultar reporte de venta'" :show="openReportesLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="openReportesLista = false"></Reporteador>
-        <FormularioClientes :id_cliente="id_cliente_modificar" :tipo="tipoFormulario" :show="verFormularioClientes"
-            @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id"></FormularioClientes>
-        <ServiciosGratis :show="openServiciosGratis" :datos="datosCliente"
+        <Reporteador v-if="openReportesLista" :header="'consultar reporte de venta'" :show="openReportesLista"
+            :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+        </Reporteador>
+        <FormularioClientes v-if="verFormularioClientes" :id_cliente="id_cliente_modificar" :tipo="tipoFormulario"
+            :show="verFormularioClientes" @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id">
+        </FormularioClientes>
+        <ServiciosGratis v-if="openServiciosGratis" :show="openServiciosGratis" :datos="datosCliente"
             @closeServiciosGratis="closeEntregarConvenio">
         </ServiciosGratis>
         <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
