@@ -448,7 +448,7 @@ class ClientesController extends ApiController
                             'serviciosFunerarios',
                             'ventasPlanes',
                             'ventasGenerales',
-                        ])->orderBy('id', 'desc'); // 👈 order by operaciones.id desc
+                        ])->where('status', '<>', 0)->orderBy('id', 'desc'); // 👈 order by operaciones.id desc
                 }])->get();
                 if ($clientes->isEmpty()) {
                     return $this->errorResponse('Error code: client not found.', 404); // or return null directly

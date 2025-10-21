@@ -1,5 +1,4 @@
 // src/plugins/logger.js
-
 const isDev = process.env.NODE_ENV === "development";
 
 // Vue plugin

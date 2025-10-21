@@ -1,7 +1,13 @@
 <template>
     <div>
-        <vs-popup :class="['forms-popup popup-70', z_index]" close="cancelar" :title="popupTitle" :active="localShow"
-            :fullscreen="false" :ref="this.$options.name">
+        <vs-popup
+            :class="['forms-popup popup-70', z_index]"
+            close="cancelar"
+            :title="popupTitle"
+            :active="localShow"
+            :fullscreen="false"
+            :ref="this.$options.name"
+        >
             <div class="pb-4">
                 <div class="form-group">
                     <div class="title-form-group">
@@ -10,35 +16,68 @@
                     <div class="form-group-content">
                         <div class="px-2 mb-2">
                             <div class="highlighted-inputs-primary">
-                                <span v-if="
-                                    this.errores.cliente_id ||
-                                    this.errores.tipo_cliente_id
-                                " class="text-danger text-sm block">Verifique que el cliente seleccionado sea
-                                    válido.</span>
-                                <span v-if="this.errores.operacion_id" class="text-danger text-sm block">{{
-                                    errores.operacion_id[0] }}</span>
-                                <InfoOperacion ref="InfoOperacion" v-if="show" :filters="filters"
-                                    @resultado="resultado_datos_cliente">
+                                <span
+                                    v-if="
+                                        this.errores.cliente_id ||
+                                        this.errores.tipo_cliente_id
+                                    "
+                                    class="text-danger text-sm block"
+                                    >Verifique que el cliente seleccionado sea
+                                    válido.</span
+                                >
+                                <span
+                                    v-if="this.errores.operacion_id"
+                                    class="text-danger text-sm block"
+                                    >{{ errores.operacion_id[0] }}</span
+                                >
+                                <InfoOperacion
+                                    ref="InfoOperacion"
+                                    v-if="show"
+                                    :filters="filters"
+                                    @resultado="resultado_datos_cliente"
+                                >
                                 </InfoOperacion>
                             </div>
                         </div>
                         <!-- Contenido Formulario -->
-                        <ProgramarSeguimientoDatos ref="seguimientoForm" v-model="formData" :errores="errores"
-                            @resultado="resultado_seguimientos_datos" :tipo="tipo"></ProgramarSeguimientoDatos>
-                        <div v-if="!isReadOnly" class="flex flex-wrap items-center justify-between pr-2 pt-4">
-                            <vs-checkbox v-show="verEnviarEmailChk" color="success" class="size-small text-info"
-                                v-model="formData.enviar_x_email" :vs-value="formData.enviar_x_email">¿Enviar por correo
-                                electrónico?</vs-checkbox>
-                            <vs-button ref="programar_seguimiento_button" class="ml-auto" :color="buttonColor"
-                                @click="EnviarForm">
+                        <ProgramarSeguimientoDatos
+                            ref="seguimientoForm"
+                            v-model="formData"
+                            :errores="errores"
+                            @resultado="resultado_seguimientos_datos"
+                            :tipo="tipo"
+                        ></ProgramarSeguimientoDatos>
+                        <div
+                            v-if="!isReadOnly"
+                            class="flex flex-wrap items-center justify-between pr-2 pt-4"
+                        >
+                            <vs-checkbox
+                                v-show="verEnviarEmailChk"
+                                color="success"
+                                class="size-small text-info"
+                                v-model="formData.enviar_x_email"
+                                :vs-value="formData.enviar_x_email"
+                                >¿Enviar por correo electrónico?</vs-checkbox
+                            >
+                            <vs-button
+                                ref="programar_seguimiento_button"
+                                class="ml-auto"
+                                :color="buttonColor"
+                                @click="EnviarForm"
+                            >
                                 {{ buttonTitle }}
                             </vs-button>
                         </div>
                     </div>
                 </div>
             </div>
-            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callback"
-                @closeVerificar="openPassword = false" :accion="accionNombre">
+            <Password
+                v-if="openPassword"
+                :show="openPassword"
+                :callback-on-success="callback"
+                @closeVerificar="openPassword = false"
+                :accion="accionNombre"
+            >
             </Password>
         </vs-popup>
     </div>
@@ -68,7 +107,7 @@ export default {
         z_index: {
             type: String,
             required: false,
-            default: "z-index55k",
+            default: "z-index59k",
         },
         filters: {
             type: Object,
@@ -208,11 +247,13 @@ export default {
             //this.$vs.loading();
             try {
                 // Call the API from seguimientos service
-                const result = await seguimientos.getSeguimientos(
-                    params
-                );
+                const result = await seguimientos.getSeguimientos(params);
                 this.$log("🚀 ~ _getSeguimientosProgramados ~ result:", result);
-                if (!result || typeof result !== "object" || Object.keys(result).length === 0) {
+                if (
+                    !result ||
+                    typeof result !== "object" ||
+                    Object.keys(result).length === 0
+                ) {
                     throw new Error(
                         "Respuesta inválida en al obtener los datos."
                     );

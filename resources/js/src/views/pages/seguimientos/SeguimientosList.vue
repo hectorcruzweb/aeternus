@@ -1,53 +1,104 @@
 <template>
     <div>
         <div class="text-right buttons-container-header">
-            <vs-button class="w-full md:w-auto md:ml-2 md:mt-0" color="success" @click="OpenFormSeguimientos()">
+            <vs-button
+                class="w-full md:w-auto md:ml-2 md:mt-0"
+                color="success"
+                @click="OpenFormSeguimientos()"
+            >
                 <span>Registrar Seguimiento</span>
             </vs-button>
         </div>
         <div class="mt-5 vx-col w-full">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
-                    <div class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-2/12 px-2 input-text">
+                    <div
+                        class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-2/12 px-2 input-text"
+                    >
                         <label class="">Tipo de Seguimiento</label>
-                        <v-select :options="tipoSeguimientos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="tipo_seguimiento" class="w-full" @input="onFilterChange" />
+                        <v-select
+                            :options="tipoSeguimientos"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="tipo_seguimiento"
+                            class="w-full"
+                            @input="onFilterChange"
+                        />
                     </div>
-                    <div class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-3/12 px-2 input-text">
+                    <div
+                        class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-3/12 px-2 input-text"
+                    >
                         <label class="">Tipo de Operación</label>
-                        <v-select :options="empresaOperaciones" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="empresa_operacion" class="w-full" @input="onFilterChange" />
+                        <v-select
+                            :options="empresaOperaciones"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="empresa_operacion"
+                            class="w-full"
+                            @input="onFilterChange"
+                        />
                     </div>
-                    <div class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-3/12 input-text px-2">
+                    <div
+                        class="w-full sm:w-full md:w-6/12 lg:w-4/12 xl:w-3/12 input-text px-2"
+                    >
                         <label class="">
                             Filtrar por Fechas
                             <span>(*)</span>
                         </label>
-                        <flat-pickr name="rango_fechas" data-vv-as=" " :config="configdateTimePickerRange"
-                            v-model="rango_fechas" placeholder="Rango de fechas" class="w-full"
-                            @on-close="onCloseDate" />
+                        <flat-pickr
+                            name="rango_fechas"
+                            data-vv-as=" "
+                            :config="configdateTimePickerRange"
+                            v-model="rango_fechas"
+                            placeholder="Rango de fechas"
+                            class="w-full"
+                            @on-close="onCloseDate"
+                        />
                     </div>
-                    <div class="w-full sm:w-full md:w-6/12 lg:w-full xl:w-4/12 input-text px-2">
+                    <div
+                        class="w-full sm:w-full md:w-6/12 lg:w-full xl:w-4/12 input-text px-2"
+                    >
                         <label class="">Nombre del Cliente</label>
-                        <vs-input name="cliente_nombre" class="w-full" icon="search"
-                            placeholder="Filtrar por Nombre del Cliente" v-model="serverOptions.cliente_nombre"
-                            maxlength="75" @keyup.enter="onEnterPress('cliente_nombre')"
-                            @blur="onBlurFetch('cliente_nombre')" />
+                        <vs-input
+                            name="cliente_nombre"
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Cliente"
+                            v-model="serverOptions.cliente_nombre"
+                            maxlength="75"
+                            @keyup.enter="onEnterPress('cliente_nombre')"
+                            @blur="onBlurFetch('cliente_nombre')"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
 
         <div id="resultados" class="mt-5 flex flex-col flex-1">
-            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
-                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
             </div>
             <div v-else id="results" class="w-full flex flex-wrap">
                 <!--Programados-->
                 <div v-if="verProgramados" class="w-full py-2">
-                    <vs-table :sst="true" :max-items="serverOptions.per_page" :data="ProgramadosList"
-                        noDataText="0 Resultados" class="tabla-datos">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page"
+                        :data="ProgramadosList"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
                         <template slot="header">
                             <h3>Seguimientos Programados Pendientes</h3>
                         </template>
@@ -59,35 +110,57 @@
                             <vs-th>Cancelar</vs-th>
                         </template>
                         <template slot-scope="{ data }">
-                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
                                 <!-- Main columns -->
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img class="cursor-pointer img-btn-20 mx-4" src="@assets/images/folder.svg"
-                                            title="Consultar Seguimiento" @click="
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-4"
+                                            src="@assets/images/folder.svg"
+                                            title="Consultar Seguimiento"
+                                            @click="
                                                 programarSeguimiento(
                                                     'consultar',
                                                     tr
                                                 )
-                                                " />
-                                        <img class="cursor-pointer img-btn-20 mx-4" src="@assets/images/edit.svg"
-                                            title="Modificar Seguimiento" @click="
+                                            "
+                                        />
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-4"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Seguimiento"
+                                            @click="
                                                 programarSeguimiento(
                                                     'modificar',
                                                     tr
                                                 )
-                                                " />
-                                        <img class="img-btn-20 mx-4" src="@assets/images/seguimientos.svg"
-                                            title="Atender Seguimiento" @click="
+                                            "
+                                        />
+                                        <img
+                                            class="img-btn-20 mx-4"
+                                            src="@assets/images/seguimientos.svg"
+                                            title="Atender Seguimiento"
+                                            @click="
                                                 registrarSeguimiento(
                                                     'atender_seguimiento_programado',
                                                     tr
                                                 )
-                                                " />
+                                            "
+                                        />
                                     </div>
                                 </vs-td>
-                                <vs-td><span v-if="tr.tipo_cliente_id === 1">{{ tr.cliente.nombre }}</span> <span
-                                        v-else>{{ tr.cotizacion.nombre }}</span></vs-td>
+                                <vs-td
+                                    ><span v-if="tr.tipo_cliente_id === 1">{{
+                                        tr.cliente.nombre
+                                    }}</span>
+                                    <span v-else>{{
+                                        tr.cotizacion.nombre
+                                    }}</span></vs-td
+                                >
                                 <vs-td>{{ tr.motivo_texto }}</vs-td>
                                 <vs-td>{{
                                     !hasSeguimientos
@@ -96,27 +169,40 @@
                                 }}</vs-td>
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
-                                            title="Cancelar Seguimiento" @click="
+                                        <img
+                                            class="img-btn-20 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Seguimiento"
+                                            @click="
                                                 programarSeguimiento(
                                                     'cancelar',
                                                     tr
                                                 )
-                                                " />
+                                            "
+                                        />
                                     </div>
                                 </vs-td>
                             </vs-tr>
                         </template>
                     </vs-table>
                     <div>
-                        <vs-pagination v-if="programados_params.verPaginado" :total="programados_params.total"
-                            v-model="programados_params.page" class="mt-8"></vs-pagination>
+                        <vs-pagination
+                            v-if="programados_params.verPaginado"
+                            :total="programados_params.total"
+                            v-model="programados_params.page"
+                            class="mt-8"
+                        ></vs-pagination>
                     </div>
                 </div>
                 <!--Realizados-->
                 <div v-if="verSeguimientos" class="w-full py-2">
-                    <vs-table :sst="true" :max-items="serverOptions.per_page" :data="SeguimientosList"
-                        noDataText="0 Resultados" class="tabla-datos">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page"
+                        :data="SeguimientosList"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
                         <template slot="header">
                             <h3>Seguimientos Atendidos</h3>
                         </template>
@@ -130,28 +216,46 @@
                             <vs-th>Cancelar</vs-th>
                         </template>
                         <template slot-scope="{ data }">
-                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
                                 <!-- Main columns -->
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img class="cursor-pointer img-btn-20 mx-4" src="@assets/images/folder.svg"
-                                            title="Consultar Seguimiento" @click="
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-4"
+                                            src="@assets/images/folder.svg"
+                                            title="Consultar Seguimiento"
+                                            @click="
                                                 registrarSeguimiento(
                                                     'consultar',
                                                     tr
                                                 )
-                                                " />
-                                        <img class="cursor-pointer img-btn-20 mx-4" src="@assets/images/edit.svg"
-                                            title="Modificar Seguimiento" @click="
+                                            "
+                                        />
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-4"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Seguimiento"
+                                            @click="
                                                 registrarSeguimiento(
                                                     'modificar',
                                                     tr
                                                 )
-                                                " />
+                                            "
+                                        />
                                     </div>
                                 </vs-td>
-                                <vs-td><span v-if="tr.tipo_cliente_id === 1">{{ tr.cliente.nombre }}</span> <span
-                                        v-else>{{ tr.cotizacion.nombre }}</span></vs-td>
+                                <vs-td
+                                    ><span v-if="tr.tipo_cliente_id === 1">{{
+                                        tr.cliente.nombre
+                                    }}</span>
+                                    <span v-else>{{
+                                        tr.cotizacion.nombre
+                                    }}</span></vs-td
+                                >
                                 <vs-td>{{ tr.motivo_texto }}</vs-td>
                                 <vs-td>{{ tr.resultado_texto }}</vs-td>
                                 <vs-td>{{ tr.tipo_programado_texto }}</vs-td>
@@ -160,35 +264,60 @@
                                 }}</vs-td>
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
-                                            title="Cancelar Seguimiento" @click="
-                                                registrarSeguimiento('cancelar', tr)
-                                                " />
+                                        <img
+                                            class="img-btn-20 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Seguimiento"
+                                            @click="
+                                                registrarSeguimiento(
+                                                    'cancelar',
+                                                    tr
+                                                )
+                                            "
+                                        />
                                     </div>
                                 </vs-td>
                             </vs-tr>
                         </template>
                     </vs-table>
                     <div>
-                        <vs-pagination v-if="realizados_params.verPaginado" :total="realizados_params.total"
-                            v-model="realizados_params.page" class="mt-8"></vs-pagination>
+                        <vs-pagination
+                            v-if="realizados_params.verPaginado"
+                            :total="realizados_params.total"
+                            v-model="realizados_params.page"
+                            class="mt-8"
+                        ></vs-pagination>
                     </div>
                 </div>
             </div>
         </div>
 
-        <FormularioSeguimientos v-if="verFormSeguimientos" :show="verFormSeguimientos" @closeVentana="reloadList">
+        <FormularioSeguimientos
+            v-if="verFormSeguimientos"
+            :show="verFormSeguimientos"
+            @closeVentana="reloadList"
+        >
         </FormularioSeguimientos>
-        <FormularioRegistrarSeguimiento v-if="ShowFormRegistrarSeguimientos" :show="ShowFormRegistrarSeguimientos"
-            :filters="filtersSeguimiento" :tipo="tipoFormSeguimiento"
-            @closeVentana="ShowFormRegistrarSeguimientos = false" @agregar_modificar_success_seguimiento="
+        <FormularioRegistrarSeguimiento
+            v-if="ShowFormRegistrarSeguimientos"
+            :show="ShowFormRegistrarSeguimientos"
+            :filters="filtersSeguimiento"
+            :tipo="tipoFormSeguimiento"
+            @closeVentana="ShowFormRegistrarSeguimientos = false"
+            @agregar_modificar_success_seguimiento="
                 agregar_modificar_success_seguimiento
-            " />
-        <FormularioProgramarSeguimiento v-if="ShowFormProgramarSeguimientos" :show="ShowFormProgramarSeguimientos"
-            :filters="filtersSeguimiento" :tipo="tipoFormSeguimiento"
-            @closeVentana="ShowFormProgramarSeguimientos = false" @agregar_modificar_success_seguimiento="
+            "
+        />
+        <FormularioProgramarSeguimiento
+            v-if="ShowFormProgramarSeguimientos"
+            :show="ShowFormProgramarSeguimientos"
+            :filters="filtersSeguimiento"
+            :tipo="tipoFormSeguimiento"
+            @closeVentana="ShowFormProgramarSeguimientos = false"
+            @agregar_modificar_success_seguimiento="
                 agregar_modificar_success_seguimiento
-            " />
+            "
+        />
     </div>
 </template>
 <script>
@@ -210,22 +339,22 @@ export default {
         "v-select": vSelect,
         flatPickr,
         FormularioRegistrarSeguimiento,
-        FormularioProgramarSeguimiento
+        FormularioProgramarSeguimiento,
     },
     computed: {
         verSeguimientos() {
             return (
-                (Array.isArray(this.SeguimientosList) &&
-                    this.SeguimientosList.length > 0) &&
+                Array.isArray(this.SeguimientosList) &&
+                this.SeguimientosList.length > 0 &&
                 (this.tipo_seguimiento.value === "" ||
                     this.tipo_seguimiento.value === "0")
             );
         },
         verProgramados() {
             return (
-                (Array.isArray(this.ProgramadosList) &&
-                    this.ProgramadosList.length > 0) && (
-                    this.tipo_seguimiento.value === "" ||
+                Array.isArray(this.ProgramadosList) &&
+                this.ProgramadosList.length > 0 &&
+                (this.tipo_seguimiento.value === "" ||
                     this.tipo_seguimiento.value === "1")
             );
         },
@@ -233,15 +362,19 @@ export default {
             let res = false;
             return (
                 (this.ProgramadosList.length === 0 &&
-                    this.SeguimientosList.length === 0) || (this.tipo_seguimiento.value === '1' && this.ProgramadosList.length === 0) || (this.tipo_seguimiento.value === '0' && this.SeguimientosList.length === 0)
+                    this.SeguimientosList.length === 0) ||
+                (this.tipo_seguimiento.value === "1" &&
+                    this.ProgramadosList.length === 0) ||
+                (this.tipo_seguimiento.value === "0" &&
+                    this.SeguimientosList.length === 0)
             );
         },
     },
     watch: {
-        'realizados_params.page': function (newValue) {
+        "realizados_params.page": function (newValue) {
             this.fetchDataSeguimientos("realizados");
         },
-        'programados_params.page': function (newValue) {
+        "programados_params.page": function (newValue) {
             this.fetchDataSeguimientos("programados");
         },
     },
@@ -250,7 +383,7 @@ export default {
             ShowFormRegistrarSeguimientos: false,
             ShowFormProgramarSeguimientos: false,
             filtersSeguimiento: [],
-            tipoFormSeguimiento: '',
+            tipoFormSeguimiento: "",
             isLoading: false, //API CALLS
             rango_fechas: [],
             configdateTimePickerRange: configdateTimePickerRange,
@@ -307,7 +440,7 @@ export default {
                 fecha_fin: "",
                 empresa_operaciones_id: null,
                 paginated_b: 1,
-                status: 1
+                status: 1,
             },
             previousServerOptions: {
                 empresa_operaciones_id: null,
@@ -400,9 +533,14 @@ export default {
                 // Call the API from clientes service
                 if (
                     ((this.tipo_seguimiento.value === "" ||
-                        this.tipo_seguimiento.value === "0") && tipo_seguimiento === "") || (tipo_seguimiento === "realizados")
+                        this.tipo_seguimiento.value === "0") &&
+                        tipo_seguimiento === "") ||
+                    tipo_seguimiento === "realizados"
                 ) {
-                    if (this.tipo_seguimiento.value === "0" || tipo_seguimiento === "realizados") {
+                    if (
+                        this.tipo_seguimiento.value === "0" ||
+                        tipo_seguimiento === "realizados"
+                    ) {
                         //this.ProgramadosList = [];
                         this.realizados_params.verPaginado = false;
                     }
@@ -419,9 +557,14 @@ export default {
 
                 if (
                     ((this.tipo_seguimiento.value === "" ||
-                        this.tipo_seguimiento.value === "1") && tipo_seguimiento === "") || (tipo_seguimiento === "programados")
+                        this.tipo_seguimiento.value === "1") &&
+                        tipo_seguimiento === "") ||
+                    tipo_seguimiento === "programados"
                 ) {
-                    if (this.tipo_seguimiento.value === "1" || tipo_seguimiento === "programados") {
+                    if (
+                        this.tipo_seguimiento.value === "1" ||
+                        tipo_seguimiento === "programados"
+                    ) {
                         //this.SeguimientosList = [];
                         this.programados_params.verPaginado = false;
                     }
@@ -461,9 +604,9 @@ export default {
                 /**hay fechas que buscar */
                 if (
                     this.serverOptions.fecha_inicio !=
-                    moment(selectedDates[0]).format("YYYY-MM-DD") ||
+                        moment(selectedDates[0]).format("YYYY-MM-DD") ||
                     this.serverOptions.fecha_fin !=
-                    moment(selectedDates[1]).format("YYYY-MM-DD")
+                        moment(selectedDates[1]).format("YYYY-MM-DD")
                 ) {
                     /**agreggo la fecha 1 */
                     this.serverOptions.fecha_inicio = moment(
@@ -475,11 +618,18 @@ export default {
                 }
             }
             //aqui mando llamar los nuevos datos
-            if ((this.serverOptions.fecha_inicio !== this.previousServerOptions.fecha_inicio) || (this.serverOptions.fecha_fin !== this.previousServerOptions.fecha_fin)) {
+            if (
+                this.serverOptions.fecha_inicio !==
+                    this.previousServerOptions.fecha_inicio ||
+                this.serverOptions.fecha_fin !==
+                    this.previousServerOptions.fecha_fin
+            ) {
                 this.realizados_params.page = 1;
                 this.programados_params.page = 1;
-                this.previousServerOptions.fecha_inicio = this.serverOptions.fecha_inicio;
-                this.previousServerOptions.fecha_fin = this.serverOptions.fecha_fin;
+                this.previousServerOptions.fecha_inicio =
+                    this.serverOptions.fecha_inicio;
+                this.previousServerOptions.fecha_fin =
+                    this.serverOptions.fecha_fin;
                 this.fetchDataSeguimientos();
             }
         },
@@ -521,8 +671,7 @@ export default {
 
         this.fetchDataSeguimientos();
 
-        if (this.$isDev)
-            this.OpenFormSeguimientos();
+        if (this.$isDev) this.OpenFormSeguimientos();
     },
     beforeDestroy() {
         this.$log("Before Component destroyed! " + this.$options.name);

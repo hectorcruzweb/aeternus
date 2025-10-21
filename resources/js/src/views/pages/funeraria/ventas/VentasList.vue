@@ -1,63 +1,112 @@
 <template>
     <div>
         <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-                @click="openPlanesVenta = true" type="border">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="primary"
+                @click="openPlanesVenta = true"
+                type="border"
+            >
                 <span>Planes de Venta</span>
             </vs-button>
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="formulario('agregar')">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="success"
+                @click="formulario('agregar')"
+            >
                 <span>Vender Planes Funerarios a Futuro</span>
             </vs-button>
         </div>
 
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="text-sm opacity-75">Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="w-full" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="text-sm opacity-75">Estado</label>
-                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado" class="w-full" />
+                        <v-select
+                            :options="estadosOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Filtrar Específico</label>
-                        <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="filtroEspecifico" class="w-full" />
+                        <v-select
+                            :options="filtrosEspecificos"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="filtroEspecifico"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 px-2 input-text">
                         <label class="">Número de Control</label>
-                        <vs-input class="w-full" icon="search" maxlength="14"
-                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="14"
+                            placeholder="Filtrar por Número de Control"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
                     <div class="w-full px-2 py-4">
                         <h3 class="text-base">
-                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
-                            Titular
+                            <feather-icon
+                                icon="UserIcon"
+                                class="mr-2"
+                                svgClasses="w-5 h-5"
+                            />Filtrar por Nombre del Titular
                         </h3>
                     </div>
-                    <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
+                    <div
+                        class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text"
+                    >
                         <label class="">Nombre del Titular</label>
-                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Titular"
-                            v-model="serverOptions.titular" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Titular"
+                            v-model="serverOptions.titular"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                            maxlength="75"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
 
         <br />
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="ventas" noDataText="0 Resultados"
-            class="tabla-datos">
+        <vs-table
+            :sst="true"
+            :max-items="serverOptions.per_page.value"
+            :data="ventas"
+            noDataText="0 Resultados"
+            class="tabla-datos"
+        >
             <template slot="header">
                 <h3>Listado de Ventas de Planes Funerarios a Futuro</h3>
             </template>
@@ -79,19 +128,28 @@
                     <vs-td :data="data[indextr].ventas_planes_id">
                         <span class="font-semibold">{{
                             data[indextr].ventas_planes_id
-                            }}</span>
+                        }}</span>
                     </vs-td>
-                    <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
-                    <vs-td :data="data[indextr].venta_plan.tipo_financiamiento_texto">{{
-                        data[indextr].venta_plan.tipo_financiamiento_texto
-                        }}</vs-td>
+                    <vs-td :data="data[indextr].nombre">{{
+                        data[indextr].nombre
+                    }}</vs-td>
+                    <vs-td
+                        :data="
+                            data[indextr].venta_plan.tipo_financiamiento_texto
+                        "
+                        >{{
+                            data[indextr].venta_plan.tipo_financiamiento_texto
+                        }}</vs-td
+                    >
                     <vs-td :data="data[indextr].numero_solicitud">
                         <span class="font-medium">{{
                             data[indextr].numero_solicitud_texto
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].numero_convenio">
-                        <span class="font-medium">{{ data[indextr].numero_convenio }}</span>
+                        <span class="font-medium">{{
+                            data[indextr].numero_convenio
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].venta_plan.nombre_original">
                         <span class="capitalize">
@@ -102,12 +160,20 @@
                     <!--Convenio-->
                     <vs-td :data="data[indextr].venta_plan.status_convenio">
                         <p v-if="data[indextr].venta_plan.status_convenio == 0">
-                            <img class="cursor-pointer img-btn-20" src="@assets/images/convenio-no.svg"
-                                title="Convenio no Entregado" @click="verEntregarConvenio(data[indextr])" />
+                            <img
+                                class="cursor-pointer img-btn-20"
+                                src="@assets/images/convenio-no.svg"
+                                title="Convenio no Entregado"
+                                @click="verEntregarConvenio(data[indextr])"
+                            />
                         </p>
                         <p v-else>
-                            <img class="cursor-pointer img-btn-20" src="@assets/images/convenio-si.svg"
-                                title="Convenio Entregado" @click="verEntregarConvenio(data[indextr])" />
+                            <img
+                                class="cursor-pointer img-btn-20"
+                                src="@assets/images/convenio-si.svg"
+                                title="Convenio Entregado"
+                                @click="verEntregarConvenio(data[indextr])"
+                            />
                         </p>
                     </vs-td>
                     <vs-td :data="data[indextr].saldo">
@@ -139,27 +205,75 @@
                     </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
-                            <img v-if="data[indextr].nota" class="cursor-pointer img-btn-20 mr-6"
-                                src="@assets/images/notepad_ver.svg" title="Notas" @click="
+                            <img
+                                class="img-btn-24 mx-6"
+                                src="@assets/images/seguimientos.svg"
+                                title="Control de Seguimientos"
+                                @click="OpenFormSeguimientos(tr)"
+                            />
+                            <img
+                                v-if="data[indextr].nota"
+                                class="cursor-pointer img-btn-20 mr-6"
+                                src="@assets/images/notepad_ver.svg"
+                                title="Notas"
+                                @click="
                                     verNota(
                                         data[indextr].nota.trim(),
-                                        data[indextr].venta_plan.nombre_original +
-                                        '/ ' +
-                                        data[indextr].nombre
+                                        data[indextr].venta_plan
+                                            .nombre_original +
+                                            '/ ' +
+                                            data[indextr].nombre
                                     )
-                                    " />
-                            <img v-else class="cursor-pointer img-btn-20 mr-6" src="@assets/images/notepad_ver_no.svg"
-                                title="Notas" />
-                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/folder.svg"
-                                title="Expediente" @click="ConsultarVenta(data[indextr].ventas_planes_id)" />
-                            <img class="img-btn-18 mx-3" src="@assets/images/edit.svg" title="Modificar Contrato"
-                                @click="openModificar(data[indextr].ventas_planes_id)" />
-                            <img v-if="data[indextr].operacion_status >= 1" class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg" title="Cancelar Contrato"
-                                @click="cancelarVenta(data[indextr].ventas_planes_id)" />
-                            <img v-else class="img-btn-22 mx-3" src="@assets/images/trash-open.svg"
+                                "
+                            />
+                            <img
+                                v-else
+                                class="cursor-pointer img-btn-20 mr-6"
+                                src="@assets/images/notepad_ver_no.svg"
+                                title="Notas"
+                            />
+                            <img
+                                class="cursor-pointer img-btn-20 mx-3"
+                                src="@assets/images/folder.svg"
+                                title="Expediente"
+                                @click="
+                                    ConsultarVenta(
+                                        data[indextr].ventas_planes_id
+                                    )
+                                "
+                            />
+                            <img
+                                class="img-btn-18 mx-3"
+                                src="@assets/images/edit.svg"
+                                title="Modificar Contrato"
+                                @click="
+                                    openModificar(
+                                        data[indextr].ventas_planes_id
+                                    )
+                                "
+                            />
+                            <img
+                                v-if="data[indextr].operacion_status >= 1"
+                                class="img-btn-22 mx-3"
+                                src="@assets/images/trash.svg"
+                                title="Cancelar Contrato"
+                                @click="
+                                    cancelarVenta(
+                                        data[indextr].ventas_planes_id
+                                    )
+                                "
+                            />
+                            <img
+                                v-else
+                                class="img-btn-22 mx-3"
+                                src="@assets/images/trash-open.svg"
                                 title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
-                                @click="ConsultarVentaAcuse(data[indextr].ventas_planes_id)" />
+                                @click="
+                                    ConsultarVentaAcuse(
+                                        data[indextr].ventas_planes_id
+                                    )
+                                "
+                            />
                         </div>
                     </vs-td>
 
@@ -169,36 +283,76 @@
         </vs-table>
 
         <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+            <vs-pagination
+                v-if="verPaginado"
+                :total="this.total"
+                v-model="actual"
+                class="mt-8"
+            ></vs-pagination>
         </div>
 
-        <FormularioVentas :id_venta="id_venta_modificar" :tipo="tipoFormulario" :show="verFormularioVentas"
-            @closeVentana="verFormularioVentas = false" @ver_pdfs_nueva_venta="ConsultarVenta"></FormularioVentas>
+        <FormularioVentas
+            :id_venta="id_venta_modificar"
+            :tipo="tipoFormulario"
+            :show="verFormularioVentas"
+            @closeVentana="verFormularioVentas = false"
+            @ver_pdfs_nueva_venta="ConsultarVenta"
+        ></FormularioVentas>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
-            :accion="accionNombre">
+        <Password
+            :show="openStatus"
+            :callback-on-success="callback"
+            @closeVerificar="closeStatus"
+            :accion="accionNombre"
+        >
         </Password>
 
-        <ReportesVentas :verAcuse="verAcuse" :show="openReportes" @closeListaReportes="closeListaReportes"
-            :id_venta="id_venta">
+        <ReportesVentas
+            :verAcuse="verAcuse"
+            :show="openReportes"
+            @closeListaReportes="closeListaReportes"
+            :id_venta="id_venta"
+        >
         </ReportesVentas>
 
-        <CancelarVenta :show="openCancelar" @closeCancelarVenta="openCancelar = false" @ConsultarVenta="ConsultarVenta"
-            :id_venta="id_venta"></CancelarVenta>
+        <CancelarVenta
+            :show="openCancelar"
+            @closeCancelarVenta="openCancelar = false"
+            @ConsultarVenta="ConsultarVenta"
+            :id_venta="id_venta"
+        ></CancelarVenta>
 
-        <PlanesVenta :show="openPlanesVenta" @closePlanesFuneraria="openPlanesVenta = false"></PlanesVenta>
+        <PlanesVenta
+            :show="openPlanesVenta"
+            @closePlanesFuneraria="openPlanesVenta = false"
+        ></PlanesVenta>
 
-        <VerNotas :show="openVerNotas" :nota="nota_contenido" :title="titulo_nota"
-            @closeVerNotas="openVerNotas = false">
+        <VerNotas
+            :show="openVerNotas"
+            :nota="nota_contenido"
+            :title="titulo_nota"
+            @closeVerNotas="openVerNotas = false"
+        >
         </VerNotas>
-        <Entregarconvenio :show="openEntregarconvenio" :datos="datosConvenio"
-            @closeEntregarConvenio="closeEntregarConvenio">
+        <Entregarconvenio
+            :show="openEntregarconvenio"
+            :datos="datosConvenio"
+            @closeEntregarConvenio="closeEntregarConvenio"
+        >
         </Entregarconvenio>
+        <FormularioSeguimientos
+            v-if="openSeguimientos"
+            :show="openSeguimientos"
+            :filters="filtersSeguimientos"
+            @closeVentana="openSeguimientos = false"
+        >
+        </FormularioSeguimientos>
     </div>
 </template>
 
 <script>
 //planes de venta
+import FormularioSeguimientos from "../../seguimientos/FormularioSeguimientos.vue";
 import planes from "@services/planes";
 import Entregarconvenio from "@pages/EntregarConvenio";
 import FormularioVentas from "../ventas/FormularioVentas";
@@ -221,6 +375,7 @@ export default {
         PlanesVenta,
         VerNotas,
         Entregarconvenio,
+        FormularioSeguimientos,
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -241,6 +396,13 @@ export default {
     },
     data() {
         return {
+            openSeguimientos: false,
+            filtersSeguimientos: {
+                cliente_id: null,
+                tipo_cliente_id: null,
+                operacion_id: null,
+                origen: 2, //Cliente
+            },
             openVerNotas: false,
             nota_contenido: "",
             titulo_nota: "",
@@ -326,6 +488,14 @@ export default {
         };
     },
     methods: {
+        OpenFormSeguimientos(venta) {
+            this.$log("🚀 ~ venta:", venta);
+            this.filtersSeguimientos.cliente_id = venta.cliente_id;
+            this.filtersSeguimientos.tipo_cliente_id = 1;
+            this.filtersSeguimientos.operacion_id = venta.operacion_id;
+            this.filtersSeguimientos.origen = 2; //clientes
+            this.openSeguimientos = true;
+        },
         verEntregarConvenio(datos) {
             this.datosConvenio.id = datos.ventas_planes_id;
             this.datosConvenio.titular = datos.nombre;
@@ -389,7 +559,8 @@ export default {
             this.serverOptions.page = page;
             this.serverOptions.per_page = this.mostrar.value;
             this.serverOptions.status = this.estado.value;
-            this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+            this.serverOptions.filtro_especifico_opcion =
+                this.filtroEspecifico.value;
 
             try {
                 let res = await planes.get_ventas(this.serverOptions, true);
