@@ -18,7 +18,7 @@ class PasswordResetNotification extends Notification
      */
     public function __construct($token)
     {
-        $this->token=$token;
+        $this->token = $token;
     }
 
     /**
@@ -40,13 +40,13 @@ class PasswordResetNotification extends Notification
      */
     public function toMail($notifiable)
     {
-       return (new MailMessage)
-       ->greeting('Hola!')
-       ->from('solserin.servicios@gmail.com', 'Recuperar Contraseña')
-                    ->subject(config('app.name')." | Recuperación de contraseña")
-                    ->line("Olvidó su contraseña? De click en el botón para actualizarla.")
-                    ->action('Recuperar Contraseña', url('pages/reset-password', $this->token))
-                    ->line('Ignore este mensaje si no solicitó un reestablecimiento de contraseña');
+        return (new MailMessage)
+            ->greeting('Hola!')
+            ->from(config('mail.from.address'), config('mail.from.name')) // must match SMTP allowed sender
+            ->subject(env('MAIL_FROM_NAME') . " | Recuperación de contraseña")
+            ->line("Olvidó su contraseña? De click en el botón para actualizarla.")
+            ->action('Recuperar Contraseña', url('pages/reset-password', $this->token))
+            ->line('Ignore este mensaje si no solicitó un reestablecimiento de contraseña');
     }
 
     /**
