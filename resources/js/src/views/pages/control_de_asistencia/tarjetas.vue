@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="flex flex-col flex-1">
         <div class="w-full text-right">
             <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="openReporte()">
                 <span>Imprimir Lista de Registros</span>
@@ -44,55 +44,69 @@
                 </div>
             </vx-card>
         </div>
-        <br />
-        <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
-            :max-items="serverOptions.per_page.value" :data="registros" noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Empleados Registrados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th># de Empleado</vs-th>
-                <vs-th>Empleado</vs-th>
-                <vs-th>Usuario</vs-th>
-                <vs-th>Rol</vs-th>
-                <vs-th>Género</vs-th>
-                <vs-th>Área</vs-th>
-                <vs-th>Estado</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span :class="['font-bold']">{{ data[indextr].id }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
-                    <vs-td :data="data[indextr].email"> {{ data[indextr].email }}</vs-td>
-                    <vs-td :data="data[indextr].rol"> {{ data[indextr].rol.rol }}</vs-td>
 
-                    <vs-td :data="data[indextr].genero">
-                        {{ data[indextr].genero }}</vs-td>
-                    <vs-td :data="data[indextr].area_des">{{ data[indextr].area_des }}</vs-td>
-                    <vs-td :data="data[indextr].status">
-                        <p v-if="data[indextr].status == 1">
-                            Activo <span class="dot-success"></span>
-                        </p>
-                        <p v-else>Cancelado <span class="dot-danger"></span></p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/pdf.svg"
-                                title="Ver Reporte de Asistencia" @click="openReporte(data[indextr].id)" />
-                            <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/calendar.svg"
-                                title="Asignar Días de Descanso" @click="openDiasDescanso(data[indextr])" />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
+                        :max-items="serverOptions.per_page.value" :data="registros" noDataText="0 Resultados"
+                        class="tabla-datos">
+                        <template slot="header">
+                            <h3>Listado de Empleados Registrados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th># de Empleado</vs-th>
+                            <vs-th>Empleado</vs-th>
+                            <vs-th>Usuario</vs-th>
+                            <vs-th>Rol</vs-th>
+                            <vs-th>Género</vs-th>
+                            <vs-th>Área</vs-th>
+                            <vs-th>Estado</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                <vs-td :data="data[indextr].id">
+                                    <span :class="['font-bold']">{{ data[indextr].id }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
+                                <vs-td :data="data[indextr].email"> {{ data[indextr].email }}</vs-td>
+                                <vs-td :data="data[indextr].rol"> {{ data[indextr].rol.rol }}</vs-td>
+
+                                <vs-td :data="data[indextr].genero">
+                                    {{ data[indextr].genero }}</vs-td>
+                                <vs-td :data="data[indextr].area_des">{{ data[indextr].area_des }}</vs-td>
+                                <vs-td :data="data[indextr].status">
+                                    <p v-if="data[indextr].status == 1">
+                                        Activo <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else>Cancelado <span class="dot-danger"></span></p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/pdf.svg"
+                                            title="Ver Reporte de Asistencia" @click="openReporte(data[indextr].id)" />
+                                        <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/calendar.svg"
+                                            title="Asignar Días de Descanso" @click="openDiasDescanso(data[indextr])" />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual"
+                            class="mt-8"></vs-pagination>
+                    </div>
+                    <pre ref="pre"></pre>
+                </div>
+            </div>
         </div>
-        <pre ref="pre"></pre>
+
+
         <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
@@ -144,7 +158,13 @@ export default {
             })();
         },
     },
-    computed: {},
+    computed: {
+        noDataFound() {
+            return (
+                this.registros.length === 0
+            );
+        },
+    },
     data() {
         return {
             areasOptionsTodas: areasOptionsTodas,

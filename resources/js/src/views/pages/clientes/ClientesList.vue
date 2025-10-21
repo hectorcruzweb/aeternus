@@ -13,7 +13,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
 -->
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="text-right buttons-container-header">
             <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
                 @click="formulario('agregar')">
                 <span>Registrar Cliente</span>
@@ -48,7 +48,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                         <div class="w-full input-text pb-2">
                             <label class="">{{
                                 this.filtroEspecifico.label
-                            }}</label>
+                                }}</label>
 
                             <vs-input class="w-full" icon="search" maxlength="75"
                                 placeholder="Filtrar por dato específico" v-model="serverOptions.numero_control"
@@ -76,86 +76,96 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
             </vx-card>
         </div>
 
-        <br />
-        <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
-            :max-items="this.mostrar.value" :data="clientes" noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Clientes Registrados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Cliente</vs-th>
-                <vs-th>Nombre</vs-th>
-                <vs-th>Domicilio</vs-th>
-                <vs-th>Celular</vs-th>
-                <vs-th>Status</vs-th>
-                <vs-th>Servicios Gratis</vs-th>
-                <vs-th>Seguimientos</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span class="font-bold">{{ data[indextr].id }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre">{{
-                        data[indextr].nombre
-                    }}</vs-td>
-                    <vs-td :data="data[indextr].direccion">{{
-                        data[indextr].direccion
-                    }}</vs-td>
-                    <vs-td :data="data[indextr].celular">
-                        {{ data[indextr].celular }}
-                    </vs-td>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
+                        :max-items="this.mostrar.value" :data="clientes" noDataText="0 Resultados" class="tabla-datos">
+                        <template slot="header">
+                            <h3>Listado de Clientes Registrados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Cliente</vs-th>
+                            <vs-th>Nombre</vs-th>
+                            <vs-th>Domicilio</vs-th>
+                            <vs-th>Celular</vs-th>
+                            <vs-th>Status</vs-th>
+                            <vs-th>Servicios Gratis</vs-th>
+                            <vs-th>Seguimientos</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                <vs-td :data="data[indextr].id">
+                                    <span class="font-bold">{{ data[indextr].id }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre">{{
+                                    data[indextr].nombre
+                                    }}</vs-td>
+                                <vs-td :data="data[indextr].direccion">{{
+                                    data[indextr].direccion
+                                    }}</vs-td>
+                                <vs-td :data="data[indextr].celular">
+                                    {{ data[indextr].celular }}
+                                </vs-td>
 
-                    <vs-td :data="data[indextr].status">
-                        <p v-if="data[indextr].status == 1">
-                            Activo <span class="dot-success"></span>
-                        </p>
-                        <p v-else>Cancelado <span class="dot-danger"></span></p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].servicios_gratis">
-                        <div class="flex justify-center">
-                            <img v-if="data[indextr].servicios_gratis > 0" class="img-btn-24 mx-2"
-                                src="@assets/images/free_yes.svg" title="Ver servicios gratis de este cliente"
-                                @click="verServiciosGratis(data[indextr])" />
-                            <img v-else class="img-btn-24 mx-2" src="@assets/images/free_no.svg"
-                                title="Ver servicios gratis de este cliente"
-                                @click="verServiciosGratis(data[indextr])" />
-                        </div>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id_user">
-                        <div class="flex justify-center">
-                            <img class="img-btn-24 mx-2" src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
-                        </div>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id_user">
-                        <div class="flex justify-center">
-                            <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/edit.svg" title="Modificar"
-                                @click="openModificar(data[indextr].id)" />
-                            <img v-if="data[indextr].status == 1" class="img-btn-24 mx-2"
-                                src="@assets/images/switchon.svg" title="Deshabilitar" @click="
-                                    deleteCliente(
-                                        data[indextr].id,
-                                        data[indextr].nombre
-                                    )
-                                    " />
-                            <img v-else class="img-btn-24 mx-2" src="@assets/images/switchoff.svg" title="Habilitar"
-                                @click="
-                                    altaCliente(
-                                        data[indextr].id,
-                                        data[indextr].nombre
-                                    )
-                                    " />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                                <vs-td :data="data[indextr].status">
+                                    <p v-if="data[indextr].status == 1">
+                                        Activo <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else>Cancelado <span class="dot-danger"></span></p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].servicios_gratis">
+                                    <div class="flex justify-center">
+                                        <img v-if="data[indextr].servicios_gratis > 0" class="img-btn-24 mx-2"
+                                            src="@assets/images/free_yes.svg"
+                                            title="Ver servicios gratis de este cliente"
+                                            @click="verServiciosGratis(data[indextr])" />
+                                        <img v-else class="img-btn-24 mx-2" src="@assets/images/free_no.svg"
+                                            title="Ver servicios gratis de este cliente"
+                                            @click="verServiciosGratis(data[indextr])" />
+                                    </div>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id_user">
+                                    <div class="flex justify-center">
+                                        <img class="img-btn-24 mx-2" src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
+                                    </div>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id_user">
+                                    <div class="flex justify-center">
+                                        <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/edit.svg"
+                                            title="Modificar" @click="openModificar(data[indextr].id)" />
+                                        <img v-if="data[indextr].status == 1" class="img-btn-24 mx-2"
+                                            src="@assets/images/switchon.svg" title="Deshabilitar" @click="
+                                                deleteCliente(
+                                                    data[indextr].id,
+                                                    data[indextr].nombre
+                                                )
+                                                " />
+                                        <img v-else class="img-btn-24 mx-2" src="@assets/images/switchoff.svg"
+                                            title="Habilitar" @click="
+                                                altaCliente(
+                                                    data[indextr].id,
+                                                    data[indextr].nombre
+                                                )
+                                                " />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual"
+                            class="mt-8"></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
-        <pre ref="pre"></pre>
+
 
         <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
@@ -210,6 +220,13 @@ export default {
         estado: function (newVal, previousVal) {
             this.get_data(1);
         }
+    },
+    computed: {
+        noDataFound() {
+            return (
+                this.clientes.length === 0
+            );
+        },
     },
     data() {
         return {

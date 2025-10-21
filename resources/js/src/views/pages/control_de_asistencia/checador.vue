@@ -4,11 +4,11 @@
       <vs-tab label="REGISTROS DEL CHECADOR" class=""></vs-tab>
       <vs-tab label="TARJETAS DE ASISTENCIA"></vs-tab>
     </vs-tabs>
-    <div class="" v-show="activeTab == 0">
+    <div :class="[activeTab === 0 ? 'flex flex-col flex-1' : '']" v-show="activeTab == 0">
       <Registros :datos="datosEmpresa" :erroresForm="erroresRegistros" @actualizar="actualizar"
         scope="this api replaced by slot-scope in 2.5.0+"></Registros>
     </div>
-    <div class=" " v-show="activeTab == 1">
+    <div :class="[activeTab === 1 ? 'flex flex-col flex-1' : '']" v-show="activeTab == 1">
       <Tarjetas></Tarjetas>
     </div>
     <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"

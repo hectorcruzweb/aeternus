@@ -14,11 +14,9 @@
       <RegistroPublico :datos="datosEmpresa" :erroresForm="erroresRegistroPublico" @actualizar="actualizar">
       </RegistroPublico>
     </div>
-
     <div class=" " v-show="activeTab == 2">
       <Cementerio :datos="datosEmpresa" :erroresForm="erroresCementerio" @actualizar="actualizar"></Cementerio>
     </div>
-
     <div class=" " v-show="activeTab == 3">
       <Facturacion :datos="datosEmpresa" :erroresForm="erroresFacturacion" @actualizar="actualizar"></Facturacion>
     </div>

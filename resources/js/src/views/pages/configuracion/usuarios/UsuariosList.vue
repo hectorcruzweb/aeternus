@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="text-right buttons-container-header">
             <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
                 @click="verFormulario('agregar')">
                 <span>Registrar Usuario</span>
@@ -61,64 +61,75 @@
             </vx-card>
         </div>
 
-        <br />
-        <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
-            :max-items="serverOptions.per_page.value" :data="users" noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Usuarios registrados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Clave</vs-th>
-                <vs-th>Nombre</vs-th>
-                <vs-th>Usuario</vs-th>
-                <vs-th>Género</vs-th>
-                <vs-th>Estado</vs-th>
-                <vs-th>Rol</vs-th>
-                <vs-th>Área</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id_user">
-                        <span class="font-bold">
-                            {{ data[indextr].id_user }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
-                    <vs-td :data="data[indextr].email">{{ data[indextr].email }}</vs-td>
-                    <vs-td :data="data[indextr].genero">
-                        <p v-if="data[indextr].genero == 1">Hombre</p>
-                        <p v-else>Mujer</p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].estado">
-                        <p v-if="data[indextr].estado == 1">
-                            Activo <span class="dot-success"></span>
-                        </p>
-                        <p v-else>Sin Acceso <span class="dot-warning"></span></p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].rol">{{ data[indextr].rol }}</vs-td>
-                    <vs-td :data="data[indextr].area_des">{{ data[indextr].area_des }}</vs-td>
-                    <vs-td :data="data[indextr].id_user">
-                        <div class="flex justify-center">
-                            <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/edit.svg" title="Modificar"
-                                @click="openModificar(data[indextr].id_user)" />
-                            <img v-if="data[indextr].estado == 1" class="img-btn-24 mx-2"
-                                src="@assets/images/switchon.svg" title="Deshabilitar" @click="
-                                    deleteUsuario(data[indextr].id_user, data[indextr].nombre)
-                                    " />
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
+                        :max-items="serverOptions.per_page.value" :data="users" noDataText="0 Resultados"
+                        class="tabla-datos">
+                        <template slot="header">
+                            <h3>Listado de Usuarios registrados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Clave</vs-th>
+                            <vs-th>Nombre</vs-th>
+                            <vs-th>Usuario</vs-th>
+                            <vs-th>Género</vs-th>
+                            <vs-th>Estado</vs-th>
+                            <vs-th>Rol</vs-th>
+                            <vs-th>Área</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                <vs-td :data="data[indextr].id_user">
+                                    <span class="font-bold">
+                                        {{ data[indextr].id_user }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre">{{ data[indextr].nombre }}</vs-td>
+                                <vs-td :data="data[indextr].email">{{ data[indextr].email }}</vs-td>
+                                <vs-td :data="data[indextr].genero">
+                                    <p v-if="data[indextr].genero == 1">Hombre</p>
+                                    <p v-else>Mujer</p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].estado">
+                                    <p v-if="data[indextr].estado == 1">
+                                        Activo <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else>Sin Acceso <span class="dot-warning"></span></p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].rol">{{ data[indextr].rol }}</vs-td>
+                                <vs-td :data="data[indextr].area_des">{{ data[indextr].area_des }}</vs-td>
+                                <vs-td :data="data[indextr].id_user">
+                                    <div class="flex justify-center">
+                                        <img class="cursor-pointer img-btn-18 mx-2" src="@assets/images/edit.svg"
+                                            title="Modificar" @click="openModificar(data[indextr].id_user)" />
+                                        <img v-if="data[indextr].estado == 1" class="img-btn-24 mx-2"
+                                            src="@assets/images/switchon.svg" title="Deshabilitar" @click="
+                                                deleteUsuario(data[indextr].id_user, data[indextr].nombre)
+                                                " />
 
-                            <img v-else class="img-btn-24 mx-2" src="@assets/images/switchoff.svg" title="Habilitar"
-                                @click="
-                                    habilitarUsuario(data[indextr].id_user, data[indextr].nombre)
-                                    " />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="ver" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                                        <img v-else class="img-btn-24 mx-2" src="@assets/images/switchoff.svg"
+                                            title="Habilitar" @click="
+                                                habilitarUsuario(data[indextr].id_user, data[indextr].nombre)
+                                                " />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination v-if="ver" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
 
         <formularioUsuarios v-if="verFormularioUsuarios" :id_usuario="id_usuario_modificar" :tipo="tipoFormulario"
             :show="verFormularioUsuarios" @closeVentana="closeVentana" @get_data="get_data(actual)">
@@ -171,6 +182,13 @@ export default {
             (async () => {
                 await this.get_data(1);
             })();
+        },
+    },
+    computed: {
+        noDataFound() {
+            return (
+                this.users.length === 0
+            );
         },
     },
     data() {

@@ -34,10 +34,6 @@
                 </div>
             </vx-card>
         </div>
-
-        <br />
-
-
         <div id="resultados" class="mt-5 flex flex-col flex-1">
             <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
                 <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
