@@ -332,7 +332,5 @@ export default {
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
-
-
 };
 </script>

@@ -8,41 +8,22 @@
       <!--<vs-tab label="FACTURACIÓN" icon="fingerprint"></vs-tab>-->
     </vs-tabs>
     <div class="" v-show="activeTab == 0">
-      <Funeraria
-        :datos="datosEmpresa"
-        :erroresForm="erroresFuneraria"
-        @actualizar="actualizar"
-      ></Funeraria>
+      <Funeraria :datos="datosEmpresa" :erroresForm="erroresFuneraria" @actualizar="actualizar"></Funeraria>
     </div>
     <div class="" v-show="activeTab == 1">
-      <RegistroPublico
-        :datos="datosEmpresa"
-        :erroresForm="erroresRegistroPublico"
-        @actualizar="actualizar"
-      ></RegistroPublico>
+      <RegistroPublico :datos="datosEmpresa" :erroresForm="erroresRegistroPublico" @actualizar="actualizar">
+      </RegistroPublico>
     </div>
 
     <div class=" " v-show="activeTab == 2">
-      <Cementerio
-        :datos="datosEmpresa"
-        :erroresForm="erroresCementerio"
-        @actualizar="actualizar"
-      ></Cementerio>
+      <Cementerio :datos="datosEmpresa" :erroresForm="erroresCementerio" @actualizar="actualizar"></Cementerio>
     </div>
 
     <div class=" " v-show="activeTab == 3">
-      <Facturacion
-        :datos="datosEmpresa"
-        :erroresForm="erroresFacturacion"
-        @actualizar="actualizar"
-      ></Facturacion>
+      <Facturacion :datos="datosEmpresa" :erroresForm="erroresFacturacion" @actualizar="actualizar"></Facturacion>
     </div>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="operConfirmar = false"
-      :accion="accionNombre"
-    ></Password>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+      @closeVerificar="operConfirmar = false" :accion="accionNombre"></Password>
     <pdf :show="verPdf" :pdf="pdfLink" @closePdf="verPdf = false"></pdf>
   </div>
 </template>

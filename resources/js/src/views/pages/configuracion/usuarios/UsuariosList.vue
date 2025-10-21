@@ -120,10 +120,11 @@
             <vs-pagination v-if="ver" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
 
-        <formularioUsuarios :id_usuario="id_usuario_modificar" :tipo="tipoFormulario" :show="verFormularioUsuarios"
-            @closeVentana="closeVentana" @get_data="get_data(actual)"></formularioUsuarios>
+        <formularioUsuarios v-if="verFormularioUsuarios" :id_usuario="id_usuario_modificar" :tipo="tipoFormulario"
+            :show="verFormularioUsuarios" @closeVentana="closeVentana" @get_data="get_data(actual)">
+        </formularioUsuarios>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
     </div>
@@ -146,6 +147,7 @@ import {
 import vSelect from "vue-select";
 
 export default {
+    name: "UsuariosList",
     components: {
         "v-select": vSelect,
         Password,
@@ -432,9 +434,21 @@ export default {
             this.verFormularioUsuarios = true;
         },
     },
+
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
         this.get_roles();
         this.get_data(this.actual);
+    },
+    beforeDestroy() {
+        this.$log("Before Component destroyed! " + this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

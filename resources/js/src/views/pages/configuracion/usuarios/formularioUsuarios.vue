@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-80 bg-content-theme" close="cancel" :title="title" :active.sync="showVentana"
-            ref="usuarios">
+        <vs-popup class="forms-popup popup-80 bg-content-theme" close="cancel" :title="title" :ref="this.$options.name"
+            :active="localShow" ref="usuarios">
             <div>
                 <vs-tabs alignment="left" position="top" v-model="activeTab">
                     <vs-tab label="DATOS DEL EMPLEADO / USUARIO" class=""></vs-tab>
@@ -255,12 +255,12 @@
                 </div>
             </div>
         </vs-popup>
-        <Password :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
-            :accion="accionNombre"></Password>
-        <ConfirmarDanger :show="openConfirmarDanger" :callback-on-success="callBackConfirmar"
+        <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+            @closeVerificar="closeChecker" :accion="accionNombre"></Password>
+        <ConfirmarDanger v-if="openConfirmarDanger" :show="openConfirmarDanger" :callback-on-success="callBackConfirmar"
             @closeVerificar="openConfirmarDanger = false" :accion="accionConfirmarDanger"
             :confirmarButton="botonConfirmarDanger"></ConfirmarDanger>
-        <ConfirmarAceptar :show="openConfirmarAceptar" :callback-on-success="callback"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar" :callback-on-success="callback"
             @closeVerificar="openConfirmarAceptar = false"
             :accion="'He revisado la información y quiero registrar a este usuario'"
             :confirmarButton="'Guardar Usuario'"></ConfirmarAceptar>
@@ -277,6 +277,7 @@ import { generosOptions, areasOptions } from "@/VariablesGlobales";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 
 export default {
+    name: "formularioUsuarios",
     components: {
         "v-select": vSelect,
         Password,
@@ -299,30 +300,36 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["usuarios"].$el.querySelector(".vs-icon").onclick = () => {
-                    this.cancel();
-                };
-                this.$nextTick(() =>
-                    this.$refs["nombre"].$el.querySelector("input").focus()
-                );
-                this.get_roles();
-                /**get puestos de trabajo */
-                this.get_puestos();
-                if (this.getTipoformulario == "agregar") {
-                    this.title = "Registrar Nuevo Usuario";
-                } else {
-                    this.title = "Modificar Usuario";
-                    /**se cargan los datos del usuario */
-                    this.get_usuarioById(this.get_usuario_id);
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    // Only listen when visible = true
+                    this.get_roles();
+                    /**get puestos de trabajo */
+                    this.get_puestos();
+                    if (this.getTipoformulario == "agregar") {
+                        this.title = "Registrar Nuevo Usuario";
+                    } else {
+                        this.title = "Modificar Usuario";
+                        /**se cargan los datos del usuario */
+                        this.get_usuarioById(this.get_usuario_id);
+                    }
+                    this.$popupManager.register(
+                        this,
+                        this.cancel,
+                        "nombre"
+                    );
+                    //verificamos el origen del form para determinar que haremos justo al abrir el form.
+                    //obtener datos del cliente
                 }
-                //window.addEventListener("resize", this.resizeCanvas);
-            }
+                this.localShow = newValue;
+            },
         },
     },
     data() {
         return {
+            localShow: false,
             error_message: false,
             openConfirmarAceptar: false,
             title: "",
@@ -501,14 +508,17 @@ export default {
                 .catch(() => { });
         },
         cancel() {
-            this.botonConfirmarDanger = "Salir y limpiar";
-            this.accionConfirmarDanger =
-                "Esta acción limpiará los datos que capturó en el formulario.";
-            this.openConfirmarDanger = true;
-            this.callBackConfirmar = this.cerrarVentana;
+            if (this.getTipoformulario !== "agregar") {
+                this.botonConfirmarDanger = "Salir y limpiar";
+                this.accionConfirmarDanger =
+                    "Esta acción limpiará los datos que capturó en el formulario.";
+                this.openConfirmarDanger = true;
+                this.callBackConfirmar = this.cerrarVentana;
+            } else
+                this.cerrarVentana();
         },
         cerrarVentana() {
-            this.roles = { label: "Seleccione 1", value: "" };
+            /*this.roles = { label: "Seleccione 1", value: "" };
             this.genero = { label: "Seleccione 1", value: "" };
             this.form.rol_id = "";
             this.form.nombre = "";
@@ -526,6 +536,7 @@ export default {
             this.form.firma = "";
             this.form.firma_registrada = false;
             this.undo();
+            */
             this.$emit("closeVentana");
         },
         get_roles() {
@@ -667,8 +678,20 @@ export default {
             this.operConfirmar = false;
         },
     },
+
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
+        this.$log("Component mounted! " + this.$options.name);
         this.resizeCanvas();
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
