@@ -15,10 +15,9 @@ const PopupManager = {
 
         const popupId = popupInstance.$options.name;
 
-        // Espera a que el popup esté renderizado
         await Vue.nextTick();
 
-        // Busca el popup real dentro del componente
+        // --- Find popup element
         let popupEl = null;
         if (
             popupInstance.$refs &&
@@ -31,19 +30,43 @@ const PopupManager = {
         }
 
         if (!popupEl) {
-            console.warn(
-                `PopupManager: no popupEl found for ${popupId}, focus trapping may fail.`
-            );
+            console.warn(`PopupManager: no popupEl found for ${popupId}`);
             return;
         }
 
+        // --- Add to stack if new
         const exists = state.stack.find((p) => p.popupId === popupId);
         if (!exists) {
             state.stack.push({ popupId, closeFn, popupEl });
             this.updateFocusAndScroll();
         }
 
-        // 🔹 Determinar qué elemento enfocar
+        // --- Automatically attach .vs-icon click handler to call closeFn
+        Vue.nextTick(() => {
+            const icon = popupEl.querySelector(".vs-icon");
+            if (icon && typeof closeFn === "function") {
+                // Save handler reference for cleanup
+                const handler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        closeFn();
+                    } catch (err) {
+                        console.error(
+                            `PopupManager: closeFn error in ${popupId}`,
+                            err
+                        );
+                    }
+                };
+                icon.addEventListener("click", handler);
+
+                // store handler for later cleanup
+                const popup = state.stack.find((p) => p.popupId === popupId);
+                if (popup) popup.iconHandler = handler;
+            }
+        });
+
+        // --- Focus management (unchanged)
         Vue.nextTick(() => {
             setTimeout(() => {
                 let el = null;
@@ -64,7 +87,6 @@ const PopupManager = {
                 }
 
                 if (!el) return;
-
                 const inputOrButton =
                     el.querySelector("input, textarea, select, button") || el;
                 if (
@@ -73,7 +95,7 @@ const PopupManager = {
                 ) {
                     inputOrButton.focus();
                 }
-            }, 50); // espera 50ms extra a que el DOM interno del vs-popup se monte
+            }, 50);
         });
     },
 
@@ -84,13 +106,23 @@ const PopupManager = {
                     (p) => p.popupId === popupId
                 );
                 if (index !== -1) {
+                    const popup = state.stack[index];
+
+                    // Safe query for the icon without optional chaining
+                    const icon =
+                        popup && popup.popupEl
+                            ? popup.popupEl.querySelector(".vs-icon")
+                            : null;
+                    if (icon && popup.iconHandler) {
+                        icon.removeEventListener("click", popup.iconHandler);
+                    }
+
                     state.stack.splice(index, 1);
                     this.updateFocusAndScroll();
                 }
-            }, 50); // espera 50ms extra a que el DOM interno del vs-popup se monte
+            }, 50);
         });
     },
-
     handleEsc(e) {
         if ((e.key === "Escape" || e.key === "Esc") && state.stack.length > 0) {
             const topPopup = state.stack[state.stack.length - 1];

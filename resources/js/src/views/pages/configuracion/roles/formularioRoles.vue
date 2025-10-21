@@ -1,12 +1,6 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-80"
-      close="cancel"
-      :title="title"
-      :active.sync="showVentana"
-      ref="roles"
-    >
+    <vs-popup class="forms-popup popup-80" close="cancel" :title="title" :active="localShow" :ref="this.$options.name">
       <!--Nombre del rol-->
       <div class="form-group">
         <div class="title-form-group">
@@ -19,17 +13,8 @@
                 Nombre del Rol
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                data-vv-as=" "
-                ref="nombre"
-                name="nombre_rol"
-                data-vv-validate-on="blur"
-                v-validate="'required'"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Ingrese el nombre del rol"
-                v-model="form.rol"
-              />
+              <vs-input data-vv-as=" " ref="nombre" name="nombre_rol" data-vv-validate-on="blur" v-validate="'required'"
+                type="text" class="w-full pb-1 pt-1" placeholder="Ingrese el nombre del rol" v-model="form.rol" />
               <span class="">{{ errors.first("nombre_rol") }}</span>
               <span class="" v-if="this.errores.rol">{{ errores.rol[0] }}</span>
             </div>
@@ -46,54 +31,29 @@
         <div class="form-group-content">
           <div class="flex flex-wrap">
             <div v-for="seccion in modulos" :key="seccion.id" class="w-full">
-              <div
-                class="size-small uppercase font-medium color-black-900 px-2 py-1"
-              >
+              <div class="size-small uppercase font-medium color-black-900 px-2 py-1">
                 {{ seccion.seccion }}
                 <vs-divider />
               </div>
-              <div
-                class="w-full"
-                v-for="modulo in seccion.modulos"
-                :key="modulo.id"
-              >
-                <div
-                  v-if="es_agrupador(modulo) == false"
-                  class="flex flex-wrap theme-background mb-4 py-4 px-4 rounded-lg"
-                >
+              <div class="w-full" v-for="modulo in seccion.modulos" :key="modulo.id">
+                <div v-if="es_agrupador(modulo) == false"
+                  class="flex flex-wrap theme-background mb-4 py-4 px-4 rounded-lg">
                   <div class="md:w-3/12">
                     <div class="pb-2 size-base font-medium color-copy">
                       {{ modulo.modulo }}
                     </div>
-                    <vs-checkbox
-                      ref="permisos_modulo"
-                      color="success"
-                      class="size-small font-medium color-copy py-2"
-                      v-model="form.modulos"
-                      :vs-value="modulo.id"
-                      >Todos los permisos</vs-checkbox
-                    >
+                    <vs-checkbox ref="permisos_modulo" color="success" class="size-small font-medium color-copy py-2"
+                      v-model="form.modulos" :vs-value="modulo.id">Todos los permisos</vs-checkbox>
                   </div>
                   <div class="w-full md:w-9/12">
                     <div class="flex flex-wrap">
                       <!--Permisos del modulo-->
-                      <ul
-                        v-for="permiso in modulo.permisos"
-                        :key="permiso.id"
-                        class="w-full sm:w-6/12 md:w-6/12 lg:w-4/12 text-center"
-                      >
+                      <ul v-for="permiso in modulo.permisos" :key="permiso.id"
+                        class="w-full sm:w-6/12 md:w-6/12 lg:w-4/12 text-center">
                         <li class="px-3 pt-2">
-                          <label
-                            class="text-center size-small font-medium color-copy"
-                            >{{ permiso.permiso }}</label
-                          >
-                          <vs-switch
-                            ref="permiso"
-                            color="primary"
-                            v-model="form.permisos"
-                            :vs-value="permiso.id"
-                            class="mx-auto"
-                          />
+                          <label class="text-center size-small font-medium color-copy">{{ permiso.permiso }}</label>
+                          <vs-switch ref="permiso" color="primary" v-model="form.permisos" :vs-value="permiso.id"
+                            class="mx-auto" />
                         </li>
                       </ul>
                     </div>
@@ -117,41 +77,21 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Crear Rol</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Crear Rol</span>
             <span class="" v-else>Modificar Rol</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarDanger"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarDanger = false"
-      :accion="accionConfirmarDanger"
-      :confirmarButton="botonConfirmarDanger"
-    ></ConfirmarDanger>
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callback"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar este rol'"
-      :confirmarButton="'Crear Rol'"
-    ></ConfirmarAceptar>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarDanger" :z_index="'z-index58k'" :show="openConfirmarDanger"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarDanger = false"
+      :accion="accionConfirmarDanger" :confirmarButton="botonConfirmarDanger"></ConfirmarDanger>
+    <ConfirmarAceptar :z_index="'z-index58k'" :show="openConfirmarAceptar" :callback-on-success="callback"
+      @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar este rol'"
+      :confirmarButton="'Crear Rol'"></ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -164,6 +104,7 @@ import ConfirmarDanger from "@pages/ConfirmarDanger";
 import { generosOptions } from "@/VariablesGlobales";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 export default {
+  name: "formularioRoles",
   components: {
     "v-select": vSelect,
     Password,
@@ -186,27 +127,33 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$refs["roles"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancel();
-        };
-        this.$nextTick(() =>
-          this.$refs["nombre"].$el.querySelector("input").focus()
-        );
-        /**obtengo los datos para llenar el form con los permisos segun su modulo */
-        this.get_modulos_permisos();
-
-        if (this.getTipoformulario == "agregar") {
-          this.title = "Registrar Rol de Usuario";
-        } else {
-          this.title = "Modificar Rol de Usuario";
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          // Only listen when visible = true
+          /**obtengo los datos para llenar el form con los permisos segun su modulo */
+          await this.get_modulos_permisos();
+          if (this.getTipoformulario == "agregar") {
+            this.title = "Registrar Rol de Usuario";
+          } else {
+            this.title = "Modificar Rol de Usuario";
+          }
+          this.$popupManager.register(
+            this,
+            this.cancel,
+            "nombre"
+          );
+          //verificamos el origen del form para determinar que haremos justo al abrir el form.
+          //obtener datos del cliente
         }
-      }
+        this.localShow = newValue;
+      },
     },
   },
   data() {
     return {
+      localShow: false,
       openConfirmarAceptar: false,
       title: "",
       botonConfirmarDanger: "",
@@ -228,14 +175,6 @@ export default {
     };
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     getTipoformulario: {
       get() {
         return this.tipo;
@@ -334,16 +273,20 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     cancel() {
-      this.botonConfirmarDanger = "Salir y limpiar";
-      this.accionConfirmarDanger =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarDanger = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario !== "agregar") {
+        this.botonConfirmarDanger = "Salir y limpiar";
+        this.accionConfirmarDanger =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarDanger = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else
+        this.cerrarVentana();
     },
     cerrarVentana() {
+      /*
       this.form.rol_id = "";
       this.form.rol = "";
       this.form.modulos = [];
@@ -365,54 +308,59 @@ export default {
               ).checked = false;
               index_permiso++;
             });
-            /**checando el seleccionar todos de caca modulo si aplica */
+            //checando el seleccionar todos de caca modulo si aplica
             index_modulo++;
           });
         });
       });
-
+*/
       this.$emit("closeVentana");
     },
-
-    get_modulos_permisos() {
+    async get_modulos_permisos() {
       this.$vs.loading();
-      roles
-        .get_modulos_permisos()
-        .then((res) => {
-          this.modulos = res.data;
-          this.$nextTick(() => {
-            let index_modulo = 0;
-            let permiso_index = 0;
-            this.modulos.forEach((secciones) => {
-              secciones.modulos.forEach((modulo) => {
-                if (modulo.url != "") {
-                  this.$refs["permisos_modulo"][index_modulo].$el.querySelector(
-                    "input"
-                  ).onchange = ($event) => {
-                    /**revisar si se activo el check */
-                    this.checarTodosModulo($event, modulo.id);
-                  };
-                  index_modulo++;
-                }
-                modulo.permisos.forEach((permiso) => {
-                  this.$refs["permiso"][permiso_index].$el.querySelector(
-                    "input"
-                  ).onchange = ($event) => {
-                    this.updateChecarTodosModulo($event, modulo.id, permiso.id);
-                  };
-                  permiso_index++;
-                });
+      try {
+        // Call the API 
+        this.modulos = await roles.get_modulos_permisos();
+        if (!this.modulos || typeof this.modulos !== "object") {
+          throw new Error(
+            "Respuesta inválida en get_modulos_permisos"
+          );
+        }
+        this.$nextTick(() => {
+          let index_modulo = 0;
+          let permiso_index = 0;
+          this.modulos.forEach((secciones) => {
+            secciones.modulos.forEach((modulo) => {
+              if (modulo.url != "") {
+                this.$refs["permisos_modulo"][index_modulo].$el.querySelector(
+                  "input"
+                ).onchange = ($event) => {
+                  /**revisar si se activo el check */
+                  this.checarTodosModulo($event, modulo.id);
+                };
+                index_modulo++;
+              }
+              modulo.permisos.forEach((permiso) => {
+                this.$refs["permiso"][permiso_index].$el.querySelector(
+                  "input"
+                ).onchange = ($event) => {
+                  this.updateChecarTodosModulo($event, modulo.id, permiso.id);
+                };
+                permiso_index++;
               });
             });
-            if (this.getTipoformulario == "modificar") {
-              this.get_rol_id(this.get_rol_id_modificar);
-            }
           });
-          this.$vs.loading.close();
-        })
-        .catch((err) => {
-          this.$vs.loading.close();
+          if (this.getTipoformulario == "modificar") {
+            this.get_rol_id(this.get_rol_id_modificar);
+          }
         });
+
+      } catch (error) {
+        this.$error("Error fetching modulos permisos:", error);
+        this.cancel();
+      } finally {
+        this.$vs.loading.close();
+      }
     },
 
     updateChecarTodosModulo(event, modulo_id, permiso_id) {
@@ -623,6 +571,19 @@ export default {
     closeChecker() {
       this.operConfirmar = false;
     },
+  },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

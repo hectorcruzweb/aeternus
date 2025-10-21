@@ -13,17 +13,17 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get(call, {
-                    cancelToken: new CancelToken(c => {
+                    cancelToken: new CancelToken((c) => {
                         self.cancel = c;
                     }),
                     params: {
-                        rol_id: param
-                    }
+                        rol_id: param,
+                    },
                 })
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -34,15 +34,15 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .get("/get_roles", {
-                    cancelToken: new CancelToken(c => {
+                    cancelToken: new CancelToken((c) => {
                         self.cancel = c;
                     }),
-                    params: param
+                    params: param,
                 })
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     if (axiosSuper.isCancel(error)) {
                         reject(error.message);
                     } else {
@@ -52,18 +52,13 @@ export default {
         });
     },
 
-    get_modulos_permisos() {
-        let call = "/get_modulos_permisos";
-        return new Promise((resolve, reject) => {
-            axios
-                .get(call)
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
+    async get_modulos_permisos() {
+        try {
+            const response = await axios.get("/get_modulos_permisos");
+            return response.data; // return only the data
+        } catch (error) {
+            throw error; // propagate the error so Vue can handle it
+        }
     },
 
     /**agregar rol */
@@ -71,10 +66,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/add_roles", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -83,10 +78,10 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/update_rol", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
@@ -96,12 +91,12 @@ export default {
         return new Promise((resolve, reject) => {
             axios
                 .post("/delete_rol", param)
-                .then(response => {
+                .then((response) => {
                     resolve(response);
                 })
-                .catch(error => {
+                .catch((error) => {
                     reject(error);
                 });
         });
-    }
+    },
 };

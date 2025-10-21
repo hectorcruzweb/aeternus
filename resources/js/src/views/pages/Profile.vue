@@ -116,12 +116,12 @@
                                         <div>
                                             <span class="text-danger text-sm">{{
                                                 errors.first("password")
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="mt-2">
                                             <span class="text-danger text-sm" v-if="this.errores.password">{{
                                                 errores.password[0]
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -136,7 +136,7 @@
                                         <div>
                                             <span class="text-danger text-sm">{{
                                                 errors.first("repetirPassword")
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="mt-2">
                                             <span class="text-danger text-sm" v-if="this.errores.repetirPassword">{{
@@ -157,8 +157,8 @@
                                         </p>
                                     </div>
                                     <div class="w-full sm:w-12/12 md:w-3/12 lg:w-3/12 xl:w-3/12 px-2">
-                                        <vs-button size="small" class="ml-auto" color="success"
-                                            icon="add_circle_outline" @click="mandarModificar">Actualizar</vs-button>
+                                        <vs-button class="ml-auto" color="success"
+                                            @click="mandarModificar">Actualizar</vs-button>
                                     </div>
                                 </div>
                             </div>
@@ -167,8 +167,8 @@
                 </div>
             </div>
         </div>
-        <Password :show="operConfirmar" :callback-on-success="ActualizarDatos" @closeVerificar="operConfirmar = false"
-            :accion="'Actualizar perfil'"></Password>
+        <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="ActualizarDatos"
+            @closeVerificar="operConfirmar = false" :accion="'Actualizar perfil'"></Password>
     </div>
 </template>
 

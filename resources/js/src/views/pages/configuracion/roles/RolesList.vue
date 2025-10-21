@@ -1,9 +1,8 @@
 <template>
     <div>
-        <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="verFormulario('agregar')">
-                <span>Registrar Rol</span>
+        <div class="text-right buttons-container-header">
+            <vs-button class="w-full md:w-auto md:ml-2 md:mt-0" color="success" @click="verFormulario('agregar')">
+                <span>Registrar Rol de Usuaurio</span>
             </vs-button>
         </div>
 
@@ -37,50 +36,65 @@
         </div>
 
         <br />
-        <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
-            :max-items="serverOptions.per_page.value" :data="roles" noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Roles registrados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Número de Rol</vs-th>
-                <vs-th>Rol</vs-th>
 
-                <vs-th>Estado</vs-th>
 
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id_rol">{{ data[indextr].id_rol }}</vs-td>
-                    <vs-td :data="data[indextr].nombre">{{ data[indextr].rol }}</vs-td>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table :sst="true" @search="handleSearch" @change-page="handleChangePage" @sort="handleSort"
+                        :max-items="serverOptions.per_page.value" :data="roles" noDataText="0 Resultados"
+                        class="tabla-datos">
+                        <template slot="header">
+                            <h3>Listado de Roles registrados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Número de Rol</vs-th>
+                            <vs-th>Rol</vs-th>
 
-                    <vs-td :data="data[indextr].estado">
-                        <p v-if="data[indextr].status_rol == 1" class="text-success font-medium">
-                            Activo
-                        </p>
-                        <p v-else class="text-danger font-medium">Sin Acceso</p>
-                    </vs-td>
+                            <vs-th>Estado</vs-th>
 
-                    <vs-td :data="data[indextr].id_rol">
-                        <div class="flex justify-center">
-                            <img class="img-btn-18 mx-2" src="@assets/images/edit.svg" title="Modificar"
-                                @click="openModificar(data[indextr].id_rol)" />
-                            <img class="img-btn-24 mx-2" src="@assets/images/trash.svg" title="Eliminar Rol"
-                                @click="deleteRol(data[indextr].id_rol, data[indextr].rol)" />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="ver" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                <vs-td :data="data[indextr].id_rol">{{ data[indextr].id_rol }}</vs-td>
+                                <vs-td :data="data[indextr].nombre">{{ data[indextr].rol }}</vs-td>
+
+                                <vs-td :data="data[indextr].estado">
+                                    <p v-if="data[indextr].status_rol == 1">
+                                        Activo
+                                        <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else>
+                                        Sin Acceso
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id_rol">
+                                    <div class="flex justify-center">
+                                        <img class="img-btn-18 mx-2" src="@assets/images/edit.svg" title="Modificar"
+                                            @click="openModificar(data[indextr].id_rol)" />
+                                        <img class="img-btn-24 mx-2" src="@assets/images/trash.svg" title="Eliminar Rol"
+                                            @click="deleteRol(data[indextr].id_rol, data[indextr].rol)" />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination v-if="ver" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <formularioRoles :id_rol="id_rol_modificar" :tipo="tipoFormulario" :show="verFormularioRoles"
-            @closeVentana="closeVentana" @get_data="get_data(actual)"></formularioRoles>
+        <formularioRoles v-if="verFormularioRoles" :id_rol="id_rol_modificar" :tipo="tipoFormulario"
+            :show="verFormularioRoles" @closeVentana="closeVentana" @get_data="get_data(actual)"></formularioRoles>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
     </div>
@@ -99,10 +113,18 @@ import { mostrarOptions, estadosOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 
 export default {
+    name: "RolesList",
     components: {
         "v-select": vSelect,
         Password,
         formularioRoles,
+    },
+    computed: {
+        noDataFound() {
+            return (
+                this.roles.length === 0
+            );
+        },
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -295,8 +317,22 @@ export default {
             this.verFormularioRoles = true;
         },
     },
+
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
         this.get_data(this.actual);
     },
+    beforeDestroy() {
+        this.$log("Before Component destroyed! " + this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+
+
 };
 </script>

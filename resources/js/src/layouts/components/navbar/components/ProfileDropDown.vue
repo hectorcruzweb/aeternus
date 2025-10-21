@@ -33,7 +33,7 @@
     </vs-dropdown>
 
     <!-- Confirm logout -->
-    <ConfirmarDanger :show="openConfirmarSinPassword" :callback-on-success="logout"
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword" :callback-on-success="logout"
       @closeVerificar="openConfirmarSinPassword = false" :accion="'Esta operación lo sacará del sistema.'"
       :confirmarButton="'Confirmar y salir'" />
   </div>
