@@ -1,9 +1,16 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['confirm-form', z_index]" close="cancelar" title="contraseña" :active="localShow"
-            :ref="$options.name">
+        <vs-popup
+            :class="['confirm-form', z_index]"
+            close="cancelar"
+            title="contraseña"
+            :active="localShow"
+            :ref="$options.name"
+        >
             <div class="text-center password_icono hidden"></div>
-            <div class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2">
+            <div
+                class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2"
+            >
                 confirmar contraseña
             </div>
             <div class="mt-3 text-center hidden">
@@ -16,14 +23,32 @@
                 que es un usuario autorizado para realizar esta operación.
             </div>
             <div class="w-full px-2 mt-6 mx-auto">
-                <vs-input maxlength="50" autocomplete="one-time-code" size="large" inputmode="none"
-                    name="auth_verification" ref="confirmAuth" type="password" form="none" class="w-full"
-                    placeholder="Contraseña" v-model.trim="pass" @keyup.enter="acceptAlert" />
+                <vs-input
+                    maxlength="50"
+                    autocomplete="one-time-code"
+                    size="large"
+                    inputmode="none"
+                    name="auth_verification"
+                    ref="confirmAuth"
+                    type="password"
+                    form="none"
+                    class="w-full"
+                    placeholder="Contraseña"
+                    v-model.trim="pass"
+                    @keyup.enter="acceptAlert"
+                />
             </div>
             <div class="w-full text-right px-2 mt-6">
-                <span @click.prevent.stop="cancel" class="color-danger-900 my-2 mr-8 cursor-pointer">(Esc) Cerrar
-                    Ventana</span>
-                <vs-button class="w-auto md:ml-2 my-2 md:mt-0" color="success" @click.prevent="acceptAlert">
+                <span
+                    @click.prevent.stop="cancel"
+                    class="color-danger-900 my-2 mr-8 cursor-pointer"
+                    >(Esc) Cerrar Ventana</span
+                >
+                <vs-button
+                    class="w-auto md:ml-2 my-2 md:mt-0"
+                    color="success"
+                    @click.prevent="acceptAlert"
+                >
                     <span>Continuar</span>
                 </vs-button>
             </div>
@@ -59,7 +84,11 @@ export default {
             handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(this, this.cancel);
+                    this.$popupManager.register(
+                        this,
+                        this.cancel,
+                        "confirmAuth"
+                    );
                 } else {
                     this.$popupManager.unregister(this.$options.name);
                 }

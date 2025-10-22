@@ -117,7 +117,7 @@ const PopupManager = {
                     state.stack.splice(index, 1);
                     this.updateFocusAndScroll();
                 }
-            }, 50);
+            }, 100);
         });
     },
     handleEsc(e) {
