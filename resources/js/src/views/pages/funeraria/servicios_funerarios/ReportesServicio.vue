@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-80" title="expediente de servicio funerario" :active.sync="showVentana"
-            ref="lista_reportes">
+        <vs-popup class="forms-popup popup-80" title="expediente de servicio funerario" :active="localShow"
+            :ref="this.$options.name">
             <div class="pb-6">
                 <div class="flex flex-wrap">
                     <div class="w-full" v-if="datosSolicitud.servicio_id">
@@ -180,16 +180,15 @@
                     </vs-table>
                 </div>
             </div>
-
-            <Reporteador :header="'consultar documentos de venta de propiedad'" :show="openReportesLista"
-                :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+            <Reporteador v-if="openReportesLista" :header="'consultar documentos de venta de propiedad'"
+                :show="openReportesLista" :listadereportes="ListaReportes" :request="request"
+                @closeReportes="openReportesLista = false">
             </Reporteador>
-
-            <FormularioPagos :referencia="referencia" :show="verFormularioPagos" @closeVentana="closeFormularioPagos"
-                @retorno_pagos="retorno_pagos"></FormularioPagos>
-            <CancelarPago :z_index="'z-index58k'" :show="openCancelar" @closeCancelarPago="closeCancelarPago"
-                @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
-            <Firmas :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
+            <FormularioPagos v-if="verFormularioPagos" :referencia="referencia" :show="verFormularioPagos"
+                @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos"></FormularioPagos>
+            <CancelarPago v-if="openCancelar" :z_index="'z-index58k'" :show="openCancelar"
+                @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
+            <Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
                 :operacion_id="get_solicitud_id" :tipo="'solicitud'" @closeFirmas="openFirmas = false"></Firmas>
         </vs-popup>
     </div>
@@ -202,6 +201,7 @@ import pagos from "@services/pagos";
 import FormularioPagos from "@pages/pagos/FormularioPagos";
 import Firmas from "@pages/Firmas";
 export default {
+    name: "ReportesServicioFuneraria",
     components: {
         Reporteador,
         FormularioPagos,
@@ -224,13 +224,10 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["lista_reportes"].$el.querySelector(".vs-icon").onclick =
-                    () => {
-                        this.cancelar();
-                    };
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_solicitudes_servicios_id();
                     if (this.operacion_id != "") {
                         this.solicitudes_id = this.operacion_id;
@@ -245,23 +242,18 @@ export default {
                             ""
                         );
                     }
-                })();
-            } else {
-                /**cerrar ventana */
-                this.datosSolicitud = [];
-                this.total = 0;
-            }
+                    this.$popupManager.register(this, this.cancelar, "input");
+                } else {
+                    /**cerrar ventana */
+                    this.datosSolicitud = [];
+                    this.total = 0;
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
         get_solicitud_id: {
             get() {
                 return this.id_solicitud;
@@ -281,6 +273,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             id_pago: "",
             openCancelar: false,
             referencia: "",
@@ -639,16 +632,18 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    //this.cancelar();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

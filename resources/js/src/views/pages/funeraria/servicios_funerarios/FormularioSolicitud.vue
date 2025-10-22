@@ -1,9 +1,9 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-75" close="cancelar" fullscreen :title="getTipoformulario == 'modificar'
+        <vs-popup :class="['forms-popup popup-75', z_index]" close="cancelar" fullscreen :title="getTipoformulario == 'modificar'
             ? 'Modificar Solicitud de Servicio Funerario'
             : 'Solicitud de Servicio Funerario'
-            " :active.sync="showVentana" ref="formulario">
+            " :active="localShow" :ref="this.$options.name">
             <div class="flex flex-wrap">
                 <div class="w-full">
                     <!--Contenido del plan-->
@@ -33,7 +33,7 @@
                                     <span>{{ errors.first("fecha_solicitud") }}</span>
                                     <span v-if="this.errores.fecha_solicitud">{{
                                         errores.fecha_solicitud[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full px-2 input-text">
@@ -47,7 +47,7 @@
                                     <span>{{ errors.first("nombre_afectado") }}</span>
                                     <span v-if="this.errores.nombre_afectado">{{
                                         errores.nombre_afectado[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full xl:w-6/12 px-2 input-text">
@@ -61,7 +61,7 @@
                                     <span>{{ errors.first("ubicacion_recoger") }}</span>
                                     <span v-if="this.errores.ubicacion_recoger">{{
                                         errores.ubicacion_recoger[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full xl:w-6/12 px-2 input-text">
                                     <label>
@@ -77,7 +77,7 @@
                                     <span>{{ errors.first("recogio") }}</span>
                                     <span v-if="this.errores['recogio.value']">{{
                                         errores["recogio.value"][0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full xl:w-6/12 input-text px-2">
@@ -91,7 +91,7 @@
                                     <span>{{ errors.first("nombre_informante") }}</span>
                                     <span v-if="this.errores.nombre_informante">{{
                                         errores.nombre_informante[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
@@ -102,7 +102,7 @@
                                     <span>{{ errors.first("telefono_informante") }}</span>
                                     <span v-if="this.errores.telefono_informante">{{
                                         errores.telefono_informante[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
@@ -113,7 +113,7 @@
                                     <span>{{ errors.first("parentesco_informante") }}</span>
                                     <span v-if="this.errores.parentesco_informante">{{
                                         errores.parentesco_informante[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                                     <span>{{ errors.first("nombre_contratante_temp") }}</span>
                                     <span v-if="this.errores.nombre_contratante_temp">{{
                                         errores.nombre_contratante_temp[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
@@ -145,7 +145,7 @@
                                     <span>{{ errors.first("telefono_contratante_temp") }}</span>
                                     <span v-if="this.errores.telefono_contratante_temp">{{
                                         errores.telefono_contratante_temp[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
@@ -156,7 +156,7 @@
                                     <span>{{ errors.first("parentesco_contratante_temp") }}</span>
                                     <span v-if="this.errores.parentesco_contratante_temp">{{
                                         errores.parentesco_contratante_temp[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div class="w-full input-text px-2">
                                     <label> Dirección del contratante </label>
@@ -166,7 +166,7 @@
                                     <span>{{ errors.first("direccion_contratante_temp") }}</span>
                                     <span v-if="this.errores.direccion_contratante_temp">{{
                                         errores.direccion_contratante_temp[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full input-text py-6 px-2">
@@ -198,13 +198,13 @@
 
             <!--fin solicitud-->
         </vs-popup>
-        <Password :show="openPassword" :callback-on-success="callback" @closeVerificar="closePassword"
-            :accion="accionNombre"></Password>
-        <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+        <Password v-if="openPassword" :show="openPassword" :z_index="'z-index59k'" :callback-on-success="callback"
+            @closeVerificar="closePassword" :accion="accionNombre"></Password>
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-        <ConfirmarAceptar :z_index="'z-index58k'" :show="openConfirmarAceptar"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index58k'" :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
             :accion="'He revisado la información y quiero guardar la solicitud'" :confirmarButton="'Guardar Solicitud'">
         </ConfirmarAceptar>
@@ -227,6 +227,7 @@ import ClientesBuscador from "@pages/clientes/searcher.vue";
 import { alfabeto, configdateTimePickerWithTime } from "@/VariablesGlobales";
 
 export default {
+    name: "FormularioSolicitud",
     components: {
         "v-select": vSelect,
         flatPickr,
@@ -249,18 +250,17 @@ export default {
             required: false,
             default: 0,
         },
+        z_index: {
+            type: String,
+            required: false,
+            default: "z-index58k",
+        },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            this.limpiarValidation();
-            if (newValue == true) {
-                this.$nextTick(() =>
-                    this.$refs["fallecido"].$el.querySelector("input").focus()
-                );
-                this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-                    this.cancelar();
-                };
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_personal_recoger();
                     if (this.getTipoformulario == "agregar") {
                         /**acciones cuando el formulario es de agregar */
@@ -271,10 +271,12 @@ export default {
                         /**se cargan los datos al formulario */
                         await this.get_solicitudes_servicios();
                     }
-                })();
-            } else {
-                /**acciones al cerrar el formulario */
-            }
+                    this.$popupManager.register(this, this.cancelar, "fallecido");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
@@ -295,20 +297,9 @@ export default {
                 return newValue;
             },
         },
-
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
-
         recogio_validacion_computed: function () {
             return this.form.recogio.value;
         },
-
         fecha_solicitud_validacion_computed: function () {
             return this.form.fecha_solicitud;
         },
@@ -316,6 +307,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             /**variables dle modulo */
             configdateTimePickerWithTime: configdateTimePickerWithTime,
             verDisponibilidad: false,
@@ -580,11 +572,15 @@ export default {
         },
 
         cancelar() {
-            this.botonConfirmarSinPassword = "Salir y limpiar";
-            this.accionConfirmarSinPassword =
-                "Esta acción limpiará los datos que capturó en el formulario.";
-            this.openConfirmarSinPassword = true;
-            this.callBackConfirmar = this.cerrarVentana;
+            if (this.getTipoformulario !== "agregar") {
+                this.botonConfirmarSinPassword = "Salir y limpiar";
+                this.accionConfirmarSinPassword =
+                    "Esta acción limpiará los datos que capturó en el formulario.";
+                this.openConfirmarSinPassword = true;
+                this.callBackConfirmar = this.cerrarVentana;
+            } else {
+                this.$emit("closeVentana");
+            }
         },
 
         cerrarVentana() {
@@ -689,6 +685,18 @@ export default {
             });
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

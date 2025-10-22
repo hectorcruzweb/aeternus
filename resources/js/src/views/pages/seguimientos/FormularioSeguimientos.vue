@@ -54,8 +54,8 @@
                                                     <vs-input ref="tipo_cliente" name="tipo_cliente" type="text"
                                                         class="w-full" placeholder="" v-model="cliente.tipo_cliente
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                                 <div class="w-full xl:w-6/12 px-2 input-text">
                                                     <label>
@@ -64,8 +64,8 @@
                                                     <vs-input ref="telefono" name="telefono" type="text" class="w-full"
                                                         placeholder="" v-model="cliente.telefono
                                                             " maxlength="100" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
 
                                                 <div class="w-full px-2 input-text">
@@ -73,8 +73,8 @@
                                                     <vs-input ref="direccion_completa" name="direccion_completa"
                                                         type="text" class="w-full" placeholder="" v-model="cliente.direccion_completa
                                                             " maxlength="250" :readonly="true" :disabled="!cliente ||
-                                                            !cliente.id
-                                                            " />
+                                                                !cliente.id
+                                                                " />
                                                 </div>
                                             </div>
                                             <div class="flex flex-wrap justify-center px-2">
@@ -111,22 +111,22 @@
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            programarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                programarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Programar
                                                     </vs-button>
                                                     <vs-button class="w-full md:w-1/2 text-center" color="success"
                                                         :disabled="!cliente ||
                                                             !cliente.id
                                                             " @click="
-                                                            registrarSeguimiento(
-                                                                'agregar',
-                                                                null
-                                                            )
-                                                            ">
+                                                                registrarSeguimiento(
+                                                                    'agregar',
+                                                                    null
+                                                                )
+                                                                ">
                                                         Registrar
                                                     </vs-button>
                                                 </div>
@@ -260,13 +260,13 @@
                                         <vs-td>{{ tr.motivo_texto }}</vs-td>
                                         <vs-td v-if="!hasProgramados">{{
                                             tr.resultado_texto
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td v-if="!hasProgramados">{{
                                             tr.tipo_programado_texto
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>{{
                                             tr.fechahora_seguimiento_texto_abr
-                                            }}</vs-td>
+                                        }}</vs-td>
                                         <vs-td>
                                             <div class="flex justify-center">
                                                 <img class="img-btn-20 mx-3" src="@assets/images/trash.svg"
@@ -476,11 +476,6 @@ export default {
             async handler(newVal) {
                 // Only listen when visible = true
                 if (newVal) {
-                    this.$popupManager.register(
-                        this,
-                        this.cancelar,
-                        "tipo_cliente"
-                    );
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     if (this.filters.origen == 1) {
                         //abeierto desde seguimientos
@@ -493,11 +488,14 @@ export default {
                             this.filters.tipo_cliente_id;
                         await this.updateClienteInfo();
                     }
+                    this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "tipo_cliente"
+                    );
                     //obtener datos del cliente
-                    this.localShow = true;
-                } else {
-                    this.localShow = false;
                 }
+                this.localShow = newVal;
             },
         },
     },
@@ -588,7 +586,6 @@ export default {
                 return data;
             } catch (error) {
                 this.$error("Error fetching clientes:", error);
-                this.cancelar();
             } finally {
                 //this.$vs.loading.close();
             }
@@ -615,7 +612,6 @@ export default {
                 return result.length ? result : [];
             } catch (error) {
                 this.$error("Error fetching seguimientos:", error);
-                this.cancelar();
             } finally {
                 //this.$vs.loading.close();
             }
@@ -657,11 +653,9 @@ export default {
             try {
                 let cliente = await this._fetchData();
                 this.cliente = { ...cliente };
-
                 // Filter programados and realizados
                 const allProgramados = await this._getSeguimientosProgramados();
                 const allRealizados = await this._getSeguimientosRealizados();
-
                 if (this.filters.operacion_id !== null) {
                     //operciones selecioanda
                     const selectedOperacion = cliente.operaciones.find(
@@ -697,7 +691,15 @@ export default {
                 this.ProgramadosList = allProgramados;
                 this.SeguimientosList = allRealizados;
             } catch (error) {
-                this.$log("🚀 ~ updateClienteInfo ~ error:", error);
+                this.$vs.notify({
+                    title: "Seguimientos",
+                    text: "Ha ocurrido un error al cargar la información.",
+                    iconPack: "feather",
+                    icon: "icon-alert-circle",
+                    color: "danger",
+                    time: 4000,
+                });
+                this.$emit("closeVentana");
             } finally {
                 this.$vs.loading.close();
             }

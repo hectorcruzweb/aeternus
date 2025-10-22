@@ -1,47 +1,26 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup popup-85', z_index]"
-      title="Catálogo de Terrenos Vendidos"
-      :active.sync="showVentana"
-      ref="buscador_terrenos"
-    >
+    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de Terrenos Vendidos" :active="localShow"
+      :ref="this.$options.name">
       <div class="w-full text-right">
-        <vs-button
-          class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-          color="primary"
-          @click="verFormularioVentas = true"
-        >
+        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+          @click="verFormularioVentas = true">
           <span>Vender Propiedad</span>
         </vs-button>
       </div>
 
       <!--inicio de buscador-->
       <div class="py-3">
-        <vx-card
-          no-radius
-          title="Filtros de selección"
-          refresh-content-action
-          @refresh="reset"
-        >
+        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
           <template slot="no-body">
             <div>
               <div class="flex flex-wrap px-4 py-4">
                 <div class="w-full xl:w-3/12 px-2">
-                  <label class="text-sm opacity-75 font-bold"
-                    >Núm. Convenio</label
-                  >
-                  <vs-input
-                    name="numero_control"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full pb-1 pt-1"
-                    placeholder="Ej. 1258"
-                    maxlength="6"
-                    v-model.trim="serverOptions.numero_control"
+                  <label class="text-sm opacity-75 font-bold">Núm. Convenio</label>
+                  <vs-input name="numero_control" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                    placeholder="Ej. 1258" maxlength="6" v-model.trim="serverOptions.numero_control"
                     v-on:keyup.enter="get_data('numero_control', 1)"
-                    v-on:blur="get_data('numero_control', 1, 'blur')"
-                  />
+                    v-on:blur="get_data('numero_control', 1, 'blur')" />
                   <div>
                     <span class="text-danger text-sm">{{
                       errors.first("numero_control")
@@ -51,21 +30,11 @@
                 </div>
 
                 <div class="w-full xl:w-9/12 px-2">
-                  <label class="text-sm opacity-75 font-bold"
-                    >Titular de la Propiedad</label
-                  >
-                  <vs-input
-                    ref="nombre_titular"
-                    name="nombre_titular"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full pb-1 pt-1"
-                    placeholder="Ej. Juan Pérez"
-                    maxlength="12"
-                    v-model.trim="serverOptions.titular"
-                    v-on:keyup.enter="get_data('titular', 1)"
-                    v-on:blur="get_data('titular', 1, 'blur')"
-                  />
+                  <label class="text-sm opacity-75 font-bold">Titular de la Propiedad</label>
+                  <vs-input ref="nombre_titular" name="nombre_titular" data-vv-as=" " type="text"
+                    class="w-full pb-1 pt-1" placeholder="Ej. Juan Pérez" maxlength="12"
+                    v-model.trim="serverOptions.titular" v-on:keyup.enter="get_data('titular', 1)"
+                    v-on:blur="get_data('titular', 1, 'blur')" />
                   <div>
                     <span class="text-danger text-sm">{{
                       errors.first("nombre_titular")
@@ -78,14 +47,8 @@
           </template>
         </vx-card>
         <div class="mt-6">
-          <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page"
-            :data="terrenos"
-            stripe
-            noDataText="0 Resultados"
-            class="tabla-datos"
-          >
+          <vs-table :sst="true" :max-items="serverOptions.per_page" :data="terrenos" stripe noDataText="0 Resultados"
+            class="tabla-datos">
             <template slot="header">
               <h3>Lista actualizada de clientes registrados</h3>
             </template>
@@ -100,29 +63,16 @@
             </template>
             <template slot-scope="{ data }">
               <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                <vs-td
-                  :data="data[indextr].venta_terreno"
-                  :class="
-                    data[indextr].operacion_status == 0 ? 'text-danger' : ''
-                  "
-                >
+                <vs-td :data="data[indextr].venta_terreno" :class="data[indextr].operacion_status == 0 ? 'text-danger' : ''
+                  ">
                   <span class="font-semibold">{{
                     data[indextr].venta_terreno.id
                   }}</span>
                 </vs-td>
-                <vs-td
-                  :data="data[indextr].id"
-                  :class="
-                    data[indextr].operacion_status == 0 ? 'text-danger' : ''
-                  "
-                  >{{ data[indextr].numero_convenio }}</vs-td
-                >
-                <vs-td
-                  :data="data[indextr].id"
-                  :class="
-                    data[indextr].operacion_status == 0 ? 'text-danger' : ''
-                  "
-                >
+                <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0 ? 'text-danger' : ''
+                  ">{{ data[indextr].numero_convenio }}</vs-td>
+                <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0 ? 'text-danger' : ''
+                  ">
                   <span v-if="data[indextr].numero_titulo == ''">
                     Pendiente
                   </span>
@@ -130,25 +80,15 @@
                     {{ data[indextr].numero_titulo }}
                   </span>
                 </vs-td>
-                <vs-td
-                  :data="data[indextr].id"
-                  :class="
-                    data[indextr].operacion_status == 0 ? 'text-danger' : ''
-                  "
-                  >{{ data[indextr].nombre }}</vs-td
-                >
-                <vs-td
-                  :data="data[indextr].venta_terreno"
-                  :class="
-                    data[indextr].operacion_status == 0 ? 'text-danger' : ''
-                  "
-                  >{{
+                <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0 ? 'text-danger' : ''
+                  ">{{ data[indextr].nombre }}</vs-td>
+                <vs-td :data="data[indextr].venta_terreno" :class="data[indextr].operacion_status == 0 ? 'text-danger' : ''
+                  ">{{
                     data[indextr].venta_terreno.ubicacion_texto +
                     " (" +
                     data[indextr].venta_terreno.tipo_propiedad.tipo +
                     ")"
-                  }}</vs-td
-                >
+                  }}</vs-td>
                 <vs-td :data="data[indextr].operacion_status">
                   <p v-if="data[indextr].operacion_status == 0">
                     {{ data[indextr].status_texto }}
@@ -164,45 +104,30 @@
                   </p>
                 </vs-td>
                 <vs-td :data="data[indextr].id">
-                  <img
-                    class="cursor-pointer img-btn-20 mx-3"
-                    src="@assets/images/checked.svg"
-                    @click="
-                      retornarSeleccion(
-                        data[indextr].venta_terreno.ubicacion_texto +
-                          ' (' +
-                          data[indextr].venta_terreno.tipo_propiedad.tipo +
-                          ' Convenio ' +
-                          data[indextr].numero_convenio +
-                          ')',
-                        data[indextr].venta_terreno.id,
-                        data[indextr].operacion_status,
-                        data[indextr].saldo_neto
-                      )
-                    "
-                  />
+                  <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
+                    retornarSeleccion(
+                      data[indextr].venta_terreno.ubicacion_texto +
+                      ' (' +
+                      data[indextr].venta_terreno.tipo_propiedad.tipo +
+                      ' Convenio ' +
+                      data[indextr].numero_convenio +
+                      ')',
+                      data[indextr].venta_terreno.id,
+                      data[indextr].operacion_status,
+                      data[indextr].saldo_neto
+                    )
+                    " />
                 </vs-td>
               </vs-tr>
             </template>
           </vs-table>
           <div>
-            <vs-pagination
-              v-if="verPaginado"
-              :total="this.total"
-              v-model="actual"
-              class="py-6"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="py-6"></vs-pagination>
           </div>
         </div>
       </div>
-      <FormularioVentas
-        :z_index="'z-index57k'"
-        :id_venta="''"
-        :tipo="'agregar'"
-        :show="verFormularioVentas"
-        @closeVentana="verFormularioVentas = false"
-        @ver_pdfs_nueva_venta="get_data('', 1)"
-      ></FormularioVentas>
+      <FormularioVentas :z_index="'z-index57k'" :id_venta="''" :tipo="'agregar'" :show="verFormularioVentas"
+        @closeVentana="verFormularioVentas = false" @ver_pdfs_nueva_venta="get_data('', 1)"></FormularioVentas>
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -215,6 +140,7 @@ import Datepicker from "vuejs-datepicker";
 import { es } from "vuejs-datepicker/dist/locale";
 
 export default {
+  name: "VentaDeTerrenosSearcher",
   components: {
     "v-select": vSelect,
     Datepicker,
@@ -238,36 +164,27 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data("", this.actual);
     },
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$nextTick(() =>
-          this.$refs["nombre_titular"].$el.querySelector("input").focus()
-        );
-        this.$refs["buscador_terrenos"].$el.querySelector(
-          ".vs-icon"
-        ).onclick = () => {
-          this.cancelar();
-        };
-        this.get_data("", 1);
-      } else {
-        /**cerrar y limpiar el formulario */
-        this.serverOptions.numero_control = "";
-        this.serverOptions.titular = "";
-      }
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.get_data("", 1);
+          this.$popupManager.register(this, this.cancelar, "nombre_titular");
+        } else {
+          /**cerrar y limpiar el formulario */
+          this.serverOptions.numero_control = "";
+          this.serverOptions.titular = "";
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
   },
   data() {
     return {
+      localShow: false,
       verFormularioVentas: false,
       selected: [],
       disabledDates: {
@@ -350,9 +267,9 @@ export default {
           }
         });
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
     retornarSeleccion(
       ubicacion = "",
       id = "",
@@ -366,7 +283,11 @@ export default {
           numero_control: id,
           ubicacion: ubicacion,
         });
-        this.$emit("closeBuscador");
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.$emit("closeBuscador");
+          }, 50);
+        });
       } else {
         /**error, venta cancelada */
         this.$vs.notify({
@@ -382,6 +303,19 @@ export default {
     retorno_id(dato) {
       this.get_data("", this.actual);
     },
+  },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

@@ -1,17 +1,9 @@
 <template>
     <div>
-        <vs-popup
-            :class="['forms-popup bg-content-theme', z_index]"
-            fullscreen
-            close="cancelar"
-            :title="
-                getTipoformulario == 'servicio_funerario'
-                    ? 'Contrato de Servicio Funerario'
-                    : 'Servicio de Exhumación'
-            "
-            :active.sync="showVentana"
-            ref="formulario"
-        >
+        <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen close="cancelar" :title="getTipoformulario == 'servicio_funerario'
+            ? 'Contrato de Servicio Funerario'
+            : 'Servicio de Exhumación'
+            " :active="localShow" :ref="this.$options.name">
             <!--inicio venta-->
             <div>
                 <vs-tabs alignment="left" position="top" v-model="activeTab">
@@ -34,27 +26,15 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full xl:w-4/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-4/12 px-2 input-text">
                                             <label>
                                                 Título de Tratamiento
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="titulos"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.titulo"
-                                                class="w-full"
-                                                v-validate:titulo_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="titulo"
-                                                data-vv-as=" "
-                                                ref="titulo_ref"
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="titulos" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.titulo" class="w-full"
+                                                v-validate:titulo_validacion_computed.immediate="'required'
+                                                    " name="titulo" data-vv-as=" " ref="titulo_ref">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -62,34 +42,21 @@
                                             <span>
                                                 {{ errors.first("titulo") }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores['titulo.value']
-                                                "
-                                                >{{
-                                                    errores["titulo.value"][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores['titulo.value']
+                                            ">{{
+                                                errores["titulo.value"][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full xl:w-4/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-4/12 px-2 input-text">
                                             <label>
                                                 Nombre del Fallecido
                                                 <span>(*)</span>
                                             </label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="nombre_afectado"
-                                                data-vv-as=" "
-                                                v-validate.disabled="'required'"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre Fallecido"
-                                                v-model="form.nombre_afectado"
-                                                ref="fallecido_ref"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="nombre_afectado" data-vv-as=" "
+                                                v-validate.disabled="'required'" maxlength="150" type="text"
+                                                class="w-full" placeholder="Nombre Fallecido"
+                                                v-model="form.nombre_afectado" ref="fallecido_ref" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -97,68 +64,41 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores.nombre_afectado
-                                                "
-                                                >{{
-                                                    errores.nombre_afectado[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.nombre_afectado
+                                            ">{{
+                                                errores.nombre_afectado[0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full xl:w-4/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-4/12 px-2 input-text">
                                             <label>
                                                 Fecha de Nacimiento
                                                 <span>(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                :disabled="esExhumacion"
-                                                name="fecha_nacimiento"
-                                                data-vv-as=" "
-                                                v-validate:fecha_nacimiento_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="configdateTimePicker"
-                                                v-model="form.fecha_nacimiento"
-                                                placeholder="Fecha de Nacimiento"
-                                                class="w-full"
-                                            />
+                                            <flat-pickr :disabled="esExhumacion" name="fecha_nacimiento" data-vv-as=" "
+                                                v-validate:fecha_nacimiento_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePicker" v-model="form.fecha_nacimiento"
+                                                placeholder="Fecha de Nacimiento" class="w-full" />
                                             <span>{{
                                                 errors.first("fecha_nacimiento")
                                             }}</span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fecha_nacimiento
-                                                "
-                                                >{{
-                                                    errores.fecha_nacimiento[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fecha_nacimiento
+                                            ">{{
+                                                errores.fecha_nacimiento[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full xl:w-6/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-6/12 px-2 input-text">
                                             <label>
                                                 Género
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="generos"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.genero"
-                                                class="w-full"
-                                                v-validate:genero_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="genero"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="generos" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.genero" class="w-full"
+                                                v-validate:genero_validacion_computed.immediate="'required'
+                                                    " name="genero" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -166,36 +106,23 @@
                                             <span>
                                                 {{ errors.first("genero") }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores['genero.value']
-                                                "
-                                                >{{
-                                                    errores["genero.value"][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores['genero.value']
+                                            ">{{
+                                                errores["genero.value"][0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full xl:w-6/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-6/12 px-2 input-text">
                                             <label>
                                                 Nacionalidad
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="nacionalidades"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.nacionalidad"
-                                                class="w-full"
-                                                v-validate:nacionalidad_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="nacionalidad"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="nacionalidades"
+                                                :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.nacionalidad" class="w-full"
+                                                v-validate:nacionalidad_validacion_computed.immediate="'required'
+                                                    " name="nacionalidad" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -205,33 +132,22 @@
                                                     errors.first("nacionalidad")
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'nacionalidad.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "nacionalidad.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'nacionalidad.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "nacionalidad.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Entidad de Nacimiento</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="lugar_nacimiento"
-                                                maxlength="100"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Lugar donde nació el fallecido"
-                                                v-model="form.lugar_nacimiento"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="lugar_nacimiento" maxlength="100"
+                                                type="text" class="w-full" placeholder="Lugar donde nació el fallecido"
+                                                v-model="form.lugar_nacimiento" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -239,29 +155,18 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .lugar_nacimiento
-                                                "
-                                                >{{
-                                                    errores.lugar_nacimiento[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .lugar_nacimiento
+                                            ">{{
+                                                errores.lugar_nacimiento[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Ocupación Habitual</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="ocupacion"
-                                                maxlength="75"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Ocupación del fallecido"
-                                                v-model="form.ocupacion"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="ocupacion" maxlength="75"
+                                                type="text" class="w-full" placeholder="Ocupación del fallecido"
+                                                v-model="form.ocupacion" />
                                             <span>
                                                 {{ errors.first("ocupacion") }}
                                             </span>
@@ -271,17 +176,10 @@
                                         </div>
                                         <div class="w-full input-text px-2">
                                             <label>Último Domicilio</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="direccion_fallecido"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Última dirección del fallecido"
-                                                v-model="
-                                                    form.direccion_fallecido
-                                                "
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="direccion_fallecido"
+                                                maxlength="150" type="text" class="w-full"
+                                                placeholder="Última dirección del fallecido" v-model="form.direccion_fallecido
+                                                    " />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -289,38 +187,25 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .direccion_fallecido
-                                                "
-                                                >{{
-                                                    errores
-                                                        .direccion_fallecido[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .direccion_fallecido
+                                            ">{{
+                                                errores
+                                                    .direccion_fallecido[0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Estado Civil
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="estados_civiles"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.estado_civil"
-                                                class="w-full"
-                                                v-validate:estado_civil_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="estado_civil"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="estados_civiles"
+                                                :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.estado_civil" class="w-full"
+                                                v-validate:estado_civil_validacion_computed.immediate="'required'
+                                                    " name="estado_civil" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -330,39 +215,26 @@
                                                     errors.first("estado_civil")
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'estado_civil.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "estado_civil.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'estado_civil.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "estado_civil.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Escolaridad
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="escolaridades"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.escolaridad"
-                                                class="w-full"
-                                                v-validate:escolaridad_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="escolaridad"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="escolaridades"
+                                                :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.escolaridad" class="w-full"
+                                                v-validate:escolaridad_validacion_computed.immediate="'required'
+                                                    " name="escolaridad" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -372,39 +244,26 @@
                                                     errors.first("escolaridad")
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'escolaridad.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "escolaridad.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'escolaridad.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "escolaridad.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Afiliado a
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="afiliaciones"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.afiliacion"
-                                                class="w-full"
-                                                v-validate:afiliacion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="afiliacion"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="afiliaciones"
+                                                :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.afiliacion" class="w-full"
+                                                v-validate:afiliacion_validacion_computed.immediate="'required'
+                                                    " name="afiliacion" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -412,33 +271,22 @@
                                             <span>
                                                 {{ errors.first("afiliacion") }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'afiliacion.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "afiliacion.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'afiliacion.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "afiliacion.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Indique la afiliación</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="afiliacion_nota"
-                                                maxlength="75"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Describa esa otra afiliación"
-                                                v-model="form.afiliacion_nota"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="afiliacion_nota" maxlength="75"
+                                                type="text" class="w-full" placeholder="Describa esa otra afiliación"
+                                                v-model="form.afiliacion_nota" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -446,14 +294,11 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores.afiliacion_nota
-                                                "
-                                                >{{
-                                                    errores.afiliacion_nota[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.afiliacion_nota
+                                            ">{{
+                                                errores.afiliacion_nota[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -472,22 +317,12 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
-                                            <label
-                                                >Folio del Certificado
-                                                Médico</label
-                                            >
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="folio_certificado"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Número de Folio"
-                                                v-model="form.folio_certificado"
-                                            />
+                                        <div class="w-full input-text xl:w-6/12 px-2">
+                                            <label>Folio del Certificado
+                                                Médico</label>
+                                            <vs-input :disabled="esExhumacion" name="folio_certificado" maxlength="45"
+                                                type="text" class="w-full" placeholder="Número de Folio"
+                                                v-model="form.folio_certificado" />
 
                                             <span>
                                                 {{
@@ -497,39 +332,25 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .folio_certificado
-                                                "
-                                                >{{
-                                                    errores.folio_certificado[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .folio_certificado
+                                            ">{{
+                                                errores.folio_certificado[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Fecha y Hora del Fallecimiento
                                                 <span>(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                :disabled="esExhumacion"
-                                                name="fechahora_defuncion"
+                                            <flat-pickr :disabled="esExhumacion" name="fechahora_defuncion"
                                                 data-vv-as=" "
-                                                v-validate:fechahora_defuncion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_defuncion
-                                                "
-                                                placeholder="Fecha y hora del fallecimiento"
-                                                class="w-full"
-                                            />
+                                                v-validate:fechahora_defuncion_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_defuncion
+                                                            " placeholder="Fecha y hora del fallecimiento"
+                                                class="w-full" />
 
                                             <span>
                                                 {{
@@ -539,35 +360,23 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_defuncion
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_defuncion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_defuncion
+                                            ">{{
+                                                errores
+                                                    .fechahora_defuncion[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Causa de Muerte
                                                 <span>(*)</span>
                                             </label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="causa_muerte"
-                                                data-vv-as=" "
-                                                v-validate.disabled="'required'"
-                                                maxlength="100"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Cáusa de la muerte"
-                                                v-model="form.causa_muerte"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="causa_muerte" data-vv-as=" "
+                                                v-validate.disabled="'required'" maxlength="100" type="text"
+                                                class="w-full" placeholder="Cáusa de la muerte"
+                                                v-model="form.causa_muerte" />
 
                                             <span>
                                                 {{
@@ -575,29 +384,18 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.causa_muerte"
-                                                >{{
-                                                    errores.causa_muerte[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.causa_muerte">{{
+                                                errores.causa_muerte[0]
+                                                }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2">
                                             <label>
                                                 Muerte Natural
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="sino"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.muerte_natural_b"
-                                                class="w-full"
-                                                name="muerte_natural_b"
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="sino" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.muerte_natural_b"
+                                                class="w-full" name="muerte_natural_b">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -611,35 +409,24 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'muerte_natural_b.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "muerte_natural_b.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'muerte_natural_b.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "muerte_natural_b.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2">
                                             <label>
                                                 Enfermedad Contagiosa
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="sino"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.contagioso_b"
-                                                class="w-full"
-                                                name="contagioso_b"
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="sino" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.contagioso_b"
+                                                class="w-full" name="contagioso_b">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -651,39 +438,26 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'contagioso_b.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "contagioso_b.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'contagioso_b.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "contagioso_b.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Lugar de Fallecimiento
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="sitios_muerte"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.sitio_muerte"
-                                                class="w-full"
-                                                v-validate:sitio_muerte_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="sitio_muerte"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="sitios_muerte"
+                                                :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.sitio_muerte" class="w-full"
+                                                v-validate:sitio_muerte_validacion_computed.immediate="'required'
+                                                    " name="sitio_muerte" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -695,32 +469,21 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'sitio_muerte.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "sitio_muerte.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'sitio_muerte.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "sitio_muerte.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Indique dirección</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="lugar_muerte"
-                                                maxlength="125"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Dirección donde murió"
-                                                v-model="form.lugar_muerte"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="lugar_muerte" maxlength="125"
+                                                type="text" class="w-full" placeholder="Dirección donde murió"
+                                                v-model="form.lugar_muerte" />
 
                                             <span>
                                                 {{
@@ -728,30 +491,19 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.lugar_muerte"
-                                                >{{
-                                                    errores.lugar_muerte[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.lugar_muerte">{{
+                                                errores.lugar_muerte[0]
+                                                }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 ¿Atención Médica Antes de morir?
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :disabled="esExhumacion"
-                                                :options="sino"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.atencion_medica_b"
-                                                class="w-full"
-                                                name="atencion_medica_b"
-                                            >
+                                            <v-select :disabled="esExhumacion" :options="sino" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.atencion_medica_b"
+                                                class="w-full" name="atencion_medica_b">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -765,37 +517,23 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'atencion_medica_b.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "atencion_medica_b.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'atencion_medica_b.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "atencion_medica_b.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
-                                            <label
-                                                >Enfermedades que Padecía</label
-                                            >
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="enfermedades_padecidas"
-                                                maxlength="125"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Enfermedades que padecía"
-                                                v-model="
-                                                    form.enfermedades_padecidas
-                                                "
-                                            />
+                                        <div class="w-full input-text xl:w-6/12 px-2">
+                                            <label>Enfermedades que Padecía</label>
+                                            <vs-input :disabled="esExhumacion" name="enfermedades_padecidas"
+                                                maxlength="125" type="text" class="w-full"
+                                                placeholder="Enfermedades que padecía" v-model="form.enfermedades_padecidas
+                                                    " />
 
                                             <span>
                                                 {{
@@ -805,32 +543,20 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .enfermedades_padecidas
-                                                "
-                                                >{{
-                                                    errores
-                                                        .enfermedades_padecidas[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .enfermedades_padecidas
+                                            ">{{
+                                                errores
+                                                    .enfermedades_padecidas[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-4/12 px-2">
                                             <label>Nombre del Informante</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="certificado_informante"
-                                                maxlength="125"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre del informante para el certificado"
-                                                v-model="
-                                                    form.certificado_informante
-                                                "
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="certificado_informante"
+                                                maxlength="125" type="text" class="w-full"
+                                                placeholder="Nombre del informante para el certificado" v-model="form.certificado_informante
+                                                    " />
 
                                             <span>
                                                 {{
@@ -840,35 +566,21 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .certificado_informante
-                                                "
-                                                >{{
-                                                    errores
-                                                        .certificado_informante[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .certificado_informante
+                                            ">{{
+                                                errores
+                                                    .certificado_informante[0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
-                                            <label
-                                                >Teléfono del Informante</label
-                                            >
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="certificado_informante_telefono"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Teléfono del informante"
-                                                v-model="
-                                                    form.certificado_informante_telefono
-                                                "
-                                            />
+                                        <div class="w-full input-text xl:w-4/12 px-2">
+                                            <label>Teléfono del Informante</label>
+                                            <vs-input :disabled="esExhumacion" name="certificado_informante_telefono"
+                                                maxlength="45" type="text" class="w-full"
+                                                placeholder="Teléfono del informante" v-model="form.certificado_informante_telefono
+                                                    " />
 
                                             <span>
                                                 {{
@@ -878,35 +590,21 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .certificado_informante_telefono
-                                                "
-                                                >{{
-                                                    errores
-                                                        .certificado_informante_telefono[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .certificado_informante_telefono
+                                            ">{{
+                                                errores
+                                                    .certificado_informante_telefono[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
-                                            <label
-                                                >Parentesco con el
-                                                fallecido</label
-                                            >
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="certificado_informante_parentesco"
-                                                maxlength="65"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Parentesco con el Fallecido"
-                                                v-model="
-                                                    form.certificado_informante_parentesco
-                                                "
-                                            />
+                                        <div class="w-full input-text xl:w-4/12 px-2">
+                                            <label>Parentesco con el
+                                                fallecido</label>
+                                            <vs-input :disabled="esExhumacion" name="certificado_informante_parentesco"
+                                                maxlength="65" type="text" class="w-full"
+                                                placeholder="Parentesco con el Fallecido" v-model="form.certificado_informante_parentesco
+                                                    " />
 
                                             <span>
                                                 {{
@@ -916,41 +614,28 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .certificado_informante_parentesco
-                                                "
-                                                >{{
-                                                    errores
-                                                        .certificado_informante_parentesco[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .certificado_informante_parentesco
+                                            ">{{
+                                                errores
+                                                    .certificado_informante_parentesco[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            :class="[
-                                                'w-full input-text px-2',
-                                                form.legista.value != 1
-                                                    ? 'xl:w-6/12'
-                                                    : 'xl:w-4/12'
-                                            ]"
-                                        >
+                                        <div :class="[
+                                            'w-full input-text px-2',
+                                            form.legista.value != 1
+                                                ? 'xl:w-6/12'
+                                                : 'xl:w-4/12'
+                                        ]">
                                             <label>
                                                 Médico Legista
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="legistas"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.legista"
-                                                class="w-full"
-                                                v-validate:legista_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="legista"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :options="legistas" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.legista" class="w-full"
+                                                v-validate:legista_validacion_computed.immediate="'required'
+                                                    " name="legista" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -958,34 +643,20 @@
                                             <span>
                                                 {{ errors.first("legista") }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'legista.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores["legista.value"][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'legista.value'
+                                                ]
+                                            ">{{
+                                                errores["legista.value"][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            v-show="form.legista.value == 1"
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
-                                            <label
-                                                >Nombre del Médico
-                                                Legista</label
-                                            >
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="medico_legista"
-                                                maxlength="125"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre del médico legista"
-                                                v-model="form.medico_legista"
-                                            />
+                                        <div v-show="form.legista.value == 1" class="w-full input-text xl:w-4/12 px-2">
+                                            <label>Nombre del Médico
+                                                Legista</label>
+                                            <vs-input :disabled="esExhumacion" name="medico_legista" maxlength="125"
+                                                type="text" class="w-full" placeholder="Nombre del médico legista"
+                                                v-model="form.medico_legista" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -993,29 +664,17 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores.medico_legista
-                                                "
-                                                >{{
-                                                    errores.medico_legista[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.medico_legista
+                                            ">{{
+                                                errores.medico_legista[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            v-show="form.legista.value == 1"
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
+                                        <div v-show="form.legista.value == 1" class="w-full input-text xl:w-4/12 px-2">
                                             <label>Cédula Médico Legista</label>
-                                            <vs-input
-                                                :disabled="esExhumacion"
-                                                name="cedula_legista"
-                                                maxlength="125"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre del médico legista"
-                                                v-model="form.cedula_legista"
-                                            />
+                                            <vs-input :disabled="esExhumacion" name="cedula_legista" maxlength="125"
+                                                type="text" class="w-full" placeholder="Nombre del médico legista"
+                                                v-model="form.cedula_legista" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -1023,39 +682,26 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores.cedula_legista
-                                                "
-                                                >{{
-                                                    errores.cedula_legista[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.cedula_legista
+                                            ">{{
+                                                errores.cedula_legista[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            :class="[
-                                                'w-full input-text px-2',
-                                                form.legista.value == 1
-                                                    ? 'xl:w-12/12'
-                                                    : 'xl:w-6/12'
-                                            ]"
-                                        >
+                                        <div :class="[
+                                            'w-full input-text px-2',
+                                            form.legista.value == 1
+                                                ? 'xl:w-12/12'
+                                                : 'xl:w-6/12'
+                                        ]">
                                             <label>
                                                 Estado del Cuerpo
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="estados_cuerpo"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.estado_cuerpo"
-                                                class="w-full"
-                                                v-validate:estado_cuerpo_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="estado_cuerpo"
-                                                data-vv-as=" "
-                                            >
+                                            <v-select :options="estados_cuerpo" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.estado_cuerpo"
+                                                class="w-full" v-validate:estado_cuerpo_validacion_computed.immediate="'required'
+                                                    " name="estado_cuerpo" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -1067,18 +713,15 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'estado_cuerpo.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "estado_cuerpo.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'estado_cuerpo.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "estado_cuerpo.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1091,63 +734,34 @@
                 <div class="tab-content" v-show="activeTab == 2">
                     <!--contenido de los destinos del servicio-->
                     <div class="flex flex-wrap">
-                        <div
-                            class="w-full xl:w-6/12 px-2 h-full py-4"
-                            v-show="!esExhumacion"
-                        >
+                        <div class="w-full xl:w-6/12 px-2 h-full py-4" v-show="!esExhumacion">
                             <div class="form-group py-6">
                                 <div class="title-form-group">
                                     Embalsamiento
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-4/12 px-2 text-center">
                                             <label>¿Embalsamar Cuerpo?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="embalsamar_b"
-                                                    v-model="form.embalsamar_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="embalsamar_b"
-                                                    v-model="form.embalsamar_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio :disabled="esExhumacion" vs-name="embalsamar_b"
+                                                    v-model="form.embalsamar_b" :vs-value="1" class="mr-4">SI</vs-radio>
+                                                <vs-radio :disabled="esExhumacion" vs-name="embalsamar_b"
+                                                    v-model="form.embalsamar_b" :vs-value="0" class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text px-2 xl:w-8/12"
-                                        >
+                                        <div class="w-full input-text px-2 xl:w-8/12">
                                             <label>
                                                 Lista de Preparadores
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="embsalsamadores"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.embalsamador"
-                                                class="w-full"
-                                                v-validate:embalsamador_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="embalsamador"
-                                                data-vv-as=" "
-                                                :disabled="
-                                                    form.embalsamar_b != 1
+                                            <v-select :options="embsalsamadores" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.embalsamador"
+                                                class="w-full" v-validate:embalsamador_validacion_computed.immediate="'required'
+                                                    " name="embalsamador" data-vv-as=" " :disabled="form.embalsamar_b != 1
                                                         ? true
                                                         : false
-                                                "
-                                            >
+                                                        ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -1157,18 +771,15 @@
                                                     errors.first("embalsamador")
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'embalsamador.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "embalsamador.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'embalsamador.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "embalsamador.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
                                         <!---
                                         <div class="w-full xl:w-8/12 px-2 input-text">
@@ -1185,90 +796,46 @@
                                                 errores.medico_responsable_embalsamado[0] }}</span>
                                         </div>
                                     -->
-                                        <div
-                                            class="'w-full px-2 xl:w-6/12 input-text"
-                                        >
+                                        <div class="'w-full px-2 xl:w-6/12 input-text">
                                             <label>
                                                 Nombre del preparador
-                                                <span
-                                                    v-if="
-                                                        form.embalsamar_b == 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.embalsamar_b == 1
+                                                ">(*)</span>
                                             </label>
-                                            <vs-input
-                                                v-if="
-                                                    form.embalsamar_b == 1 &&
-                                                        form.embalsamador
-                                                            .value == 2
-                                                "
-                                                name="preparador"
-                                                data-vv-as=" "
-                                                v-validate:preparador_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre del preparador"
-                                                v-model="form.preparador"
-                                            />
-                                            <vs-input
-                                                v-else
-                                                type="text"
-                                                class="w-full"
-                                                value="N/A"
-                                                disabled="true"
-                                            />
+                                            <vs-input v-if="
+                                                form.embalsamar_b == 1 &&
+                                                form.embalsamador
+                                                    .value == 2
+                                            " name="preparador" data-vv-as=" "
+                                                v-validate:preparador_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Nombre del preparador" v-model="form.preparador" />
+                                            <vs-input v-else type="text" class="w-full" value="N/A" disabled="true" />
                                             <span>
                                                 {{ errors.first("preparador") }}
                                             </span>
-                                            <span
-                                                v-if="this.errores.preparador"
-                                                >{{
-                                                    errores.preparador[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.preparador">{{
+                                                errores.preparador[0]
+                                                }}</span>
                                         </div>
-                                        <div
-                                            class="'w-full px-2 xl:w-6/12 input-text"
-                                        >
+                                        <div class="'w-full px-2 xl:w-6/12 input-text">
                                             <label>
                                                 Cédula del preparador
-                                                <span
-                                                    v-if="
-                                                        form.embalsamar_b == 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.embalsamar_b == 1
+                                                ">(*)</span>
                                             </label>
-                                            <vs-input
-                                                v-if="
-                                                    form.embalsamar_b == 1 &&
-                                                        form.embalsamador
-                                                            .value == 2
-                                                "
-                                                name="cedula_embalsamador"
-                                                data-vv-as=" "
-                                                v-validate:preparador_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Cédula del preparador"
-                                                v-model="
-                                                    form.cedula_embalsamador
-                                                "
-                                            />
-                                            <vs-input
-                                                v-else
-                                                type="text"
-                                                class="w-full"
-                                                value="N/A"
-                                                disabled="true"
-                                            />
+                                            <vs-input v-if="
+                                                form.embalsamar_b == 1 &&
+                                                form.embalsamador
+                                                    .value == 2
+                                            " name="cedula_embalsamador" data-vv-as=" "
+                                                v-validate:preparador_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Cédula del preparador" v-model="form.cedula_embalsamador
+                                                    " />
+                                            <vs-input v-else type="text" class="w-full" value="N/A" disabled="true" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -1277,81 +844,46 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .cedula_embalsamador
-                                                "
-                                                >{{
-                                                    errores
-                                                        .cedula_embalsamador[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .cedula_embalsamador
+                                            ">{{
+                                                errores
+                                                    .cedula_embalsamador[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div
-                            class="w-full xl:w-6/12 px-2 h-full py-4"
-                            v-show="!esExhumacion"
-                        >
+                        <div class="w-full xl:w-6/12 px-2 h-full py-4" v-show="!esExhumacion">
                             <div class="form-group py-6">
                                 <div class="title-form-group">Velación</div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full xl:w-3/12 px-2 text-center input-text"
-                                        >
+                                        <div class="w-full xl:w-3/12 px-2 text-center input-text">
                                             <label>¿Velar Cuerpo?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="velacion_b"
-                                                    v-model="form.velacion_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="velacion_b"
-                                                    v-model="form.velacion_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio :disabled="esExhumacion" vs-name="velacion_b"
+                                                    v-model="form.velacion_b" :vs-value="1" class="mr-4">SI</vs-radio>
+                                                <vs-radio :disabled="esExhumacion" vs-name="velacion_b"
+                                                    v-model="form.velacion_b" :vs-value="0" class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
 
-                                        <div
-                                            class="w-full xl:w-9/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-9/12 px-2 input-text">
                                             <label>
                                                 ¿Lugar de Velación?
-                                                <span
-                                                    v-if="form.velacion_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.velacion_b == 1">(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="lugares_servicio"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.lugar_servicio"
-                                                class="w-full"
-                                                v-validate:lugar_servicio_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="lugar_servicio"
-                                                data-vv-as=" "
-                                                :disabled="
-                                                    (form.velacion_b != 1
+                                            <v-select :options="lugares_servicio" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.lugar_servicio"
+                                                class="w-full" v-validate:lugar_servicio_validacion_computed.immediate="'required'
+                                                    " name="lugar_servicio" data-vv-as=" " :disabled="(form.velacion_b != 1
                                                         ? true
                                                         : false) || esExhumacion
-                                                "
-                                            >
+                                                        ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -1365,46 +897,29 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'lugar_servicio.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "lugar_servicio.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'lugar_servicio.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "lugar_servicio.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
                                         <div class="w-full px-2 input-text">
                                             <label>
                                                 Dirección del Servicio
-                                                <span
-                                                    v-if="form.velacion_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.velacion_b == 1">(*)</span>
                                             </label>
-                                            <vs-input
-                                                name="direccion_velacion"
-                                                data-vv-as=" "
-                                                v-validate:direccion_velacion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Dirección donde se velará"
-                                                v-model="
-                                                    form.direccion_velacion
-                                                "
-                                                :disabled="
-                                                    (form.velacion_b != 1
+                                            <vs-input name="direccion_velacion" data-vv-as=" "
+                                                v-validate:direccion_velacion_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Dirección donde se velará" v-model="form.direccion_velacion
+                                                    " :disabled="(form.velacion_b != 1
                                                         ? true
                                                         : false) || esExhumacion
-                                                "
-                                            />
+                                                        " />
 
                                             <span>
                                                 {{
@@ -1414,16 +929,13 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .direccion_velacion
-                                                "
-                                                >{{
-                                                    errores
-                                                        .direccion_velacion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .direccion_velacion
+                                            ">{{
+                                                errores
+                                                    .direccion_velacion[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1435,57 +947,29 @@
                                 <div class="title-form-group">Cremación</div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2 text-center">
                                             <label>¿Cremar Cuerpo?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="cremacion_b"
-                                                    v-model="form.cremacion_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="cremacion_b"
-                                                    v-model="form.cremacion_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="cremacion_b" v-model="form.cremacion_b" :vs-value="1"
+                                                    class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="cremacion_b" v-model="form.cremacion_b" :vs-value="0"
+                                                    class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-9/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-9/12 px-2">
                                             <label>
                                                 Fecha de la Cremación
-                                                <span
-                                                    v-if="form.cremacion_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.cremacion_b == 1">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_cremacion"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_cremacion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_cremacion
-                                                "
-                                                placeholder="Fecha y Hora de Cremación"
-                                                class="w-full"
-                                                :disabled="
-                                                    form.cremacion_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fechahora_cremacion" data-vv-as=" "
+                                                v-validate:fechahora_cremacion_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_cremacion
+                                                            " placeholder="Fecha y Hora de Cremación" class="w-full"
+                                                :disabled="form.cremacion_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -1495,47 +979,28 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_cremacion
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_cremacion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_cremacion
+                                            ">{{
+                                                errores
+                                                    .fechahora_cremacion[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Fecha de Entrega de Cenizas
-                                                <span
-                                                    v-if="form.cremacion_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.cremacion_b == 1">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_entrega_cenizas"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_entrega_cenizas_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_entrega_cenizas
-                                                "
-                                                placeholder="Fecha y hora para entrega de cenizas"
-                                                class="w-full"
-                                                :disabled="
-                                                    form.cremacion_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fechahora_entrega_cenizas" data-vv-as=" "
+                                                v-validate:fechahora_entrega_cenizas_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_entrega_cenizas
+                                                            " placeholder="Fecha y hora para entrega de cenizas"
+                                                class="w-full" :disabled="form.cremacion_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -1545,34 +1010,22 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_entrega_cenizas
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_entrega_cenizas[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_entrega_cenizas
+                                            ">{{
+                                                errores
+                                                    .fechahora_entrega_cenizas[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Descripción de Urna</label>
-                                            <vs-input
-                                                name="descripcion_urna"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Descripción de urna"
-                                                v-model="form.descripcion_urna"
-                                                :disabled="
-                                                    form.cremacion_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="descripcion_urna" maxlength="150" type="text" class="w-full"
+                                                placeholder="Descripción de urna" v-model="form.descripcion_urna"
+                                                :disabled="form.cremacion_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -1582,15 +1035,12 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .descripcion_urna
-                                                "
-                                                >{{
-                                                    errores.descripcion_urna[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .descripcion_urna
+                                            ">{{
+                                                errores.descripcion_urna[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1602,59 +1052,31 @@
                                 <div class="title-form-group">Inhumación</div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2 text-center">
                                             <label>¿Inhumar Cuerpo?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="inhumacion_b"
-                                                    v-model="form.inhumacion_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="inhumacion_b"
-                                                    v-model="form.inhumacion_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="inhumacion_b" v-model="form.inhumacion_b"
+                                                    :vs-value="1" class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="inhumacion_b" v-model="form.inhumacion_b"
+                                                    :vs-value="0" class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-5/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-5/12 px-2">
                                             <label>
                                                 ¿Lugar de Inhumación?
-                                                <span
-                                                    v-if="
-                                                        form.inhumacion_b == 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.inhumacion_b == 1
+                                                ">(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="cementerios_servicio"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="
-                                                    form.cementerio_servicio
-                                                "
-                                                class="w-full"
-                                                v-validate:cementerio_servicio_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="cementerio_servicio"
-                                                data-vv-as=" "
-                                                :disabled="
-                                                    form.inhumacion_b != 1
+                                            <v-select :options="cementerios_servicio" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.cementerio_servicio
+                                                    " class="w-full"
+                                                v-validate:cementerio_servicio_validacion_computed.immediate="'required'
+                                                    " name="cementerio_servicio" data-vv-as=" " :disabled="form.inhumacion_b != 1
                                                         ? true
                                                         : false
-                                                "
-                                            >
+                                                        ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -1668,51 +1090,32 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'cementerio_servicio.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "cementerio_servicio.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'cementerio_servicio.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "cementerio_servicio.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-4/12 px-2">
                                             <label>
                                                 Fecha Inhumación
-                                                <span
-                                                    v-if="
-                                                        form.inhumacion_b == 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.inhumacion_b == 1
+                                                ">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_inhumacion"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_inhumacion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_inhumacion
-                                                "
-                                                placeholder="Fecha y hora de inhumación"
-                                                class="w-full"
-                                                :disabled="
-                                                    form.inhumacion_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fechahora_inhumacion" data-vv-as=" "
+                                                v-validate:fechahora_inhumacion_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_inhumacion
+                                                            " placeholder="Fecha y hora de inhumación" class="w-full"
+                                                :disabled="form.inhumacion_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -1722,32 +1125,21 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_inhumacion
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_inhumacion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_inhumacion
+                                            ">{{
+                                                errores
+                                                    .fechahora_inhumacion[0]
+                                            }}</span>
                                         </div>
 
-                                        <div
-                                            v-show="
-                                                this.form.cementerio_servicio
-                                                    .value == 1
-                                            "
-                                            class="w-full input-text px-2"
-                                        >
+                                        <div v-show="this.form.cementerio_servicio
+                                            .value == 1
+                                            " class="w-full input-text px-2">
                                             <!--cementerio Aeternus-->
-                                            <div
-                                                class="w-full"
-                                                v-if="fueCancelada"
-                                            >
-                                                <div
-                                                    class="
+                                            <div class="w-full" v-if="fueCancelada">
+                                                <div class="
                             theme-background
                             text-center
                             mt-3
@@ -1755,23 +1147,16 @@
                             px-2
                             size-base
                             border-gray-solid-1
-                          "
-                                                >
+                          ">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full lg:w-10/12 py-1 px-2"
-                                                        >
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                        <div class="w-full lg:w-10/12 py-1 px-2">
+                                                            <span class="font-medium">
                                                                 Ubicación:
                                                             </span>
                                                             {{
                                                                 form.ubicacion_convenio
                                                             }}
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                            <span class="font-medium">
                                                                 $ Saldo por
                                                                 pagar:
                                                             </span>
@@ -1779,37 +1164,29 @@
                                                             {{
                                                                 this
                                                                     .saldo_neto_terreno
-                                                                    | numFormat(
-                                                                        "0,000.00"
-                                                                    )
+                                                                | numFormat(
+                                                                    "0,000.00"
+                                                                )
                                                             }}
                                                             MXN
                                                         </div>
-                                                        <div
-                                                            class="w-full lg:w-2/12 text-center py-1"
-                                                        >
-                                                            <span
-                                                                class="color-danger-900 cursor-pointer"
-                                                                >X Cambiar
+                                                        <div class="w-full lg:w-2/12 text-center py-1">
+                                                            <span class="color-danger-900 cursor-pointer">X Cambiar
                                                                 convenio
                                                             </span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="w-full"
-                                                v-else-if="
-                                                    this.form
-                                                        .ventas_terrenos_id ==
-                                                        0 &&
-                                                        this.form
-                                                            .ventas_terrenos_id ==
-                                                            ''
-                                                "
-                                            >
-                                                <div
-                                                    class="
+                                            <div class="w-full" v-else-if="
+                                                this.form
+                                                    .ventas_terrenos_id ==
+                                                0 &&
+                                                this.form
+                                                    .ventas_terrenos_id ==
+                                                ''
+                                            ">
+                                                <div class="
                             bg-danger-50
                             text-center
                             py-2
@@ -1818,40 +1195,30 @@
                             border-danger-solid-1
                             cursor-pointer
                             color-danger-900
-                          "
-                                                    @click="
-                                                        openBuscadorTerreno = true
-                                                    "
-                                                >
+                          " @click="
+                            openBuscadorTerreno = true
+                            ">
                                                     Seleccione la propiedad
                                                 </div>
                                             </div>
                                             <div class="w-full" v-else>
-                                                <div
-                                                    class="
+                                                <div class="
                             bg-success-50
                             py-2
                             mt-3
                             size-base
                             border-success-solid-2
                             uppercase
-                          "
-                                                >
+                          ">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full lg:w-10/12 py-1 px-2"
-                                                        >
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                        <div class="w-full lg:w-10/12 py-1 px-2">
+                                                            <span class="font-medium">
                                                                 Ubicación:
                                                             </span>
                                                             {{
                                                                 form.ubicacion_convenio
                                                             }}
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                            <span class="font-medium">
                                                                 $ Saldo por
                                                                 pagar:
                                                             </span>
@@ -1859,21 +1226,16 @@
                                                             {{
                                                                 this
                                                                     .saldo_neto_terreno
-                                                                    | numFormat(
-                                                                        "0,000.00"
-                                                                    )
+                                                                | numFormat(
+                                                                    "0,000.00"
+                                                                )
                                                             }}
                                                             MXN
                                                         </div>
-                                                        <div
-                                                            class="w-full lg:w-2/12 text-center py-1"
-                                                        >
-                                                            <span
-                                                                @click="
-                                                                    quitarTerreno()
-                                                                "
-                                                                class="color-danger-900 cursor-pointer"
-                                                                >X Cambiar
+                                                        <div class="w-full lg:w-2/12 text-center py-1">
+                                                            <span @click="
+                                                                quitarTerreno()
+                                                                " class="color-danger-900 cursor-pointer">X Cambiar
                                                                 convenio
                                                             </span>
                                                         </div>
@@ -1884,56 +1246,36 @@
                                         </div>
 
                                         <!--otro cementerio-->
-                                        <div
-                                            v-show="
-                                                this.form.cementerio_servicio
-                                                    .value != 1
-                                            "
-                                            class="w-full input-text px-2"
-                                        >
+                                        <div v-show="this.form.cementerio_servicio
+                                            .value != 1
+                                            " class="w-full input-text px-2">
                                             <label>
                                                 Cementerio y Ubicación
                                                 (Cementerio, Fila, Lote y
                                                 Sección)
-                                                <span
-                                                    v-if="
-                                                        form.inhumacion_b ==
-                                                            1 &&
-                                                            form
-                                                                .cementerio_servicio
-                                                                .value > 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.inhumacion_b ==
+                                                    1 &&
+                                                    form
+                                                        .cementerio_servicio
+                                                        .value > 1
+                                                ">(*)</span>
                                             </label>
-                                            <vs-input
-                                                name="ubicacion"
-                                                data-vv-as=" "
-                                                v-validate:ubicacion_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Ubicación del terreno"
-                                                v-model="form.ubicacion"
-                                                :disabled="
-                                                    form.inhumacion_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="ubicacion" data-vv-as=" "
+                                                v-validate:ubicacion_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Ubicación del terreno" v-model="form.ubicacion" :disabled="form.inhumacion_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{ errors.first("ubicacion") }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.ubicacion"
-                                                >{{
-                                                    errores.ubicacion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.ubicacion">{{
+                                                errores.ubicacion[0]
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1945,57 +1287,29 @@
                                 <div class="title-form-group">Traslado</div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2 text-center">
                                             <label>¿Trasladar Fallecido?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="traslado_b"
-                                                    v-model="form.traslado_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="traslado_b"
-                                                    v-model="form.traslado_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="traslado_b" v-model="form.traslado_b" :vs-value="1"
+                                                    class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="traslado_b" v-model="form.traslado_b" :vs-value="0"
+                                                    class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-9/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-9/12 px-2">
                                             <label>
                                                 Fecha del Traslado
-                                                <span
-                                                    v-if="form.traslado_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.traslado_b == 1">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_traslado"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_traslado_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_traslado
-                                                "
-                                                placeholder="Fecha y hora del traslado"
-                                                class="w-full"
-                                                :disabled="
-                                                    form.traslado_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fechahora_traslado" data-vv-as=" "
+                                                v-validate:fechahora_traslado_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_traslado
+                                                            " placeholder="Fecha y hora del traslado" class="w-full"
+                                                :disabled="form.traslado_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2005,42 +1319,27 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_traslado
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_traslado[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_traslado
+                                            ">{{
+                                                errores
+                                                    .fechahora_traslado[0]
+                                            }}</span>
                                         </div>
                                         <div class="w-full input-text px-2">
                                             <label>
                                                 Lugar del Traslado
-                                                <span
-                                                    v-if="form.traslado_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.traslado_b == 1">(*)</span>
                                             </label>
-                                            <vs-input
-                                                name="destino_traslado"
-                                                data-vv-as=" "
-                                                v-validate:destino_traslado_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Dirección a trasladar"
-                                                v-model="form.destino_traslado"
-                                                :disabled="
-                                                    form.traslado_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="destino_traslado" data-vv-as=" "
+                                                v-validate:destino_traslado_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Dirección a trasladar" v-model="form.destino_traslado"
+                                                :disabled="form.traslado_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2050,72 +1349,41 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .destino_traslado
-                                                "
-                                                >{{
-                                                    errores.destino_traslado[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .destino_traslado
+                                            ">{{
+                                                errores.destino_traslado[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div
-                            class="w-full xl:w-6/12 px-2 h-full py-4"
-                            v-show="!esExhumacion"
-                        >
+                        <div class="w-full xl:w-6/12 px-2 h-full py-4" v-show="!esExhumacion">
                             <div class="form-group py-6">
                                 <div class="title-form-group">Aseguradora</div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-4/12 px-2 text-center"
-                                        >
-                                            <label
-                                                >¿Servicio con
-                                                Aseguradora?</label
-                                            >
+                                        <div class="w-full input-text xl:w-4/12 px-2 text-center">
+                                            <label>¿Servicio con
+                                                Aseguradora?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="aseguradora_b"
-                                                    v-model="form.aseguradora_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="aseguradora_b"
-                                                    v-model="form.aseguradora_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="aseguradora_b" v-model="form.aseguradora_b"
+                                                    :vs-value="1" class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="aseguradora_b" v-model="form.aseguradora_b"
+                                                    :vs-value="0" class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-8/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-8/12 px-2">
                                             <label>Num. Convenio</label>
-                                            <vs-input
-                                                name="numero_convenio_aseguradora"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Núm. Convenio de referencia"
-                                                v-model="
-                                                    form.numero_convenio_aseguradora
-                                                "
-                                                :disabled="
-                                                    form.aseguradora_b != 1
+                                            <vs-input name="numero_convenio_aseguradora" maxlength="150" type="text"
+                                                class="w-full" placeholder="Núm. Convenio de referencia" v-model="form.numero_convenio_aseguradora
+                                                    " :disabled="form.aseguradora_b != 1
                                                         ? true
                                                         : false
-                                                "
-                                            />
+                                                        " />
 
                                             <span>
                                                 {{
@@ -2125,46 +1393,29 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .numero_convenio_aseguradora
-                                                "
-                                                >{{
-                                                    errores
-                                                        .numero_convenio_aseguradora[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .numero_convenio_aseguradora
+                                            ">{{
+                                                errores
+                                                    .numero_convenio_aseguradora[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Aseguradora
-                                                <span
-                                                    v-if="
-                                                        form.aseguradora_b == 1
-                                                    "
-                                                    >(*)</span
-                                                >
+                                                <span v-if="
+                                                    form.aseguradora_b == 1
+                                                ">(*)</span>
                                             </label>
-                                            <vs-input
-                                                name="aseguradora"
-                                                data-vv-as=" "
-                                                v-validate:aseguradora_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre de la aseguradora"
-                                                v-model="form.aseguradora"
-                                                :disabled="
-                                                    form.aseguradora_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="aseguradora" data-vv-as=" "
+                                                v-validate:aseguradora_validacion_computed.immediate="'required'
+                                                    " maxlength="150" type="text" class="w-full"
+                                                placeholder="Nombre de la aseguradora" v-model="form.aseguradora"
+                                                :disabled="form.aseguradora_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2172,32 +1423,18 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.aseguradora"
-                                                >{{
-                                                    errores.aseguradora[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.aseguradora">{{
+                                                errores.aseguradora[0]
+                                                }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Teléfono (s)</label>
-                                            <vs-input
-                                                name="telefono_aseguradora"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Teléfonos de la aseguradora"
-                                                v-model="
-                                                    form.telefono_aseguradora
-                                                "
-                                                :disabled="
-                                                    form.aseguradora_b != 1
+                                            <vs-input name="telefono_aseguradora" maxlength="45" type="text"
+                                                class="w-full" placeholder="Teléfonos de la aseguradora" v-model="form.telefono_aseguradora
+                                                    " :disabled="form.aseguradora_b != 1
                                                         ? true
                                                         : false
-                                                "
-                                            />
+                                                        " />
 
                                             <span>
                                                 {{
@@ -2207,80 +1444,48 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .telefono_aseguradora
-                                                "
-                                                >{{
-                                                    errores
-                                                        .telefono_aseguradora[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .telefono_aseguradora
+                                            ">{{
+                                                errores
+                                                    .telefono_aseguradora[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div
-                            class="w-full xl:w-6/12 px-2 h-full py-4"
-                            v-show="!esExhumacion"
-                        >
+                        <div class="w-full xl:w-6/12 px-2 h-full py-4" v-show="!esExhumacion">
                             <div class="form-group py-6">
                                 <div class="title-form-group">
                                     Misa / Ceremonia
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2 text-center">
                                             <label>¿Ceremonia o Misa?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="misa_b"
-                                                    v-model="form.misa_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="misa_b"
-                                                    v-model="form.misa_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="misa_b" v-model="form.misa_b" :vs-value="1"
+                                                    class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="misa_b" v-model="form.misa_b" :vs-value="0"
+                                                    class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-9/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-9/12 px-2">
                                             <label>
                                                 Fecha y Hora
-                                                <span v-if="form.misa_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.misa_b == 1">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_misa"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_misa_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="form.fechahora_misa"
-                                                placeholder="Fecha y hora de la misa"
-                                                class="w-full"
-                                                :disabled="
-                                                    form.misa_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fechahora_misa" data-vv-as=" "
+                                                v-validate:fechahora_misa_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_misa"
+                                                placeholder="Fecha y hora de la misa" class="w-full" :disabled="form.misa_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2290,41 +1495,25 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores.fechahora_misa
-                                                "
-                                                >{{
-                                                    errores.fechahora_misa[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.fechahora_misa
+                                            ">{{
+                                                errores.fechahora_misa[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>
                                                 Iglesia o Templo
-                                                <span v-if="form.misa_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.misa_b == 1">(*)</span>
                                             </label>
-                                            <vs-input
-                                                name="iglesia_misa"
-                                                data-vv-as=" "
-                                                v-validate:iglesia_misa_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="75"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre de la iglesia"
-                                                v-model="form.iglesia_misa"
-                                                :disabled="
-                                                    form.misa_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="iglesia_misa" data-vv-as=" "
+                                                v-validate:iglesia_misa_validacion_computed.immediate="'required'
+                                                    " maxlength="75" type="text" class="w-full"
+                                                placeholder="Nombre de la iglesia" v-model="form.iglesia_misa"
+                                                :disabled="form.misa_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2332,30 +1521,18 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.iglesia_misa"
-                                                >{{
-                                                    errores.iglesia_misa[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.iglesia_misa">{{
+                                                errores.iglesia_misa[0]
+                                                }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Dirección</label>
-                                            <vs-input
-                                                name="direccion_iglesia"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Dirección de la iglesia"
-                                                v-model="form.direccion_iglesia"
-                                                :disabled="
-                                                    form.misa_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="direccion_iglesia" maxlength="150" type="text"
+                                                class="w-full" placeholder="Dirección de la iglesia"
+                                                v-model="form.direccion_iglesia" :disabled="form.misa_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{
@@ -2365,72 +1542,41 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .direccion_iglesia
-                                                "
-                                                >{{
-                                                    errores.direccion_iglesia[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .direccion_iglesia
+                                            ">{{
+                                                errores.direccion_iglesia[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div
-                            class="w-full xl:w-6/12 px-2 h-full py-4"
-                            v-show="!esExhumacion"
-                        >
+                        <div class="w-full xl:w-6/12 px-2 h-full py-4" v-show="!esExhumacion">
                             <div class="form-group py-6">
                                 <div class="title-form-group">
                                     Cadena de Custodia
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2 text-center"
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2 text-center">
                                             <label>¿Requirió Custodia?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="custodia_b"
-                                                    v-model="form.custodia_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="custodia_b"
-                                                    v-model="form.custodia_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="custodia_b" v-model="form.custodia_b" :vs-value="1"
+                                                    class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="custodia_b" v-model="form.custodia_b" :vs-value="0"
+                                                    class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-9/12 px-2"
-                                        >
-                                            <label
-                                                >Nombre del Responsable</label
-                                            >
-                                            <vs-input
-                                                name="responsable_custodia"
-                                                maxlength="150"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Nombre del responsable"
-                                                v-model="
-                                                    form.responsable_custodia
-                                                "
-                                                :disabled="
-                                                    form.custodia_b != 1
+                                        <div class="w-full input-text xl:w-9/12 px-2">
+                                            <label>Nombre del Responsable</label>
+                                            <vs-input name="responsable_custodia" maxlength="150" type="text"
+                                                class="w-full" placeholder="Nombre del responsable" v-model="form.responsable_custodia
+                                                    " :disabled="form.custodia_b != 1
                                                         ? true
                                                         : false
-                                                "
-                                            />
+                                                        " />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -2438,34 +1584,22 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .responsable_custodia
-                                                "
-                                                >{{
-                                                    errores
-                                                        .responsable_custodia[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .responsable_custodia
+                                            ">{{
+                                                errores
+                                                    .responsable_custodia[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Folio de Referencia</label>
-                                            <vs-input
-                                                name="folio_custodia"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
+                                            <vs-input name="folio_custodia" maxlength="45" type="text" class="w-full"
                                                 placeholder="Folio de la cadena de custodia"
-                                                v-model="form.folio_custodia"
-                                                :disabled="
-                                                    form.custodia_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                                v-model="form.folio_custodia" :disabled="form.custodia_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -2473,32 +1607,20 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores.folio_custodia
-                                                "
-                                                >{{
-                                                    errores.folio_custodia[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores.folio_custodia
+                                            ">{{
+                                                errores.folio_custodia[0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-6/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-6/12 px-2">
                                             <label>Folio de Liberación</label>
-                                            <vs-input
-                                                name="folio_liberacion"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
+                                            <vs-input name="folio_liberacion" maxlength="45" type="text" class="w-full"
                                                 placeholder="Folio del acta de liberación"
-                                                v-model="form.folio_liberacion"
-                                                :disabled="
-                                                    form.custodia_b != 1
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                                v-model="form.folio_liberacion" :disabled="form.custodia_b != 1
+                                                    ? true
+                                                    : false
+                                                    " />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -2506,15 +1628,12 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .folio_liberacion
-                                                "
-                                                >{{
-                                                    errores.folio_liberacion[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .folio_liberacion
+                                            ">{{
+                                                errores.folio_liberacion[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2535,39 +1654,20 @@
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
                                         <div class="w-full input-text px-2">
-                                            <label
-                                                >¿Requirió Equipo de
-                                                Velación?</label
-                                            >
+                                            <label>¿Requirió Equipo de
+                                                Velación?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="material_velacion_b"
-                                                    v-model="
-                                                        form.material_velacion_b
-                                                    "
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    :disabled="esExhumacion"
-                                                    vs-name="material_velacion_b"
-                                                    v-model="
-                                                        form.material_velacion_b
-                                                    "
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio :disabled="esExhumacion" vs-name="material_velacion_b"
+                                                    v-model="form.material_velacion_b
+                                                        " :vs-value="1" class="mr-4">SI</vs-radio>
+                                                <vs-radio :disabled="esExhumacion" vs-name="material_velacion_b"
+                                                    v-model="form.material_velacion_b
+                                                        " :vs-value="0" class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
                                         <div class="w-full px-2 input-text">
-                                            <vs-table
-                                                class="tabla-datos"
-                                                :data="form.material_velacion"
-                                                noDataText="No se han agregado Artículos"
-                                            >
+                                            <vs-table class="tabla-datos" :data="form.material_velacion"
+                                                noDataText="No se han agregado Artículos">
                                                 <template slot="header">
                                                     <h3>
                                                         Artículos que se van a
@@ -2580,12 +1680,8 @@
                                                     <vs-th>Cantidad</vs-th>
                                                 </template>
                                                 <template slot-scope="{ data }">
-                                                    <vs-tr
-                                                        :data="tr"
-                                                        :key="indextr"
-                                                        v-for="(tr,
-                                                        indextr) in data"
-                                                    >
+                                                    <vs-tr :data="tr" :key="indextr" v-for="(tr,
+                                                        indextr) in data">
                                                         <vs-td class="w-4/12">
                                                             <div>
                                                                 {{
@@ -2594,84 +1690,59 @@
                                                             </div>
                                                         </vs-td>
                                                         <vs-td class="w-4/12">
-                                                            <vs-input
-                                                                :name="
-                                                                    'nota_material' +
-                                                                        indextr
-                                                                "
-                                                                class="w-full mr-auto ml-auto cantidad"
-                                                                maxlength="180"
-                                                                v-model="
-                                                                    form
-                                                                        .material_velacion[
-                                                                        indextr
-                                                                    ].nota
-                                                                "
-                                                                :disabled="
-                                                                    form.material_velacion_b ==
-                                                                    0
+                                                            <vs-input :name="'nota_material' +
+                                                                indextr
+                                                                " class="w-full mr-auto ml-auto cantidad"
+                                                                maxlength="180" v-model="form
+                                                                    .material_velacion[
+                                                                    indextr
+                                                                ].nota
+                                                                    " :disabled="form.material_velacion_b ==
+                                                                        0
                                                                         ? true
                                                                         : false
-                                                                "
-                                                            />
+                                                                        " />
                                                         </vs-td>
                                                         <vs-td class="w-4/12">
-                                                            <vs-input
-                                                                :name="
-                                                                    'cantidad' +
-                                                                        indextr
-                                                                "
-                                                                data-vv-as=" "
-                                                                data-vv-validate-on="blur"
-                                                                v-validate="
-                                                                    'required|integer|min_value:' +
-                                                                        0
-                                                                "
-                                                                class="w-full mr-auto ml-auto cantidad"
-                                                                maxlength="4"
-                                                                v-model="
-                                                                    form
-                                                                        .material_velacion[
-                                                                        indextr
-                                                                    ].cantidad
-                                                                "
-                                                                :disabled="
-                                                                    form.material_velacion_b ==
+                                                            <vs-input :name="'cantidad' +
+                                                                indextr
+                                                                " data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
                                                                     0
+                                                                    " class="w-full mr-auto ml-auto cantidad"
+                                                                maxlength="4" v-model="form
+                                                                    .material_velacion[
+                                                                    indextr
+                                                                ].cantidad
+                                                                    " :disabled="form.material_velacion_b ==
+                                                                        0
                                                                         ? true
                                                                         : false
-                                                                "
-                                                            />
+                                                                        " />
 
                                                             <span>{{
                                                                 errors.first(
                                                                     "cantidad" +
-                                                                        indextr
+                                                                    indextr
                                                                 )
                                                             }}</span>
 
-                                                            <span
-                                                                v-if="
-                                                                    errores[
-                                                                        'material_velacion.' +
-                                                                            indextr +
-                                                                            '.cantidad'
-                                                                    ]
-                                                                "
-                                                            >
+                                                            <span v-if="
+                                                                errores[
+                                                                'material_velacion.' +
+                                                                indextr +
+                                                                '.cantidad'
+                                                                ]
+                                                            ">
                                                                 {{
                                                                     errores[
-                                                                        "material_velacion." +
-                                                                            indextr +
-                                                                            ".cantidad"
+                                                                    "material_velacion." +
+                                                                    indextr +
+                                                                    ".cantidad"
                                                                     ][0]
                                                                 }}
                                                             </span>
                                                         </vs-td>
-                                                        <template
-                                                            class="expand-user"
-                                                            slot="expand"
-                                                        ></template>
+                                                        <template class="expand-user" slot="expand"></template>
                                                     </vs-tr>
                                                 </template>
                                             </vs-table>
@@ -2691,102 +1762,57 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full xl:w-2/12 px-2 text-center input-text"
-                                        >
+                                        <div class="w-full xl:w-2/12 px-2 text-center input-text">
                                             <label>¿Se Tramitó Acta?</label>
                                             <div class="mt-3">
-                                                <vs-radio
-                                                    vs-name="acta_b"
-                                                    v-model="form.acta_b"
-                                                    :vs-value="1"
-                                                    class="mr-4"
-                                                    >SI</vs-radio
-                                                >
-                                                <vs-radio
-                                                    vs-name="acta_b"
-                                                    v-model="form.acta_b"
-                                                    :vs-value="0"
-                                                    class="mr-4"
-                                                    >NO</vs-radio
-                                                >
+                                                <vs-radio vs-name="acta_b" v-model="form.acta_b" :vs-value="1"
+                                                    class="mr-4">SI</vs-radio>
+                                                <vs-radio vs-name="acta_b" v-model="form.acta_b" :vs-value="0"
+                                                    class="mr-4">NO</vs-radio>
                                             </div>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-5/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-5/12 px-2">
                                             <label>
                                                 Folio del Acta
-                                                <span v-if="form.acta_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.acta_b == 1">(*)</span>
                                             </label>
 
-                                            <vs-input
-                                                name="folio_acta"
-                                                data-vv-as=" "
-                                                v-validate:folio_acta_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Folio del Acta"
-                                                v-model="form.folio_acta"
-                                                :disabled="
-                                                    this.form.acta_b == 0
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <vs-input name="folio_acta" data-vv-as=" "
+                                                v-validate:folio_acta_validacion_computed.immediate="'required'
+                                                    " maxlength="45" type="text" class="w-full"
+                                                placeholder="Folio del Acta" v-model="form.folio_acta" :disabled="this.form.acta_b == 0
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{ errors.first("folio_acta") }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.folio_acta"
-                                                >{{
-                                                    errores.folio_acta[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.folio_acta">{{
+                                                errores.folio_acta[0]
+                                                }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-5/12 px-2"
-                                        >
+                                        <div class="w-full input-text xl:w-5/12 px-2">
                                             <label>
                                                 Fecha de Levantamiento
-                                                <span v-if="form.acta_b == 1"
-                                                    >(*)</span
-                                                >
+                                                <span v-if="form.acta_b == 1">(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fecha_acta"
-                                                data-vv-as=" "
-                                                v-validate:fecha_acta_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="configdateTimePicker"
-                                                v-model="form.fecha_acta"
-                                                placeholder="Fecha de Levantamiento"
-                                                class="w-full"
-                                                :disabled="
-                                                    this.form.acta_b == 0
-                                                        ? true
-                                                        : false
-                                                "
-                                            />
+                                            <flat-pickr name="fecha_acta" data-vv-as=" "
+                                                v-validate:fecha_acta_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePicker" v-model="form.fecha_acta"
+                                                placeholder="Fecha de Levantamiento" class="w-full" :disabled="this.form.acta_b == 0
+                                                    ? true
+                                                    : false
+                                                    " />
 
                                             <span>
                                                 {{ errors.first("fecha_acta") }}
                                             </span>
 
-                                            <span
-                                                v-if="this.errores.fecha_acta"
-                                                >{{
-                                                    errores.fecha_acta[0]
-                                                }}</span
-                                            >
+                                            <span v-if="this.errores.fecha_acta">{{
+                                                errores.fecha_acta[0]
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -2803,30 +1829,19 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            v-if="verUsoConvenios"
-                                            class="w-full mt-5"
-                                        >
+                                        <div v-if="verUsoConvenios" class="w-full mt-5">
                                             <div class="flex flex-wrap">
-                                                <div
-                                                    class="w-full mb-6"
-                                                    v-if="
-                                                        form.id_convenio_plan >
-                                                            0 &&
-                                                            form.id_convenio_plan !=
-                                                                ''
-                                                    "
-                                                >
-                                                    <div
-                                                        class="w-full"
-                                                        v-if="
-                                                            contratos_con_uso_plan_funerario_futuro_seleccionado.length >
-                                                                0
-                                                        "
-                                                    >
-                                                        <div
-                                                            class="w-full alerta pt-4 pb-6 px-2"
-                                                        >
+                                                <div class="w-full mb-6" v-if="
+                                                    form.id_convenio_plan >
+                                                    0 &&
+                                                    form.id_convenio_plan !=
+                                                    ''
+                                                ">
+                                                    <div class="w-full" v-if="
+                                                        contratos_con_uso_plan_funerario_futuro_seleccionado.length >
+                                                        0
+                                                    ">
+                                                        <div class="w-full alerta pt-4 pb-6 px-2">
                                                             <div class="info">
                                                                 <h3>
                                                                     Uso de plan
@@ -2851,31 +1866,20 @@
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                            class="w-full px-2 pb-6"
-                                                            v-if="
-                                                                datosPlanFunerario !=
-                                                                    []
-                                                            "
-                                                        >
-                                                            <div
-                                                                class="
+                                                        <div class="w-full px-2 pb-6" v-if="
+                                                            datosPlanFunerario !=
+                                                            []
+                                                        ">
+                                                            <div class="
                                   bg-success-50
                                   py-2
                                   size-base
                                   border-success-solid-2
                                   uppercase
-                                "
-                                                            >
-                                                                <div
-                                                                    class="flex flex-wrap"
-                                                                >
-                                                                    <div
-                                                                        class="w-full py-1 px-2"
-                                                                    >
-                                                                        <span
-                                                                            class="font-medium"
-                                                                        >
+                                ">
+                                                                <div class="flex flex-wrap">
+                                                                    <div class="w-full py-1 px-2">
+                                                                        <span class="font-medium">
                                                                             Plan
                                                                             Funerario
                                                                             a
@@ -2884,9 +1888,7 @@
                                                                         {{
                                                                             form.plan
                                                                         }}
-                                                                        <span
-                                                                            class="font-medium"
-                                                                        >
+                                                                        <span class="font-medium">
                                                                             $
                                                                             Saldo
                                                                             por
@@ -2895,9 +1897,9 @@
                                                                         $
                                                                         {{
                                                                             datosPlanFunerario.saldo_neto
-                                                                                | numFormat(
-                                                                                    "0,000.00"
-                                                                                )
+                                                                            | numFormat(
+                                                                                "0,000.00"
+                                                                            )
                                                                         }}
                                                                         MXN
                                                                     </div>
@@ -2905,73 +1907,42 @@
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                            class="w-full px-2"
-                                                        >
-                                                            <vs-table
-                                                                class="tabla-datos"
-                                                                :data="
-                                                                    contratos_con_uso_plan_funerario_futuro_seleccionado
-                                                                "
-                                                                noDataText=""
-                                                            >
-                                                                <template
-                                                                    slot="header"
-                                                                >
+                                                        <div class="w-full px-2">
+                                                            <vs-table class="tabla-datos" :data="contratos_con_uso_plan_funerario_futuro_seleccionado
+                                                                " noDataText="">
+                                                                <template slot="header">
                                                                     <h3>
                                                                         Lista de
                                                                         Finados
                                                                     </h3>
                                                                 </template>
-                                                                <template
-                                                                    slot="thead"
-                                                                >
-                                                                    <vs-th
-                                                                        >Fallecido</vs-th
-                                                                    >
-                                                                    <vs-th
-                                                                        >Contratante</vs-th
-                                                                    >
-                                                                    <vs-th
-                                                                        >Fecha
+                                                                <template slot="thead">
+                                                                    <vs-th>Fallecido</vs-th>
+                                                                    <vs-th>Contratante</vs-th>
+                                                                    <vs-th>Fecha
                                                                         de
-                                                                        Uso</vs-th
-                                                                    >
+                                                                        Uso</vs-th>
                                                                 </template>
-                                                                <template
-                                                                    slot-scope="{
+                                                                <template slot-scope="{
                                                                         data
-                                                                    }"
-                                                                >
-                                                                    <vs-tr
-                                                                        :data="
-                                                                            tr
-                                                                        "
-                                                                        :key="
-                                                                            indextr
-                                                                        "
-                                                                        v-for="(tr,
-                                                                        indextr) in data"
-                                                                        v-show="
-                                                                            tr.status_b ==
-                                                                                1
-                                                                        "
-                                                                    >
+                                                                    }">
+                                                                    <vs-tr :data="tr
+                                                                        " :key="indextr
+                                                                            " v-for="(tr,
+                                                                                indextr) in data" v-show="tr.status_b ==
+                                                                                    1
+                                                                                    ">
                                                                         <vs-td>
-                                                                            <div
-                                                                                v-if="
-                                                                                    get_id_solicitud ==
-                                                                                        tr.id
-                                                                                "
-                                                                            >
+                                                                            <div v-if="
+                                                                                get_id_solicitud ==
+                                                                                tr.id
+                                                                            ">
                                                                                 {{
                                                                                     tr.nombre_afectado +
-                                                                                        " (Finado de este contrato)"
+                                                                                    " (Finado de este contrato)"
                                                                                 }}
                                                                             </div>
-                                                                            <div
-                                                                                v-else
-                                                                            >
+                                                                            <div v-else>
                                                                                 {{
                                                                                     tr.nombre_afectado
                                                                                 }}
@@ -3003,12 +1974,8 @@
                                                     </div>
 
                                                     <div v-else>
-                                                        <div
-                                                            class="w-full alerta pt-4 pb-6 px-2"
-                                                        >
-                                                            <div
-                                                                class="success"
-                                                            >
+                                                        <div class="w-full alerta pt-4 pb-6 px-2">
+                                                            <div class="success">
                                                                 <h3>
                                                                     Uso de plan
                                                                     funerario a
@@ -3032,16 +1999,11 @@
                                             </div>
 
                                             <!--Uso de cementerio-->
-                                            <div
-                                                class="w-full"
-                                                v-if="
-                                                    contratos_con_uso_terreno_seleccionado.length >
-                                                        0
-                                                "
-                                            >
-                                                <div
-                                                    class="w-full alerta pt-4 pb-6 px-2"
-                                                >
+                                            <div class="w-full" v-if="
+                                                contratos_con_uso_terreno_seleccionado.length >
+                                                0
+                                            ">
+                                                <div class="w-full alerta pt-4 pb-6 px-2">
                                                     <div class="info">
                                                         <h3>
                                                             Uso de propiedad en
@@ -3060,32 +2022,22 @@
                                                 </div>
 
                                                 <div class="w-full px-2">
-                                                    <div
-                                                        class="
+                                                    <div class="
                               bg-success-50
                               py-2
                               size-base
                               border-success-solid-2
                               uppercase
-                            "
-                                                    >
-                                                        <div
-                                                            class="flex flex-wrap"
-                                                        >
-                                                            <div
-                                                                class="w-full py-1 px-2"
-                                                            >
-                                                                <span
-                                                                    class="font-medium"
-                                                                >
+                            ">
+                                                        <div class="flex flex-wrap">
+                                                            <div class="w-full py-1 px-2">
+                                                                <span class="font-medium">
                                                                     Ubicación:
                                                                 </span>
                                                                 {{
                                                                     form.ubicacion_convenio
                                                                 }}
-                                                                <span
-                                                                    class="font-medium"
-                                                                >
+                                                                <span class="font-medium">
                                                                     $ Saldo por
                                                                     pagar:
                                                                 </span>
@@ -3093,9 +2045,9 @@
                                                                 {{
                                                                     this
                                                                         .saldo_neto_terreno
-                                                                        | numFormat(
-                                                                            "0,000.00"
-                                                                        )
+                                                                    | numFormat(
+                                                                        "0,000.00"
+                                                                    )
                                                                 }}
                                                                 MXN
                                                             </div>
@@ -3103,55 +2055,34 @@
                                                     </div>
                                                 </div>
                                                 <div class="w-full px-2 pt-6">
-                                                    <vs-table
-                                                        class="tabla-datos"
-                                                        :data="
-                                                            contratos_con_uso_terreno_seleccionado
-                                                        "
-                                                        noDataText=""
-                                                    >
+                                                    <vs-table class="tabla-datos" :data="contratos_con_uso_terreno_seleccionado
+                                                        " noDataText="">
                                                         <template slot="header">
                                                             <h3>
                                                                 Lista de Finados
                                                             </h3>
                                                         </template>
                                                         <template slot="thead">
-                                                            <vs-th
-                                                                >Fallecido</vs-th
-                                                            >
-                                                            <vs-th
-                                                                >Contratante</vs-th
-                                                            >
-                                                            <vs-th
-                                                                >Fecha de
-                                                                Uso</vs-th
-                                                            >
+                                                            <vs-th>Fallecido</vs-th>
+                                                            <vs-th>Contratante</vs-th>
+                                                            <vs-th>Fecha de
+                                                                Uso</vs-th>
                                                         </template>
-                                                        <template
-                                                            slot-scope="{
+                                                        <template slot-scope="{
                                                                 data
-                                                            }"
-                                                        >
-                                                            <vs-tr
-                                                                :data="tr"
-                                                                :key="indextr"
-                                                                v-for="(tr,
-                                                                indextr) in data"
-                                                                v-show="
-                                                                    tr.status_b ==
-                                                                        1
-                                                                "
-                                                            >
+                                                            }">
+                                                            <vs-tr :data="tr" :key="indextr" v-for="(tr,
+                                                                indextr) in data" v-show="tr.status_b ==
+                                                                    1
+                                                                    ">
                                                                 <vs-td>
-                                                                    <div
-                                                                        v-if="
-                                                                            get_id_solicitud ==
-                                                                                tr.id
-                                                                        "
-                                                                    >
+                                                                    <div v-if="
+                                                                        get_id_solicitud ==
+                                                                        tr.id
+                                                                    ">
                                                                         {{
                                                                             tr.nombre_afectado +
-                                                                                " (Finado de este contrato)"
+                                                                            " (Finado de este contrato)"
                                                                         }}
                                                                     </div>
                                                                     <div v-else>
@@ -3185,9 +2116,7 @@
                                                 </div>
                                             </div>
                                             <div v-else>
-                                                <div
-                                                    class="w-full alerta pt-4 pb-6 px-2"
-                                                >
+                                                <div class="w-full alerta pt-4 pb-6 px-2">
                                                     <div class="success">
                                                         <h3>
                                                             Uso de propiedad en
@@ -3205,13 +2134,8 @@
                                             </div>
                                             <!--Uso de cementerio-->
                                         </div>
-                                        <div
-                                            class="w-full input-text px-2 mb-6"
-                                            v-else
-                                        >
-                                            <div
-                                                class="w-full alerta pt-4 pb-6 px-2"
-                                            >
+                                        <div class="w-full input-text px-2 mb-6" v-else>
+                                            <div class="w-full alerta pt-4 pb-6 px-2">
                                                 <div class="primary">
                                                     <h3>Uso de convenios</h3>
                                                     <p>
@@ -3240,28 +2164,16 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full xl:w-2/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-2/12 px-2 input-text">
                                             <label>
                                                 Fecha del Contrato
                                                 <span>(*)</span>
                                             </label>
-                                            <flat-pickr
-                                                name="fechahora_contrato"
-                                                data-vv-as=" "
-                                                v-validate:fechahora_contrato_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                :config="
-                                                    configdateTimePickerWithTime
-                                                "
-                                                v-model="
-                                                    form.fechahora_contrato
-                                                "
-                                                placeholder="Fecha y Hora del Contrato"
-                                                class="w-full"
-                                            />
+                                            <flat-pickr name="fechahora_contrato" data-vv-as=" "
+                                                v-validate:fechahora_contrato_validacion_computed.immediate="'required'
+                                                    " :config="configdateTimePickerWithTime
+                                                        " v-model="form.fechahora_contrato
+                                                            " placeholder="Fecha y Hora del Contrato" class="w-full" />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -3269,37 +2181,29 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .fechahora_contrato
-                                                "
-                                                >{{
-                                                    errores
-                                                        .fechahora_contrato[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .fechahora_contrato
+                                            ">{{
+                                                errores
+                                                    .fechahora_contrato[0]
+                                            }}</span>
                                         </div>
 
                                         <div class="w-full xl:w-7/12">
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-if="fueCancelada"
-                                            >
+                                            <div class="w-full px-2 input-text" v-if="fueCancelada">
                                                 <label>
                                                     Contratante
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             theme-background
                             text-center
                             py-2
                             px-2
                             size-base
                             border-gray-solid-1
-                          "
-                                                >
+                          ">
                                                     <span class="font-medium">
                                                         Clave:
                                                     </span>
@@ -3314,18 +2218,14 @@
                                                     {{ form.direccion_cliente }}
                                                 </div>
                                             </div>
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-else-if="
-                                                    form.id_cliente == ''
-                                                "
-                                            >
+                                            <div class="w-full px-2 input-text" v-else-if="
+                                                form.id_cliente == ''
+                                            ">
                                                 <label>
                                                     Contratante
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             bg-danger-50
                             text-center
                             py-2
@@ -3334,71 +2234,48 @@
                             border-danger-solid-1
                             cursor-pointer
                             color-danger-900
-                          "
-                                                    @click="openBuscador = true"
-                                                >
+                          " @click="openBuscador = true">
                                                     Click para seleccionar al
                                                     contratante
                                                 </div>
                                             </div>
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-else
-                                            >
+                                            <div class="w-full px-2 input-text" v-else>
                                                 <label>
                                                     Contratante
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             bg-success-50
                             py-2
                             px-2
                             size-base
                             border-success-solid-2
                             uppercase
-                          "
-                                                >
+                          ">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full xl:w-8/12"
-                                                        >
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                        <div class="w-full xl:w-8/12">
+                                                            <span class="font-medium">
                                                                 Clave:
                                                             </span>
                                                             {{
                                                                 form.id_cliente
                                                             }},
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                            <span class="font-medium">
                                                                 Nombre:
                                                             </span>
                                                             {{ form.cliente }}
-                                                            <span
-                                                                class="font-medium hidden"
-                                                            >
+                                                            <span class="font-medium hidden">
                                                                 Dirección:
                                                             </span>
-                                                            <span
-                                                                class="hidden"
-                                                            >
+                                                            <span class="hidden">
                                                                 {{
                                                                     form.direccion_cliente
-                                                                }}</span
-                                                            >
+                                                                }}</span>
                                                         </div>
-                                                        <div
-                                                            class="w-full xl:w-4/12 text-center xl:text-right"
-                                                        >
-                                                            <span
-                                                                @click="
-                                                                    quitarCliente()
-                                                                "
-                                                                class="color-danger-900 cursor-pointer"
-                                                                >X Cambiar
+                                                        <div class="w-full xl:w-4/12 text-center xl:text-right">
+                                                            <span @click="
+                                                                quitarCliente()
+                                                                " class="color-danger-900 cursor-pointer">X Cambiar
                                                                 cliente
                                                             </span>
                                                         </div>
@@ -3407,23 +2284,12 @@
                                             </div>
                                         </div>
 
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2"
-                                        >
-                                            <label
-                                                >Parentesco con el
-                                                Fallecido</label
-                                            >
-                                            <vs-input
-                                                name="parentesco_contratante"
-                                                maxlength="45"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Parentesco con el Fallecido"
-                                                v-model="
-                                                    form.parentesco_contratante
-                                                "
-                                            />
+                                        <div class="w-full input-text xl:w-3/12 px-2">
+                                            <label>Parentesco con el
+                                                Fallecido</label>
+                                            <vs-input name="parentesco_contratante" maxlength="45" type="text"
+                                                class="w-full" placeholder="Parentesco con el Fallecido" v-model="form.parentesco_contratante
+                                                    " />
                                             <span>
                                                 {{
                                                     errors.first(
@@ -3431,16 +2297,13 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores
-                                                        .parentesco_contratante
-                                                "
-                                                >{{
-                                                    errores
-                                                        .parentesco_contratante[0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores
+                                                    .parentesco_contratante
+                                            ">{{
+                                                errores
+                                                    .parentesco_contratante[0]
+                                            }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -3454,23 +2317,14 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div
-                                            class="w-full xl:w-2/12 px-2 input-text"
-                                        >
+                                        <div class="w-full xl:w-2/12 px-2 input-text">
                                             <label>
                                                 ¿Tiene Plan Funerario?
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="sino"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="
-                                                    form.plan_funerario_futuro_b
-                                                "
-                                                class="w-full"
-                                                name="plan_funerario_futuro_b"
-                                            >
+                                            <v-select :options="sino" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.plan_funerario_futuro_b
+                                                    " class="w-full" name="plan_funerario_futuro_b">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -3484,40 +2338,27 @@
                                                 }}
                                             </span>
 
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'plan_funerario_futuro_b.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "plan_funerario_futuro_b.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'plan_funerario_futuro_b.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "plan_funerario_futuro_b.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2"
-                                            v-if="
-                                                form.plan_funerario_futuro_b
-                                                    .value == 0
-                                            "
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2" v-if="
+                                            form.plan_funerario_futuro_b
+                                                .value == 0
+                                        ">
                                             <label>
                                                 ¿Usar Plan de Uso inmediato?
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="sino"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="
-                                                    form.plan_funerario_inmediato_b
-                                                "
-                                                class="w-full"
-                                                name="plan_funerario_inmediato_b"
-                                            >
+                                            <v-select :options="sino" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                v-model="form.plan_funerario_inmediato_b
+                                                    " class="w-full" name="plan_funerario_inmediato_b">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -3529,59 +2370,41 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'plan_funerario_inmediato_b.value'
-                                                    ]
-                                                "
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'plan_funerario_inmediato_b.value'
+                                                ]
+                                            ">
                                                 {{
                                                     errores[
-                                                        "plan_funerario_inmediato_b.value"
+                                                    "plan_funerario_inmediato_b.value"
                                                     ][0]
                                                 }}
                                             </span>
                                         </div>
 
-                                        <div
-                                            class="w-full xl:w-7/12 px-2 input-text"
-                                            v-if="
-                                                form.plan_funerario_futuro_b
-                                                    .value == 0
-                                            "
-                                        >
+                                        <div class="w-full xl:w-7/12 px-2 input-text" v-if="
+                                            form.plan_funerario_futuro_b
+                                                .value == 0
+                                        ">
                                             <label>
                                                 Planes Funerarios de Uso
                                                 Inmediato
-                                                <span
-                                                    v-if="
-                                                        form
-                                                            .plan_funerario_inmediato_b
-                                                            .value == 1
-                                                    "
-                                                    >(*)</span
-                                                >
-                                            </label>
-                                            <v-select
-                                                :options="planes_funerarios"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.plan_funerario"
-                                                class="w-full"
-                                                v-validate:plan_funerario_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="plan_funerario"
-                                                data-vv-as=" "
-                                                :disabled="
+                                                <span v-if="
                                                     form
+                                                        .plan_funerario_inmediato_b
+                                                        .value == 1
+                                                ">(*)</span>
+                                            </label>
+                                            <v-select :options="planes_funerarios" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.plan_funerario"
+                                                class="w-full" v-validate:plan_funerario_validacion_computed.immediate="'required'
+                                                    " name="plan_funerario" data-vv-as=" " :disabled="form
                                                         .plan_funerario_inmediato_b
                                                         .value == 0
                                                         ? true
                                                         : false
-                                                "
-                                            >
+                                                        ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -3593,66 +2416,50 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'plan_funerario.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "plan_funerario.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'plan_funerario.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "plan_funerario.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
 
                                         <!--Seleccionar plan funerario a futuro si tiene convenio-->
-                                        <div
-                                            class="w-full xl:w-7/12"
-                                            v-show="
-                                                form.plan_funerario_futuro_b
-                                                    .value == 1
-                                            "
-                                        >
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-if="fueCancelada"
-                                            >
+                                        <div class="w-full xl:w-7/12" v-show="form.plan_funerario_futuro_b
+                                            .value == 1
+                                            ">
+                                            <div class="w-full px-2 input-text" v-if="fueCancelada">
                                                 <label>
                                                     Convenio del plan funerario
                                                     a futuro
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             theme-background
                             text-center
                             py-2
                             px-2
                             size-base
                             border-gray-solid-1
-                          "
-                                                >
+                          ">
                                                     <span class="font-medium">
                                                         Plan Funerario:
                                                     </span>
                                                     {{ form.plan }}
                                                 </div>
                                             </div>
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-else-if="
-                                                    form.id_convenio_plan == ''
-                                                "
-                                            >
+                                            <div class="w-full px-2 input-text" v-else-if="
+                                                form.id_convenio_plan == ''
+                                            ">
                                                 <label>
                                                     Convenio del plan funerario
                                                     a futuro
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             bg-danger-50
                             text-center
                             py-2
@@ -3661,54 +2468,38 @@
                             border-danger-solid-1
                             cursor-pointer
                             color-danger-900
-                          "
-                                                    @click="
-                                                        openBuscadorPlan = true
-                                                    "
-                                                >
+                          " @click="
+                            openBuscadorPlan = true
+                            ">
                                                     Click para seleccionar al
                                                     convenio
                                                 </div>
                                             </div>
-                                            <div
-                                                class="w-full px-2 input-text"
-                                                v-else
-                                            >
+                                            <div class="w-full px-2 input-text" v-else>
                                                 <label>
                                                     Convenio del plan funerario
                                                     a futuro
                                                     <span>(*)</span>
                                                 </label>
-                                                <div
-                                                    class="
+                                                <div class="
                             bg-success-50
                             py-2
                             px-2
                             size-base
                             border-success-solid-2
                             uppercase
-                          "
-                                                >
+                          ">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full lg:w-7/12"
-                                                        >
-                                                            <span
-                                                                class="font-medium"
-                                                            >
+                                                        <div class="w-full lg:w-7/12">
+                                                            <span class="font-medium">
                                                                 Plan Funerario:
                                                             </span>
                                                             {{ form.plan }}
                                                         </div>
-                                                        <div
-                                                            class="w-full lg:w-4/12 text-center xl:text-right"
-                                                        >
-                                                            <span
-                                                                @click="
-                                                                    quitarPlan()
-                                                                "
-                                                                class="color-danger-900 cursor-pointer"
-                                                                >X Cambiar
+                                                        <div class="w-full lg:w-4/12 text-center xl:text-right">
+                                                            <span @click="
+                                                                quitarPlan()
+                                                                " class="color-danger-900 cursor-pointer">X Cambiar
                                                                 convenio
                                                             </span>
                                                         </div>
@@ -3717,29 +2508,18 @@
                                             </div>
                                         </div>
                                         <!--Fin de plan funerario con convenio-->
-                                        <div
-                                            class="w-full input-text xl:w-3/12 px-2"
-                                            v-show="
-                                                form.plan_funerario_futuro_b
-                                                    .value == 1
-                                            "
-                                        >
+                                        <div class="w-full input-text xl:w-3/12 px-2" v-show="form.plan_funerario_futuro_b
+                                            .value == 1
+                                            ">
                                             <label>
                                                 Tipo de Contratante
                                                 <span>(*)</span>
                                             </label>
-                                            <v-select
-                                                :options="tipos_contratante"
-                                                :clearable="false"
-                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                v-model="form.tipo_contratante"
+                                            <v-select :options="tipos_contratante" :clearable="false"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.tipo_contratante"
                                                 class="w-full"
-                                                v-validate:tipo_contratante_validacion_computed.immediate="
-                                                    'required'
-                                                "
-                                                name="tipo_contratante"
-                                                data-vv-as=" "
-                                            >
+                                                v-validate:tipo_contratante_validacion_computed.immediate="'required'
+                                                    " name="tipo_contratante" data-vv-as=" ">
                                                 <div slot="no-options">
                                                     Seleccione 1
                                                 </div>
@@ -3751,57 +2531,33 @@
                                                     )
                                                 }}
                                             </span>
-                                            <span
-                                                v-if="
-                                                    this.errores[
-                                                        'tipo_contratante.value'
-                                                    ]
-                                                "
-                                                >{{
-                                                    errores[
-                                                        "tipo_contratante.value"
-                                                    ][0]
-                                                }}</span
-                                            >
+                                            <span v-if="
+                                                this.errores[
+                                                'tipo_contratante.value'
+                                                ]
+                                            ">{{
+                                                errores[
+                                                "tipo_contratante.value"
+                                                ][0]
+                                            }}</span>
                                         </div>
                                         <!--Ver Contenido del plan-->
-                                        <div
-                                            v-if="verLista"
-                                            class="w-full input-text px-2 mt-6"
-                                        >
-                                            <vx-card
-                                                no-radius
-                                                collapse-action
-                                                :title="
-                                                    form.plan_funerario_futuro_b
-                                                        .value == 1
-                                                        ? form.plan
-                                                        : form.plan_funerario
-                                                              .label
-                                                "
-                                            >
-                                                <vs-table
-                                                    class="tabla-datos no-header"
-                                                    :data="conceptos"
-                                                    noDataText="No se han agregado Artículos ni Servicios"
-                                                >
+                                        <div v-if="verLista" class="w-full input-text px-2 mt-6">
+                                            <vx-card no-radius collapse-action :title="form.plan_funerario_futuro_b
+                                                .value == 1
+                                                ? form.plan
+                                                : form.plan_funerario
+                                                    .label
+                                                ">
+                                                <vs-table class="tabla-datos no-header" :data="conceptos"
+                                                    noDataText="No se han agregado Artículos ni Servicios">
                                                     <template slot="thead">
-                                                        <vs-th
-                                                            >Artículo/Servicio</vs-th
-                                                        >
-                                                        <vs-th
-                                                            >Aplicar en</vs-th
-                                                        >
+                                                        <vs-th>Artículo/Servicio</vs-th>
+                                                        <vs-th>Aplicar en</vs-th>
                                                     </template>
-                                                    <template
-                                                        slot-scope="{ data }"
-                                                    >
-                                                        <vs-tr
-                                                            :data="tr"
-                                                            :key="indextr"
-                                                            v-for="(tr,
-                                                            indextr) in data"
-                                                        >
+                                                    <template slot-scope="{ data }">
+                                                        <vs-tr :data="tr" :key="indextr" v-for="(tr,
+                                                            indextr) in data">
                                                             <vs-td>
                                                                 <div>
                                                                     {{
@@ -3820,166 +2576,111 @@
 
                                                         <!--mostrar en caso de que se use un plan ya comprado para uso a futuro-->
 
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_futuro_b
-                                                                    .value == 1
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value == 1
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Titular del
                                                                     Convenio
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="uppercase dato_servicio_valor"
-                                                                >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="uppercase dato_servicio_valor">
                                                                     {{
                                                                         datosPlanFunerario.nombre
                                                                     }}
                                                                 </div>
                                                             </vs-td>
                                                         </vs-tr>
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_futuro_b
-                                                                    .value == 1
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value == 1
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Fecha de la
                                                                     Venta
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="dato_servicio_valor"
-                                                                >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="dato_servicio_valor">
                                                                     {{
                                                                         datosPlanFunerario.fecha_operacion_texto
                                                                     }}
                                                                 </div>
                                                             </vs-td>
                                                         </vs-tr>
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_futuro_b
-                                                                    .value == 1
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value == 1
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Estado del
                                                                     Plan
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="dato_servicio_valor"
-                                                                >
-                                                                    <span
-                                                                        class="color-warning-900"
-                                                                        v-if="
-                                                                            datosPlanFunerario.operacion_status ==
-                                                                                1
-                                                                        "
-                                                                        >{{
-                                                                            datosPlanFunerario.status_texto
-                                                                        }}</span
-                                                                    >
-                                                                    <span
-                                                                        class="color-success-900"
-                                                                        v-else-if="
-                                                                            datosPlanFunerario.operacion_status ==
-                                                                                2
-                                                                        "
-                                                                        >{{
-                                                                            datosPlanFunerario.status_texto
-                                                                        }}</span
-                                                                    >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="dato_servicio_valor">
+                                                                    <span class="color-warning-900" v-if="
+                                                                        datosPlanFunerario.operacion_status ==
+                                                                        1
+                                                                    ">{{
+                                                                        datosPlanFunerario.status_texto
+                                                                    }}</span>
+                                                                    <span class="color-success-900" v-else-if="
+                                                                        datosPlanFunerario.operacion_status ==
+                                                                        2
+                                                                    ">{{
+                                                                        datosPlanFunerario.status_texto
+                                                                    }}</span>
 
-                                                                    <span
-                                                                        v-else-if="
-                                                                            datosPlanFunerario.operacion_status ==
-                                                                                0
-                                                                        "
-                                                                        >{{
-                                                                            datosPlanFunerario.status_texto
-                                                                        }}</span
-                                                                    >
+                                                                    <span v-else-if="
+                                                                        datosPlanFunerario.operacion_status ==
+                                                                        0
+                                                                    ">{{
+                                                                        datosPlanFunerario.status_texto
+                                                                    }}</span>
                                                                 </div>
                                                             </vs-td>
                                                         </vs-tr>
 
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_futuro_b
-                                                                    .value == 1
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value == 1
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Saldo
                                                                     Restante
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="dato_servicio_valor"
-                                                                >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="dato_servicio_valor">
                                                                     $
                                                                     {{
                                                                         datosPlanFunerario.saldo_neto
-                                                                            | numFormat(
-                                                                                "0,000.00"
-                                                                            )
+                                                                        | numFormat(
+                                                                            "0,000.00"
+                                                                        )
                                                                     }}
                                                                 </div>
                                                             </vs-td>
@@ -3988,44 +2689,33 @@
                                                         <!--fFIN DE DATOS A USAR EN CASO DE QUE SEA A USO A FUTURO-->
 
                                                         <!--fFIN DE DATOS A USAR EN CASO DE QUE SEA A USO INMEDIATO-->
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_inmediato_b
-                                                                    .value ==
-                                                                    1 &&
-                                                                    form
-                                                                        .plan_funerario_futuro_b
-                                                                        .value ==
-                                                                        0 &&
-                                                                    form
-                                                                        .plan_funerario
-                                                                        .value !=
-                                                                        ''
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_inmediato_b
+                                                                .value ==
+                                                            1 &&
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value ==
+                                                            0 &&
+                                                            form
+                                                                .plan_funerario
+                                                                .value !=
+                                                            ''
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Plan
                                                                     Funerario de
                                                                     Uso
                                                                     Inmediato
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="dato_servicio_valor"
-                                                                >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="dato_servicio_valor">
                                                                     {{
                                                                         form
                                                                             .plan_funerario
@@ -4034,49 +2724,38 @@
                                                                 </div>
                                                             </vs-td>
                                                         </vs-tr>
-                                                        <vs-tr
-                                                            v-if="
-                                                                form
-                                                                    .plan_funerario_inmediato_b
-                                                                    .value ==
-                                                                    1 &&
-                                                                    form
-                                                                        .plan_funerario_futuro_b
-                                                                        .value ==
-                                                                        0 &&
-                                                                    form
-                                                                        .plan_funerario
-                                                                        .value !=
-                                                                        ''
-                                                            "
-                                                        >
-                                                            <vs-td
-                                                                class="w-7/12"
-                                                            >
-                                                                <div
-                                                                    class="py-1 text-right pr-4 dato_servicio"
-                                                                >
+                                                        <vs-tr v-if="
+                                                            form
+                                                                .plan_funerario_inmediato_b
+                                                                .value ==
+                                                            1 &&
+                                                            form
+                                                                .plan_funerario_futuro_b
+                                                                .value ==
+                                                            0 &&
+                                                            form
+                                                                .plan_funerario
+                                                                .value !=
+                                                            ''
+                                                        ">
+                                                            <vs-td class="w-7/12">
+                                                                <div class="py-1 text-right pr-4 dato_servicio">
                                                                     Total del
                                                                     Plan
                                                                     Funerario
                                                                 </div>
                                                             </vs-td>
-                                                            <vs-td
-                                                                class="w-2/12"
-                                                            >
-                                                                <div
-                                                                    v-if="
-                                                                        datosPlanFunerario !=
-                                                                            []
-                                                                    "
-                                                                    class="dato_servicio_valor"
-                                                                >
+                                                            <vs-td class="w-2/12">
+                                                                <div v-if="
+                                                                    datosPlanFunerario !=
+                                                                    []
+                                                                " class="dato_servicio_valor">
                                                                     $
                                                                     {{
                                                                         costo_uso_inmediato_computed
-                                                                            | numFormat(
-                                                                                "0,000.00"
-                                                                            )
+                                                                        | numFormat(
+                                                                            "0,000.00"
+                                                                        )
                                                                     }}
                                                                 </div>
                                                             </vs-td>
@@ -4102,12 +2781,9 @@
                                 </div>
                                 <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <img
-                                            class="img-btn-20 mx-3 mt-4 hidden lg:block"
-                                            src="@assets/images/barcode.svg"
-                                        />
-                                        <div
-                                            class="
+                                        <img class="img-btn-20 mx-3 mt-4 hidden lg:block"
+                                            src="@assets/images/barcode.svg" />
+                                        <div class="
                         w-auto
                         lg:w-4/12
                         xl:w-2/12
@@ -4115,71 +2791,45 @@
                         input-text
                         hidden
                         lg:block
-                      "
-                                        >
-                                            <label
-                                                >Clave o código de barras</label
-                                            >
-                                            <vs-input
-                                                ref="codigo_barras"
-                                                name="codigo_barras"
-                                                data-vv-as=" "
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Ej. 0000000123"
-                                                maxlength="28"
-                                                v-model.trim="
-                                                    serverOptions.numero_control
-                                                "
-                                                v-on:keyup.enter="
-                                                    get_concepto_por_codigo(
-                                                        'codigo_barras'
-                                                    )
-                                                "
-                                                v-on:blur="
-                                                    get_concepto_por_codigo(
-                                                        'codigo_barras',
-                                                        'blur'
-                                                    )
-                                                "
-                                            />
+                      ">
+                                            <label>Clave o código de barras</label>
+                                            <vs-input ref="codigo_barras" name="codigo_barras" data-vv-as=" "
+                                                type="text" class="w-full" placeholder="Ej. 0000000123" maxlength="28"
+                                                v-model.trim="serverOptions.numero_control
+                                                    " v-on:keyup.enter="
+                                                        get_concepto_por_codigo(
+                                                            'codigo_barras'
+                                                        )
+                                                        " v-on:blur="
+                                                            get_concepto_por_codigo(
+                                                                'codigo_barras',
+                                                                'blur'
+                                                            )
+                                                            " />
                                         </div>
-                                        <img
-                                            class="
+                                        <img class="
                         cursor-pointer
                         img-btn-20
                         mx-3
                         mt-4
                         hidden
                         lg:block
-                      "
-                                            src="@assets/images/searcharticulo.svg"
-                                            title="Buscador de artículos y servicios"
-                                            @click="
-                                                openBuscadorArticulos = true
-                                            "
-                                        />
+                      " src="@assets/images/searcharticulo.svg" title="Buscador de artículos y servicios" @click="
+                        openBuscadorArticulos = true
+                        " />
 
-                                        <div
-                                            class="w-full text-right block lg:hidden"
-                                        >
-                                            <vs-button
-                                                class="sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                                                color="primary"
+                                        <div class="w-full text-right block lg:hidden">
+                                            <vs-button class="sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
                                                 @click="
                                                     openBuscadorArticulos = true
-                                                "
-                                            >
+                                                    ">
                                                 <span>Buscar artículos</span>
                                             </vs-button>
                                         </div>
 
                                         <div class="w-full my-6 px-2">
-                                            <vs-table
-                                                class="tabla-datos"
-                                                :data="form.articulos_servicios"
-                                                noDataText="No se han agregado Artículos ni Servicios"
-                                            >
+                                            <vs-table class="tabla-datos" :data="form.articulos_servicios"
+                                                noDataText="No se han agregado Artículos ni Servicios">
                                                 <template slot="header">
                                                     <h3>
                                                         Servicios y Artículos
@@ -4190,32 +2840,22 @@
                                                 <template slot="thead">
                                                     <vs-th>#</vs-th>
                                                     <vs-th hidden>Clave</vs-th>
-                                                    <vs-th hidden
-                                                        >Código de Barras</vs-th
-                                                    >
+                                                    <vs-th hidden>Código de Barras</vs-th>
                                                     <vs-th hidden>Tipo</vs-th>
                                                     <vs-th>Descripción</vs-th>
                                                     <vs-th>Cant.</vs-th>
                                                     <vs-th>Costo Neto</vs-th>
                                                     <vs-th>Descuento</vs-th>
-                                                    <vs-th
-                                                        >Costo Neto Con
-                                                        Descuento</vs-th
-                                                    >
+                                                    <vs-th>Costo Neto Con
+                                                        Descuento</vs-th>
                                                     <vs-th>Importe</vs-th>
-                                                    <vs-th
-                                                        >Plan Funerario</vs-th
-                                                    >
+                                                    <vs-th>Plan Funerario</vs-th>
                                                     <vs-th>Facturable</vs-th>
                                                     <vs-th>Quitar</vs-th>
                                                 </template>
                                                 <template slot-scope="{ data }">
-                                                    <vs-tr
-                                                        :data="tr"
-                                                        :key="indextr"
-                                                        v-for="(tr,
-                                                        indextr) in data"
-                                                    >
+                                                    <vs-tr :data="tr" :key="indextr" v-for="(tr,
+                                                        indextr) in data">
                                                         <vs-td class="">
                                                             <div>
                                                                 <span>{{
@@ -4252,9 +2892,7 @@
                                                             </div>
                                                         </vs-td>
                                                         <vs-td class="">
-                                                            <div
-                                                                class="uppercase"
-                                                            >
+                                                            <div class="uppercase">
                                                                 {{
                                                                     data[
                                                                         indextr
@@ -4265,105 +2903,76 @@
                                                         </vs-td>
 
                                                         <vs-td class="">
-                                                            <vs-input
-                                                                :name="
-                                                                    'cantidad_articulos_servicios' +
-                                                                        indextr
-                                                                "
-                                                                data-vv-as=" "
-                                                                data-vv-validate-on="blur"
-                                                                v-validate="
-                                                                    'required|integer|min_value:' +
-                                                                        1
-                                                                "
-                                                                class="mr-auto ml-auto input-cantidad"
-                                                                maxlength="4"
-                                                                v-model="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ].cantidad
-                                                                "
-                                                            />
-                                                            <div
-                                                                class="input-text"
-                                                            >
+                                                            <vs-input :name="'cantidad_articulos_servicios' +
+                                                                indextr
+                                                                " data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
+                                                                    1
+                                                                    " class="mr-auto ml-auto input-cantidad"
+                                                                maxlength="4" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ].cantidad
+                                                                    " />
+                                                            <div class="input-text">
                                                                 <span>
                                                                     {{
                                                                         errors.first(
                                                                             "cantidad_articulos_servicios" +
-                                                                                indextr
+                                                                            indextr
                                                                         )
                                                                     }}
                                                                 </span>
                                                             </div>
                                                         </vs-td>
-                                                        <vs-td
-                                                            class=""
-                                                            v-if="
-                                                                habilitar_plan_funerario_b ==
-                                                                    false ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            1 &&
-                                                                        form
-                                                                            .articulos_servicios[
-                                                                            indextr
-                                                                        ]
-                                                                            .plan_b ==
-                                                                            0) ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            0 &&
-                                                                        form
-                                                                            .plan_funerario_inmediato_b
-                                                                            .value ==
-                                                                            1)
-                                                            "
-                                                        >
-                                                            <vs-input
-                                                                :name="
-                                                                    'costo_neto_normal_articulos_servicios' +
-                                                                        indextr
-                                                                "
-                                                                data-vv-as=" "
-                                                                data-vv-validate-on="blur"
-                                                                v-validate="
-                                                                    'required|decimal:2|min_value:' +
-                                                                        0
-                                                                "
-                                                                class="mr-auto ml-auto input-cantidad"
-                                                                maxlength="10"
-                                                                v-model="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ]
-                                                                        .costo_neto_normal
-                                                                "
-                                                                :disabled="
-                                                                    form
+                                                        <vs-td class="" v-if="
+                                                            habilitar_plan_funerario_b ==
+                                                            false ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                1 &&
+                                                                form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .plan_b ==
+                                                                0) ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                0 &&
+                                                                form
+                                                                    .plan_funerario_inmediato_b
+                                                                    .value ==
+                                                                1)
+                                                        ">
+                                                            <vs-input :name="'costo_neto_normal_articulos_servicios' +
+                                                                indextr
+                                                                " data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|decimal:2|min_value:' +
+                                                                    0
+                                                                    " class="mr-auto ml-auto input-cantidad"
+                                                                maxlength="10" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .costo_neto_normal
+                                                                    " :disabled="form
                                                                         .articulos_servicios[
                                                                         indextr
                                                                     ]
                                                                         .descuento_b ==
                                                                         1
-                                                                "
-                                                            />
-                                                            <div
-                                                                class="input-text"
-                                                            >
+                                                                        " />
+                                                            <div class="input-text">
                                                                 <span>
                                                                     {{
                                                                         errors.first(
                                                                             "costo_neto_normal_articulos_servicios" +
-                                                                                indextr
+                                                                            indextr
                                                                         )
                                                                     }}
                                                                 </span>
@@ -4372,130 +2981,101 @@
                                                         <vs-td v-else class="">
                                                             <div>$ 0.00</div>
                                                         </vs-td>
-                                                        <vs-td
-                                                            class=""
-                                                            v-if="
-                                                                habilitar_plan_funerario_b ==
-                                                                    false ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            1 &&
-                                                                        form
-                                                                            .articulos_servicios[
-                                                                            indextr
-                                                                        ]
-                                                                            .plan_b ==
-                                                                            0) ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            0 &&
-                                                                        form
-                                                                            .plan_funerario_inmediato_b
-                                                                            .value ==
-                                                                            1)
-                                                            "
-                                                        >
-                                                            <vs-switch
-                                                                class="ml-auto mr-auto"
-                                                                color="success"
-                                                                icon-pack="feather"
-                                                                v-model="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ]
-                                                                        .descuento_b
-                                                                "
-                                                            >
-                                                                <span slot="on"
-                                                                    >SI</span
-                                                                >
-                                                                <span slot="off"
-                                                                    >NO</span
-                                                                >
+                                                        <vs-td class="" v-if="
+                                                            habilitar_plan_funerario_b ==
+                                                            false ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                1 &&
+                                                                form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .plan_b ==
+                                                                0) ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                0 &&
+                                                                form
+                                                                    .plan_funerario_inmediato_b
+                                                                    .value ==
+                                                                1)
+                                                        ">
+                                                            <vs-switch class="ml-auto mr-auto" color="success"
+                                                                icon-pack="feather" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .descuento_b
+                                                                    ">
+                                                                <span slot="on">SI</span>
+                                                                <span slot="off">NO</span>
                                                             </vs-switch>
                                                         </vs-td>
                                                         <vs-td v-else class="">
                                                             <div>N/A</div>
                                                         </vs-td>
-                                                        <vs-td
-                                                            class=""
-                                                            v-if="
-                                                                habilitar_plan_funerario_b ==
-                                                                    false ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            1 &&
-                                                                        form
-                                                                            .articulos_servicios[
-                                                                            indextr
-                                                                        ]
-                                                                            .plan_b ==
-                                                                            0) ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            0 &&
-                                                                        form
-                                                                            .plan_funerario_inmediato_b
-                                                                            .value ==
-                                                                            1)
-                                                            "
-                                                        >
-                                                            <vs-input
-                                                                :name="
-                                                                    'costo_neto_descuento_articulos_servicios' +
-                                                                        indextr
-                                                                "
-                                                                data-vv-as=" "
-                                                                data-vv-validate-on="blur"
-                                                                v-validate="
-                                                                    'required|decimal:2|min_value:' +
-                                                                        0 +
-                                                                        '|max_value:' +
-                                                                        form
-                                                                            .articulos_servicios[
-                                                                            indextr
-                                                                        ]
-                                                                            .costo_neto_normal
-                                                                "
-                                                                class="mr-auto ml-auto input-cantidad"
-                                                                maxlength="10"
-                                                                v-model="
+                                                        <vs-td class="" v-if="
+                                                            habilitar_plan_funerario_b ==
+                                                            false ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                1 &&
+                                                                form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .plan_b ==
+                                                                0) ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                0 &&
+                                                                form
+                                                                    .plan_funerario_inmediato_b
+                                                                    .value ==
+                                                                1)
+                                                        ">
+                                                            <vs-input :name="'costo_neto_descuento_articulos_servicios' +
+                                                                indextr
+                                                                " data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|decimal:2|min_value:' +
+                                                                    0 +
+                                                                    '|max_value:' +
                                                                     form
                                                                         .articulos_servicios[
                                                                         indextr
                                                                     ]
-                                                                        .costo_neto_descuento
-                                                                "
-                                                                :disabled="
-                                                                    form
+                                                                        .costo_neto_normal
+                                                                    " class="mr-auto ml-auto input-cantidad"
+                                                                maxlength="10" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .costo_neto_descuento
+                                                                    " :disabled="form
                                                                         .articulos_servicios[
                                                                         indextr
                                                                     ]
                                                                         .descuento_b ==
                                                                         0
-                                                                "
-                                                            />
-                                                            <div
-                                                                class="input-text"
-                                                            >
+                                                                        " />
+                                                            <div class="input-text">
                                                                 <span>
                                                                     {{
                                                                         errors.first(
                                                                             "costo_neto_descuento_articulos_servicios" +
-                                                                                indextr
+                                                                            indextr
                                                                         )
                                                                     }}
                                                                 </span>
@@ -4504,45 +3084,40 @@
                                                         <vs-td v-else class="">
                                                             <div>N/A</div>
                                                         </vs-td>
-                                                        <vs-td
-                                                            class=""
-                                                            v-if="
-                                                                habilitar_plan_funerario_b ==
-                                                                    false ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            1 &&
-                                                                        form
-                                                                            .articulos_servicios[
-                                                                            indextr
-                                                                        ]
-                                                                            .plan_b ==
-                                                                            0) ||
-                                                                    (habilitar_plan_funerario_b ==
-                                                                        true &&
-                                                                        form
-                                                                            .plan_funerario_futuro_b
-                                                                            .value ==
-                                                                            0 &&
-                                                                        form
-                                                                            .plan_funerario_inmediato_b
-                                                                            .value ==
-                                                                            1)
-                                                            "
-                                                        >
-                                                            <div
-                                                                v-if="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ]
-                                                                        .descuento_b ==
-                                                                        1
-                                                                "
-                                                            >
+                                                        <vs-td class="" v-if="
+                                                            habilitar_plan_funerario_b ==
+                                                            false ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                1 &&
+                                                                form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .plan_b ==
+                                                                0) ||
+                                                            (habilitar_plan_funerario_b ==
+                                                                true &&
+                                                                form
+                                                                    .plan_funerario_futuro_b
+                                                                    .value ==
+                                                                0 &&
+                                                                form
+                                                                    .plan_funerario_inmediato_b
+                                                                    .value ==
+                                                                1)
+                                                        ">
+                                                            <div v-if="
+                                                                form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .descuento_b ==
+                                                                1
+                                                            ">
                                                                 $
                                                                 {{
                                                                     (form
@@ -4555,9 +3130,9 @@
                                                                             indextr
                                                                         ]
                                                                             .cantidad)
-                                                                        | numFormat(
-                                                                            "0,000.00"
-                                                                        )
+                                                                    | numFormat(
+                                                                        "0,000.00"
+                                                                    )
                                                                 }}
                                                             </div>
                                                             <div v-else>
@@ -4573,83 +3148,55 @@
                                                                             indextr
                                                                         ]
                                                                             .cantidad)
-                                                                        | numFormat(
-                                                                            "0,000.00"
-                                                                        )
+                                                                    | numFormat(
+                                                                        "0,000.00"
+                                                                    )
                                                                 }}
                                                             </div>
                                                         </vs-td>
                                                         <vs-td v-else class="">
                                                             <div>$ 0.00</div>
                                                         </vs-td>
-                                                        <vs-td
-                                                            v-if="
-                                                                habilitar_plan_funerario_b
-                                                            "
-                                                        >
-                                                            <vs-switch
-                                                                class="ml-auto mr-auto"
-                                                                color="success"
-                                                                icon-pack="feather"
-                                                                v-model="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ].plan_b
-                                                                "
-                                                                :disabled="
-                                                                    !habilitar_plan_funerario_b
-                                                                "
-                                                            >
-                                                                <span slot="on"
-                                                                    >SI</span
-                                                                >
-                                                                <span slot="off"
-                                                                    >NO</span
-                                                                >
+                                                        <vs-td v-if="
+                                                            habilitar_plan_funerario_b
+                                                        ">
+                                                            <vs-switch class="ml-auto mr-auto" color="success"
+                                                                icon-pack="feather" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ].plan_b
+                                                                    " :disabled="!habilitar_plan_funerario_b
+                                                                        ">
+                                                                <span slot="on">SI</span>
+                                                                <span slot="off">NO</span>
                                                             </vs-switch>
                                                         </vs-td>
                                                         <vs-td v-else class="">
                                                             <div>N/A</div>
                                                         </vs-td>
                                                         <vs-td class="">
-                                                            <vs-switch
-                                                                class="ml-auto mr-auto"
-                                                                color="success"
-                                                                icon-pack="feather"
-                                                                v-model="
-                                                                    form
-                                                                        .articulos_servicios[
-                                                                        indextr
-                                                                    ]
-                                                                        .facturable_b
-                                                                "
-                                                            >
-                                                                <span slot="on"
-                                                                    >SI</span
-                                                                >
-                                                                <span slot="off"
-                                                                    >NO</span
-                                                                >
+                                                            <vs-switch class="ml-auto mr-auto" color="success"
+                                                                icon-pack="feather" v-model="form
+                                                                    .articulos_servicios[
+                                                                    indextr
+                                                                ]
+                                                                    .facturable_b
+                                                                    ">
+                                                                <span slot="on">SI</span>
+                                                                <span slot="off">NO</span>
                                                             </vs-switch>
                                                         </vs-td>
 
                                                         <vs-td class="">
-                                                            <div
-                                                                class="flex justify-center"
-                                                                @click="
-                                                                    remover_articulo(
-                                                                        indextr
-                                                                    )
-                                                                "
-                                                                v-if="
+                                                            <div class="flex justify-center" @click="
+                                                                remover_articulo(
+                                                                    indextr
+                                                                )
+                                                                " v-if="
                                                                     !fueCancelada
-                                                                "
-                                                            >
-                                                                <img
-                                                                    class="cursor-pointer img-btn-20 mx-3"
-                                                                    src="@assets/images/minus.svg"
-                                                                />
+                                                                ">
+                                                                <img class="cursor-pointer img-btn-20 mx-3"
+                                                                    src="@assets/images/minus.svg" />
                                                             </div>
                                                         </vs-td>
                                                     </vs-tr>
@@ -4659,173 +3206,104 @@
 
                                         <div class="w-full">
                                             <div class="flex flex-wrap my-6">
-                                                <div
-                                                    class="w-full xl:w-8/12 px-2"
-                                                >
+                                                <div class="w-full xl:w-8/12 px-2">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full input-text px-2"
-                                                        >
-                                                            <label
-                                                                >Nota u
-                                                                Observación:</label
-                                                            >
-                                                            <vs-textarea
-                                                                height="240px"
-                                                                :rows="9"
-                                                                size="large"
-                                                                ref="nota"
-                                                                type="text"
-                                                                class="w-full"
-                                                                v-model.trim="
-                                                                    form.nota
-                                                                "
-                                                            />
+                                                        <div class="w-full input-text px-2">
+                                                            <label>Nota u
+                                                                Observación:</label>
+                                                            <vs-textarea height="240px" :rows="9" size="large"
+                                                                ref="nota" type="text" class="w-full" v-model.trim="form.nota
+                                                                    " />
                                                         </div>
                                                     </div>
                                                     <!--fin del resumen de la venta-->
                                                 </div>
-                                                <div
-                                                    class="w-full xl:w-4/12 px-2"
-                                                >
+                                                <div class="w-full xl:w-4/12 px-2">
                                                     <div class="flex flex-wrap">
-                                                        <div
-                                                            class="w-full input-text px-2 text-center"
-                                                        >
+                                                        <div class="w-full input-text px-2 text-center">
                                                             <label>
                                                                 Tasa IVA %
                                                                 <span>(*)</span>
                                                             </label>
-                                                            <vs-input
-                                                                :disabled="
-                                                                    tiene_pagos_realizados ||
-                                                                        ventaLiquidada ||
-                                                                        fueCancelada
-                                                                "
-                                                                size="large"
-                                                                name="tasa_iva"
-                                                                data-vv-as=" "
-                                                                v-validate="
-                                                                    'required|decimal:2|min_value:14|max_value:25'
-                                                                "
-                                                                type="text"
-                                                                class="w-full cantidad"
-                                                                placeholder="Porcentaje IVA"
-                                                                v-model="
-                                                                    form.tasa_iva
-                                                                "
-                                                                maxlength="2"
-                                                            />
-                                                            <span
-                                                                class="mensaje-requerido"
-                                                            >
+                                                            <vs-input :disabled="tiene_pagos_realizados ||
+                                                                ventaLiquidada ||
+                                                                fueCancelada
+                                                                " size="large" name="tasa_iva" data-vv-as=" "
+                                                                v-validate="'required|decimal:2|min_value:14|max_value:25'
+                                                                    " type="text" class="w-full cantidad"
+                                                                placeholder="Porcentaje IVA" v-model="form.tasa_iva
+                                                                    " maxlength="2" />
+                                                            <span class="mensaje-requerido">
                                                                 {{
                                                                     errors.first(
                                                                         "tasa_iva"
                                                                     )
                                                                 }}
                                                             </span>
-                                                            <span
-                                                                class="mensaje-requerido"
-                                                                v-if="
-                                                                    this.errores
-                                                                        .tasa_iva
-                                                                "
-                                                                >{{
-                                                                    errores
-                                                                        .tasa_iva[0]
-                                                                }}</span
-                                                            >
+                                                            <span class="mensaje-requerido" v-if="
+                                                                this.errores
+                                                                    .tasa_iva
+                                                            ">{{
+                                                                errores
+                                                                    .tasa_iva[0]
+                                                            }}</span>
                                                         </div>
-                                                        <div
-                                                            class="w-full px-2 text-center mt-3"
-                                                            v-if="
-                                                                verTotalUsoinmediato
-                                                            "
-                                                        >
-                                                            <label
-                                                                class="h4 font-medium color-copy"
-                                                                >$ Total por
+                                                        <div class="w-full px-2 text-center mt-3" v-if="
+                                                            verTotalUsoinmediato
+                                                        ">
+                                                            <label class="h4 font-medium color-copy">$ Total por
                                                                 plan de uso
-                                                                inmediato</label
-                                                            >
-                                                            <div
-                                                                class="mt-1 pb-2 text-center"
-                                                            >
-                                                                <span
-                                                                    class="h5"
-                                                                >
+                                                                inmediato</label>
+                                                            <div class="mt-1 pb-2 text-center">
+                                                                <span class="h5">
                                                                     $
                                                                     {{
                                                                         totalUsoInmediato
-                                                                            | numFormat(
-                                                                                "0,000.00"
-                                                                            )
+                                                                        | numFormat(
+                                                                            "0,000.00"
+                                                                        )
                                                                     }}
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        <div
-                                                            class="w-full px-2 text-center mt-3"
-                                                        >
-                                                            <label
-                                                                class="h4 font-medium color-copy"
-                                                                >$ Total a
-                                                                Pagar</label
-                                                            >
-                                                            <div
-                                                                class="mt-3 text-center"
-                                                            >
-                                                                <span
-                                                                    class="h5"
-                                                                >
+                                                        <div class="w-full px-2 text-center mt-3">
+                                                            <label class="h4 font-medium color-copy">$ Total a
+                                                                Pagar</label>
+                                                            <div class="mt-3 text-center">
+                                                                <span class="h5">
                                                                     $
                                                                     {{
                                                                         totalContrato
-                                                                            | numFormat(
-                                                                                "0,000.00"
-                                                                            )
+                                                                        | numFormat(
+                                                                            "0,000.00"
+                                                                        )
                                                                     }}
                                                                 </span>
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                            class="
+                                                        <div class="
                                 w-full
                                 px-2
                                 size-base
                                 color-copy
                                 mt-3
                                 text-center
-                              "
-                                                        >
-                                                            <span
-                                                                class="color-danger-900 font-medium"
-                                                                >Ojo:</span
-                                                            >
+                              ">
+                                                            <span class="color-danger-900 font-medium">Ojo:</span>
                                                             Los costos de los
                                                             conceptos capturados
                                                             ya incluyen el IVA.
                                                         </div>
 
-                                                        <div
-                                                            class="w-full input-text px-2"
-                                                        >
-                                                            <vs-button
-                                                                v-if="
-                                                                    !fueCancelada
-                                                                "
-                                                                class="w-full ml-auto mr-auto mt-3"
-                                                                @click="
-                                                                    acceptAlert()
-                                                                "
-                                                                color="success"
-                                                            >
-                                                                <span
-                                                                    >Guardar
-                                                                    Contrato</span
-                                                                >
+                                                        <div class="w-full input-text px-2">
+                                                            <vs-button v-if="
+                                                                !fueCancelada
+                                                            " class="w-full ml-auto mr-auto mt-3" @click="
+                                                                acceptAlert()
+                                                                " color="success">
+                                                                <span>Guardar
+                                                                    Contrato</span>
                                                             </vs-button>
                                                         </div>
                                                         <!--fin de precios-->
@@ -4845,57 +3323,23 @@
             </div>
             <!--fin venta-->
         </vs-popup>
-        <Password
-            :z_index="'z-index56k'"
-            :show="openPassword"
-            :callback-on-success="callback"
-            @closeVerificar="closePassword"
-            :accion="accionNombre"
-        ></Password>
-        <ConfirmarDanger
-            :z_index="'z-index58k'"
-            :show="openConfirmarSinPassword"
-            :callback-on-success="callBackConfirmar"
-            @closeVerificar="openConfirmarSinPassword = false"
-            :accion="accionConfirmarSinPassword"
-            :confirmarButton="botonConfirmarSinPassword"
-        ></ConfirmarDanger>
-
-        <ConfirmarAceptar
-            :show="openConfirmarAceptar"
-            :callback-on-success="callBackConfirmarAceptar"
-            @closeVerificar="openConfirmarAceptar = false"
-            :accion="'He revisado la información y quiero guardar la venta'"
-            :confirmarButton="'Guardar Venta'"
-        >
+        <Password v-if="openPassword" :z_index="'z-index59k'" :show="openPassword" :callback-on-success="callback"
+            @closeVerificar="closePassword" :accion="accionNombre"></Password>
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+            :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+            :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+            :accion="'He revisado la información y quiero guardar la venta'" :confirmarButton="'Guardar Venta'">
         </ConfirmarAceptar>
-
-        <ClientesBuscador
-            :z_index="'z-index55k'"
-            :show="openBuscador"
-            @closeBuscador="openBuscador = false"
-            @retornoCliente="clienteSeleccionado"
-        ></ClientesBuscador>
-
-        <TerrenosBuscador
-            :z_index="'z-index55k'"
-            :show="openBuscadorTerreno"
-            @closeBuscador="openBuscadorTerreno = false"
-            @retornoTerreno="TerrenoSeleccionado"
-        ></TerrenosBuscador>
-
-        <PlanesBuscador
-            :z_index="'z-index55k'"
-            :show="openBuscadorPlan"
-            @closeBuscador="openBuscadorPlan = false"
-            @retornoPlan="PlanSeleccionado"
-        ></PlanesBuscador>
-        <ArticulosBuscador
-            :z_index="'z-index56k'"
-            :show="openBuscadorArticulos"
-            @closeBuscador="openBuscadorArticulos = false"
-            @LoteSeleccionado="LoteSeleccionado"
-        ></ArticulosBuscador>
+        <ClientesBuscador v-if="openBuscador" :z_index="'z-index55k'" :show="openBuscador"
+            @closeBuscador="openBuscador = false" @retornoCliente="clienteSeleccionado"></ClientesBuscador>
+        <ArticulosBuscador v-if="openBuscadorArticulos" :z_index="'z-index56k'" :show="openBuscadorArticulos"
+            @closeBuscador="openBuscadorArticulos = false" @LoteSeleccionado="LoteSeleccionado"></ArticulosBuscador>
+        <TerrenosBuscador v-if="openBuscadorTerreno" :z_index="'z-index55k'" :show="openBuscadorTerreno"
+            @closeBuscador="openBuscadorTerreno = false" @retornoTerreno="TerrenoSeleccionado"></TerrenosBuscador>
+        <PlanesBuscador v-if="openBuscadorPlan" :z_index="'z-index55k'" :show="openBuscadorPlan"
+            @closeBuscador="openBuscadorPlan = false" @retornoPlan="PlanSeleccionado"></PlanesBuscador>
     </div>
 </template>
 <script>
@@ -4925,6 +3369,7 @@ import {
 import { tr } from "date-fns/locale";
 
 export default {
+    name: "FormularioServiciosFunerarios",
     components: {
         "v-select": vSelect,
         flatPickr,
@@ -4958,20 +3403,10 @@ export default {
         }
     },
     watch: {
-        show: function(newValue, oldValue) {
-            this.limpiarValidation();
-            if (newValue == true) {
-                this.$nextTick(() =>
-                    this.$refs["fallecido_ref"].$el
-                        .querySelector("input")
-                        .focus()
-                );
-                this.$refs["formulario"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_nacionalidades();
                     await this.get_estados_afectado();
                     await this.get_titulos();
@@ -4986,22 +3421,23 @@ export default {
                     await this.get_legistas_embalsamadores();
                     await this.get_solicitudes_servicios_id();
                     /**aqui cargo la informacion que existe hasta el momento sobre este servicio */
-                })();
-            } else {
-                /**acciones al cerrar el formulario */
-            }
+                    this.$popupManager.register(this, this.cancelar, "fallecido_ref");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
-
-        "form.inhumacion_b": function(newValue, oldValue) {
+        "form.inhumacion_b": function (newValue, oldValue) {
             ///this.form.ubicacion = "";
             //this.form.ventas_terrenos_id = "";
         },
-        "form.cementerio_servicio": function(newValue, oldValue) {
+        "form.cementerio_servicio": function (newValue, oldValue) {
             //this.form.ubicacion_convenio = "";
             //this.form.ventas_terrenos_id = "";
         },
 
-        "form.plan_funerario_futuro_b": function(newValue, oldValue) {
+        "form.plan_funerario_futuro_b": function (newValue, oldValue) {
             this.secciones = [];
             if (newValue.value == 0) {
                 (async () => {
@@ -5022,7 +3458,7 @@ export default {
                 /**cargar datos de origen del plan de uso a futuro */
             }
         },
-        "form.plan_funerario_inmediato_b": function(newValue, oldValue) {
+        "form.plan_funerario_inmediato_b": function (newValue, oldValue) {
             if (newValue.value == 1) {
                 if (this.data_contrato != []) {
                     /**el contrato tiene un plan funerario de uso inmediato */
@@ -5036,7 +3472,7 @@ export default {
                 this.form.plan_funerario = this.planes_funerarios[0];
             }
         },
-        "form.plan_funerario": function(newValue, oldValue) {
+        "form.plan_funerario": function (newValue, oldValue) {
             if (newValue.value != "") {
                 this.secciones = this.form.plan_funerario.secciones;
             } else {
@@ -5044,7 +3480,7 @@ export default {
             }
         },
         /**aqui estoy */
-        "form.id_convenio_plan": function(newValue, oldValue) {
+        "form.id_convenio_plan": function (newValue, oldValue) {
             if (newValue != "" && newValue > 0) {
                 /**buscar servicios que hayan usado este plan funerario */
                 this.$vs.loading();
@@ -5073,7 +3509,7 @@ export default {
                 /**limpiar los datos */
             }
         },
-        "form.ventas_terrenos_id": function(newValue, oldValue) {
+        "form.ventas_terrenos_id": function (newValue, oldValue) {
             if (newValue != "" && newValue > 0) {
                 /**buscar servicios que hayan usado este terreno */
                 this.$vs.loading();
@@ -5102,7 +3538,7 @@ export default {
         }
     },
     computed: {
-        esExhumacion: function() {
+        esExhumacion: function () {
             if (
                 this.getTipoformulario == "exhumar" ||
                 this.getTipoformulario == "modificar_exhumar"
@@ -5112,7 +3548,7 @@ export default {
                 return false;
             }
         },
-        verUsoConvenios: function() {
+        verUsoConvenios: function () {
             if (
                 this.form.inhumacion_b == 0 &&
                 this.form.plan_funerario_futuro_b.value == 0
@@ -5133,40 +3569,40 @@ export default {
         },
 
         /**validaciones de los selects */
-        nacionalidad_validacion_computed: function() {
+        nacionalidad_validacion_computed: function () {
             return this.form.nacionalidad.value;
         },
 
-        estado_civil_validacion_computed: function() {
+        estado_civil_validacion_computed: function () {
             return this.form.estado_civil.value;
         },
 
-        escolaridad_validacion_computed: function() {
+        escolaridad_validacion_computed: function () {
             return this.form.escolaridad.value;
         },
 
-        afiliacion_validacion_computed: function() {
+        afiliacion_validacion_computed: function () {
             return this.form.afiliacion.value;
         },
 
-        sitio_muerte_validacion_computed: function() {
+        sitio_muerte_validacion_computed: function () {
             return this.form.sitio_muerte.value;
         },
 
-        estado_cuerpo_validacion_computed: function() {
+        estado_cuerpo_validacion_computed: function () {
             return this.form.estado_cuerpo.value;
         },
-        legista_validacion_computed: function() {
+        legista_validacion_computed: function () {
             return this.form.legista.value;
         },
-        embalsamador_validacion_computed: function() {
+        embalsamador_validacion_computed: function () {
             return this.form.embsalsamador.value;
         },
-        genero_validacion_computed: function() {
+        genero_validacion_computed: function () {
             return this.form.genero.value;
         },
 
-        preparador_validacion_computed: function() {
+        preparador_validacion_computed: function () {
             if (this.form.embalsamar_b == 1) {
                 return this.form.preparador;
             } else {
@@ -5174,7 +3610,7 @@ export default {
             }
         },
 
-        lugar_servicio_validacion_computed: function() {
+        lugar_servicio_validacion_computed: function () {
             if (this.form.velacion_b == 1) {
                 return this.form.lugar_servicio.value;
             } else {
@@ -5182,7 +3618,7 @@ export default {
             }
         },
 
-        direccion_velacion_validacion_computed: function() {
+        direccion_velacion_validacion_computed: function () {
             if (this.form.velacion_b == 1) {
                 return this.form.direccion_velacion;
             } else {
@@ -5190,7 +3626,7 @@ export default {
             }
         },
 
-        fechahora_cremacion_validacion_computed: function() {
+        fechahora_cremacion_validacion_computed: function () {
             if (this.form.cremacion_b == 1) {
                 return this.form.fechahora_cremacion;
             } else {
@@ -5198,7 +3634,7 @@ export default {
             }
         },
 
-        fechahora_entrega_cenizas_validacion_computed: function() {
+        fechahora_entrega_cenizas_validacion_computed: function () {
             if (this.form.cremacion_b == 1) {
                 return this.form.fechahora_entrega_cenizas;
             } else {
@@ -5206,7 +3642,7 @@ export default {
             }
         },
 
-        cementerio_servicio_validacion_computed: function() {
+        cementerio_servicio_validacion_computed: function () {
             if (this.form.inhumacion_b == 1) {
                 return this.form.cementerio_servicio.value;
             } else {
@@ -5214,7 +3650,7 @@ export default {
             }
         },
 
-        fechahora_inhumacion_validacion_computed: function() {
+        fechahora_inhumacion_validacion_computed: function () {
             if (this.form.inhumacion_b == 1) {
                 return this.form.fechahora_inhumacion;
             } else {
@@ -5222,7 +3658,7 @@ export default {
             }
         },
 
-        ubicacion_validacion_computed: function() {
+        ubicacion_validacion_computed: function () {
             if (
                 this.form.inhumacion_b == 1 &&
                 this.form.cementerio_servicio.value > 1
@@ -5233,7 +3669,7 @@ export default {
             }
         },
 
-        ventas_terrenos_id_validacion_computed: function() {
+        ventas_terrenos_id_validacion_computed: function () {
             if (
                 this.form.inhumacion_b == 1 &&
                 this.form.cementerio_servicio.value == 1
@@ -5244,7 +3680,7 @@ export default {
             }
         },
 
-        fechahora_traslado_validacion_computed: function() {
+        fechahora_traslado_validacion_computed: function () {
             if (this.form.traslado_b == 1) {
                 return this.form.fechahora_traslado;
             } else {
@@ -5252,7 +3688,7 @@ export default {
             }
         },
 
-        destino_traslado_validacion_computed: function() {
+        destino_traslado_validacion_computed: function () {
             if (this.form.traslado_b == 1) {
                 return this.form.destino_traslado;
             } else {
@@ -5260,7 +3696,7 @@ export default {
             }
         },
 
-        aseguradora_validacion_computed: function() {
+        aseguradora_validacion_computed: function () {
             if (this.form.aseguradora_b == 1) {
                 return this.form.aseguradora;
             } else {
@@ -5268,7 +3704,7 @@ export default {
             }
         },
 
-        fechahora_misa_validacion_computed: function() {
+        fechahora_misa_validacion_computed: function () {
             if (this.form.misa_b == 1) {
                 return this.form.fechahora_misa;
             } else {
@@ -5276,7 +3712,7 @@ export default {
             }
         },
 
-        iglesia_misa_validacion_computed: function() {
+        iglesia_misa_validacion_computed: function () {
             if (this.form.misa_b == 1) {
                 return this.form.iglesia_misa;
             } else {
@@ -5284,7 +3720,7 @@ export default {
             }
         },
 
-        folio_acta_validacion_computed: function() {
+        folio_acta_validacion_computed: function () {
             if (this.form.acta_b == 1) {
                 return this.form.folio_acta;
             } else {
@@ -5292,7 +3728,7 @@ export default {
             }
         },
 
-        fecha_acta_validacion_computed: function() {
+        fecha_acta_validacion_computed: function () {
             if (this.form.acta_b == 1) {
                 return this.form.fecha_acta;
             } else {
@@ -5300,27 +3736,27 @@ export default {
             }
         },
 
-        tipo_contrato_validacion_computed: function() {
+        tipo_contrato_validacion_computed: function () {
             return this.form.tipo_contrato.value;
         },
 
-        titulo_validacion_computed: function() {
+        titulo_validacion_computed: function () {
             return this.form.titulo.value;
         },
 
-        fecha_nacimiento_validacion_computed: function() {
+        fecha_nacimiento_validacion_computed: function () {
             return this.form.fecha_nacimiento;
         },
 
-        fechahora_defuncion_validacion_computed: function() {
+        fechahora_defuncion_validacion_computed: function () {
             return this.form.fechahora_defuncion;
         },
 
-        fechahora_contrato_validacion_computed: function() {
+        fechahora_contrato_validacion_computed: function () {
             return this.form.fechahora_contrato;
         },
 
-        id_convenio_plan_validacion_computed: function() {
+        id_convenio_plan_validacion_computed: function () {
             if (this.form.plan_funerario_futuro_b.value == 1) {
                 return this.form.id_convenio_plan;
             } else {
@@ -5328,7 +3764,7 @@ export default {
             }
         },
 
-        tipo_contratante_validacion_computed: function() {
+        tipo_contratante_validacion_computed: function () {
             if (this.form.plan_funerario_futuro_b.value == 1) {
                 return this.form.tipo_contratante.value;
             } else {
@@ -5336,7 +3772,7 @@ export default {
             }
         },
 
-        plan_funerario_validacion_computed: function() {
+        plan_funerario_validacion_computed: function () {
             if (this.form.plan_funerario_inmediato_b.value == 1) {
                 return this.form.plan_funerario.value;
             } else {
@@ -5345,7 +3781,7 @@ export default {
         },
 
         /**costo del plan a uso inmediato */
-        costo_uso_inmediato_computed: function() {
+        costo_uso_inmediato_computed: function () {
             if (this.form.plan_funerario.value != "") {
                 return this.form.plan_funerario.costo_neto;
             } else {
@@ -5354,7 +3790,7 @@ export default {
         },
 
         /**controla si deja al usuario decidir si aplicar al plan funerario o no */
-        habilitar_plan_funerario_b: function() {
+        habilitar_plan_funerario_b: function () {
             if (this.form.plan_funerario_futuro_b.value == 1) {
                 return true;
                 /* if (
@@ -5378,7 +3814,7 @@ export default {
                 }
             }
         },
-        verTotalUsoinmediato: function() {
+        verTotalUsoinmediato: function () {
             if (
                 this.habilitar_plan_funerario_b == true &&
                 this.form.plan_funerario_futuro_b.value == 0 &&
@@ -5389,7 +3825,7 @@ export default {
                 return false;
             }
         },
-        totalUsoInmediato: function() {
+        totalUsoInmediato: function () {
             let total = 0;
             this.form.articulos_servicios.forEach((element, index) => {
                 /**calculo tomando en cuenta que tiene un plan de uso inmdiato */
@@ -5418,7 +3854,7 @@ export default {
             });
             return total;
         },
-        totalContrato: function() {
+        totalContrato: function () {
             let total = 0;
             this.form.articulos_servicios.forEach((element, index) => {
                 /**calculo tomando en cuenta que no tiene seleccionado un plan fuenerario a futuro */
@@ -5464,14 +3900,6 @@ export default {
             });
             return total;
         },
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            }
-        },
         getTipoformulario: {
             get() {
                 return this.tipo;
@@ -5489,7 +3917,7 @@ export default {
             }
         },
 
-        verLista: function() {
+        verLista: function () {
             if (this.secciones.length > 0) {
                 let mostrar = false;
                 this.conceptos = [];
@@ -5522,6 +3950,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             contratos_con_uso_terreno_seleccionado: [],
             contratos_con_uso_plan_funerario_futuro_seleccionado: [],
             saldo_neto_terreno: 0,
@@ -5856,10 +4285,10 @@ export default {
                         this.form.fecha_nacimiento =
                             data.fecha_nacimiento != null
                                 ? new Date(
-                                      fecha_nacimiento[0],
-                                      fecha_nacimiento[1] - 1,
-                                      fecha_nacimiento[2]
-                                  )
+                                    fecha_nacimiento[0],
+                                    fecha_nacimiento[1] - 1,
+                                    fecha_nacimiento[2]
+                                )
                                 : null;
                         /**cargando el genero */
                         this.generos.forEach(genero => {
@@ -6824,7 +5253,7 @@ export default {
                         })();
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         },
 
         async modificar_contrato() {
@@ -7212,6 +5641,18 @@ export default {
             });
         }
     },
-    created() {}
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

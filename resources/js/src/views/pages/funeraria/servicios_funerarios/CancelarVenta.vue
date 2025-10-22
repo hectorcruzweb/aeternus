@@ -1,11 +1,6 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-50"
-      title="Cancelar Solicitud"
-      :active.sync="showVentana"
-      ref="cancelar_solicitud"
-    >
+    <vs-popup class="forms-popup popup-50" title="Cancelar Solicitud" :active="localShow" :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">Formulario de Cancelación</div>
         <div class="form-group-content">
@@ -24,25 +19,17 @@
               <div class="flex flex-wrap">
                 <div class="w-full xl:w-12/12 px-2">
                   <div class="flex flex-wrap">
-                    <div
-                      class="p-4 w-full mx-auto rounded-lg size-base border-gray-solid-1 rounded-lg"
-                    >
-                      <div
-                        class="size-base font-bold color-black-900 uppercase pb-6 text-center"
-                      >
+                    <div class="p-4 w-full mx-auto rounded-lg size-base border-gray-solid-1 rounded-lg">
+                      <div class="size-base font-bold color-black-900 uppercase pb-6 text-center">
                         Resumen del Servicio
                       </div>
                       <div class="flex flex-wrap color-copy">
                         <div class="w-full">
                           <div class="flex flex-wrap pb-6">
-                            <div
-                              class="w-full text-center font-medium color-black-900 uppercase"
-                            >
+                            <div class="w-full text-center font-medium color-black-900 uppercase">
                               Tipo de Servicio
                             </div>
-                            <div
-                              class="w-full text-center font-medium color-copy pt-2"
-                            >
+                            <div class="w-full text-center font-medium color-copy pt-2">
                               <span class="capitalize">
                                 Servicio Funerario
                               </span>
@@ -52,43 +39,27 @@
 
                         <div class="w-full">
                           <div class="flex flex-wrap">
-                            <div
-                              class="w-full xl:w-6/12 text-center font-medium color-black-900 uppercase"
-                            >
+                            <div class="w-full xl:w-6/12 text-center font-medium color-black-900 uppercase">
                               Nombre del Finado
                             </div>
-                            <div
-                              class="w-full xl:w-6/12 text-center font-medium color-copy"
-                            >
-                              <span
-                                class="capitalize"
-                                v-if="datosVenta.nombre_afectado"
-                                >{{ datosVenta.nombre_afectado }}</span
-                              >
+                            <div class="w-full xl:w-6/12 text-center font-medium color-copy">
+                              <span class="capitalize" v-if="datosVenta.nombre_afectado">{{ datosVenta.nombre_afectado
+                              }}</span>
                             </div>
                           </div>
                         </div>
 
                         <div class="w-full">
-                          <div
-                            class="flex flex-wrap mt-2 theme-background py-2"
-                          >
-                            <div
-                              class="w-full text-center font-medium color-black-900 uppercase"
-                            >
+                          <div class="flex flex-wrap mt-2 theme-background py-2">
+                            <div class="w-full text-center font-medium color-black-900 uppercase">
                               Cantidad cubierta de capital hasta la fecha:
                             </div>
-                            <div
-                              class="w-full text-center font-medium color-black-700 uppercase pt-2"
-                            >
-                              <span
-                                class="capitalize"
-                                v-if="datosVenta.operacion"
-                              >
+                            <div class="w-full text-center font-medium color-black-700 uppercase pt-2">
+                              <span class="capitalize" v-if="datosVenta.operacion">
                                 $
                                 {{
                                   datosVenta.operacion.total_cubierto
-                                    | numFormat("0,000.00")
+                                  | numFormat("0,000.00")
                                 }}
                                 Pesos mxn
                               </span>
@@ -103,17 +74,8 @@
                   <div class="flex flex-wrap">
                     <div class="w-full xl:w-4/12 input-text px-2">
                       <label>$ Monto a devolver:</label>
-                      <vs-input
-                        size="large"
-                        v-model="form.cantidad"
-                        v-validate="'required|decimal:2|min_value:0'"
-                        name="cantidad"
-                        data-vv-as=" "
-                        type="text"
-                        class="w-full"
-                        placeholder=" $ 00.00 Pesos MXN"
-                        maxlength="7"
-                      />
+                      <vs-input v-model="form.cantidad" v-validate="'required|decimal:2|min_value:0'" name="cantidad"
+                        data-vv-as=" " type="text" class="w-full" placeholder=" $ 00.00 Pesos MXN" maxlength="7" />
                       <span>{{ errors.first("cantidad") }}</span>
                       <span v-if="this.errores.cantidad">{{
                         errores.cantidad[0]
@@ -122,16 +84,9 @@
 
                     <div class="w-full xl:w-8/12 input-text px-2">
                       <label>Seleccione un motivo de cancelación:</label>
-                      <v-select
-                        :options="motivos"
-                        :clearable="false"
-                        v-model="form.motivo"
-                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                        class="w-full large_select"
-                        v-validate:motivo_computed.immediate="'required'"
-                        name="plan_venta"
-                        data-vv-as=" "
-                      >
+                      <v-select :options="motivos" :clearable="false" v-model="form.motivo"
+                        :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full " v-validate:motivo_computed.immediate="'required'"
+                        name="plan_venta" data-vv-as=" ">
                         <div slot="no-options">
                           No Se Ha Seleccionado Ningún Motivo
                         </div>
@@ -145,17 +100,10 @@
                 </div>
 
                 <div class="w-full input-text px-2">
-                  <label
-                    >Agregue un comentario respecto a la cancelación de esta
-                    venta:</label
-                  >
-                  <vs-textarea
-                    class="w-full"
-                    label="Detalle de la cancelación..."
-                    height="170px"
-                    v-model="form.comentario"
-                    ref="comentario"
-                  />
+                  <label>Agregue un comentario respecto a la cancelación de esta
+                    venta:</label>
+                  <vs-textarea class="w-full" label="Detalle de la cancelación..." height="170px"
+                    v-model="form.comentario" ref="comentario" />
                 </div>
               </div>
             </div>
@@ -171,31 +119,19 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            v-if="!fueCancelada"
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="danger"
-            @click="acceptAlert()"
-          >
+          <vs-button v-if="!fueCancelada" class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="danger"
+            @click="acceptAlert()">
             <span>Cancelar Contrato</span>
           </vs-button>
         </div>
       </div>
 
-      <Password
-        :show="openConfirmar"
-        :callback-on-success="callback"
-        @closeVerificar="openConfirmar = false"
-        :accion="'Cancelar servicio funerario'"
-      ></Password>
+      <Password v-if="openConfirmar" :show="openConfirmar" :callback-on-success="callback"
+        @closeVerificar="openConfirmar = false" :accion="'Cancelar servicio funerario'"></Password>
 
-      <ConfirmarDanger
-        :show="openConfirmarSinPassword"
-        :callback-on-success="callBackConfirmar"
-        @closeVerificar="openConfirmarSinPassword = false"
-        :accion="accionConfirmarSinPassword"
-        :confirmarButton="botonConfirmarSinPassword"
-      ></ConfirmarDanger>
+      <ConfirmarDanger v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword"
+        :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+        :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
     </vs-popup>
   </div>
 </template>
@@ -205,6 +141,7 @@ import vSelect from "vue-select";
 import funeraria from "@services/funeraria";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 export default {
+  name: "CancelarVentaServicioFunerario",
   components: {
     Password,
     "v-select": vSelect,
@@ -222,18 +159,10 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$refs["cancelar_solicitud"].$el.querySelector(
-          ".vs-icon"
-        ).onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() => {
-          this.$refs["comentario"].$el.querySelector("textarea").focus();
-        });
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
           this.form.cantidad = "0.00";
           this.$vs.loading();
           try {
@@ -268,24 +197,19 @@ export default {
                 });
               }
             }
-
             this.cerrarVentana();
           }
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, "comentario");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
     motivo_computed: function () {
       return this.form.motivo.value;
-    },
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
     },
     getSolicitudId: {
       get() {
@@ -298,6 +222,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       botonConfirmarSinPassword: "",
       accionConfirmarSinPassword: "",
       callBackConfirmar: Function,
@@ -354,7 +279,7 @@ export default {
             })();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     cancelar() {
@@ -456,17 +381,18 @@ export default {
       }
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
   mounted() {
-    //cerrando el confirmar con esc
-    document.body.addEventListener("keyup", (e) => {
-      if (e.keyCode === 27) {
-        if (this.showVentana) {
-          //CIERRO EL CONFIRMAR AL PRESONAR ESC
-          //this.cancelar();
-        }
-      }
-    });
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>
