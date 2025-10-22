@@ -1,11 +1,7 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :title="HeaderNombre"
-      :class="['forms-popup popup-50',z_index]"
-      :active.sync="showChecker"
-      ref="formulario"
-    >
+    <vs-popup :title="HeaderNombre" :class="['forms-popup popup-50', z_index]" :active="localShow"
+      :ref="this.$options.name">
       <!-- <img style="width:100px;" src="@assets/images/pdf.svg" alt />-->
       <div class="flex flex-wrap">
         <div class="w-full px-2 pb-6">
@@ -13,36 +9,21 @@
             <div class="title-form-group">{{ documento }}</div>
             <div class="form-group-content">
               <div class="flex flex-wrap">
-                <div
-                  class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text"
-                >
+                <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 input-text">
                   <label class=""> Seleccione quien firma </label>
-                  <v-select
-                    :options="firmasDisponibles"
-                    v-model="firmaSeleccionada"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    class="w-full"
-                    name="firma"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="firmasDisponibles" v-model="firmaSeleccionada" :clearable="false"
+                    :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" name="firma" data-vv-as=" ">
                     <div slot="no-options">Seleccione el Firmador</div>
                   </v-select>
                 </div>
                 <div class="w-full">
                   <div class="w-full text-center mt-12" v-if="!firmado">
-                    <vs-button
-                      class="w-full sm:w-full sm:w-auto md:w-auto mr-8 my-2 md:mt-0"
-                      color="danger"
-                      @click="undo"
-                    >
+                    <vs-button class="w-full sm:w-full sm:w-auto md:w-auto mr-8 my-2 md:mt-0" color="danger"
+                      @click="undo">
                       <span>Limpiar</span>
                     </vs-button>
-                    <vs-button
-                      class="w-full sm:w-full sm:w-auto md:w-auto ml-8 my-2 md:mt-0"
-                      color="success"
-                      @click="acceptAlert"
-                    >
+                    <vs-button class="w-full sm:w-full sm:w-auto md:w-auto ml-8 my-2 md:mt-0" color="success"
+                      @click="acceptAlert">
                       <span>Firmar</span>
                     </vs-button>
                   </div>
@@ -50,11 +31,7 @@
                   <div class="signature">
                     <h3 class="mt-12">Registro de Firma Manuscrita</h3>
                     <div class="firma" v-show="!firmado">
-                      <VueSignaturePad
-                        ref="signaturePad"
-                        width="400px"
-                        height="200px"
-                      />
+                      <VueSignaturePad ref="signaturePad" width="400px" height="200px" />
                     </div>
                     <div v-show="firmado" class="firma">
                       <img :src="firma" width="400px" height="200px" alt="" />
@@ -74,13 +51,10 @@
           <!--fin de datos de los reportes-->
         </div>
       </div>
-      <ConfirmarAceptar
-        :show="openConfirmarAceptar"
-        :callback-on-success="callBackConfirmar"
-        @closeVerificar="openConfirmarAceptar = false"
-        :accion="'Firmar Documento'"
-        :confirmarButton="'Firmar'"
-      ></ConfirmarAceptar>
+      <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar"
+        :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarAceptar = false"
+        :accion="'Firmar Documento'" :confirmarButton="'Firmar'">
+      </ConfirmarAceptar>
     </vs-popup>
   </div>
 </template>
@@ -89,20 +63,21 @@ import firmas from "@services/firmas";
 import vSelect from "vue-select";
 import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 export default {
+  name: "Firmas",
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == false) {
-      } else {
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancel();
-        };
-        /**cargo el reporte que me llega y sus respectivas areas a firmar */
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
           await this.get_areas_firmar();
           await this.get_firma();
-        })();
-        this.resizeCanvas();
-      }
+          this.resizeCanvas();
+          this.$popupManager.register(this, this.cancel, "signaturePad");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
     firmaSeleccionada: function (newValue, oldValue) {
       if (newValue.value != "") {
@@ -148,6 +123,7 @@ export default {
 
   data() {
     return {
+      localShow: false,
       openConfirmarAceptar: false,
       callBackConfirmar: Function,
       firmasDisponibles: [],
@@ -167,14 +143,6 @@ export default {
     };
   },
   computed: {
-    showChecker: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     HeaderNombre: {
       get() {
         return this.header;
@@ -434,18 +402,19 @@ export default {
 
     /**enviar pdf por mail */
   },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
   mounted() {
-    //cerrando el confirmar con esc
-    document.body.addEventListener("keyup", (e) => {
-      /*if (e.keyCode === 27) {
-        if (this.showChecker) {
-          //CIERRO EL CONFIRMAR AL PRESONAR ESC
-          this.cancel();
-        }
-      }*/
-    });
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>
-<style  scoped>
-</style>
+<style scoped></style>

@@ -1,7 +1,7 @@
 <template>
   <div class="centerx">
-    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de clientes registrados"
-      :active.sync="showVentana" ref="buscador_cliente">
+    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de clientes registrados" :active="localShow"
+      :ref="this.$options.name">
       <div class="w-full text-right">
         <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
           @click="verFormularioClientes = true">
@@ -81,8 +81,9 @@
           </div>
         </div>
       </div>
-      <FormularioClientes :tipo="'agregar'" :z_index="'z-index58k'" :show="verFormularioClientes"
-        @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id"></FormularioClientes>
+      <FormularioClientes v-if="verFormularioClientes" :tipo="'agregar'" :z_index="'z-index59k'"
+        :show="verFormularioClientes" @closeVentana="verFormularioClientes = false" @retornar_id="retorno_id">
+      </FormularioClientes>
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -95,6 +96,7 @@ import Datepicker from "vuejs-datepicker";
 import { es } from "vuejs-datepicker/dist/locale";
 
 export default {
+  name: "ClientesSearcher",
   components: {
     "v-select": vSelect,
     Datepicker,
@@ -118,39 +120,30 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data("", this.actual);
     },
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$nextTick(() =>
-          this.$refs["nombre_cliente"].$el.querySelector("input").focus()
-        );
-        this.$refs["buscador_cliente"].$el.querySelector(
-          ".vs-icon"
-        ).onclick = () => {
-          this.cancelar();
-        };
-        this.get_data("", 1);
-      } else {
-        /**cerrar y limpiar el formulario */
-        this.serverOptions.id_cliente = "";
-        this.serverOptions.cliente = "";
-        this.serverOptions.rfc = "";
-        this.serverOptions.celular = "";
-        this.serverOptions.nacionalidad = this.nacionalidades[0];
-      }
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.get_data("", 1);
+          this.$popupManager.register(this, this.cancelar, "nombre_cliente");
+        } else {
+          /**cerrar y limpiar el formulario */
+          this.serverOptions.id_cliente = "";
+          this.serverOptions.cliente = "";
+          this.serverOptions.rfc = "";
+          this.serverOptions.celular = "";
+          //this.serverOptions.nacionalidad = this.nacionalidades[0];
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
   },
   data() {
     return {
+      localShow: false,
       verFormularioClientes: false,
       selected: [],
       nacionalidades: [],
@@ -184,7 +177,7 @@ export default {
       this.serverOptions.cliente = "";
       this.serverOptions.rfc = "";
       this.serverOptions.celular = "";
-      this.serverOptions.nacionalidad = this.nacionalidades[0];
+      //this.serverOptions.nacionalidad = this.nacionalidades[0];
       this.get_data("", this.actual);
     },
     cancelar() {
@@ -280,14 +273,29 @@ export default {
         nombre: nombre,
         datos: todos_los_datos,
       });
-      this.$emit("closeBuscador");
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$emit("closeBuscador");
+        }, 50);
+      });
     },
     retorno_id(dato) {
       this.get_data("", this.actual);
     },
   },
+  // Lifecycle hooks
   created() {
-    this.get_nacionalidades();
+    //this.get_nacionalidades();
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

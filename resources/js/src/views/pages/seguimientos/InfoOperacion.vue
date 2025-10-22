@@ -69,6 +69,8 @@ export default {
                 tipo_cliente_id: this.filters.tipo_cliente_id,
                 filtrar_x_operaciones: 1,
             };
+            this.$log("🚀 ~ params InfoOperacion:", params)
+            this.$log("🚀 ~ Filters:", this.filters)
             //this.$vs.loading();
             try {
                 // Call the API from clientes service
@@ -77,6 +79,7 @@ export default {
                     throw new Error("Respuesta inválida al consultar cliente");
                 }
                 const data = result.length ? result[0] : result;
+                this.$log("🚀 ~ InfoOperacion:", data)
                 if (data) {
                     this.cliente.id = data.id;
                     this.cliente.nombre = data.nombre;
@@ -91,10 +94,13 @@ export default {
                         if (match) {
                             this.operacion_descripcion =
                                 match.descripcion + " Saldo: " + match.saldo;
+                        } else {
+                            throw new Error("Error, Operación no válida.");
                         }
-                    } else
+                    } else {
                         this.operacion_descripcion =
                             "No se seleccionó ninguna operación";
+                    }
                 }
                 this.$emit("resultado", true, data.email);
             } catch (error) {

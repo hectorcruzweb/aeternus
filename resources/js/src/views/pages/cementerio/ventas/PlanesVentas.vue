@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
         <vs-popup class="forms-popup popup-90" fullscreen title="listado de precios para propiedades en cementerio"
-            :active.sync="showVentana" ref="planes_cementerio">
+            :active="localShow" :ref="this.$options.name">
             <div class="w-full text-right">
                 <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
                     type="border" @click="
@@ -57,7 +57,7 @@
                                             <vs-td :data="data[index_precio].id">
                                                 <span class="font-semibold">{{
                                                     index_precio + 1
-                                                    }}</span>
+                                                }}</span>
                                             </vs-td>
                                             <vs-td :data="data[index_precio].pago_inicial">$
                                                 {{ precio.pago_inicial | numFormat("0,000.00") }}</vs-td>
@@ -69,10 +69,10 @@
 
                                             <vs-td :data="data[index_precio].tipo_financiamiento">{{
                                                 precio.tipo_financiamiento
-                                                }}</vs-td>
+                                            }}</vs-td>
                                             <vs-td :data="data[index_precio].descripcion">{{
                                                 precio.descripcion
-                                                }}</vs-td>
+                                            }}</vs-td>
 
                                             <vs-td :data="data[index_precio].status">
                                                 <img class="cursor-pointer img-btn-18 mx-2"
@@ -105,17 +105,18 @@
             </div>
 
             <!--componente de confirmar sin contraseña-->
-            <ConfirmarDanger :z_index="'z-index58k'" :show="operConfirmar" :callback-on-success="callback"
-                @closeVerificar="operConfirmar = false"
+            <ConfirmarDanger v-if="operConfirmar" :z_index="'z-index58k'" :show="operConfirmar"
+                :callback-on-success="callback" @closeVerificar="operConfirmar = false"
                 :accion="'¿Desea eliminar este plan de mensualidades? Los datos quedarán eliminados del sistema.'"
                 :confirmarButton="'Eliminar'"></ConfirmarDanger>
-            <Password :show="openPassword" :callback-on-success="callbackPassword"
+            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callbackPassword"
                 @closeVerificar="openPassword = false" :accion="accionPassword"></Password>
 
-            <FormularioPrecios :id_precio="id_precio_modificar" :tipo="tipoFormulario" :show="verFormularioPrecios"
-                @closeVentana="verFormularioPrecios = false" @retornar_id="retorno_id"></FormularioPrecios>
+            <FormularioPrecios v-if="verFormularioPrecios" :id_precio="id_precio_modificar" :tipo="tipoFormulario"
+                :show="verFormularioPrecios" @closeVentana="verFormularioPrecios = false" @retornar_id="retorno_id">
+            </FormularioPrecios>
 
-            <Reporteador :header="'Consultar precios x propiedad'" :show="openReportesLista"
+            <Reporteador v-if="openReportesLista" :header="'Consultar precios x propiedad'" :show="openReportesLista"
                 :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
             </Reporteador>
             <!--fin de compornentes-->
@@ -130,6 +131,7 @@ import cementerio from "@services/cementerio";
 import FormularioPrecios from "@pages/cementerio/ventas/FormularioPrecios";
 import vSelect from "vue-select";
 export default {
+    name: "PlanesVentaCementerio",
     props: {
         show: {
             type: Boolean,
@@ -137,23 +139,21 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["planes_cementerio"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     /**manda traer los financiamientps */
                     await this.get_financiamientos();
-                })();
-            } else {
-                /**cerrar ventana */
-                this.datosVenta = [];
-                this.total = 0;
-            }
+                    this.$popupManager.register(this, this.cancelar, "input");
+                } else {
+                    /**cerrar ventana */
+                    this.datosVenta = [];
+                    this.total = 0;
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     components: {
@@ -165,6 +165,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             /**reporteador */
             openReportesLista: false,
             ListaReportes: [],
@@ -191,14 +192,6 @@ export default {
         };
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
     },
     methods: {
         openReporte(nombre_reporte = "", link = "", parametro = "") {
@@ -354,6 +347,18 @@ export default {
                 });
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

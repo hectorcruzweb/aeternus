@@ -1,12 +1,7 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-50"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup popup-50', z_index]" close="cancelar" :title="title" :active="localShow"
+      :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">Plan de Financiamiento</div>
         <div class="form-group-content">
@@ -16,18 +11,9 @@
                 Descripción/Nombre del Plan
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                ref="descripcion"
-                name="descripcion"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required'"
-                maxlength="85"
-                type="text"
-                class="w-full"
-                placeholder="Ej. Pago de Contado"
-                v-model="form.descripcion"
-              />
+              <vs-input ref="descripcion" name="descripcion" data-vv-as=" " data-vv-validate-on="blur"
+                v-validate="'required'" maxlength="85" type="text" class="w-full" placeholder="Ej. Pago de Contado"
+                v-model="form.descripcion" />
               <span class="">{{ errors.first("descripcion") }}</span>
               <span class="" v-if="this.errores.descripcion">{{
                 errores.descripcion[0]
@@ -38,15 +24,8 @@
                 Tipo de Financiamiento
                 <span class="">(*)</span>
               </label>
-              <v-select
-                :options="financiamientos"
-                :clearable="false"
-                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                v-model="form.contado_b"
-                class="w-full"
-                name="contado_b"
-                data-vv-as=" "
-              >
+              <v-select :options="financiamientos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                v-model="form.contado_b" class="w-full" name="contado_b" data-vv-as=" ">
                 <div slot="no-options">Seleccione una opción</div>
               </v-select>
               <span class="">{{ errors.first("contado_b") }}</span>
@@ -59,16 +38,9 @@
                 Tipo de Propiedad
                 <span class="">(*)</span>
               </label>
-              <v-select
-                :options="tipos_propiedad"
-                :clearable="false"
-                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                v-model="form.tipo_propiedades_id"
-                v-validate:tipo_propiedad_computed.immediate="'required'"
-                class="w-full"
-                name="tipo_propiedades_id"
-                data-vv-as=" "
-              >
+              <v-select :options="tipos_propiedad" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                v-model="form.tipo_propiedades_id" v-validate:tipo_propiedad_computed.immediate="'required'"
+                class="w-full" name="tipo_propiedades_id" data-vv-as=" ">
                 <div slot="no-options">Seleccione una opción</div>
               </v-select>
               <span class="">{{ errors.first("tipo_propiedades_id") }}</span>
@@ -81,18 +53,9 @@
                 Pagos/Meses a Pagar
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                name="financiamiento"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required|integer'"
-                maxlength="2"
-                type="text"
-                class="w-full"
-                placeholder="Ej. 1"
-                :disabled="es_contado"
-                v-model="form.financiamiento"
-              />
+              <vs-input name="financiamiento" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer'"
+                maxlength="2" type="text" class="w-full" placeholder="Ej. 1" :disabled="es_contado"
+                v-model="form.financiamiento" />
               <span class="">{{ errors.first("financiamiento") }}</span>
               <span class="" v-if="this.errores.financiamiento">{{
                 errores.financiamiento[0]
@@ -103,18 +66,9 @@
                 $ Costo Neto(Con IVA)
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                ref="costo_neto"
-                name="costo_neto"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required'"
-                maxlength="10"
-                type="text"
-                class="w-full"
-                placeholder="Ej. $1000.00"
-                v-model="form.costo_neto"
-              />
+              <vs-input ref="costo_neto" name="costo_neto" data-vv-as=" " data-vv-validate-on="blur"
+                v-validate="'required'" maxlength="10" type="text" class="w-full" placeholder="Ej. $1000.00"
+                v-model="form.costo_neto" />
               <span class="">{{ errors.first("costo_neto") }}</span>
               <span class="" v-if="this.errores.costo_neto">{{
                 errores.costo_neto[0]
@@ -125,17 +79,8 @@
                 $ Pago Inicial Mínimo
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                name="pago_inicial"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required|numeric'"
-                maxlength="10"
-                type="text"
-                class="w-full"
-                placeholder="Ej. $1000.00"
-                v-model="form.pago_inicial"
-              />
+              <vs-input name="pago_inicial" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|numeric'"
+                maxlength="10" type="text" class="w-full" placeholder="Ej. $1000.00" v-model="form.pago_inicial" />
               <span class="">{{ errors.first("pago_inicial") }}</span>
               <span class="" v-if="this.errores.pago_inicial">{{
                 errores.pago_inicial[0]
@@ -153,42 +98,23 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Precio</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Precio</span>
             <span class="" v-else>Modificar Precio</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre" :z_index="'z-index59k'"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar este precio'"
-      :confirmarButton="'Registrar Precio'"
-    ></ConfirmarAceptar>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar este precio'" :confirmarButton="'Registrar Precio'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -202,6 +128,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioPreciosCementerio",
   components: {
     "v-select": vSelect,
     Password,
@@ -222,24 +149,21 @@ export default {
       required: false,
       default: 0,
     },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index58k",
+    },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["descripcion"].$el.querySelector("input").focus()
-        );
-
-        this.form.contado_b = {
-          value: 1,
-          label: "Pago de Contado/Uso Inmediato",
-        };
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.form.contado_b = {
+            value: 1,
+            label: "Pago de Contado/Uso Inmediato",
+          };
           /**de manera asincrona para evitar errores en popular los selects */
           /**cargando los tipos de propeidades */
           await this.get_tipo_propiedades();
@@ -250,8 +174,12 @@ export default {
           } else {
             this.title = "Registrar Nuevo Financiamiento";
           }
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, "descripcion");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
     "form.contado_b": function (newValue, oldValue) {
       if (newValue.value == 1) {
@@ -265,14 +193,6 @@ export default {
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     getTipoformulario: {
       get() {
         return this.tipo;
@@ -302,6 +222,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       datosPrecio: [],
       title: "",
       accionConfirmarSinPassword: "",
@@ -437,7 +358,7 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     registrar_precio_propiedad() {
@@ -586,11 +507,15 @@ export default {
     },
 
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario == "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.$emit("closeVentana");
+      }
     },
     cerrarVentana() {
       this.openConfirmarSinPassword = false;
@@ -615,6 +540,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

@@ -699,13 +699,20 @@ class SeguimientosController extends ApiController
                             });
                     });
                 });
-            $query->with(['operacion:id,empresa_operaciones_id'])
+            $query->with(['operacion:id,empresa_operaciones_id,status'])
                 ->when($request->filled('empresa_operaciones_id'), function ($q) use ($request) {
                     $q->whereHas('operacion', function ($q2) use ($request) {
-                        if (trim($request->empresa_operaciones_id) && $request->empresa_operaciones_id > 0)
+                        if (trim($request->empresa_operaciones_id) && $request->empresa_operaciones_id > 0) {
                             $q2->where('empresa_operaciones_id', $request->empresa_operaciones_id);
+                        }
                     });
-                }); // 👈 load cliente info automatically
+                })
+                ->where(function ($q) {
+                    $q->whereHas('operacion', function ($sub) {
+                        $sub->where('status', '>', 0);
+                    })
+                        ->orWhereDoesntHave('operacion');
+                });
             if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
                 if ((int)$request->programado_b === 1) {
                     $query->whereDate('fechahora_programada', '>=', $request->fecha_inicio)->whereDate('fechahora_programada', '<=', $request->fecha_fin);

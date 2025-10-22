@@ -1,13 +1,8 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup', !mostrar_datos_operacion ? 'popup-85' : '',z_index]"
-      :fullscreen="mostrar_datos_operacion"
-      close="cancelar"
-      :title="'control de cobranza'"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup', !mostrar_datos_operacion ? 'popup-85' : '', z_index]"
+      :fullscreen="mostrar_datos_operacion" close="cancelar" :title="'control de cobranza'" :active="localShow"
+      :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">
           <span>Referencia de pago</span>
@@ -20,21 +15,10 @@
                 <span>(*)</span>
               </label>
 
-              <vs-input
-                data-vv-scope="form_calcular_adeudo"
-                ref="referencia"
-                name="referencia"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                maxlength="25"
-                type="text"
-                class="w-full"
-                v-validate="'required'"
-                placeholder="Núm. de referencia del pago"
-                v-model.trim="form.referencia"
-                :disabled="getReferencia != '' ? true : false"
-                @keypress.enter="CalcularPago()"
-              />
+              <vs-input data-vv-scope="form_calcular_adeudo" ref="referencia" name="referencia" data-vv-as=" "
+                data-vv-validate-on="blur" maxlength="25" type="text" class="w-full" v-validate="'required'"
+                placeholder="Núm. de referencia del pago" v-model.trim="form.referencia"
+                :disabled="getReferencia != '' ? true : false" @keypress.enter="CalcularPago()" />
               <span>{{ errors.first("form_calcular_adeudo.referencia") }}</span>
               <span v-if="this.errores.referencia">{{
                 errores.referencia[0]
@@ -45,16 +29,9 @@
                 Fecha y Hora del Pago
                 <span>(*)</span>
               </label>
-              <flat-pickr
-                data-vv-scope="form_calcular_adeudo"
-                name="fecha_pago"
-                data-vv-as=" "
-                v-validate:fecha_pago_validacion_computed.immediate="'required'"
-                :config="configdateTimePickerWithTime"
-                v-model="form.fecha_pago"
-                placeholder="Fecha del Pago"
-                class="w-full"
-              />
+              <flat-pickr data-vv-scope="form_calcular_adeudo" name="fecha_pago" data-vv-as=" "
+                v-validate:fecha_pago_validacion_computed.immediate="'required'" :config="configdateTimePickerWithTime"
+                v-model="form.fecha_pago" placeholder="Fecha del Pago" class="w-full" />
               <span>{{ errors.first("form_calcular_adeudo.fecha_pago") }}</span>
               <span v-if="this.errores.fecha_pago">{{
                 errores.fecha_pago[0]
@@ -63,22 +40,12 @@
             <div class="w-full md:w-6/12 xl:w-2/12 px-2 text-center input-text">
               <label>Habilitar Multipago</label>
               <div>
-                <vs-switch
-                  class="mx-auto mt-2"
-                  ref="permiso"
-                  color="success"
-                  v-model="form.multipago"
-                  :vs-value="false"
-                />
+                <vs-switch class="mx-auto mt-2" ref="permiso" color="success" v-model="form.multipago"
+                  :vs-value="false" />
               </div>
             </div>
-            <div
-              class="w-full md:w-6/12 xl:w-2/12 px-2 text-center xl:text-right"
-            >
-              <vs-button
-                class="w-full my-2 mt-6 md:mt-4"
-                @click="CalcularPago()"
-              >
+            <div class="w-full md:w-6/12 xl:w-2/12 px-2 text-center xl:text-right">
+              <vs-button class="w-full my-2 mt-6 md:mt-4" @click="CalcularPago()">
                 <span>Calcular Adeudo</span>
               </vs-button>
             </div>
@@ -94,23 +61,14 @@
           <div class="flex flex-wrap">
             <!--incio de tabla-->
             <div class="w-full">
-              <vs-table
-                :data="form.datos_operacion.pagos_programados"
-                noDataText="0 Resultados"
-                class="tabla-datos"
-              >
+              <vs-table :data="form.datos_operacion.pagos_programados" noDataText="0 Resultados" class="tabla-datos">
                 <template slot="header">
                   <h3>Listado de pagos programados</h3>
                 </template>
                 <template slot="thead">
                   <vs-th>
-                    <vs-checkbox
-                      ref="seleccionar_todos"
-                      color="primary"
-                      class="capitalize font-medium mt-2 permiso"
-                      :vs-value="true"
-                      v-model="seleccionar_todos"
-                    ></vs-checkbox>
+                    <vs-checkbox ref="seleccionar_todos" color="primary" class="capitalize font-medium mt-2 permiso"
+                      :vs-value="true" v-model="seleccionar_todos"></vs-checkbox>
                   </vs-th>
                   <vs-th>#</vs-th>
                   <vs-th>Concepto</vs-th>
@@ -122,128 +80,73 @@
                   <vs-th> Saldo del Pago $</vs-th>
                 </template>
                 <template slot-scope="{ data }">
-                  <vs-tr
-                    :data="programados"
-                    v-show="
-                      programados.status == 1 && programados.status_pago != 2
-                    "
-                    v-for="(programados, indextr) in form.datos_operacion
-                      .pagos_programados"
-                    v-bind:key="programados.id"
-                    ref="row"
-                  >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr].num_pago
-                      "
-                      :class="[
+                  <vs-tr :data="programados" v-show="programados.status == 1 && programados.status_pago != 2
+                    " v-for="(programados, indextr) in form.datos_operacion
+                      .pagos_programados" v-bind:key="programados.id" ref="row">
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr].num_pago
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                    >
-                      <vs-checkbox
-                        ref="pago_seleccionado"
-                        color="primary"
-                        :vs-value="programados"
-                        v-model="form.pagos_a_cubrir"
-                      ></vs-checkbox>
+                      ]">
+                      <vs-checkbox ref="pago_seleccionado" color="primary" :vs-value="programados"
+                        v-model="form.pagos_a_cubrir"></vs-checkbox>
                     </vs-td>
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr].num_pago
-                      "
-                      :class="[
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr].num_pago
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                    >
+                      ]">
                       <span class="font-semibold">{{
                         programados.num_pago
                       }}</span>
                     </vs-td>
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .concepto_texto
-                      "
-                      :class="[
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .concepto_texto
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >{{ programados.concepto_texto }}</vs-td
-                    >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .referencia_pago
-                      "
-                      :class="[
+                      ]">{{ programados.concepto_texto }}</vs-td>
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .referencia_pago
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >{{ programados.referencia_pago }}</vs-td
-                    >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .fecha_programada_abr
-                      "
-                      :class="[
+                      ]">{{ programados.referencia_pago }}</vs-td>
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .fecha_programada_abr
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >{{ programados.fecha_programada_abr }}</vs-td
-                    >
+                      ]">{{ programados.fecha_programada_abr }}</vs-td>
 
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .status_pago
-                      "
-                      :class="[
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .status_pago
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >$
+                      ]">$
                       {{
                         (programados.monto_programado -
                           programados.total_cubierto)
-                          | numFormat("0,000.00")
-                      }}</vs-td
-                    >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .intereses
-                      "
-                      :class="[
+                        | numFormat("0,000.00")
+                      }}</vs-td>
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .intereses
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >$
-                      {{ programados.intereses | numFormat("0,000.00") }}</vs-td
-                    >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .status_pago
-                      "
-                      :class="[
+                      ]">$
+                      {{ programados.intereses | numFormat("0,000.00") }}</vs-td>
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .status_pago
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      hidden
-                      >$
+                      ]" hidden>$
                       {{
                         programados.descuento_pronto_pago
-                          | numFormat("0,000.00")
-                      }}</vs-td
-                    >
-                    <vs-td
-                      :data="
-                        form.datos_operacion.pagos_programados[indextr]
-                          .saldo_neto
-                      "
-                      :class="[
+                        | numFormat("0,000.00")
+                      }}</vs-td>
+                    <vs-td :data="form.datos_operacion.pagos_programados[indextr]
+                      .saldo_neto
+                      " :class="[
                         programados.status_pago == 0 ? 'color-danger-900' : '',
-                      ]"
-                      >$
+                      ]">$
                       {{
                         programados.saldo_neto | numFormat("0,000.00")
-                      }}</vs-td
-                    >
+                      }}</vs-td>
                   </vs-tr>
                   <vs-tr class="font-medium color-primary-900 size-base">
                     <vs-td colspan="5">
@@ -308,19 +211,10 @@
                                 Forma de Pago
                                 <span>(*)</span>
                               </label>
-                              <v-select
-                                v-validate:forma_pago_validacion_computed.immediate="
-                                  'required'
-                                "
-                                data-vv-scope="pago_form"
-                                :options="FormasPago"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="form.formaPago"
-                                class="large_select"
-                                name="forma_pago"
-                                data-vv-as=" "
-                              >
+                              <v-select v-validate:forma_pago_validacion_computed.immediate="'required'
+                                " data-vv-scope="pago_form" :options="FormasPago" :clearable="false"
+                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.formaPago" class="large_select"
+                                name="forma_pago" data-vv-as=" ">
                                 <div slot="no-options">
                                   No Se Ha Seleccionado Ninguna Opción
                                 </div>
@@ -339,19 +233,10 @@
                                 <span>(*)</span>
                               </label>
 
-                              <v-select
-                                v-validate:cobrador_validacion_computed.immediate="
-                                  'required'
-                                "
-                                data-vv-scope="pago_form"
-                                :options="Cobradores"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="form.cobrador"
-                                class="large_select"
-                                name="forma_pago"
-                                data-vv-as=" "
-                              >
+                              <v-select v-validate:cobrador_validacion_computed.immediate="'required'
+                                " data-vv-scope="pago_form" :options="Cobradores" :clearable="false"
+                                :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.cobrador" class="large_select"
+                                name="forma_pago" data-vv-as=" ">
                                 <div slot="no-options">
                                   No Se Ha Seleccionado Ninguna Opción
                                 </div>
@@ -367,21 +252,12 @@
                             </div>
 
                             <div class="w-full px-2 input-text">
-                              <label
-                                >Referencia de abono
-                                (depósito/transferencia)</label
-                              >
+                              <label>Referencia de abono
+                                (depósito/transferencia)</label>
 
-                              <vs-input
-                                data-vv-scope="pago_form"
-                                size="large"
-                                name="referencia_sobre_pago"
-                                data-vv-as=" "
-                                type="text"
-                                class="w-full"
-                                placeholder="Ej. cheque número 1"
-                                v-model="form.referencia_sobre_pago"
-                              />
+                              <vs-input data-vv-scope="pago_form" size="large" name="referencia_sobre_pago"
+                                data-vv-as=" " type="text" class="w-full" placeholder="Ej. cheque número 1"
+                                v-model="form.referencia_sobre_pago" />
 
                               <span>{{
                                 errors.first("pago_form.referencia")
@@ -393,16 +269,8 @@
                             </div>
                             <div class="w-full px-2 input-text">
                               <label>Nombre del banco </label>
-                              <vs-input
-                                data-vv-scope="pago_form"
-                                size="large"
-                                name="banco"
-                                data-vv-as=" "
-                                type="text"
-                                class="w-full"
-                                placeholder="Ej. Santander"
-                                v-model="form.banco"
-                              />
+                              <vs-input data-vv-scope="pago_form" size="large" name="banco" data-vv-as=" " type="text"
+                                class="w-full" placeholder="Ej. Santander" v-model="form.banco" />
                               <span>{{ errors.first("pago_form.banco") }}</span>
                               <span v-if="this.errores.banco">{{
                                 errores.banco[0]
@@ -417,12 +285,8 @@
                       <!--Datos de resumen-->
                       <div class="flex pt-6 px-2">
                         <!--Resumen de pago-->
-                        <div
-                          class="w-full p-4 border-gray-solid-1 mx-auto rounded-lg"
-                        >
-                          <h3
-                            class="size-base font-bold color-black-900 text-center uppercase"
-                          >
+                        <div class="w-full p-4 border-gray-solid-1 mx-auto rounded-lg">
+                          <h3 class="size-base font-bold color-black-900 text-center uppercase">
                             Resumen del pago
                           </h3>
                           <div class="flex pt-6 pb-2">
@@ -473,26 +337,17 @@
                               {{ form.cobrador.label }}
                             </div>
                           </div>
-                          <div
-                            class="flex flex-wrap mt-2 theme-background py-6"
-                          >
-                            <div
-                              class="w-full text-center font-medium color-black-900 uppercase"
-                            >
+                          <div class="flex flex-wrap mt-2 theme-background py-6">
+                            <div class="w-full text-center font-medium color-black-900 uppercase">
                               Total a pagar
                             </div>
-                            <div
-                              class="w-full text-center font-medium color-black-700 uppercase pt-2"
-                            >
+                            <div class="w-full text-center font-medium color-black-700 uppercase pt-2">
                               <span v-if="total_pagar > 0" class="uppercase">
                                 $
                                 {{ total_pagar | numFormat("0,000.00") }}
                                 Pesos mexicanos
                               </span>
-                              <span
-                                v-else
-                                class="uppercase color-danger-900 font-normal"
-                              >
+                              <span v-else class="uppercase color-danger-900 font-normal">
                                 no se ha ingresado la cantidad a pagar
                               </span>
                             </div>
@@ -504,15 +359,8 @@
                     </div>
                     <div class="w-full input-text mt-6 px-2">
                       <label> Nota u observación: </label>
-                      <vs-textarea
-                        :rows="6"
-                        size="large"
-                        ref="nota"
-                        type="text"
-                        class="w-full"
-                        placeholder="Ingrese una nota..."
-                        v-model.trim="form.nota"
-                      />
+                      <vs-textarea :rows="6" size="large" ref="nota" type="text" class="w-full"
+                        placeholder="Ingrese una nota..." v-model.trim="form.nota" />
                     </div>
                   </div>
                 </div>
@@ -529,23 +377,12 @@
                             $ ABONO A CAPITAL
                             <span>(*)</span>
                           </label>
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="abono"
-                            data-vv-as=" "
-                            v-validate="
-                              'required|decimal:2|min_value:' +
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="abono" data-vv-as=" "
+                            v-validate="'required|decimal:2|min_value:' +
                               minimo_abono +
                               '|max_value:' +
                               maximo_abono
-                            "
-                            type="text"
-                            class="w-full"
-                            placeholder="$ 0.00"
-                            v-model.trim="form.abono"
-                          />
+                              " type="text" class="w-full" placeholder="$ 0.00" v-model.trim="form.abono" />
                           <span>{{ errors.first("pago_form.abono") }}</span>
                           <span v-if="this.errores.abono">{{
                             errores.abono[0]
@@ -556,21 +393,10 @@
                             $ INTERESES MORATORIOS
                             <span>(*)</span>
                           </label>
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="intereses"
-                            data-vv-as=" "
-                            v-validate="
-                              'required|decimal:2|min_value:0|max_value:' +
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="intereses" data-vv-as=" "
+                            v-validate="'required|decimal:2|min_value:0|max_value:' +
                               maximo_interes
-                            "
-                            type="text"
-                            class="w-full"
-                            placeholder="$ 0.00"
-                            v-model.trim="form.intereses"
-                          />
+                              " type="text" class="w-full" placeholder="$ 0.00" v-model.trim="form.intereses" />
                           <span>{{ errors.first("pago_form.intereses") }}</span>
                           <span v-if="this.errores.intereses">{{
                             errores.intereses[0]
@@ -581,21 +407,11 @@
                             $ DESCUENTO POR PRONTO PAGO
                             <span>(*)</span>
                           </label>
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="descuento"
-                            data-vv-as=" "
-                            v-validate="
-                              'required|decimal:2|min_value:0|max_value:' +
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="descuento" data-vv-as=" "
+                            v-validate="'required|decimal:2|min_value:0|max_value:' +
                               maximo_descuento
-                            "
-                            type="text"
-                            class="w-full"
-                            placeholder="$ 0.00"
-                            v-model.trim="form.descuento_pronto_pago"
-                          />
+                              " type="text" class="w-full" placeholder="$ 0.00"
+                            v-model.trim="form.descuento_pronto_pago" />
                           <span>{{ errors.first("pago_form.descuento") }}</span>
                           <span v-if="this.errores.descuento">{{
                             errores.descuento[0]
@@ -606,23 +422,11 @@
                             $ TOTAL A PAGAR
                             <span>(*)</span>
                           </label>
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="total"
-                            data-vv-as=" "
-                            v-validate="
-                              'required|decimal:2|min_value:0|max_value:' +
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="total" data-vv-as=" "
+                            v-validate="'required|decimal:2|min_value:0|max_value:' +
                               maximo_saldo
-                            "
-                            type="text"
-                            class="w-full"
-                            placeholder=""
-                            v-model.trim="total_pagar"
-                            readonly
-                            :disabled="true"
-                          />
+                              " type="text" class="w-full" placeholder="" v-model.trim="total_pagar" readonly
+                            :disabled="true" />
                           <span>{{ errors.first("pago_form.total") }}</span>
                           <span v-if="this.errores.total">{{
                             errores.total[0]
@@ -635,26 +439,14 @@
                             <span>(*)</span>
                           </label>
 
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="pago_con_cantidad"
-                            data-vv-as=" "
-                            v-validate="
-                              'required|decimal:2|min_value:' +
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="pago_con_cantidad"
+                            data-vv-as=" " v-validate="'required|decimal:2|min_value:' +
                               cantidad_a_regresar +
                               '|max_value:' +
                               maximo_cantidad_pago
-                            "
-                            type="text"
-                            class="w-full"
-                            placeholder=""
-                            v-model.trim="form.pago_con_cantidad"
-                            :disabled="
-                              this.form.formaPago.value != 1 ? true : false
-                            "
-                          />
+                              " type="text" class="w-full" placeholder="" v-model.trim="form.pago_con_cantidad"
+                            :disabled="this.form.formaPago.value != 1 ? true : false
+                              " />
                           <span>{{
                             errors.first("pago_form.pago_con_cantidad")
                           }}</span>
@@ -669,20 +461,9 @@
                             $ CAMBIO A REGRESAR
                             <span>(*)</span>
                           </label>
-                          <vs-input
-                            data-vv-scope="pago_form"
-                            maxlength="9"
-                            size="large"
-                            name="cambio_pago"
-                            data-vv-as=" "
-                            v-validate="'required|decimal:2|min_value:0'"
-                            type="text"
-                            class="w-full"
-                            placeholder=""
-                            v-model.trim="cantidad_a_regresar"
-                            readonly
-                            :disabled="true"
-                          />
+                          <vs-input data-vv-scope="pago_form" maxlength="9" size="large" name="cambio_pago"
+                            data-vv-as=" " v-validate="'required|decimal:2|min_value:0'" type="text" class="w-full"
+                            placeholder="" v-model.trim="cantidad_a_regresar" readonly :disabled="true" />
                           <span>{{
                             errors.first("pago_form.cambio_pago")
                           }}</span>
@@ -698,18 +479,12 @@
                             es correcto de click en "Botón de Abajo”.
                           </div>
                           <div v-if="form.formaPago.value == 7">
-                            <h3
-                              class="w-full size-base color-danger-900 pb-6 font-normal"
-                            >
+                            <h3 class="w-full size-base color-danger-900 pb-6 font-normal">
                               Advertencia, la forma de pago seleccionada se
                               tomará como un descuento.
                             </h3>
                           </div>
-                          <vs-button
-                            class="w-full"
-                            @click="acceptAlert()"
-                            color="success"
-                          >
+                          <vs-button class="w-full" @click="acceptAlert()" color="success">
                             <span class="">Guardar Pago</span>
                           </vs-button>
                         </div>
@@ -742,29 +517,16 @@
 
       <!--fin mostrar datos de operacion-->
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index59k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
-
-    <ConfirmarAceptar
-      :z_index="'z-index59k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar este pago'"
-      :confirmarButton="'Registrar Pago'"
-    ></ConfirmarAceptar>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre">
+    </Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar este pago'" :confirmarButton="'Registrar Pago'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -782,6 +544,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 import { alfabeto, configdateTimePickerWithTime } from "@/VariablesGlobales";
 export default {
+  name: "formularioPagos",
   components: {
     "v-select": vSelect,
     Password,
@@ -806,54 +569,51 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["referencia"].$el.querySelector("input").focus()
-        );
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          //yyyy-mm-dd
+          let today = new Date();
+          var mm =
+            (today.getMinutes() + 1 < 10 ? "0" : "") + (today.getMinutes() + 1);
+          var hh =
+            (today.getHours() + 1 < 10 ? "0" : "") + (today.getHours() + 1);
 
-        //yyyy-mm-dd
-        let today = new Date();
+          // 1970, 1971, ... 2015, 2016, ...
+          var yyyy = today.getFullYear();
+          var month =
+            (today.getMonth() + 1 < 10 ? "0" : "") + (today.getMonth() + 1);
+          // 01, 02, 03, ... 29, 30, 31
+          var dd = (today.getDate() < 10 ? "0" : "") + today.getDate();
+          let fecha = yyyy + "-" + month + "-" + dd + " " + hh + ":" + mm;
+          // 01, 02, 03, ... 10, 11, 12
+          this.form.fecha_pago = fecha;
 
-        var mm =
-          (today.getMinutes() + 1 < 10 ? "0" : "") + (today.getMinutes() + 1);
-        var hh =
-          (today.getHours() + 1 < 10 ? "0" : "") + (today.getHours() + 1);
+          /**de manera asincrona para evitar errores en popular los selects */
+          /**cargando los tipos de propeidades */
+          this.title = "control de cobranza";
+          /**cargando por defecto la referencia enviada */
+          this.form.referencia = this.getReferencia;
+          try {
+            this.$vs.loading();
+            await this.get_formas_pago_sat();
+            await this.get_monedas_sat();
+            await this.get_cobradores();
+          } finally {
+            this.$vs.loading.close();
+          }
 
-        // 1970, 1971, ... 2015, 2016, ...
-        var yyyy = today.getFullYear();
-        var month =
-          (today.getMonth() + 1 < 10 ? "0" : "") + (today.getMonth() + 1);
-        // 01, 02, 03, ... 29, 30, 31
-        var dd = (today.getDate() < 10 ? "0" : "") + today.getDate();
-        let fecha = yyyy + "-" + month + "-" + dd + " " + hh + ":" + mm;
-        // 01, 02, 03, ... 10, 11, 12
-        this.form.fecha_pago = fecha;
-
-        /**de manera asincrona para evitar errores en popular los selects */
-        /**cargando los tipos de propeidades */
-        this.title = "control de cobranza";
-        /**cargando por defecto la referencia enviada */
-        this.form.referencia = this.getReferencia;
-
-        (async () => {
-          await this.get_formas_pago_sat();
-          await this.get_monedas_sat();
-          await this.get_cobradores();
-        })();
-
-        if (this.getReferencia != "") {
-          /**se envio una referencia por default
-           * se debe de llamar el servicio de calcular pago
-           */
-          this.CalcularPago();
-        }
-      } else {
-        this.$validator.pause();
+          if (this.getReferencia != "") {
+            /**se envio una referencia por default
+             * se debe de llamar el servicio de calcular pago
+             */
+            this.CalcularPago();
+          }
+          this.$popupManager.register(this, this.cancelar, "referencia");
+        } else {
+          /**
+           * this.$validator.pause();
         this.$nextTick(() => {
           this.$validator.errors.clear();
           this.$validator.fields.items.forEach((field) => field.reset());
@@ -862,7 +622,11 @@ export default {
           );
           this.$validator.resume();
         });
-      }
+           */
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
     "form.formaPago": function (newValue, oldValue) {
       if (newValue.value != 1) {
@@ -978,15 +742,6 @@ export default {
         } else return false;
       } else return false;
     },
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
-
     getReferencia: {
       get() {
         return this.referencia;
@@ -1007,6 +762,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       error: "",
       configdateTimePickerWithTime: configdateTimePickerWithTime,
       accionConfirmarSinPassword: "",
@@ -1365,7 +1121,7 @@ export default {
             })();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     acceptAlert() {
@@ -1403,7 +1159,7 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     cancelar() {
@@ -1437,6 +1193,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

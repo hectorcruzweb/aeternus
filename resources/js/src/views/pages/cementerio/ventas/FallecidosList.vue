@@ -1,16 +1,8 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            class="forms-popup popup-80"
-            :title="title"
-            :active.sync="showVentana"
-            ref="lista_reportes"
-        >
+        <vs-popup class="forms-popup popup-80" :title="title" :active="localShow" :ref="this.$options.name">
             <div class="pb-6">
-                <div
-                    class="mx-auto w-full lg:w-9/12 xl:w-9/12 my-8"
-                    v-if="servicio"
-                >
+                <div class="mx-auto w-full lg:w-9/12 xl:w-9/12 my-8" v-if="servicio">
                     <div class="form-group">
                         <div class="title-form-group">
                             Información de la Propiedad
@@ -53,38 +45,25 @@
                 </div>
                 <div class="flex flex-wrap">
                     <div class="w-full pb-4" v-if="servicio.sepultados">
-                        <vs-table
-                            class="tabla-datos"
-                            :data="servicio.sepultados"
-                            noDataText="0 Resultados"
-                        >
+                        <vs-table class="tabla-datos" :data="servicio.sepultados" noDataText="0 Resultados">
                             <template slot="header">
                                 <h3>Lista de personas sepultadas</h3>
                             </template>
                             <template slot="thead">
-                                <vs-th class="w-1/5"
-                                    ># Servicio Funerario</vs-th
-                                >
+                                <vs-th class="w-1/5"># Servicio Funerario</vs-th>
                                 <vs-th class="w-2/5">Fallecido (a)</vs-th>
                                 <vs-th class="w-1/5">Fecha de Inhumación</vs-th>
-                                <vs-th class="w-1/5"
-                                    >Ver Órden de Servicio</vs-th
-                                >
+                                <vs-th class="w-1/5">Ver Órden de Servicio</vs-th>
                             </template>
                             <template>
-                                <vs-tr
-                                    v-for="(sepultado,
-                                    index_sepultado) in servicio.sepultados"
-                                    v-bind:key="
-                                        sepultado.servicios_funerarios_id
-                                    "
-                                >
+                                <vs-tr v-for="(sepultado,
+                                    index_sepultado) in servicio.sepultados" v-bind:key="sepultado.servicios_funerarios_id
+                                        ">
                                     <vs-td>
                                         <span class="font-medium">
                                             {{
                                                 sepultado.servicios_funerarios_id
-                                            }}</span
-                                        >
+                                            }}</span>
                                     </vs-td>
                                     <vs-td>
                                         <span class="">{{
@@ -98,23 +77,17 @@
                                     </vs-td>
                                     <vs-td>
                                         <div class="flex justify-center">
-                                            <img
-                                                class="cursor-pointer img-btn-25 mx-4"
-                                                src="@assets/images/pdf.svg"
-                                                title="Consultar Servicio"
-                                                v-show="
-                                                    sepultado.servicios_funerarios_id
-                                                "
-                                                @click="
-                                                    openReporte(
-                                                        'Hoja de Servicio',
-                                                        '/funeraria/orden_servicio',
-                                                        sepultado.servicios_funerarios_id,
-                                                        'pdf',
-                                                        ''
-                                                    )
-                                                "
-                                            />
+                                            <img class="cursor-pointer img-btn-25 mx-4" src="@assets/images/pdf.svg"
+                                                title="Consultar Servicio" v-show="sepultado.servicios_funerarios_id
+                                                    " @click="
+                                                        openReporte(
+                                                            'Hoja de Servicio',
+                                                            '/funeraria/orden_servicio',
+                                                            sepultado.servicios_funerarios_id,
+                                                            'pdf',
+                                                            ''
+                                                        )
+                                                        " />
                                         </div>
                                     </vs-td>
                                 </vs-tr>
@@ -123,19 +96,17 @@
                     </div>
                 </div>
             </div>
-            <Reporteador
-                :header="'consultar sepultados de venta de propiedad'"
-                :show="openReportesLista"
-                :listadereportes="ListaReportes"
-                :request="request"
-                @closeReportes="openReportesLista = false"
-            ></Reporteador>
+            <Reporteador v-if="openReportesLista" :header="'consultar sepultados de venta de propiedad'"
+                :show="openReportesLista" :listadereportes="ListaReportes" :request="request"
+                @closeReportes="openReportesLista = false">
+            </Reporteador>
         </vs-popup>
     </div>
 </template>
 <script>
 import Reporteador from "@pages/Reporteador";
 export default {
+    name: "FallecidosList",
     components: {
         Reporteador
     },
@@ -150,28 +121,21 @@ export default {
         }
     },
     watch: {
-        show: function(newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["lista_reportes"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-            } else {
-                /**cerrar ventana */
-                this.servicio = [];
-            }
-        }
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    this.$popupManager.register(this, this.cancelar, "input");
+                    //verificamos el origen del form para determinar que haremos justo al abrir el form.
+                    //obtener datos del cliente
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
+        },
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            }
-        },
         servicio: {
             get() {
                 return this.fallecidos;
@@ -180,7 +144,7 @@ export default {
                 return newValue;
             }
         },
-        title: function() {
+        title: function () {
             if (this.servicio.venta_terreno)
                 return this.servicio.venta_terreno.ubicacion_texto;
             else return;
@@ -188,6 +152,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             ListaReportes: [],
             request: {
                 id_pago: "",
@@ -230,15 +195,19 @@ export default {
             this.$vs.loading.close();
         }
     },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", e => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                }
-            }
-        });
-    }
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>
 

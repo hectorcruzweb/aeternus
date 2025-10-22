@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-90" fullscreen title="cuotas de mantenimiento en cementerio"
-            :active.sync="showVentana" ref="planes_cementerio">
+        <vs-popup class="forms-popup popup-90" title="cuotas de mantenimiento en cementerio" :active="localShow"
+            :ref="this.$options.name">
             <div class="w-full text-right">
                 <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
                     type="border" @click="
@@ -42,10 +42,10 @@
                                     </vs-td>
                                     <vs-td :data="data[index_cuota].descripcion">{{
                                         cuotas.descripcion
-                                        }}</vs-td>
+                                    }}</vs-td>
                                     <vs-td :data="data[index_cuota].periodo">{{
                                         cuotas.periodo
-                                        }}</vs-td>
+                                    }}</vs-td>
 
                                     <vs-td :data="data[index_cuota].cuota_total">$ {{ cuotas.cuota_total |
                                         numFormat("0,000.00") }}</vs-td>
@@ -100,17 +100,18 @@
                 </div>
             </div>
             <!--componente de confirmar sin contraseña-->
-            <ConfirmarDanger :z_index="'z-index58k'" :show="operConfirmar" :callback-on-success="callback"
-                @closeVerificar="operConfirmar = false"
+            <ConfirmarDanger v-if="operConfirmar" :z_index="'z-index58k'" :show="operConfirmar"
+                :callback-on-success="callback" @closeVerificar="operConfirmar = false"
                 :accion="'¿Desea eliminar este plan de mensualidades? Los datos quedarán eliminados del sistema.'"
                 :confirmarButton="'Eliminar'"></ConfirmarDanger>
-            <Password :show="openPassword" :callback-on-success="callbackPassword"
+            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callbackPassword"
                 @closeVerificar="openPassword = false" :accion="accionPassword"></Password>
 
-            <FormularioCuotas :id_cuota="id_cuotas_modificar" :tipo="tipoFormulario" :show="verFormularioCuotas"
-                @closeVentana="verFormularioCuotas = false" @retornar_id="retorno_id"></FormularioCuotas>
+            <FormularioCuotas v-if="verFormularioCuotas" :id_cuota="id_cuotas_modificar" :tipo="tipoFormulario"
+                :show="verFormularioCuotas" @closeVentana="verFormularioCuotas = false" @retornar_id="retorno_id">
+            </FormularioCuotas>
 
-            <Reporteador :header="'Consultar cuotas x propiedad'" :show="openReportesLista"
+            <Reporteador v-if="openReportesLista" :header="'Consultar cuotas x propiedad'" :show="openReportesLista"
                 :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
             </Reporteador>
             <!--fin de compornentes-->
@@ -125,6 +126,7 @@ import cementerio from "@services/cementerio";
 import FormularioCuotas from "@pages/cementerio/ventas/cuotas/FormularioCuotas";
 import vSelect from "vue-select";
 export default {
+    name: "CuotasCementerio",
     props: {
         show: {
             type: Boolean,
@@ -132,22 +134,17 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["planes_cementerio"].$el.querySelector(".vs-icon").onclick =
-                    () => {
-                        this.cancelar();
-                    };
-
-                (async () => {
-                    /**manda traer los cuotas */
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_cuotas();
-                })();
-            } else {
-                /**cerrar ventana */
-                this.datosVenta = [];
-                this.total = 0;
-            }
+                    this.$popupManager.register(this, this.cancelar, "input");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     components: {
@@ -159,6 +156,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             documentos: [
                 {
                     documento: "Cuota de mantenimiento",
@@ -191,14 +189,6 @@ export default {
         };
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
     },
     methods: {
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
@@ -341,6 +331,18 @@ export default {
                 });
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

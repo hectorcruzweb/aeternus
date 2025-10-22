@@ -1,12 +1,7 @@
 <template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-50"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup popup-50', z_index]" close="cancelar" :title="title" :active="localShow"
+      :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">Cuota de Mantenimiento</div>
         <div class="form-group-content">
@@ -16,17 +11,9 @@
                 Periodo de cuota (Descripción)
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                name="descripcion"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required'"
-                maxlength="100"
-                type="text"
-                class="w-full"
-                placeholder="Ene 2021 - Enero 2022"
-                v-model="form.descripcion"
-              />
+              <vs-input name="descripcion" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required'"
+                maxlength="100" type="text" class="w-full" placeholder="Ene 2021 - Enero 2022"
+                v-model="form.descripcion" />
               <span class="">{{ errors.first("descripcion") }}</span>
               <span class="" v-if="this.errores.descripcion">{{
                 errores.descripcion[0]
@@ -37,17 +24,8 @@
                 $ Cuota Total
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                name="cuota_total"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required|decimal'"
-                maxlength="10"
-                type="text"
-                class="w-full"
-                placeholder="Ej. $1000.00"
-                v-model="form.cuota_total"
-              />
+              <vs-input name="cuota_total" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|decimal'"
+                maxlength="10" type="text" class="w-full" placeholder="Ej. $1000.00" v-model="form.cuota_total" />
               <span class="">{{ errors.first("cuota_total") }}</span>
               <span class="" v-if="this.errores.cuota_total">{{
                 errores.cuota_total[0]
@@ -59,17 +37,9 @@
                 % IVA
                 <span class="">(*)</span>
               </label>
-              <vs-input
-                name="tasa_iva"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="'required|integer|min_value:0|max_value:16'"
-                maxlength="2"
-                type="text"
-                class="w-full"
-                placeholder=""
-                v-model="form.tasa_iva"
-              />
+              <vs-input name="tasa_iva" data-vv-as=" " data-vv-validate-on="blur"
+                v-validate="'required|integer|min_value:0|max_value:16'" maxlength="2" type="text" class="w-full"
+                placeholder="" v-model="form.tasa_iva" />
               <span class="">{{ errors.first("tasa_iva") }}</span>
               <span class="" v-if="this.errores.tasa_iva">{{
                 errores.tasa_iva[0]
@@ -81,15 +51,9 @@
                 Fecha de inicio (Año-Mes-Dia)
                 <span>(*)</span>
               </label>
-              <flat-pickr
-                name="fecha_inicio"
-                data-vv-as=" "
-                v-validate:fecha_inicio_validacion_computed="'required'"
-                :config="configdateTimePicker"
-                v-model="form.fecha_inicio"
-                placeholder="Fecha de inicio"
-                class="w-full"
-              />
+              <flat-pickr name="fecha_inicio" data-vv-as=" " v-validate:fecha_inicio_validacion_computed="'required'"
+                :config="configdateTimePicker" v-model="form.fecha_inicio" placeholder="Fecha de inicio"
+                class="w-full" />
               <span>{{ errors.first("fecha_inicio") }}</span>
               <span v-if="this.errores.fecha_inicio">{{
                 errores.fecha_inicio[0]
@@ -100,15 +64,9 @@
                 Fecha final (Año-Mes-Dia)
                 <span>(*)</span>
               </label>
-              <flat-pickr
-                name="fecha_fin"
-                data-vv-as=" "
-                v-validate:fecha_fin_validacion_computed="'required'"
-                :config="configdateTimePickerFechasCaducidad"
-                v-model="form.fecha_fin"
-                placeholder="Fecha final"
-                class="w-full"
-              />
+              <flat-pickr name="fecha_fin" data-vv-as=" " v-validate:fecha_fin_validacion_computed="'required'"
+                :config="configdateTimePickerFechasCaducidad" v-model="form.fecha_fin" placeholder="Fecha final"
+                class="w-full" />
               <span>{{ errors.first("fecha_fin") }}</span>
               <span v-if="this.errores.fecha_fin">{{
                 errores.fecha_fin[0]
@@ -126,42 +84,23 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Cuota</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Cuota</span>
             <span class="" v-else>Modificar Cuota</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre" :z_index="'z-index59k'"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar este Cuota'"
-      :confirmarButton="'Registrar Cuota'"
-    ></ConfirmarAceptar>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar este Cuota'" :confirmarButton="'Registrar Cuota'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -182,6 +121,8 @@ import {
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioPreciosCementerio",
+  name: "formularioCuotas",
   components: {
     "v-select": vSelect,
     Password,
@@ -203,19 +144,17 @@ export default {
       required: false,
       default: 0,
     },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index58k",
+    },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["descripcion"].$el.querySelector("input").focus()
-        );
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
           if (this.getTipoformulario == "modificar") {
             this.title = "Modificar Cuota de Mantenimiento";
             this.get_cuota_by_id();
@@ -223,8 +162,12 @@ export default {
           } else {
             this.title = "Registrar Cuota de Mantenimiento";
           }
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, "descripcion");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
@@ -234,15 +177,6 @@ export default {
 
     fecha_fin_validacion_computed: function () {
       return this.form.fecha_fin;
-    },
-
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
     },
     getTipoformulario: {
       get() {
@@ -263,6 +197,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       configdateTimePicker: configdateTimePicker,
       configdateTimePickerFechasCaducidad: configdateTimePickerFechasCaducidad,
       datosCuota: [],
@@ -344,7 +279,7 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
 
     registrar_cuota() {
@@ -491,15 +426,19 @@ export default {
     },
 
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario == "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.cerrarVentana();
+      }
     },
     cerrarVentana() {
-      this.openConfirmarSinPassword = false;
-      this.limpiarVentana();
+      //this.openConfirmarSinPassword = false;
+      //this.limpiarVentana();
       this.$emit("closeVentana");
     },
     //regresa los datos a su estado inicial
@@ -518,6 +457,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

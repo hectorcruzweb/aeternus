@@ -1,19 +1,11 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            :class="['forms-popup popup-80', z_index]"
-            title="expediente de venta en cementerio"
-            :active.sync="showVentana"
-            ref="lista_reportes"
-        >
+        <vs-popup :class="['forms-popup popup-80', z_index]" title="expediente de venta en cementerio"
+            :active="localShow" :ref="this.$options.name">
             <div class="pb-6">
                 <div class="flex flex-wrap">
                     <div class="w-full" v-if="datosVenta.operacion_id">
-                        <vs-table
-                            class="tabla-datos"
-                            :data="documentos"
-                            noDataText="0 Resultados"
-                        >
+                        <vs-table class="tabla-datos" :data="documentos" noDataText="0 Resultados">
                             <template slot="header">
                                 <h3>Documentos del contrato</h3>
                             </template>
@@ -22,52 +14,35 @@
 
                                 <vs-th class="w-3/5">Documento</vs-th>
 
-                                <vs-th class="w-1/5"
-                                    >Seleccionar Documento</vs-th
-                                >
+                                <vs-th class="w-1/5">Seleccionar Documento</vs-th>
                             </template>
                             <template>
-                                <vs-tr
-                                    v-show="
-                                        mostrarDocumento(documento.documento)
-                                    "
-                                    v-for="(
-                                        documento, index_documento
-                                    ) in documentos"
-                                    v-bind:key="documento.id"
-                                >
+                                <vs-tr v-show="mostrarDocumento(documento.documento)
+                                    " v-for="(
+documento, index_documento
+                                    ) in documentos" v-bind:key="documento.id">
                                     <vs-td>
                                         <span class="font-medium">
-                                            {{ index_documento + 1 }}</span
-                                        >
+                                            {{ index_documento + 1 }}</span>
                                     </vs-td>
 
                                     <vs-td>
                                         <span class="">{{
                                             documento.documento
-                                        }}</span>
+                                            }}</span>
                                     </vs-td>
 
                                     <vs-td>
                                         <div class="flex justify-center">
-                                            <img
-                                                class="cursor-pointer img-btn-25 mx-4"
-                                                src="@assets/images/signature.svg"
-                                                title="Firmar Documento"
-                                                @click="
+                                            <img class="cursor-pointer img-btn-25 mx-4"
+                                                src="@assets/images/signature.svg" title="Firmar Documento" @click="
                                                     openFirmador(
                                                         documento.documento_id
                                                     )
-                                                "
-                                                v-show="documento.firma"
-                                            />
+                                                    " v-show="documento.firma" />
 
-                                            <img
-                                                v-if="documento.tipo == 'pdf'"
-                                                class="cursor-pointer img-btn-24 mx-2"
-                                                src="@assets/images/pdf.svg"
-                                                title="Consultar Documento"
-                                                @click="
+                                            <img v-if="documento.tipo == 'pdf'" class="cursor-pointer img-btn-24 mx-2"
+                                                src="@assets/images/pdf.svg" title="Consultar Documento" @click="
                                                     openReporte(
                                                         documento.documento,
 
@@ -77,15 +52,10 @@
 
                                                         ''
                                                     )
-                                                "
-                                            />
+                                                    " />
 
-                                            <img
-                                                v-else
-                                                class="cursor-pointer img-btn-24 mx-2"
-                                                src="@assets/images/excel.svg"
-                                                title="Consultar Documento"
-                                                @click="
+                                            <img v-else class="cursor-pointer img-btn-24 mx-2"
+                                                src="@assets/images/excel.svg" title="Consultar Documento" @click="
                                                     openReporte(
                                                         documento.documento,
 
@@ -95,8 +65,7 @@
 
                                                         ''
                                                     )
-                                                "
-                                            />
+                                                    " />
                                         </div>
                                     </vs-td>
                                 </vs-tr>
@@ -106,12 +75,8 @@
                 </div>
 
                 <div class="w-full mt-6" v-if="datosVenta.operacion_id">
-                    <vs-table
-                        class="tabla-datos"
-                        :data="datosVenta.pagos_programados"
-                        noDataText="0 Resultados"
-                        ref="tabla_pagos_programados"
-                    >
+                    <vs-table class="tabla-datos" :data="datosVenta.pagos_programados" noDataText="0 Resultados"
+                        ref="tabla_pagos_programados">
                         <template slot="header">
                             <h3>Listado de Pagos programados</h3>
                         </template>
@@ -137,110 +102,84 @@
                             <vs-th>Pagar Recibo</vs-th>
                         </template>
                         <template>
-                            <vs-tr
-                                v-show="programados.status == 1"
-                                v-for="(
-                                    programados, index_programado
-                                ) in datosVenta.pagos_programados"
-                                v-bind:key="programados.id"
-                                ref="row"
-                            >
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                            <vs-tr v-show="programados.status == 1" v-for="(
+programados, index_programado
+                                ) in datosVenta.pagos_programados" v-bind:key="programados.id" ref="row">
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{
                                         programados.num_pago
-                                    }}</span>
+                                        }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     {{ programados.referencia_pago }}
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >{{
-                                        programados.fecha_programada_abr
-                                    }}</vs-td
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">{{
+                                    programados.fecha_programada_abr
+                                    }}</vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span v-if="programados.saldo_neto > 0">
                                         {{ programados.fecha_a_pagar_abr }}
                                     </span>
 
-                                    <span v-else
-                                        >{{ programados.fecha_ultimo_pago_abr }}
+                                    <span v-else>{{ programados.fecha_ultimo_pago_abr }}
                                     </span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >$
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">$
                                     {{
                                         programados.monto_programado
-                                            | numFormat("0,000.00")
+                                        | numFormat("0,000.00")
                                     }}
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >$
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">$
                                     {{
                                         programados.intereses
-                                            | numFormat("0,000.00")
-                                    }}</vs-td
-                                >
+                                        | numFormat("0,000.00")
+                                    }}</vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >$
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">$
                                     {{
                                         programados.saldo_neto
-                                            | numFormat("0,000.00")
-                                    }}</vs-td
-                                >
+                                        | numFormat("0,000.00")
+                                    }}</vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >{{ programados.concepto_texto }}</vs-td
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">{{ programados.concepto_texto }}</vs-td>
 
                                 <vs-td>
                                     <p v-if="programados.status_pago == 0">
@@ -264,24 +203,15 @@
 
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img
-                                            v-if="programados.saldo_neto > 0"
-                                            class="cursor-pointer img-btn-24 mx-2"
-                                            src="@assets/images/dollar_bill.svg"
-                                            title="Pagar Ficha"
-                                            @click="
+                                        <img v-if="programados.saldo_neto > 0" class="cursor-pointer img-btn-24 mx-2"
+                                            src="@assets/images/dollar_bill.svg" title="Pagar Ficha" @click="
                                                 pagar(
                                                     programados.referencia_pago
                                                 )
-                                            "
-                                        />
+                                                " />
 
-                                        <img
-                                            v-else
-                                            class="cursor-pointer img-btn-20 mx-2"
-                                            src="@assets/images/right.svg"
-                                            title="ficha cubierta"
-                                        />
+                                        <img v-else class="cursor-pointer img-btn-20 mx-2"
+                                            src="@assets/images/right.svg" title="ficha cubierta" />
                                     </div>
                                 </vs-td>
 
@@ -289,21 +219,14 @@
     
                     d
 </template>
-    -->
+        -->
                             </vs-tr>
                         </template>
                     </vs-table>
                 </div>
 
-                <div
-                    class="w-full mt-6"
-                    v-if="pagos_programados_cuotas.length > 0"
-                >
-                    <vs-table
-                        class="tabla-datos"
-                        :data="pagos_programados_cuotas"
-                        noDataText="0 Resultados"
-                    >
+                <div class="w-full mt-6" v-if="pagos_programados_cuotas.length > 0">
+                    <vs-table class="tabla-datos" :data="pagos_programados_cuotas" noDataText="0 Resultados">
                         <template slot="header">
                             <h3>Cuotas de Mantenimiento</h3>
                         </template>
@@ -328,98 +251,76 @@
                             <vs-th>Pagar Recibo</vs-th>
                         </template>
                         <template>
-                            <vs-tr
-                                v-show="programados.status == 1"
-                                v-for="(
-                                    programados, index_programado
-                                ) in pagos_programados_cuotas"
-                                v-bind:key="programados.id"
-                                ref="row"
-                            >
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                            <vs-tr v-show="programados.status == 1" v-for="(
+programados, index_programado
+                                ) in pagos_programados_cuotas" v-bind:key="programados.id" ref="row">
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{
                                         index_programado + 1
-                                    }}</span>
+                                        }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     {{ programados.referencia_pago }}
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     {{ programados.concepto_texto }}
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >{{
-                                        programados.fecha_programada_abr
-                                    }}</vs-td
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">{{
+                                    programados.fecha_programada_abr
+                                    }}</vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span v-if="programados.saldo_neto > 0">
                                         {{ programados.fecha_a_pagar_abr }}
                                     </span>
 
-                                    <span v-else
-                                        >{{ programados.fecha_ultimo_pago_abr }}
+                                    <span v-else>{{ programados.fecha_ultimo_pago_abr }}
                                     </span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >$
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">$
                                     {{
                                         programados.monto_programado
-                                            | numFormat("0,000.00")
+                                        | numFormat("0,000.00")
                                     }}
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        programados.status_pago == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                    >$
+                                <vs-td :class="[
+                                    programados.status_pago == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">$
                                     {{
                                         programados.saldo_neto
-                                            | numFormat("0,000.00")
-                                    }}</vs-td
-                                >
+                                        | numFormat("0,000.00")
+                                    }}</vs-td>
 
                                 <vs-td>
                                     <p v-if="programados.status_pago == 0">
@@ -443,42 +344,26 @@
 
                                 <vs-td>
                                     <div class="flex justify-center">
-                                        <img
-                                            class="img-btn-24 mx-3"
-                                            src="@assets/images/seguimientos.svg"
-                                            title="Control de Seguimientos"
-                                            @click="
+                                        <img class="img-btn-24 mx-3" src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos" @click="
                                                 OpenFormSeguimientos(
                                                     programados
                                                 )
-                                            "
-                                        />
+                                                " />
                                     </div>
                                 </vs-td>
 
                                 <vs-td>
-                                    <div
-                                        class="flex justify-center"
-                                        v-if="programados.status != 0"
-                                    >
-                                        <img
-                                            v-if="programados.saldo_neto > 0"
-                                            class="cursor-pointer img-btn-24 mx-2"
-                                            src="@assets/images/dollar_bill.svg"
-                                            title="Pagar Ficha"
-                                            @click="
+                                    <div class="flex justify-center" v-if="programados.status != 0">
+                                        <img v-if="programados.saldo_neto > 0" class="cursor-pointer img-btn-24 mx-2"
+                                            src="@assets/images/dollar_bill.svg" title="Pagar Ficha" @click="
                                                 pagar(
                                                     programados.referencia_pago
                                                 )
-                                            "
-                                        />
+                                                " />
 
-                                        <img
-                                            v-else
-                                            class="cursor-pointer img-btn-20 mx-2"
-                                            src="@assets/images/right.svg"
-                                            title="ficha cubierta"
-                                        />
+                                        <img v-else class="cursor-pointer img-btn-20 mx-2"
+                                            src="@assets/images/right.svg" title="ficha cubierta" />
                                     </div>
                                 </vs-td>
 
@@ -486,17 +371,13 @@
     
                     d
 </template>
-    -->
+        -->
                             </vs-tr>
                         </template>
                     </vs-table>
                 </div>
                 <div class="w-full mt-6" v-if="datosVenta.operacion_id">
-                    <vs-table
-                        class="tabla-datos"
-                        :data="pagos"
-                        noDataText="0 Resultados"
-                    >
+                    <vs-table class="tabla-datos" :data="pagos" noDataText="0 Resultados">
                         <template slot="header">
                             <h3>Listado de Abonos Recibidos</h3>
                         </template>
@@ -516,71 +397,55 @@
                             <vs-th>Consultar</vs-th>
                         </template>
                         <template>
-                            <vs-tr
-                                v-for="(pago, index_pago) in pagos"
-                                v-bind:key="pago.id"
-                                ref="row"
-                            >
-                                <vs-td
-                                    :class="[
-                                        pago.status == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                            <vs-tr v-for="(pago, index_pago) in pagos" v-bind:key="pago.id" ref="row">
+                                <vs-td :class="[
+                                    pago.status == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{ pago.id }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        pago.status == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    pago.status == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{
                                         pago.fecha_pago_texto
-                                    }}</span>
+                                        }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        pago.status == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
-                                    <span class=""
-                                        >$
+                                <vs-td :class="[
+                                    pago.status == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
+                                    <span class="">$
                                         {{
                                             pago.total_pago
-                                                | numFormat("0,000.00")
-                                        }}</span
-                                    >
+                                            | numFormat("0,000.00")
+                                        }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        pago.status == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    pago.status == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{
                                         pago.movimientos_pagos_texto
-                                    }}</span>
+                                        }}</span>
                                 </vs-td>
 
-                                <vs-td
-                                    :class="[
-                                        pago.status == 0
-                                            ? 'text-danger-900'
-                                            : '',
-                                    ]"
-                                >
+                                <vs-td :class="[
+                                    pago.status == 0
+                                        ? 'text-danger-900'
+                                        : '',
+                                ]">
                                     <span class="">{{
                                         pago.cobrador.nombre
-                                    }}</span>
+                                        }}</span>
                                 </vs-td>
 
                                 <vs-td>
@@ -599,26 +464,18 @@
 
                                 <vs-td>
                                     <div class="flex justify-center py-1">
-                                        <img
-                                            class="cursor-pointer img-btn-24 mx-2"
-                                            src="@assets/images/pdf.svg"
-                                            title="Ver Nota de Pago"
-                                            @click="
+                                        <img class="cursor-pointer img-btn-24 mx-2" src="@assets/images/pdf.svg"
+                                            title="Ver Nota de Pago" @click="
                                                 openReporte(
                                                     'reporte de pago',
                                                     '/pagos/recibo_de_pago/',
                                                     pago.id,
                                                     'pago'
                                                 )
-                                            "
-                                        />
-                                        <img
-                                            v-if="pago.status == 1"
-                                            class="img-btn-20 mx-2"
-                                            src="@assets/images/cancel.svg"
-                                            title="Cancelar Movimiento"
-                                            @click="cancelarPago(pago.id)"
-                                        />
+                                                " />
+                                        <img v-if="pago.status == 1" class="img-btn-20 mx-2"
+                                            src="@assets/images/cancel.svg" title="Cancelar Movimiento"
+                                            @click="cancelarPago(pago.id)" />
                                     </div>
                                 </vs-td>
                             </vs-tr>
@@ -626,42 +483,19 @@
                     </vs-table>
                 </div>
             </div>
-            <Reporteador
-                :header="'consultar documentos de venta de propiedad'"
-                :show="openReportesLista"
-                :listadereportes="ListaReportes"
-                :request="request"
-                @closeReportes="openReportesLista = false"
-            ></Reporteador>
-            <Firmas
-                :header="'Venta de Terrenos'"
-                :show="openFirmas"
-                :id_documento="id_documento"
-                :operacion_id="operacion_id"
-                :tipo="'operacion'"
-                @closeFirmas="openFirmas = false"
-            ></Firmas>
-            <CancelarPago
-                :z_index="'z-index58k'"
-                :show="openCancelar"
-                @closeCancelarPago="closeCancelarPago"
-                @retorno_pago="retorno_pago"
-                :id_pago="id_pago"
-            ></CancelarPago>
-            <FormularioPagos
-                :z_index="'z-index58k'"
-                :referencia="referencia"
-                :show="verFormularioPagos"
-                @closeVentana="closeFormularioPagos"
-                @retorno_pagos="retorno_pagos"
-            ></FormularioPagos>
-            <FormularioSeguimientos
-                v-if="openSeguimientos"
-                :show="openSeguimientos"
-                :filters="filtersSeguimientos"
-                @closeVentana="openSeguimientos = false"
-                :z_index="'z-index58k'"
-            >
+            <Reporteador v-if="openReportesLista" :header="'consultar documentos de venta de propiedad'"
+                :show="openReportesLista" :listadereportes="ListaReportes" :request="request"
+                @closeReportes="openReportesLista = false">
+            </Reporteador>
+            <Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
+                :operacion_id="operacion_id" :tipo="'operacion'" @closeFirmas="openFirmas = false"></Firmas>
+            <CancelarPago v-if="openCancelar" :z_index="'z-index58k'" :show="openCancelar"
+                @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
+            <FormularioPagos v-if="verFormularioPagos" :z_index="'z-index58k'" :referencia="referencia"
+                :show="verFormularioPagos" @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos">
+            </FormularioPagos>
+            <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
+                @closeVentana="openSeguimientos = false" :z_index="'z-index58k'">
             </FormularioSeguimientos>
         </vs-popup>
     </div>
@@ -675,6 +509,7 @@ import cementerio from "@services/cementerio";
 import pagos from "@services/pagos";
 import FormularioPagos from "@pages/pagos/FormularioPagos";
 export default {
+    name: "ReportesVentasCementerio",
     components: {
         Reporteador,
         FormularioPagos,
@@ -705,12 +540,19 @@ export default {
     watch: {
         show: function (newValue, oldValue) {
             if (newValue == true) {
-                this.$refs["lista_reportes"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-                (async () => {
+
+            } else {
+                /**cerrar ventana */
+                this.datosVenta = [];
+                this.total = 0;
+            }
+        },
+
+
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.consultar_venta_id();
                     if (this.operacion_id != "") {
                         await this.consultar_pagos_operacion_id();
@@ -724,13 +566,16 @@ export default {
                             ""
                         );
                     }
-                })();
-            } else {
-                /**cerrar ventana */
-                this.datosVenta = [];
-                this.total = 0;
-            }
+                    this.$popupManager.register(this, this.cancelar, "input");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
+
+
+
     },
     computed: {
         showVentana: {
@@ -760,6 +605,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             openSeguimientos: false,
             filtersSeguimientos: {
                 cliente_id: null,
@@ -850,15 +696,10 @@ export default {
     },
     methods: {
         OpenFormSeguimientos(cuota) {
-            this.$log("🚀 ~ cuota:", cuota);
             this.filtersSeguimientos.cliente_id = this.datosVenta.cliente_id;
             this.filtersSeguimientos.tipo_cliente_id = 1;
             this.filtersSeguimientos.operacion_id = cuota.operaciones_id;
             this.filtersSeguimientos.origen = 2; //cuotas
-            this.$log(
-                "🚀 ~ this.filtersSeguimientos:",
-                this.filtersSeguimientos
-            );
             this.openSeguimientos = true;
         },
         cancelarPago(id_pago) {
@@ -972,7 +813,6 @@ export default {
                     this.get_venta_id
                 );
                 this.datosVenta = res.data[0];
-                this.$log("🚀 ~ this.datosVenta:", this.datosVenta);
                 this.operacion_id = this.datosVenta.operacion_id;
                 this.pagos_programados_cuotas = [];
                 if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
@@ -1073,16 +913,18 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    //this.cancelar();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

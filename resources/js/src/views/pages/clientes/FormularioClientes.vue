@@ -298,12 +298,11 @@
             </div>
         </vs-popup>
         <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
-            @closeVerificar="closeChecker" :accion="accionNombre"></Password>
-        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+            @closeVerificar="closeChecker" :accion="accionNombre" :z_index="'z-index60k'"></Password>
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index60k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
-
-        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index60k'" :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar a este cliente'
                 " :confirmarButton="'Guardar Cliente'"></ConfirmarAceptar>
     </div>
@@ -357,17 +356,15 @@ export default {
             immediate: true, // runs when component is mounted too
             async handler(newValue) {
                 if (newValue) {
-                    if (newValue == true) {
-                        //cargo nacionalidades
-                        await this.get_nacionalidades();
-                        await this.get_regimenes();
-                        if (this.getTipoformulario == "modificar") {
-                            this.title = "Modificar Datos del Cliente";
-                            /**se cargan los datos al formulario */
-                            await this.get_cliente_by_id(this.get_cliente_id);
-                        } else {
-                            this.title = "Registrar Nuevo Cliente";
-                        }
+                    //cargo nacionalidades
+                    await this.get_nacionalidades();
+                    await this.get_regimenes();
+                    if (this.getTipoformulario == "modificar") {
+                        this.title = "Modificar Datos del Cliente";
+                        /**se cargan los datos al formulario */
+                        await this.get_cliente_by_id(this.get_cliente_id);
+                    } else {
+                        this.title = "Registrar Nuevo Cliente";
                     }
                     this.$popupManager.register(
                         this,
@@ -376,6 +373,8 @@ export default {
                     );
                     //verificamos el origen del form para determinar que haremos justo al abrir el form.
                     //obtener datos del cliente
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
                 }
                 this.localShow = newValue;
             },

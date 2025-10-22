@@ -1,402 +1,246 @@
 <template>
     <div>
-        <div class="w-full text-right">
-            <vs-button
-                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                color="primary"
-                @click="openCuotasCementerio = true"
-                type="border"
-            >
+        <div class="text-right">
+            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+                @click="openCuotasCementerio = true" type="border">
                 <span>Cuotas / Cementerio</span>
             </vs-button>
-            <vs-button
-                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                color="primary"
-                @click="openPlanesVenta = true"
-                type="border"
-            >
+            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+                @click="openPlanesVenta = true" type="border">
                 <span>Planes de Venta</span>
             </vs-button>
-            <vs-button
-                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                color="success"
-                @click="formulario('agregar')"
-            >
+            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
+                @click="formulario('agregar')">
                 <span>Vender Propiedad</span>
             </vs-button>
         </div>
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card
-                no-radius
-                title="Filtros de selección"
-                refresh-content-action
-                @refresh="reset"
-                :collapse-action="false"
-            >
+            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+                :collapse-action="false">
                 <div class="flex flex-wrap">
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Mostrar</label>
-                        <v-select
-                            :options="mostrarOptions"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar"
-                            class="sm:mb-0"
-                        />
+                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar" class="sm:mb-0" />
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Estado</label>
-                        <v-select
-                            :options="estadosOptions"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado"
-                            class=""
-                        />
+                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado" class="" />
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Filtrar Específico</label>
-                        <v-select
-                            :options="filtrosEspecificos"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="filtroEspecifico"
-                            class=""
-                        />
+                        <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="filtroEspecifico" class="" />
                     </div>
-                    <div
-                        class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-12/12 md:w-6/12 lg:w-3/12 xl:w-3/12 px-2 input-text">
                         <label class="">Número de Control</label>
-                        <vs-input
-                            class="w-full"
-                            icon="search"
-                            maxlength="14"
-                            placeholder="Filtrar por Número de Control"
-                            v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')"
-                        />
+                        <vs-input class="w-full" icon="search" maxlength="14"
+                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
                     <div class="w-full px-2 py-4">
                         <h3 class="text-base">
-                            <feather-icon
-                                icon="UserIcon"
-                                class="mr-2"
-                                svgClasses="w-5 h-5"
-                            />Filtrar por Nombre del Titular
+                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
+                            Titular
                         </h3>
                     </div>
-                    <div
-                        class="w-full sm:w-6/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-6/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text">
                         <label class="">Nombre del Titular</label>
-                        <vs-input
-                            class="w-full"
-                            icon="search"
-                            placeholder="Filtrar por Nombre del Titular"
-                            v-model="serverOptions.titular"
-                            v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')"
-                            maxlength="75"
-                        />
+                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Titular"
+                            v-model="serverOptions.titular" v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
                     </div>
-                    <div
-                        class="w-full sm:w-6/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text"
-                    >
+                    <div class="w-full sm:w-6/12 md:w-6/12 lg:w-6/12 xl:w-6/12 px-2 input-text">
                         <label class="">Nombre del Fallecido</label>
-                        <vs-input
-                            class="w-full"
-                            icon="search"
-                            placeholder="Filtrar por Nombre del Fallecido"
-                            v-model="serverOptions.fallecido"
-                            v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')"
-                            maxlength="75"
-                        />
+                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Fallecido"
+                            v-model="serverOptions.fallecido" v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
                     </div>
                 </div>
             </vx-card>
         </div>
-
-        <br />
-        <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="ventas"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
-            <template slot="header">
-                <h3>Listado de Ventas Realizadas del Cementerio</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Venta</vs-th>
-                <vs-th>Titular</vs-th>
-                <vs-th>Uso Venta</vs-th>
-                <vs-th>Solicitud</vs-th>
-                <vs-th>Convenio</vs-th>
-                <vs-th>Título</vs-th>
-                <vs-th>Ubicacion</vs-th>
-                <vs-th>Convenio</vs-th>
-                <vs-th>$ Saldo Venta</vs-th>
-                <vs-th>Estatus</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].ventas_terrenos_id">
-                        <span class="font-medium">{{
-                            data[indextr].ventas_terrenos_id
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre">{{
-                        data[indextr].nombre
-                    }}</vs-td>
-                    <vs-td
-                        :data="
-                            data[indextr].venta_terreno
-                                .tipo_financiamiento_texto
-                        "
-                        >{{
-                            data[indextr].venta_terreno
-                                .tipo_financiamiento_texto
-                        }}</vs-td
-                    >
-                    <vs-td :data="data[indextr].numero_solicitud">
-                        <span class="">{{
-                            data[indextr].numero_solicitud_texto
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].numero_convenio">
-                        <span class="">{{
-                            data[indextr].numero_convenio
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].numero_titulo">
-                        <span class="">{{
-                            data[indextr].numero_titulo_texto
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].ubicacion_texto">{{
-                        data[indextr].venta_terreno.ubicacion_texto
-                    }}</vs-td>
-                    <!--Convenio-->
-                    <vs-td :data="data[indextr].venta_terreno.status_convenio">
-                        <p
-                            v-if="
-                                data[indextr].venta_terreno.status_convenio == 0
-                            "
-                        >
-                            <img
-                                class="cursor-pointer img-btn-20"
-                                src="@assets/images/convenio-no.svg"
-                                title="Convenio no Entregado"
-                                @click="verEntregarConvenio(data[indextr])"
-                            />
-                        </p>
-                        <p v-else>
-                            <img
-                                class="cursor-pointer img-btn-20"
-                                src="@assets/images/convenio-si.svg"
-                                title="Convenio Entregado"
-                                @click="verEntregarConvenio(data[indextr])"
-                            />
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].saldo">
-                        $ {{ data[indextr].saldo | numFormat("0,000.00") }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].operacion_status">
-                        <p v-if="data[indextr].operacion_status == 0">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                        <p v-else-if="data[indextr].operacion_status == 1">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-warning"></span>
-                        </p>
-                        <p v-else-if="data[indextr].operacion_status == 2">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                    </vs-td>
-
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img
-                                class="img-btn-24 mx-6"
-                                src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos"
-                                @click="OpenFormSeguimientos(tr)"
-                            />
-                            <img
-                                v-if="data[indextr].sepultados.length > 0"
-                                class="cursor-pointer img-btn-24 mr-6"
-                                src="@assets/images/conserviciosfunerarios.svg"
-                                title="Propiedad con servicios Funerarios"
-                                @click="ConsultarListaFallecidos(data[indextr])"
-                            />
-                            <img
-                                v-else
-                                class="cursor-pointer img-btn-24 mr-6"
-                                src="@assets/images/sinserviciosfunerarios.svg"
-                                title="Propiedad sin servicios Funerarios"
-                            />
-                            <img
-                                v-if="data[indextr].nota"
-                                class="cursor-pointer img-btn-20 mr-6"
-                                src="@assets/images/notepad_ver.svg"
-                                title="Notas"
-                                @click="
-                                    verNota(
-                                        data[indextr].nota.trim(),
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="ventas"
+                        noDataText="0 Resultados" class="tabla-datos">
+                        <template slot="header">
+                            <h3>Listado de Ventas Realizadas del Cementerio</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Venta</vs-th>
+                            <vs-th>Titular</vs-th>
+                            <vs-th>Uso Venta</vs-th>
+                            <vs-th>Solicitud</vs-th>
+                            <vs-th>Convenio</vs-th>
+                            <vs-th>Título</vs-th>
+                            <vs-th>Ubicacion</vs-th>
+                            <vs-th>Convenio</vs-th>
+                            <vs-th>$ Saldo Venta</vs-th>
+                            <vs-th>Estatus</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                <vs-td :data="data[indextr].ventas_terrenos_id">
+                                    <span class="font-medium">{{
+                                        data[indextr].ventas_terrenos_id
+                                        }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre">{{
+                                    data[indextr].nombre
+                                    }}</vs-td>
+                                <vs-td :data="data[indextr].venta_terreno
+                                    .tipo_financiamiento_texto
+                                    ">{{
                                         data[indextr].venta_terreno
-                                            .ubicacion_texto
-                                    )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="cursor-pointer img-btn-20 mr-6"
-                                src="@assets/images/notepad_ver_no.svg"
-                                title="Notas"
-                            />
-                            <img
-                                class="cursor-pointer img-btn-20 mx-3"
-                                src="@assets/images/folder.svg"
-                                title="Expediente"
-                                @click="
-                                    ConsultarVenta(
-                                        data[indextr].ventas_terrenos_id
-                                    )
-                                "
-                            />
-                            <img
-                                class="img-btn-18 mx-3"
-                                src="@assets/images/edit.svg"
-                                title="Modificar Contrato"
-                                @click="
-                                    openModificar(
-                                        data[indextr].ventas_terrenos_id
-                                    )
-                                "
-                            />
-                            <img
-                                v-if="data[indextr].operacion_status >= 1"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg"
-                                title="Cancelar Contrato"
-                                @click="
-                                    cancelarVenta(
-                                        data[indextr].ventas_terrenos_id
-                                    )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg"
-                                title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
-                                @click="
-                                    ConsultarVentaAcuse(
-                                        data[indextr].ventas_terrenos_id
-                                    )
-                                "
-                            />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
+                                            .tipo_financiamiento_texto
+                                    }}</vs-td>
+                                <vs-td :data="data[indextr].numero_solicitud">
+                                    <span class="">{{
+                                        data[indextr].numero_solicitud_texto
+                                        }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].numero_convenio">
+                                    <span class="">{{
+                                        data[indextr].numero_convenio
+                                        }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].numero_titulo">
+                                    <span class="">{{
+                                        data[indextr].numero_titulo_texto
+                                        }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].ubicacion_texto">{{
+                                    data[indextr].venta_terreno.ubicacion_texto
+                                    }}</vs-td>
+                                <!--Convenio-->
+                                <vs-td :data="data[indextr].venta_terreno.status_convenio">
+                                    <p v-if="
+                                        data[indextr].venta_terreno.status_convenio == 0
+                                    ">
+                                        <img class="cursor-pointer img-btn-20" src="@assets/images/convenio-no.svg"
+                                            title="Convenio no Entregado" @click="verEntregarConvenio(data[indextr])" />
+                                    </p>
+                                    <p v-else>
+                                        <img class="cursor-pointer img-btn-20" src="@assets/images/convenio-si.svg"
+                                            title="Convenio Entregado" @click="verEntregarConvenio(data[indextr])" />
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].saldo">
+                                    $ {{ data[indextr].saldo | numFormat("0,000.00") }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].operacion_status">
+                                    <p v-if="data[indextr].operacion_status == 0">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].operacion_status == 1">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-warning"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].operacion_status == 2">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                </vs-td>
 
-        <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img class="img-btn-24 mx-6" src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
+                                        <img v-if="data[indextr].sepultados.length > 0"
+                                            class="cursor-pointer img-btn-24 mr-6"
+                                            src="@assets/images/conserviciosfunerarios.svg"
+                                            title="Propiedad con servicios Funerarios"
+                                            @click="ConsultarListaFallecidos(data[indextr])" />
+                                        <img v-else class="cursor-pointer img-btn-24 mr-6"
+                                            src="@assets/images/sinserviciosfunerarios.svg"
+                                            title="Propiedad sin servicios Funerarios" />
+                                        <img v-if="data[indextr].nota" class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver.svg" title="Notas" @click="
+                                                verNota(
+                                                    data[indextr].nota.trim(),
+                                                    data[indextr].venta_terreno
+                                                        .ubicacion_texto
+                                                )
+                                                " />
+                                        <img v-else class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver_no.svg" title="Notas" />
+                                        <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/folder.svg"
+                                            title="Expediente" @click="
+                                                ConsultarVenta(
+                                                    data[indextr].ventas_terrenos_id
+                                                )
+                                                " />
+                                        <img class="img-btn-18 mx-3" src="@assets/images/edit.svg"
+                                            title="Modificar Contrato" @click="
+                                                openModificar(
+                                                    data[indextr].ventas_terrenos_id
+                                                )
+                                                " />
+                                        <img v-if="data[indextr].operacion_status >= 1" class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg" title="Cancelar Contrato" @click="
+                                                cancelarVenta(
+                                                    data[indextr].ventas_terrenos_id
+                                                )
+                                                " />
+                                        <img v-else class="img-btn-22 mx-3" src="@assets/images/trash-open.svg"
+                                            title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
+                                            @click="
+                                                ConsultarVentaAcuse(
+                                                    data[indextr].ventas_terrenos_id
+                                                )
+                                                " />
+                                    </div>
+                                </vs-td>
+                                <template class="expand-user" slot="expand"></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+
+                    <div>
+                        <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual"
+                            class="mt-8"></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <FormularioVentas
-            :id_venta="id_venta_modificar"
-            :tipo="tipoFormulario"
-            :show="verFormularioVentas"
-            @closeVentana="verFormularioVentas = false"
-            @ver_pdfs_nueva_venta="ConsultarVenta"
-        ></FormularioVentas>
-
-        <Password
-            :show="openStatus"
-            :callback-on-success="callback"
-            @closeVerificar="closeStatus"
-            :accion="accionNombre"
-        >
+        <FormularioVentas v-if="verFormularioVentas" :id_venta="id_venta_modificar" :tipo="tipoFormulario"
+            :show="verFormularioVentas" @closeVentana="verFormularioVentas = false"
+            @ver_pdfs_nueva_venta="ConsultarVenta">
+        </FormularioVentas>
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+            :accion="accionNombre">
         </Password>
-
-        <ReportesVentas
-            :verAcuse="verAcuse"
-            :show="openReportes"
-            @closeListaReportes="closeListaReportes"
-            :id_venta="id_venta"
-        >
+        <ReportesVentas v-if="openReportes" :verAcuse="verAcuse" :show="openReportes"
+            @closeListaReportes="closeListaReportes" :id_venta="id_venta">
         </ReportesVentas>
-
-        <FallecidosList
-            :show="openListaFallecidos"
-            @closeListaFallecidos="closeListaFallecidos"
-            :fallecidos="fallecidos"
-        >
+        <FallecidosList v-if="openListaFallecidos" :show="openListaFallecidos"
+            @closeListaFallecidos="closeListaFallecidos" :fallecidos="fallecidos">
         </FallecidosList>
-
-        <CancelarVenta
-            :show="openCancelar"
-            @closeCancelarVenta="openCancelar = false"
-            @ConsultarVenta="ConsultarVenta"
-            :id_venta="id_venta"
-        ></CancelarVenta>
-
-        <PlanesVenta
-            :show="openPlanesVenta"
-            @closePlanesCementerio="openPlanesVenta = false"
-        ></PlanesVenta>
-
-        <CuotasCementerio
-            :show="openCuotasCementerio"
-            @closeCuotasCementerio="openCuotasCementerio = false"
-        >
+        <CancelarVenta v-if="openCancelar" :show="openCancelar" @closeCancelarVenta="openCancelar = false"
+            @ConsultarVenta="ConsultarVenta" :id_venta="id_venta"></CancelarVenta>
+        <CuotasCementerio v-if="openCuotasCementerio" :show="openCuotasCementerio"
+            @closeCuotasCementerio="openCuotasCementerio = false">
         </CuotasCementerio>
-
-        <VerNotas
-            :show="openVerNotas"
-            :nota="nota_contenido"
-            :title="titulo_nota"
-            @closeVerNotas="openVerNotas = false"
-        >
+        <PlanesVenta v-if="openPlanesVenta" :show="openPlanesVenta" @closePlanesCementerio="openPlanesVenta = false">
+        </PlanesVenta>
+        <VerNotas v-if="openVerNotas" :show="openVerNotas" :nota="nota_contenido" :title="titulo_nota"
+            @closeVerNotas="openVerNotas = false">
         </VerNotas>
-        <Entregarconvenio
-            :show="openEntregarconvenio"
-            :datos="datosConvenio"
-            @closeEntregarConvenio="closeEntregarConvenio"
-        >
+        <Entregarconvenio v-if="openEntregarconvenio" :show="openEntregarconvenio" :datos="datosConvenio"
+            @closeEntregarConvenio="closeEntregarConvenio">
         </Entregarconvenio>
-        <FormularioSeguimientos
-            v-if="openSeguimientos"
-            :show="openSeguimientos"
-            :filters="filtersSeguimientos"
-            @closeVentana="openSeguimientos = false"
-        >
+        <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
+            @closeVentana="openSeguimientos = false">
         </FormularioSeguimientos>
     </div>
 </template>
@@ -406,11 +250,9 @@
 import cementerio from "@services/cementerio";
 import FormularioSeguimientos from "../../seguimientos/FormularioSeguimientos.vue";
 import FormularioVentas from "../ventas/FormularioVentas";
-
 import ReportesVentas from "../ventas/ReportesVentas";
 import FallecidosList from "../ventas/FallecidosList";
 import CancelarVenta from "../ventas/CancelarVenta";
-
 //componente de password
 import Password from "@pages/confirmar_password";
 import VerNotas from "@pages/VerNotas";
@@ -420,8 +262,8 @@ import { mostrarOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 import PlanesVenta from "@pages/cementerio/ventas/PlanesVentas";
 import CuotasCementerio from "@pages/cementerio/ventas/cuotas/CuotasCementerio";
-
 export default {
+    name: "VentasListCementerio",
     components: {
         "v-select": vSelect,
         Password,
@@ -450,6 +292,13 @@ export default {
             (async () => {
                 await this.get_data(1);
             })();
+        },
+    },
+    computed: {
+        noDataFound() {
+            return (
+                this.ventas.length === 0
+            );
         },
     },
     data() {
@@ -724,10 +573,21 @@ export default {
             })();
         },
     },
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         (async () => {
             await this.get_data(this.actual);
         })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
