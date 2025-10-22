@@ -1,13 +1,7 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-80"
-      fullscreen
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup popup-80', z_index]" fullscreen close="cancelar" :title="title" :active="localShow"
+      :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">Nombre del Paquete Funerario</div>
         <div class="form-group-content">
@@ -17,17 +11,9 @@
                 Descripción / Nombre del Plan
                 <span>(*)</span>
               </label>
-              <vs-input
-                ref="descripcion"
-                name="descripcion"
-                data-vv-as=" "
-                v-validate.disable="'required'"
-                maxlength="200"
-                type="text"
-                class="w-full"
-                placeholder="Ej. Servicio de cremación"
-                v-model="form.descripcion"
-              />
+              <vs-input ref="descripcion" name="descripcion" data-vv-as=" " v-validate.disable="'required'"
+                maxlength="200" type="text" class="w-full" placeholder="Ej. Servicio de cremación"
+                v-model="form.descripcion" />
               <span>{{ errors.first("descripcion") }}</span>
               <span v-if="this.errores.descripcion">{{
                 errores.descripcion[0]
@@ -43,11 +29,7 @@
           <div class="flex flex-wrap">
             <div class="w-full px-2">
               <div v-if="verLista">
-                <vs-table
-                  :data="datos"
-                  noDataText="No se han agregado Artículos ni Servicios"
-                  class="tabla-datos"
-                >
+                <vs-table :data="datos" noDataText="No se han agregado Artículos ni Servicios" class="tabla-datos">
                   <template slot="header">
                     <h3>Servicios y Artículos que Incluye el Paquete</h3>
                   </template>
@@ -58,11 +40,7 @@
                     <vs-th>Acciones</vs-th>
                   </template>
                   <template slot-scope="{ data }">
-                    <vs-tr
-                      :data="tr"
-                      :key="indextr"
-                      v-for="(tr, indextr) in data"
-                    >
+                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
                       <vs-td>
                         <div>
                           <span>{{ alfabeto[indextr] }})</span>
@@ -78,18 +56,10 @@
                       </vs-td>
                       <vs-td>
                         <div class="flex justify-center">
-                          <img
-                            class="img-btn-18 mx-3"
-                            src="@assets/images/edit.svg"
-                            title="Modificar"
-                            @click="update(tr)"
-                          />
-                          <img
-                            class="img-btn-22 mx-3"
-                            src="@assets/images/trash.svg"
-                            title="Quitar"
-                            @click="remove(tr)"
-                          />
+                          <img class="img-btn-18 mx-3" src="@assets/images/edit.svg" title="Modificar"
+                            @click="update(tr)" />
+                          <img class="img-btn-22 mx-3" src="@assets/images/trash.svg" title="Quitar"
+                            @click="remove(tr)" />
                         </div>
                       </vs-td>
                     </vs-tr>
@@ -97,10 +67,7 @@
                 </vs-table>
               </div>
               <div class="w-full" v-else>
-                <vs-table
-                  :data="[]"
-                  noDataText="No se han agregado Artículos ni Servicios"
-                >
+                <vs-table :data="[]" noDataText="No se han agregado Artículos ni Servicios">
                   <template slot="header">
                     <h3>Servicios y Artículos que Incluye el Paquete</h3>
                   </template>
@@ -115,9 +82,7 @@
             </div>
             <div class="w-full">
               <div class="flex flex-wrap">
-                <div
-                  class="w-full h5 size-base font-medium uppercase color-dark-900 pb-2 px-2 py-6"
-                >
+                <div class="w-full h5 size-base font-medium uppercase color-dark-900 pb-2 px-2 py-6">
                   Agregar conceptos a la lista
                 </div>
                 <div class="w-full lg:w-8/12 input-text px-2">
@@ -125,18 +90,9 @@
                     Concepto
                     <span>(*)</span>
                   </label>
-                  <vs-input
-                    data-vv-scope="conceptos"
-                    ref="concepto"
-                    name="concepto"
-                    data-vv-as=" "
-                    v-validate.disable="'required'"
-                    maxlength="200"
-                    type="text"
-                    class="w-full"
-                    placeholder="Ej. Una urna básica"
-                    v-model="form.concepto"
-                  />
+                  <vs-input data-vv-scope="conceptos" ref="concepto" name="concepto" data-vv-as=" "
+                    v-validate.disable="'required'" maxlength="200" type="text" class="w-full"
+                    placeholder="Ej. Una urna básica" v-model="form.concepto" />
                   <span>{{ errors.first("conceptos.concepto") }}</span>
                 </div>
 
@@ -145,15 +101,8 @@
                     Aplicar en
                     <span>(*)</span>
                   </label>
-                  <v-select
-                    :options="secciones"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.seccion"
-                    class="w-full"
-                    name="plan_venta"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="secciones" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.seccion" class="w-full" name="plan_venta" data-vv-as=" ">
                     <div slot="no-options">
                       No Se Ha Seleccionado Ninguna Opción
                     </div>
@@ -161,21 +110,12 @@
                 </div>
 
                 <div class="w-full text-right px-2 pt-6">
-                  <vs-button
-                    v-if="verModificar"
-                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                    color="danger"
-                    @click="cancelarModificacion"
-                    type="line"
-                  >
+                  <vs-button v-if="verModificar" class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                    color="danger" @click="cancelarModificacion" type="line">
                     <span>Cancelar modificación</span>
                   </vs-button>
-                  <vs-button
-                    @click="agregarConcepto"
-                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                    color="success"
-                    type="line"
-                  >
+                  <vs-button @click="agregarConcepto" class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                    color="success" type="line">
                     <span v-if="!verModificar">Agregar</span>
                     <span v-else>Modificar concepto</span>
                   </vs-button>
@@ -188,16 +128,8 @@
       <vs-divider />
       <div class="w-full input-text">
         <label> Nota u observación sobre el paquete funerario: </label>
-        <vs-textarea
-          height="120px"
-          maxlength="400"
-          size="large"
-          ref="nota"
-          type="text"
-          class="w-full"
-          placeholder=""
-          v-model.trim="form.nota"
-        />
+        <vs-textarea height="120px" maxlength="400" size="large" ref="nota" type="text" class="w-full" placeholder=""
+          v-model.trim="form.nota" />
       </div>
       <div class="bottom-buttons-section w-full">
         <div class="text-advice">
@@ -207,42 +139,23 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Datos</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Datos</span>
             <span class="" v-else>Modificar Datos</span>
           </vs-button>
         </div>
       </div>
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :z_index="'z-index59k'" :callback-on-success="callback"
+      @closeVerificar="closeChecker" :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index59k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index59k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
       :accion="'He revisado la información y quiero registrar este plan funerario'"
-      :confirmarButton="'Registrar Plan Funerario'"
-    ></ConfirmarAceptar>
+      :confirmarButton="'Registrar Plan Funerario'"></ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -256,6 +169,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioPlanes",
   components: {
     "v-select": vSelect,
     Password,
@@ -276,24 +190,22 @@ export default {
       required: false,
       default: 0,
     },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index58k",
+    },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.limpiarValidation();
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["descripcion"].$el.querySelector("input").focus()
-        );
-        /**agregando por default una seccion y un concepto */
-        this.form.seccion = {
-          value: "incluye",
-          label: "plan funerario",
-        };
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          /**agregando por default una seccion y un concepto */
+          this.form.seccion = {
+            value: "incluye",
+            label: "plan funerario",
+          };
           if (this.getTipoformulario == "modificar") {
             this.title = "Modificar Plan Funerario";
             /**cargar los datos para modificar */
@@ -301,19 +213,15 @@ export default {
           } else {
             this.title = "Registrar Plan Funerario";
           }
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, 'descripcion');
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     getTipoformulario: {
       get() {
         return this.tipo;
@@ -373,6 +281,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       alfabeto: alfabeto,
       /**index de modificacion de concepto */
       index_seccion: "",
@@ -577,7 +486,7 @@ export default {
             );
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     /**trae la info del precio */
     async get_planes_id() {
@@ -632,7 +541,7 @@ export default {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     /**funciones del modulo */
 
@@ -783,11 +692,15 @@ export default {
     },
 
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario == "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.$emit("closeVentana");
+      }
     },
     cerrarVentana() {
       this.openConfirmarSinPassword = false;
@@ -826,6 +739,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

@@ -66,37 +66,34 @@ const PopupManager = {
             }
         });
 
-        // --- Focus management (unchanged)
-        Vue.nextTick(() => {
-            setTimeout(() => {
-                let el = null;
-
-                if (focusRef && popupInstance.$refs[focusRef]) {
-                    el =
-                        popupInstance.$refs[focusRef].$el ||
-                        popupInstance.$refs[focusRef];
-                } else {
-                    const content =
-                        popupEl.querySelector(".vs-popup--content") || popupEl;
-                    const focusables = content.querySelectorAll(
-                        'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
-                    );
-                    el = Array.from(focusables).find(
-                        (f) => !f.disabled && f.offsetParent !== null
-                    );
-                }
-
-                if (!el) return;
-                const inputOrButton =
-                    el.querySelector("input, textarea, select, button") || el;
-                if (
-                    inputOrButton &&
-                    typeof inputOrButton.focus === "function"
-                ) {
-                    inputOrButton.focus();
-                }
-            }, 50);
-        });
+        // --- Focus management (only if focusRef is provided)
+        if (focusRef) {
+            Vue.nextTick(() => {
+                setTimeout(() => {
+                    const refEl = popupInstance.$refs[focusRef];
+                    if (!refEl) {
+                        console.warn(
+                            `PopupManager: focusRef '${focusRef}' not found in ${popupId}`
+                        );
+                        return;
+                    }
+                    // Get actual DOM element
+                    const el = refEl.$el || refEl;
+                    const inputOrButton =
+                        (el && typeof el.querySelector === "function"
+                            ? el.querySelector(
+                                  "input, textarea, select, button"
+                              )
+                            : null) || el;
+                    if (
+                        inputOrButton &&
+                        typeof inputOrButton.focus === "function"
+                    ) {
+                        inputOrButton.focus();
+                    }
+                }, 50);
+            });
+        }
     },
 
     unregister(popupId) {

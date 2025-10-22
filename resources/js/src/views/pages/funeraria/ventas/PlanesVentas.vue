@@ -1,7 +1,7 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-85" fullscreen title="listado de planes funerarios"
-            :active.sync="showVentana" ref="planes_planes">
+        <vs-popup class="forms-popup popup-85" fullscreen title="listado de planes funerarios" :active="localShow"
+            :ref="this.$options.name">
             <div class="form-group">
                 <div class="title-form-group">Planes Funerarios Registrados</div>
                 <div class="form-group-content">
@@ -115,7 +115,7 @@
                                             <vs-td>
                                                 <span class="font-semibold">{{
                                                     index_precio + 1
-                                                    }}</span>
+                                                }}</span>
                                             </vs-td>
                                             <vs-td>$
                                                 {{ precio.pago_inicial | numFormat("0,000.00") }}</vs-td>
@@ -159,20 +159,22 @@
             </div>
 
             <!--componente de confirmar sin contraseña-->
-            <ConfirmarDanger :z_index="'z-index58k'" :show="operConfirmar" :callback-on-success="callback"
-                @closeVerificar="operConfirmar = false"
+            <ConfirmarDanger v-if="operConfirmar" :z_index="'z-index58k'" :show="operConfirmar"
+                :callback-on-success="callback" @closeVerificar="operConfirmar = false"
                 :accion="'¿Desea eliminar este plan de mensualidades? Los datos quedarán eliminados del sistema.'"
                 :confirmarButton="'Eliminar'"></ConfirmarDanger>
-            <Password :show="openPassword" :callback-on-success="callbackPassword"
+            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callbackPassword"
                 @closeVerificar="openPassword = false" :accion="accionPassword"></Password>
 
-            <FormularioPrecios :id_precio="id_precio_modificar" :tipo="tipoFormulario" :show="verFormularioPrecios"
-                @closeVentana="verFormularioPrecios = false" @retornar_id="retorno_plan"></FormularioPrecios>
+            <FormularioPrecios v-if="verFormularioPrecios" :id_precio="id_precio_modificar" :tipo="tipoFormulario"
+                :show="verFormularioPrecios" @closeVentana="verFormularioPrecios = false" @retornar_id="retorno_plan">
+            </FormularioPrecios>
 
-            <FormularioPlanes :id_plan="id_plan_modificar" :tipo="tipoFormularioPlan" :show="verFormularioPlan"
-                @closeVentana="verFormularioPlan = false" @retornar="retorno_plan"></FormularioPlanes>
+            <FormularioPlanes v-if="verFormularioPlan" :id_plan="id_plan_modificar" :tipo="tipoFormularioPlan"
+                :show="verFormularioPlan" @closeVentana="verFormularioPlan = false" @retornar="retorno_plan">
+            </FormularioPlanes>
 
-            <Reporteador :header="'Consultar precios x propiedad'" :show="openReportesLista"
+            <Reporteador v-if="openReportesLista" :header="'Consultar precios x propiedad'" :show="openReportesLista"
                 :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
             </Reporteador>
             <!--fin de compornentes-->
@@ -188,6 +190,7 @@ import FormularioPrecios from "@pages/funeraria/ventas/FormularioPrecios";
 import FormularioPlanes from "@pages/funeraria/ventas/FormularioPlanes";
 import vSelect from "vue-select";
 export default {
+    name: "PlanesVentas",
     props: {
         show: {
             type: Boolean,
@@ -195,22 +198,20 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["planes_planes"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_planes();
-                })();
-            } else {
-                /**cerrar ventana */
-                this.datosVenta = [];
-                this.total = 0;
-            }
+                    this.$popupManager.register(this, this.cancelar, null);
+                } else {
+                    /**cerrar ventana */
+                    this.datosVenta = [];
+                    this.total = 0;
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     components: {
@@ -223,6 +224,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             plan_tipo: {},
             tipo_planes: [],
             tipoFormularioPlan: "",
@@ -257,14 +259,7 @@ export default {
         };
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
+
     },
     methods: {
         async get_planes() {
@@ -562,6 +557,18 @@ export default {
                 });
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

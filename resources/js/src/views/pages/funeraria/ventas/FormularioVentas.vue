@@ -1,9 +1,9 @@
 <template>
     <div class="centerx">
         <vs-popup :class="['forms-popup', z_index]" fullscreen close="cancelar" :title="getTipoformulario == 'modificar'
-                ? 'Modificar Venta de Plan Funerario a Futuro'
-                : 'Registrar Venta de Plan Funerario a Futuro'
-            " :active.sync="showVentana" ref="formulario">
+            ? 'Modificar Venta de Plan Funerario a Futuro'
+            : 'Registrar Venta de Plan Funerario a Futuro'
+            " :active="localShow" :ref="this.$options.name">
             <!--inicio venta-->
             <div class="flex flex-wrap">
                 <div class="w-full lg:w-7/12 px-4">
@@ -60,8 +60,8 @@
                                         <span>(*)</span>
                                     </label>
                                     <v-select :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
-                                        " :options="planes_funerarios" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                        v-model="form.plan_funerario" class="w-full"
+                                        " :options="planes_funerarios" :clearable="false"
+                                        :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.plan_funerario" class="w-full"
                                         v-validate:plan_funerario_validacion_computed.immediate="'required'
                                             " name="plan_validacion" data-vv-as=" ">
                                         <div slot="no-options">
@@ -168,9 +168,10 @@
                                     <label>Fecha de la Venta (Año-Mes-Dia)</label>
                                     <span>(*)</span>
                                     <flat-pickr :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
-                                        " name="fecha_venta" data-vv-as=" " v-validate:fecha_venta_validacion_computed.immediate="'required'
-                        " :config="configdateTimePicker" v-model="form.fecha_venta" placeholder="Fecha de la Venta"
-                                        class="w-full" />
+                                        " name="fecha_venta" ref="fecha_venta" data-vv-as=" "
+                                        v-validate:fecha_venta_validacion_computed.immediate="'required'
+                                            " :config="configdateTimePicker" v-model="form.fecha_venta"
+                                        placeholder="Fecha de la Venta" class="w-full" />
                                     <span>{{ errors.first("fecha_venta") }}</span>
                                     <span v-if="this.errores.fecha_venta">{{
                                         errores.fecha_venta[0]
@@ -182,8 +183,9 @@
                                         <span>(*)</span>
                                     </label>
                                     <vs-input v-validate:solicitud_validacion_computed.immediate="'required'
-                                        " name="solicitud" data-vv-as=" " type="text" class="w-full" placeholder=" Núm. Solicitud"
-                                        v-model="form.solicitud" :disabled="fueCancelada" maxlength="12" />
+                                        " name="solicitud" ref="solicitud" data-vv-as=" " type="text" class="w-full"
+                                        placeholder=" Núm. Solicitud" v-model="form.solicitud" :disabled="fueCancelada"
+                                        maxlength="12" />
                                     <span>{{ errors.first("solicitud") }}</span>
                                     <span v-if="this.errores.solicitud">{{
                                         errores.solicitud[0]
@@ -195,9 +197,9 @@
                                         <span>(*)</span>
                                     </label>
                                     <vs-input v-validate:num_convenio_validacion_computed.immediate="'required'
-                                        " name="num_convenio" data-vv-as=" " type="text" class="w-full" placeholder="Núm. Convenio"
-                                        v-model="form.convenio" :disabled="!capturar_num_convenio || fueCancelada"
-                                        maxlength="16" />
+                                        " name="num_convenio" data-vv-as=" " type="text" class="w-full"
+                                        placeholder="Núm. Convenio" v-model="form.convenio"
+                                        :disabled="!capturar_num_convenio || fueCancelada" maxlength="16" />
                                     <span>{{ errors.first("num_convenio") }}</span>
                                     <span v-if="this.errores.convenio">{{
                                         errores.convenio[0]
@@ -344,11 +346,11 @@
                                     </label>
                                     <vs-input :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
                                         " size="large" v-validate.disabled="'required|integer|min_value:' +
-                        minimo_financiamiento +
-                        '|max_value:' +
-                        maximo_financiamiento
-                        " name="financiamiento" data-vv-as=" " type="text" class="w-full" placeholder="Número de pagos"
-                                        v-model="form.financiamiento" maxlength="3" />
+                                            minimo_financiamiento +
+                                            '|max_value:' +
+                                            maximo_financiamiento
+                                            " name="financiamiento" data-vv-as=" " type="text" class="w-full"
+                                        placeholder="Número de pagos" v-model="form.financiamiento" maxlength="3" />
                                     <span>{{ errors.first("financiamiento") }}</span>
                                     <span v-if="this.errores.financiamiento">{{
                                         errores.financiamiento[0]
@@ -377,8 +379,9 @@
                                         <span>(*)</span>
                                     </label>
                                     <vs-input :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
-                                        " size="large" name="costo_neto" data-vv-as=" " v-validate="'required|decimal:2|min_value:1'"
-                                        type="text" class="w-full" placeholder="" v-model="form.costo_neto" />
+                                        " size="large" name="costo_neto" data-vv-as=" "
+                                        v-validate="'required|decimal:2|min_value:1'" type="text" class="w-full"
+                                        placeholder="" v-model="form.costo_neto" />
                                     <span>{{ errors.first("costo_neto") }}</span>
                                     <span v-if="this.errores.costo_neto">{{
                                         errores.costo_neto[0]
@@ -392,8 +395,8 @@
                                     </label>
                                     <vs-input :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
                                         " size="large" name="descuento" data-vv-as=" " v-validate="'required|decimal:2|min_value:0|max_value:' +
-                        form.costo_neto
-                        " type="text" class="w-full" placeholder="" v-model="form.descuento" />
+                                            form.costo_neto
+                                            " type="text" class="w-full" placeholder="" v-model="form.descuento" />
                                     <span>{{ errors.first("descuento") }}</span>
                                     <span v-if="this.errores.descuento">{{
                                         errores.descuento[0]
@@ -417,10 +420,11 @@
                                     </label>
                                     <vs-input :disabled="tiene_pagos_realizados || ventaLiquidada || fueCancelada
                                         " size="large" name="pago_inicial" data-vv-as=" " v-validate="'required|decimal:2|min_value:' +
-                        valor_minimo_pago_inicial +
-                        '|max_value:' +
-                        valor_maximo_pago_inicial
-                        " maxlength="10" type="text" class="w-full" v-model="form.pago_inicial" placeholder="" />
+                                            valor_minimo_pago_inicial +
+                                            '|max_value:' +
+                                            valor_maximo_pago_inicial
+                                            " maxlength="10" type="text" class="w-full" v-model="form.pago_inicial"
+                                        placeholder="" />
                                     <span>{{ errors.first("pago_inicial") }}</span>
 
                                     <span v-if="this.errores.pago_inicial">{{
@@ -516,20 +520,20 @@
                 </div>
             </div>
         </vs-popup>
-        <Password :show="openPassword" :callback-on-success="callback" @closeVerificar="closePassword"
-            :accion="accionNombre">
+        <Password v-if="openPassword" :show="openPassword" :callback-on-success="callback"
+            @closeVerificar="closePassword" :accion="accionNombre">
         </Password>
-        <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index58k'" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-        <ConfirmarAceptar :z_index="'z-index58k'" :show="openConfirmarAceptar"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index58k'" :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
             :accion="'He revisado la información y quiero guardar la venta'" :confirmarButton="'Guardar Venta'">
         </ConfirmarAceptar>
 
-        <ClientesBuscador :z_index="'z-index55k'" :show="openBuscador" @closeBuscador="openBuscador = false"
-            @retornoCliente="clienteSeleccionado"></ClientesBuscador>
+        <ClientesBuscador v-if="openBuscador" :z_index="'z-index55k'" :show="openBuscador"
+            @closeBuscador="openBuscador = false" @retornoCliente="clienteSeleccionado"></ClientesBuscador>
     </div>
 </template>
 <script>
@@ -550,6 +554,7 @@ import ClientesBuscador from "@pages/clientes/searcher.vue";
 import { alfabeto, configdateTimePicker } from "@/VariablesGlobales";
 
 export default {
+    name: "FormularioVentasPlanes",
     components: {
         "v-select": vSelect,
         flatPickr,
@@ -580,16 +585,10 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            this.limpiarValidation();
-            if (newValue == true) {
-                this.$nextTick(() =>
-                    this.$refs["cliente_ref"].$el.querySelector("input").focus()
-                );
-                this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-                    this.cancelar();
-                };
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_planes_funerarios();
                     await this.get_vendedores();
                     if (this.getTipoformulario == "agregar") {
@@ -601,10 +600,12 @@ export default {
                         /**se cargan los datos al formulario */
                         await this.consultar_venta_id();
                     }
-                })();
-            } else {
-                /**acciones al cerrar el formulario */
-            }
+                    this.$popupManager.register(this, this.cancelar, "solicitud");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
@@ -744,15 +745,6 @@ export default {
                 return newValue;
             },
         },
-
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
         capturar_num_convenio: function () {
             if (this.form.ventaAntiguedad.value > 1) {
                 return true;
@@ -797,6 +789,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             planes_funerarios: [],
             datos: [],
             /**variables dle modulo */
@@ -1495,6 +1488,18 @@ export default {
             });
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>
