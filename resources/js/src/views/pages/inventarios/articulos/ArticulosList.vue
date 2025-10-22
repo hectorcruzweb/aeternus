@@ -106,7 +106,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     <vs-td :data="data[indextr].tipo_articulo.tipo">
                         <span class="uppercase">{{
                             data[indextr].tipo_articulo.tipo
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td hidden :data="data[indextr].caduca_texto">
                         <span class="uppercase">{{ data[indextr].caduca_texto }}</span>
@@ -153,15 +153,17 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         </div>
         <pre ref="pre"></pre>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'Consultar Inventario'" :show="openReportesLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="openReportesLista = false"></Reporteador>
-        <FormularioArticulos :id_articulo="id_articulo_modificar" :tipo="tipoFormulario" :show="verFormularioArticulos"
-            @closeVentana="verFormularioArticulos = false" @retornar_id="retorno_id"></FormularioArticulos>
-        <FormularioLabel :show="verFormularioLabels" @closeVentana="verFormularioLabels = false"
-            @retornar_id="retorno_id">
+        <Reporteador v-if="openReportesLista" :header="'Consultar Inventario'" :show="openReportesLista"
+            :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+        </Reporteador>
+        <FormularioArticulos v-if="verFormularioArticulos" :id_articulo="id_articulo_modificar" :tipo="tipoFormulario"
+            :show="verFormularioArticulos" @closeVentana="verFormularioArticulos = false" @retornar_id="retorno_id">
+        </FormularioArticulos>
+        <FormularioLabel v-if="verFormularioLabels" :show="verFormularioLabels"
+            @closeVentana="verFormularioLabels = false" @retornar_id="retorno_id">
         </FormularioLabel>
     </div>
 </template>
@@ -185,6 +187,7 @@ import { mostrarOptions, PermisosModulo } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 
 export default {
+    name: "ArticulosList",
     components: {
         "v-select": vSelect,
         Password,
@@ -512,8 +515,21 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
     created() {
-        this.get_data(this.actual);
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        (async () => {
+            await this.get_data(this.actual);
+        })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

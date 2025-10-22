@@ -117,13 +117,13 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         </div>
         <pre ref="pre"></pre>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'consultar reporte de venta'" :show="openReportesLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="closeReportes"></Reporteador>
-        <FormularioAjustes :show="verFormularioAjustes" @closeVentana="verFormularioAjustes = false"
-            @retornar_id="retorno_id">
+        <Reporteador v-if="openReportesLista" :header="'consultar reporte de venta'" :show="openReportesLista"
+            :listadereportes="ListaReportes" :request="request" @closeReportes="closeReportes"></Reporteador>
+        <FormularioAjustes v-if="verFormularioAjustes" :show="verFormularioAjustes"
+            @closeVentana="verFormularioAjustes = false" @retornar_id="retorno_id">
         </FormularioAjustes>
     </div>
 </template>
@@ -145,6 +145,7 @@ import { mostrarOptions, PermisosModulo } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 
 export default {
+    name: "AjustesList",
     components: {
         "v-select": vSelect,
         Password,
@@ -454,8 +455,21 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
     created() {
-        this.get_data(this.actual);
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        (async () => {
+            await this.get_data(this.actual);
+        })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

@@ -120,14 +120,15 @@
             <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
         </div>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
 
-        <ReportesServicio :verAcuse="verAcuse" :show="openReportes" @closeListaReportes="closeListaReportes"
-            :id_compra="id_compra"></ReportesServicio>
+        <ReportesServicio v-if="openReportes" :verAcuse="verAcuse" :show="openReportes"
+            @closeListaReportes="closeListaReportes" :id_compra="id_compra"></ReportesServicio>
 
-        <FormularioCompras :tipo="tipoFormulario" :show="verFormularioCompras" @closeVentana="reloadList">
+        <FormularioCompras v-if="verFormularioCompras" :tipo="tipoFormulario" :show="verFormularioCompras"
+            @closeVentana="reloadList">
         </FormularioCompras>
     </div>
 </template>
@@ -149,6 +150,7 @@ import inventario from "@services/inventario";
 import { mostrarOptions } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 export default {
+    name: "ComprasList",
     components: {
         "v-select": vSelect,
         Password,
@@ -410,11 +412,21 @@ export default {
             })();
         },
     },
-
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         (async () => {
             await this.get_data(this.actual);
         })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

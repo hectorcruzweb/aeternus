@@ -1,19 +1,10 @@
-<template >
+<template>
   <div>
-    <vs-popup
-      :class="['forms-popup popup-90', z_index]"
-      title="Catálogo de Artículos y Servicios"
-      :active.sync="showVentana"
-      ref="buscador_lotes"
-    >
+    <vs-popup :class="['forms-popup popup-90', z_index]" title="Catálogo de Artículos y Servicios" :active="localShow"
+      :ref="this.$options.name">
       <!--inicio de buscador-->
       <div class="py-3">
-        <vx-card
-          no-radius
-          title="Filtros de selección"
-          refresh-content-action
-          @refresh="reset"
-        >
+        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
           <template slot="no-body">
             <div>
               <div class="flex flex-wrap px-4 py-6">
@@ -22,15 +13,8 @@
                     Categorías
                     <span>(*)</span>
                   </label>
-                  <v-select
-                    :options="categorias"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="serverOptions.categoria"
-                    class="w-full"
-                    name="categoria"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="categorias" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="serverOptions.categoria" class="w-full" name="categoria" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
 
@@ -39,18 +23,9 @@
 
                 <div class="w-full xl:w-7/12 px-2 input-text">
                   <label>Descripción</label>
-                  <vs-input
-                    ref="descripcion"
-                    name="descripcion"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    placeholder="Ej. Ataúd de Madera"
-                    maxlength="12"
-                    v-model.trim="serverOptions.descripcion"
-                    v-on:keyup.enter="get_data('descripcion', 1)"
-                    v-on:blur="get_data('descripcion', 1, 'blur')"
-                  />
+                  <vs-input ref="descripcion" name="descripcion" data-vv-as=" " type="text" class="w-full"
+                    placeholder="Ej. Ataúd de Madera" maxlength="12" v-model.trim="serverOptions.descripcion"
+                    v-on:keyup.enter="get_data('descripcion', 1)" v-on:blur="get_data('descripcion', 1, 'blur')" />
                   <span>{{ errors.first("descripcion") }}</span>
                 </div>
               </div>
@@ -58,14 +33,8 @@
           </template>
         </vx-card>
         <div class="py-6">
-          <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page"
-            :data="lotes"
-            stripe
-            noDataText="0 Resultados"
-            class="tabla-datos"
-          >
+          <vs-table :sst="true" :max-items="serverOptions.per_page" :data="lotes" stripe noDataText="0 Resultados"
+            class="tabla-datos">
             <template slot="header">
               <h3>Lista de Artículos y Servicios por Lotes</h3>
             </template>
@@ -113,22 +82,14 @@
                   </p>
                 </vs-td>
                 <vs-td :data="data[indextr].id">
-                  <img
-                    class="cursor-pointer img-btn-20 mx-3"
-                    src="@assets/images/checked.svg"
-                    @click="retornarSeleccion(data[indextr])"
-                  />
+                  <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg"
+                    @click="retornarSeleccion(data[indextr])" />
                 </vs-td>
               </vs-tr>
             </template>
           </vs-table>
           <div>
-            <vs-pagination
-              v-if="verPaginado"
-              :total="this.total"
-              v-model="actual"
-              class="mt-3"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
           </div>
         </div>
       </div>
@@ -142,6 +103,7 @@ import funeraria from "@services/funeraria";
 import vSelect from "vue-select";
 
 export default {
+  name: "searcher_articulos",
   components: {
     "v-select": vSelect,
   },
@@ -163,24 +125,21 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data("", this.actual);
     },
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$nextTick(() =>
-          this.$refs["descripcion"].$el.querySelector("input").focus()
-        );
-        this.$refs["buscador_lotes"].$el.querySelector(".vs-icon").onclick =
-          () => {
-            this.cancelar();
-          };
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
           await this.get_categorias_servicio();
-        })();
-        this.get_data("", 1);
-      } else {
-        /**cerrar y limpiar el formulario */
-        this.serverOptions.numero_control = "";
-        this.serverOptions.titular = "";
-      }
+          this.get_data("", 1);
+          this.$popupManager.register(this, this.cancelar, "descripcion");
+        } else {
+          /**cerrar y limpiar el formulario */
+          this.serverOptions.numero_control = "";
+          this.serverOptions.titular = "";
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
     articulos: function (newValue, oldValue) {
       /**se limpian los lotes */
@@ -250,6 +209,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       categorias: [
         {
           label: "Seleccione 1",
@@ -360,13 +320,31 @@ export default {
           }
         });
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
     retornarSeleccion(datos) {
       this.$emit("LoteSeleccionado", datos);
-      this.$emit("closeBuscador");
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$emit("closeBuscador");
+        }, 50);
+      });
     },
+  },
+
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

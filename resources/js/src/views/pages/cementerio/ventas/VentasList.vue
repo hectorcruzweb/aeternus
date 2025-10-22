@@ -92,11 +92,11 @@
                                 <vs-td :data="data[indextr].ventas_terrenos_id">
                                     <span class="font-medium">{{
                                         data[indextr].ventas_terrenos_id
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].nombre">{{
                                     data[indextr].nombre
-                                    }}</vs-td>
+                                }}</vs-td>
                                 <vs-td :data="data[indextr].venta_terreno
                                     .tipo_financiamiento_texto
                                     ">{{
@@ -106,21 +106,21 @@
                                 <vs-td :data="data[indextr].numero_solicitud">
                                     <span class="">{{
                                         data[indextr].numero_solicitud_texto
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].numero_convenio">
                                     <span class="">{{
                                         data[indextr].numero_convenio
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].numero_titulo">
                                     <span class="">{{
                                         data[indextr].numero_titulo_texto
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].ubicacion_texto">{{
                                     data[indextr].venta_terreno.ubicacion_texto
-                                    }}</vs-td>
+                                }}</vs-td>
                                 <!--Convenio-->
                                 <vs-td :data="data[indextr].venta_terreno.status_convenio">
                                     <p v-if="
@@ -584,7 +584,7 @@ export default {
         this.$log("Component mounted! " + this.$options.name);
     },
     beforeDestroy() {
-        this.$popupManager.unregister(this.$options.name);
+
     },
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet

@@ -1,9 +1,9 @@
 <template>
     <div>
         <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen close="cancelar" :title="getTipoformulario == 'agregar'
-                ? 'compras a proveedor'
-                : 'POR DEFINIR FUNCION'
-            " :active.sync="showVentana" ref="formulario">
+            ? 'compras a proveedor'
+            : 'POR DEFINIR FUNCION'
+            " :active="localShow" :ref="this.$options.name">
             <!--inicio venta-->
             <div class="flex flex-wrap">
                 <div class="w-full py-4">
@@ -25,7 +25,7 @@
                                     </span>
                                     <span v-if="this.errores.fecha_compra">{{
                                         errores.fecha_compra[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <div class="w-full xl:w-7/12">
@@ -94,7 +94,7 @@
                                     </span>
                                     <span v-if="this.errores.referencia">{{
                                         errores.referencia[0]
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -120,15 +120,15 @@
                                     <vs-input ref="codigo_barras" name="codigo_barras" data-vv-as=" " type="text"
                                         class="w-full" placeholder="Ej. 0000000123" maxlength="28" v-model.trim="serverOptions.numero_control
                                             " v-on:keyup.enter="
-                                            get_concepto_por_codigo(
-                                                'codigo_barras'
-                                            )
-                                            " v-on:blur="
-                                            get_concepto_por_codigo(
-                                                'codigo_barras',
-                                                'blur'
-                                            )
-                                            " />
+                                                get_concepto_por_codigo(
+                                                    'codigo_barras'
+                                                )
+                                                " v-on:blur="
+                                                    get_concepto_por_codigo(
+                                                        'codigo_barras',
+                                                        'blur'
+                                                    )
+                                                    " />
                                 </div>
                                 <img class="cursor-pointer img-btn-20 mx-3 mt-4 hidden lg:block"
                                     src="@assets/images/searcharticulo.svg" title="Buscador de artículos y servicios"
@@ -166,7 +166,7 @@
                                                     <div>
                                                         <span>{{
                                                             indextr + 1
-                                                            }}</span>
+                                                        }}</span>
                                                     </div>
                                                 </vs-td>
 
@@ -186,9 +186,10 @@
                                                         " data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
                                                             1 +
                                                             '|max_value:1000'
-                                                            " class="mr-auto ml-auto input-cantidad" maxlength="4" v-model="form.articulos[
-                                                                indextr
-                                                            ].cantidad
+                                                            " class="mr-auto ml-auto input-cantidad" maxlength="4"
+                                                        v-model="form.articulos[
+                                                            indextr
+                                                        ].cantidad
                                                             " />
                                                     <div class="input-text">
                                                         <span>
@@ -209,12 +210,12 @@
                                                             0
                                                             " class="mr-auto ml-auto input-cantidad" maxlength="10"
                                                         v-model="form.articulos[
-                                                                indextr
-                                                            ].costo_neto_normal
+                                                            indextr
+                                                        ].costo_neto_normal
                                                             " :disabled="form.articulos[
                                                                 indextr
                                                             ].descuento_b == 1
-                                                            " />
+                                                                " />
                                                     <div class="input-text">
                                                         <span>
                                                             {{
@@ -230,8 +231,8 @@
                                                 <vs-td class="">
                                                     <vs-switch class="ml-auto mr-auto" color="success"
                                                         icon-pack="feather" v-model="form.articulos[
-                                                                indextr
-                                                            ].descuento_b
+                                                            indextr
+                                                        ].descuento_b
                                                             ">
                                                         <span slot="on">SI</span>
                                                         <span slot="off">NO</span>
@@ -249,13 +250,13 @@
                                                                 .costo_neto_normal
                                                             " class="mr-auto ml-auto input-cantidad" maxlength="10"
                                                         v-model="form.articulos[
-                                                                indextr
-                                                            ]
-                                                                .costo_neto_descuento
+                                                            indextr
+                                                        ]
+                                                            .costo_neto_descuento
                                                             " :disabled="form.articulos[
                                                                 indextr
                                                             ].descuento_b == 0
-                                                            " />
+                                                                " />
                                                     <div class="input-text">
                                                         <span>
                                                             {{
@@ -308,8 +309,8 @@
                                                 <vs-td class="">
                                                     <vs-switch class="ml-auto mr-auto" color="success"
                                                         icon-pack="feather" v-model="form.articulos[
-                                                                indextr
-                                                            ].facturable_b
+                                                            indextr
+                                                        ].facturable_b
                                                             ">
                                                         <span slot="on">SI</span>
                                                         <span slot="off">NO</span>
@@ -351,8 +352,9 @@
                                                                 ">(*)</span></label>
                                                             <vs-input name="costo_incurrido_detalle" maxlength="150"
                                                                 data-vv-as=" " v-validate="this
-                                                                        .validar_costo_incurrido_detalle
-                                                                    " type="text" class="w-full" placeholder="" v-model="form.costo_incurrido_detalle
+                                                                    .validar_costo_incurrido_detalle
+                                                                    " type="text" class="w-full" placeholder=""
+                                                                v-model="form.costo_incurrido_detalle
                                                                     " />
                                                             <span>
                                                                 {{
@@ -365,9 +367,9 @@
                                                                 this.errores
                                                                     .costo_incurrido_detalle
                                                             ">{{
-                                                                    errores
-                                                                        .costo_incurrido_detalle[0]
-                                                                }}</span>
+                                                                errores
+                                                                    .costo_incurrido_detalle[0]
+                                                            }}</span>
                                                         </div>
                                                         <div class="w-full input-text xl:w-3/12 px-2">
                                                             <label>Total del costo
@@ -378,7 +380,7 @@
                                                                 ">(*)</span></label>
                                                             <vs-input name="costo_incurrido_costo" data-vv-as=" "
                                                                 v-validate="this
-                                                                        .validar_costo_incurrido_costo
+                                                                    .validar_costo_incurrido_costo
                                                                     " maxlength="12" type="text" class="w-full"
                                                                 placeholder="" v-model="form.costo_incurrido_costo
                                                                     " />
@@ -393,9 +395,9 @@
                                                                 this.errores
                                                                     .costo_incurrido_costo
                                                             ">{{
-                                                                    errores
-                                                                        .costo_incurrido_costo[0]
-                                                                }}</span>
+                                                                errores
+                                                                    .costo_incurrido_costo[0]
+                                                            }}</span>
                                                         </div>
 
                                                         <div class="
@@ -451,8 +453,8 @@
                                                         this.errores
                                                             .tasa_iva
                                                     ">{{
-                                                            errores.tasa_iva[0]
-                                                        }}</span>
+                                                        errores.tasa_iva[0]
+                                                    }}</span>
                                                 </div>
                                                 <div class="w-full px-2 text-center mt-3">
                                                     <label class="h4 font-medium color-copy">$ Total de la
@@ -476,7 +478,8 @@
                                                     </label>
                                                     <vs-input size="large" name="pago_efectivo" data-vv-as=" "
                                                         v-validate="'required|decimal:2|min_value:0'
-                                                            " type="text" class="w-full cantidad" placeholder="" v-model="form.pago_efectivo
+                                                            " type="text" class="w-full cantidad" placeholder=""
+                                                        v-model="form.pago_efectivo
                                                             " maxlength="12" />
                                                     <span class="mensaje-requerido">
                                                         {{
@@ -489,9 +492,9 @@
                                                         this.errores
                                                             .pago_efectivo
                                                     ">{{
-                                                            errores
-                                                                .pago_efectivo[0]
-                                                        }}</span>
+                                                        errores
+                                                            .pago_efectivo[0]
+                                                    }}</span>
                                                 </div>
                                                 <div class="w-full input-text px-2 text-center">
                                                     <label>
@@ -512,9 +515,9 @@
                                                         this.errores
                                                             .pago_cheque
                                                     ">{{
-                                                            errores
-                                                                .pago_cheque[0]
-                                                        }}</span>
+                                                        errores
+                                                            .pago_cheque[0]
+                                                    }}</span>
                                                 </div>
                                                 <div class="w-full input-text px-2 text-center">
                                                     <label>
@@ -523,7 +526,8 @@
                                                     </label>
                                                     <vs-input size="large" name="pago_tarjeta" data-vv-as=" "
                                                         v-validate="'required|decimal:2|min_value:0'
-                                                            " type="text" class="w-full cantidad" placeholder="" v-model="form.pago_tarjeta
+                                                            " type="text" class="w-full cantidad" placeholder=""
+                                                        v-model="form.pago_tarjeta
                                                             " maxlength="12" />
                                                     <span class="mensaje-requerido">
                                                         {{
@@ -536,9 +540,9 @@
                                                         this.errores
                                                             .pago_tarjeta
                                                     ">{{
-                                                            errores
-                                                                .pago_tarjeta[0]
-                                                        }}</span>
+                                                        errores
+                                                            .pago_tarjeta[0]
+                                                    }}</span>
                                                 </div>
                                                 <div class="w-full input-text px-2 text-center">
                                                     <label>
@@ -547,7 +551,8 @@
                                                     </label>
                                                     <vs-input size="large" name="pago_transferencia" data-vv-as=" "
                                                         v-validate="'required|decimal:2|min_value:0'
-                                                            " type="text" class="w-full cantidad" placeholder="" v-model="form.pago_transferencia
+                                                            " type="text" class="w-full cantidad" placeholder=""
+                                                        v-model="form.pago_transferencia
                                                             " maxlength="12" />
                                                     <span class="mensaje-requerido">
                                                         {{
@@ -560,9 +565,9 @@
                                                         this.errores
                                                             .pago_transferencia
                                                     ">{{
-                                                            errores
-                                                                .pago_transferencia[0]
-                                                        }}</span>
+                                                        errores
+                                                            .pago_transferencia[0]
+                                                    }}</span>
                                                 </div>
                                                 <div class="w-full px-2 text-center mt-3 hidden">
                                                     <label class="h4 font-medium color-copy">$ Resto a Pagar a
@@ -624,21 +629,21 @@
             </div>
             <!--fin venta-->
         </vs-popup>
-        <Password :z_index="'z-index56k'" :show="openPassword" :callback-on-success="callback"
+        <Password :z_index="'z-index56k'" v-if="openPassword" :show="openPassword" :callback-on-success="callback"
             @closeVerificar="closePassword" :accion="accionNombre"></Password>
-        <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+        <ConfirmarDanger :z_index="'z-index58k'" v-if="openConfirmarSinPassword" :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
             :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-        <ConfirmarAceptar :show="openConfirmarAceptar" :callback-on-success="callBackConfirmarAceptar"
-            @closeVerificar="openConfirmarAceptar = false"
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
             :accion="'He revisado la información y quiero guardar la venta'" :confirmarButton="'Guardar Venta'">
         </ConfirmarAceptar>
 
-        <ClientesBuscador :z_index="'z-index55k'" :show="openBuscadorProveedores"
+        <ClientesBuscador v-if="openBuscadorProveedores" :z_index="'z-index55k'" :show="openBuscadorProveedores"
             @closeBuscador="openBuscadorProveedores = false" @retornoCliente="clienteSeleccionado"></ClientesBuscador>
 
-        <ArticulosBuscador :z_index="'z-index56k'" :show="openBuscadorArticulos"
+        <ArticulosBuscador v-if="openBuscadorArticulos" :z_index="'z-index56k'" :show="openBuscadorArticulos"
             @closeBuscador="openBuscadorArticulos = false" @LoteSeleccionado="LoteSeleccionado"></ArticulosBuscador>
     </div>
 </template>
@@ -661,6 +666,7 @@ import ArticulosBuscador from "@pages/funeraria/servicios_funerarios/searcher_ar
 import { configdateTimePicker } from "@/VariablesGlobales";
 
 export default {
+    name: "FormularioCompras",
     components: {
         "v-select": vSelect,
         flatPickr,
@@ -687,27 +693,17 @@ export default {
         }
     },
     watch: {
-        show: function (newValue, oldValue) {
-            this.limpiarValidation();
-            if (newValue == true) {
-                this.$nextTick(
-                    () => { }
-                    // this.$refs["fallecido_ref"].$el.querySelector("input").focus()
-                );
-                this.$refs["formulario"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-                (async () => {
-                    if (this.getTipoformulario == "agregar") {
-                        //await this.get_solicitudes_servicios_id();
-                    }
-                })();
-            } else {
-                /**acciones al cerrar el formulario */
-            }
-        }
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    this.$popupManager.register(this, this.cancelar, "codigo_barras");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
+        },
     },
     computed: {
         /**validaciones de los selects */
@@ -727,15 +723,6 @@ export default {
             if (this.form.costo_incurrido_costo > 0) {
                 return "required";
             } else return "";
-        },
-
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            }
         },
         getTipoformulario: {
             get() {
@@ -786,6 +773,7 @@ export default {
 
     data() {
         return {
+            localShow: false,
             sino: [
                 {
                     value: "1",
@@ -1139,6 +1127,18 @@ export default {
             this.form.proveedor = "";
         }
     },
-    created() { }
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

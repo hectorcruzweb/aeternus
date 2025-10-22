@@ -1,51 +1,32 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            :class="['forms-popup bg-content-theme', z_index]"
-            fullscreen
-            close="cancelar"
-            :title="title"
-            :active.sync="showVentana"
-            ref="formulario"
-        >
+        <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen close="cancelar" :title="title"
+            :active="localShow" :ref="this.$options.name">
             <div class="w-full text-right">
-                <vs-button
-                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                    color="primary"
-                    @click="openBuscador = true"
-                >
+                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+                    @click="openBuscador = true">
                     <span>Buscar Articulos</span>
                 </vs-button>
             </div>
 
             <div class="flex flex-wrap px-2">
                 <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-                    <vx-card
-                        no-radius
-                        title="Filtros de selección"
-                        :collapse-action="false"
-                    >
+                    <vx-card no-radius title="Filtros de selección" :collapse-action="false">
                         <div class="flex flex-wrap">
                             <div class="w-full text-right">
-                                <vs-button
-                                    v-if="form.ajuste.length > 0"
-                                    class="
+                                <vs-button v-if="form.ajuste.length > 0" class="
                     w-full
                     sm:w-full sm:w-auto
                     md:w-auto
                     md:ml-2
                     my-2
                     md:mt-0
-                  "
-                                    color="danger"
-                                    @click="quitarTodos"
-                                >
+                  " color="danger" @click="quitarTodos">
                                     <span>Quitar todos los Artículos</span>
                                 </vs-button>
                             </div>
 
-                            <div
-                                class="
+                            <div class="
                   w-full
                   sm:w-12/12
                   md:w-3/12
@@ -54,22 +35,13 @@
                   mb-1
                   px-2
                   input-text
-                "
-                            >
-                                <label class="text-base opacity-75 font-medium"
-                                    >Datos del Ajuste</label
-                                >
-                                <v-select
-                                    :options="tipoAjustes"
-                                    :clearable="false"
-                                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                    v-model="form.tipoAjuste"
-                                    class="mb-4 md:mb-0 mt-1"
-                                    :disabled="this.form.ajuste.length > 0"
-                                />
+                ">
+                                <label class="text-base opacity-75 font-medium">Datos del Ajuste</label>
+                                <v-select :options="tipoAjustes" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                    v-model="form.tipoAjuste" class="mb-4 md:mb-0 mt-1"
+                                    :disabled="this.form.ajuste.length > 0" />
                             </div>
-                            <div
-                                class="
+                            <div class="
                   w-full
                   sm:w-12/12
                   md:w-9/12
@@ -78,24 +50,15 @@
                   mb-4
                   px-2
                   input-text
-                "
-                            >
-                                <label class="text-base opacity-75 font-medium"
-                                    >Nota:</label
-                                >
-                                <vs-input
-                                    class="w-full mt-1"
-                                    maxlength="250"
-                                    placeholder="Nota sobre el ajuste"
-                                    v-model.trim="form.nota"
-                                />
+                ">
+                                <label class="text-base opacity-75 font-medium">Nota:</label>
+                                <vs-input class="w-full mt-1" maxlength="250" placeholder="Nota sobre el ajuste"
+                                    v-model.trim="form.nota" />
                             </div>
                         </div>
                     </vx-card>
                 </div>
-                <div
-                    class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 mt-5"
-                >
+                <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 mt-5">
                     <vs-table :data="form.ajuste" noDataText="0 Resultados">
                         <template slot="header">
                             <h3>Lista de Artículos a Inventariar</h3>
@@ -112,11 +75,7 @@
                             <vs-th>Acciones</vs-th>
                         </template>
                         <template slot-scope="{ data }">
-                            <vs-tr
-                                :data="tr"
-                                :key="indextr"
-                                v-for="(tr, indextr) in data"
-                            >
+                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
                                 <vs-td :data="data[indextr].id">
                                     <span class="font-semibold">{{
                                         data[indextr].id
@@ -143,15 +102,10 @@
                                     }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].existencia_fisica">
-                                    <vs-input
-                                        :name="'existencia_fisica' + indextr"
-                                        data-vv-as=" "
-                                        data-vv-validate-on="blur"
-                                        v-validate="
-                                            'required|integer|min_value:' +
-                                                min_existencia
-                                        "
-                                        class="
+                                    <vs-input :name="'existencia_fisica' + indextr" data-vv-as=" "
+                                        data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
+                                            min_existencia
+                                            " class="
                       w-full
                       sm:w-10/12
                       md:w-8/12
@@ -161,38 +115,25 @@
                       ml-auto
                       mt-1
                       cantidad
-                    "
-                                        maxlength="4"
-                                        v-model="
-                                            form.ajuste[indextr]
-                                                .existencia_fisica
-                                        "
-                                    />
+                    " maxlength="4" v-model="form.ajuste[indextr]
+                        .existencia_fisica
+                        " />
                                     <div>
                                         <span class="text-danger text-xs">
                                             {{
                                                 errors.first(
                                                     "existencia_fisica" +
-                                                        indextr
+                                                    indextr
                                                 )
                                             }}
                                         </span>
                                     </div>
                                 </vs-td>
-                                <vs-td
-                                    hidden
-                                    :data="data[indextr].fecha_caducidad"
-                                >
+                                <vs-td hidden :data="data[indextr].fecha_caducidad">
                                     <span v-if="data[indextr].caduca_b == 1">
-                                        <flat-pickr
-                                            :name="'fecha_venta' + indextr"
-                                            data-vv-as=" "
-                                            v-validate="'required'"
-                                            :config="
-                                                configdateTimePickerFechasCaducidad
-                                            "
-                                            placeholder="Fecha de caducidad"
-                                            class="
+                                        <flat-pickr :name="'fecha_venta' + indextr" data-vv-as=" "
+                                            v-validate="'required'" :config="configdateTimePickerFechasCaducidad
+                                                " placeholder="Fecha de caducidad" class="
                         w-full
                         sm:w-10/12
                         md:w-8/12
@@ -202,12 +143,9 @@
                         ml-auto
                         mt-1
                         text-center
-                      "
-                                            v-model="
-                                                form.ajuste[indextr]
-                                                    .fecha_caducidad
-                                            "
-                                        />
+                      " v-model="form.ajuste[indextr]
+                        .fecha_caducidad
+                        " />
                                         <div>
                                             <span class="text-danger text-xs">
                                                 {{
@@ -224,9 +162,7 @@
                                     }}</span>
                                 </vs-td>
                                 <vs-td :data="data[indextr].nota">
-                                    <vs-input
-                                        :name="'nota' + indextr"
-                                        class="
+                                    <vs-input :name="'nota' + indextr" class="
                       w-full
                       sm:w-11/12
                       md:w-11/12
@@ -236,24 +172,17 @@
                       ml-auto
                       mt-1
                       cantidad
-                    "
-                                        maxlength="150"
-                                        v-model="form.ajuste[indextr].nota"
-                                    />
+                    " maxlength="150" v-model="form.ajuste[indextr].nota" />
                                 </vs-td>
                                 <vs-td :data="data[indextr].id">
                                     <div class="flex flex-start">
-                                        <img
-                                            class="cursor-pointer img-btn mr-auto ml-auto"
-                                            src="@assets/images/cancel.svg"
-                                            title="Remover"
-                                            @click="
+                                        <img class="cursor-pointer img-btn mr-auto ml-auto"
+                                            src="@assets/images/cancel.svg" title="Remover" @click="
                                                 deleteArticulo(
                                                     data[indextr],
                                                     indextr
                                                 )
-                                            "
-                                        />
+                                                " />
                                     </div>
                                 </vs-td>
                             </vs-tr>
@@ -272,50 +201,27 @@
                     </div>
                 </div>
                 <div class="w-full text-center">
-                    <vs-button
-                        class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2"
-                        color="success"
-                        @click="acceptAlert()"
-                    >
+                    <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2" color="success"
+                        @click="acceptAlert()">
                         <span>Ajustar Inventario</span>
                     </vs-button>
                 </div>
             </div>
         </vs-popup>
-        <Password
-            :show="operConfirmar"
-            :callback-on-success="callback"
-            @closeVerificar="closeChecker"
-            :accion="accionNombre"
-        ></Password>
-        <ConfirmarDanger
-            :z_index="'z-index58k'"
-            :show="openConfirmarSinPassword"
-            :callback-on-success="callBackConfirmar"
-            @closeVerificar="openConfirmarSinPassword = false"
-            :accion="accionConfirmarSinPassword"
-            :confirmarButton="botonConfirmarSinPassword"
-        ></ConfirmarDanger>
-        <ConfirmarAceptar
-            :show="openConfirmarAceptar"
-            :callback-on-success="callBackConfirmarAceptar"
-            @closeVerificar="openConfirmarAceptar = false"
-            :accion="
-                'He revisado la información y quiero registrar a este proveedor'
-            "
-            :confirmarButton="'Guardar Proveedor'"
-        ></ConfirmarAceptar>
-        <ArticulosBuscador
-            :show="openBuscador"
-            @closeBuscador="openBuscador = false"
-            @retornoArticulo="articuloSeleccionado"
-        ></ArticulosBuscador>
-        <Cantidad
-            :show="openCantidad"
-            :articulo="articulo"
-            @closeCantidad="openCantidad = false"
-            @retornoCantidad="retornoCantidad"
-        ></Cantidad>
+        <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+            @closeVerificar="closeChecker" :accion="accionNombre">
+        </Password>
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+            :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+            :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar a este proveedor'
+                " :confirmarButton="'Guardar Proveedor'"></ConfirmarAceptar>
+        <ArticulosBuscador v-if="openBuscador" :show="openBuscador" @closeBuscador="openBuscador = false"
+            @retornoArticulo="articuloSeleccionado">
+        </ArticulosBuscador>
+        <Cantidad v-if="openCantidad" :show="openCantidad" :articulo="articulo" @closeCantidad="openCantidad = false"
+            @retornoCantidad="retornoCantidad"></Cantidad>
     </div>
 </template>
 <script>
@@ -335,6 +241,7 @@ import { configdateTimePickerFechasCaducidad } from "@/VariablesGlobales";
 /**VARIABLES GLOBALES */
 
 export default {
+    name: "FormularioAjustes",
     components: {
         "v-select": vSelect,
         flatPickr,
@@ -356,35 +263,21 @@ export default {
         }
     },
     watch: {
-        show: function(newValue, oldValue) {
-            this.limpiarValidation();
-            if (newValue == true) {
-                this.imagen_anterior = require("@assets/images/no-image-icon.png");
-                //cargo nacionalidades
-                this.$refs["formulario"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cancelar();
-                };
-                this.$nextTick(() => {
-                    //this.$refs["nombre_comercial"].$el.querySelector("input").focus()
-                });
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     this.title = "Realizar Ajuste del Inventario";
-                })();
-            }
-        }
+                    this.$popupManager.register(this, this.cancelar, "input");
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
+        },
     },
     computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            }
-        },
-        min_existencia: function() {
+        min_existencia: function () {
             if (this.form.tipoAjuste.value == 1) {
                 return 1;
             } else return 0;
@@ -392,10 +285,10 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             configdateTimePickerFechasCaducidad: configdateTimePickerFechasCaducidad,
             openCantidad: false,
             openBuscador: false,
-            imagen_anterior: "",
             title: "",
             accionConfirmarSinPassword: "",
             botonConfirmarSinPassword: "",
@@ -504,7 +397,7 @@ export default {
                             if (
                                 ajuste.id == element.articulos_id &&
                                 ajuste.fecha_caducidad ==
-                                    element.fecha_caducidad &&
+                                element.fecha_caducidad &&
                                 ajuste.lote == element.lotes_id
                             ) {
                                 esta = 1;
@@ -593,7 +486,7 @@ export default {
                         }
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         },
         async ajustar_inventario() {
             //aqui mando guardar los datos
@@ -701,6 +594,18 @@ export default {
             this.operConfirmar = false;
         }
     },
-    created() {}
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>

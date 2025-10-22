@@ -1,20 +1,14 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup', 'popup-70', z_index]"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup', 'popup-70', z_index]" close="cancelar" :title="title" :active="localShow"
+      :ref="this.$options.name">
       <div class="form-group">
         <div class="title-form-group">
           <span>Datos del Proveedor</span>
         </div>
         <div class="form-group-content">
           <div class="flex flex-wrap px-2">
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-6/12
@@ -22,31 +16,21 @@
                 xl:w-6/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label>
                 Nombre Comercial / Empresa
                 <span>(*)</span>
               </label>
 
-              <vs-input
-                ref="nombre_comercial"
-                name="nombre_comercial"
-                data-vv-as=" "
-                v-validate.disabled="'required'"
-                maxlength="100"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Ej. Funeraria Aeternus"
-                v-model.trim="form.nombre_comercial"
-              />
+              <vs-input ref="nombre_comercial" name="nombre_comercial" data-vv-as=" " v-validate.disabled="'required'"
+                maxlength="100" type="text" class="w-full pb-1 pt-1" placeholder="Ej. Funeraria Aeternus"
+                v-model.trim="form.nombre_comercial" />
               <span>{{ errors.first("nombre_comercial") }}</span>
               <span v-if="this.errores.nombre_comercial">{{
                 errores.nombre_comercial[0]
-              }}</span>
+                }}</span>
             </div>
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-6/12
@@ -54,25 +38,17 @@
                 xl:w-6/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label> Razón Social </label>
-              <vs-input
-                name="razon_social"
-                maxlength="125"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Ej. Servicios integrales de Sinaloa SA DE CV"
-                v-model.trim="form.razon_social"
-              />
+              <vs-input name="razon_social" maxlength="125" type="text" class="w-full pb-1 pt-1"
+                placeholder="Ej. Servicios integrales de Sinaloa SA DE CV" v-model.trim="form.razon_social" />
               <span>{{ errors.first("razon_social") }}</span>
               <span v-if="this.errores.razon_social">{{
                 errores.razon_social[0]
-              }}</span>
+                }}</span>
             </div>
 
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-12/12
@@ -80,25 +56,17 @@
                 xl:w-12/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label> Domicilio Completo </label>
-              <vs-input
-                name="direccion"
-                maxlength="250"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Domicilio Completo"
-                v-model.trim="form.direccion"
-              />
+              <vs-input name="direccion" maxlength="250" type="text" class="w-full pb-1 pt-1"
+                placeholder="Domicilio Completo" v-model.trim="form.direccion" />
               <span>{{ errors.first("direccion") }}</span>
               <span v-if="this.errores.direccion">{{
                 errores.direccion[0]
-              }}</span>
+                }}</span>
             </div>
 
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-6/12
@@ -106,31 +74,21 @@
                 xl:w-6/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label>
                 Nombre del contacto
                 <span>(*)</span>
               </label>
 
-              <vs-input
-                name="nombre_contacto"
-                data-vv-as=" "
-                v-validate.disabled="'required'"
-                maxlength="125"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Ej. Juán Pérez"
-                v-model.trim="form.nombre_contacto"
-              />
+              <vs-input name="nombre_contacto" data-vv-as=" " v-validate.disabled="'required'" maxlength="125"
+                type="text" class="w-full pb-1 pt-1" placeholder="Ej. Juán Pérez" v-model.trim="form.nombre_contacto" />
               <span>{{ errors.first("nombre_contacto") }}</span>
               <span v-if="this.errores.nombre_contacto">{{
                 errores.nombre_contacto[0]
-              }}</span>
+                }}</span>
             </div>
 
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-6/12
@@ -138,20 +96,13 @@
                 xl:w-6/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label>Teléfono</label>
-              <vs-input
-                maxlength="25"
-                type="text"
-                class="w-full pb-1 pt-1"
-                placeholder="Ingrese el teléfono de contacto"
-                v-model.trim="form.telefono"
-              />
+              <vs-input maxlength="25" type="text" class="w-full pb-1 pt-1"
+                placeholder="Ingrese el teléfono de contacto" v-model.trim="form.telefono" />
             </div>
 
-            <div
-              class="
+            <div class="
                 w-full
                 sm:w-12/12
                 md:w-12/12
@@ -159,38 +110,19 @@
                 xl:w-12/12
                 px-2
                 input-text
-              "
-            >
+              ">
               <label>Correo Electrónico</label>
-              <vs-input
-                name="email"
-                data-vv-as=" "
-                v-validate.disabled="'email'"
-                maxlength="85"
-                type="email"
-                class="w-full pb-1 pt-1"
-                placeholder="Ingrese el email"
-                v-model.trim="form.email"
-              />
+              <vs-input name="email" data-vv-as=" " v-validate.disabled="'email'" maxlength="85" type="email"
+                class="w-full pb-1 pt-1" placeholder="Ingrese el email" v-model.trim="form.email" />
 
               <span>{{ errors.first("email") }}</span>
 
               <span v-if="this.errores.email">{{ errores.email[0] }}</span>
             </div>
 
-            <div
-              class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2"
-            >
-              <vs-textarea
-                height="200px"
-                maxlength="350"
-                size="large"
-                ref="nota"
-                type="text"
-                class="w-full pt-3 pb-3"
-                placeholder="Ingrese una nota..."
-                v-model.trim="form.nota"
-              />
+            <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2">
+              <vs-textarea height="200px" maxlength="350" size="large" ref="nota" type="text" class="w-full pt-3 pb-3"
+                placeholder="Ingrese una nota..." v-model.trim="form.nota" />
             </div>
 
             <!--fin de datos del titular-->
@@ -208,14 +140,8 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Datos</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Datos</span>
             <span class="" v-else>Modificar Datos</span>
           </vs-button>
         </div>
@@ -223,28 +149,15 @@
 
       <!--fin proveedor-->
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index62k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
-    <ConfirmarAceptar
-      :z_index="'z-index62k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar a este proveedor'"
-      :confirmarButton="'Guardar Proveedor'"
-    ></ConfirmarAceptar>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index62k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index62k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar a este proveedor'" :confirmarButton="'Guardar Proveedor'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -257,6 +170,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioProveedores",
   components: {
     Password,
     ConfirmarDanger,
@@ -283,37 +197,26 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      this.limpiarValidation();
-      if (newValue == true) {
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["nombre_comercial"].$el.querySelector("input").focus()
-        );
-        if (this.getTipoformulario == "modificar") {
-          this.title = "Modificar Proveedor";
-          /**se cargan los datos al formulario */
-          (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          if (this.getTipoformulario == "modificar") {
+            this.title = "Modificar Proveedor";
+            /**se cargan los datos al formulario */
             await this.get_proveedor_by_id(this.get_proveedor_id);
-          })();
+          } else {
+            this.title = "Registrar Proveedor";
+          }
+          this.$popupManager.register(this, this.cancelar, "nombre_comercial");
         } else {
-          this.title = "Registrar Proveedor";
+          this.$popupManager.unregister(this.$options.name);
         }
-      }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     getTipoformulario: {
       get() {
         return this.tipo;
@@ -333,6 +236,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       title: "",
       accionConfirmarSinPassword: "",
       botonConfirmarSinPassword: "",
@@ -417,7 +321,7 @@ export default {
             })();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     async guardar_proveedor() {
       //aqui mando guardar los datos
@@ -538,11 +442,15 @@ export default {
       this.$emit("closeVentana");
     },
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario == "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.$emit("closeVentana");
+      }
     },
     cerrarVentana() {
       this.openConfirmarSinPassword = false;
@@ -574,6 +482,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

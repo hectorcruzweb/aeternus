@@ -1,19 +1,11 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      class="forms-popup popup-80"
-      title="expediente de servicio funerario"
-      :active.sync="showVentana"
-      ref="lista_reportes"
-    >
+    <vs-popup :class="['forms-popup popup-80', z_index]" title="expediente de servicio funerario" :active="localShow"
+      :ref="this.$options.name">
       <div class="pb-6">
         <div class="flex flex-wrap">
           <div class="w-full">
-            <vs-table
-              :data="documentos"
-              noDataText="0 Resultados"
-              class="tabla-datos"
-            >
+            <vs-table :data="documentos" noDataText="0 Resultados" class="tabla-datos">
               <template slot="header">
                 <h3>Documentos de la Compra</h3>
               </template>
@@ -23,10 +15,7 @@
                 <vs-th>Seleccionar Documento</vs-th>
               </template>
               <template>
-                <vs-tr
-                  v-for="(documento, index_documento) in documentos"
-                  v-bind:key="documento.id"
-                >
+                <vs-tr v-for="(documento, index_documento) in documentos" v-bind:key="documento.id">
                   <vs-td>
                     <span class="font-bold">{{ index_documento + 1 }}</span>
                   </vs-td>
@@ -34,15 +23,10 @@
                     <span class="">{{ documento.documento }}</span>
                   </vs-td>
                   <vs-td>
-                    <img
-                      v-if="documento.tipo == 'pdf'"
-                      class="cursor-pointer img-btn-24 mx-2"
-                      src="@assets/images/pdf.svg"
-                      title="Consultar Documento"
-                      @click="
+                    <img v-if="documento.tipo == 'pdf'" class="cursor-pointer img-btn-24 mx-2"
+                      src="@assets/images/pdf.svg" title="Consultar Documento" @click="
                         openReporte(documento.documento, documento.url, '', '')
-                      "
-                    />
+                        " />
                   </vs-td>
                 </vs-tr>
               </template>
@@ -51,13 +35,9 @@
         </div>
       </div>
 
-      <Reporteador
-        :header="'consultar documentos de venta de propiedad'"
-        :show="openReportesLista"
-        :listadereportes="ListaReportes"
-        :request="request"
-        @closeReportes="openReportesLista = false"
-      ></Reporteador>
+      <Reporteador v-if="openReportesLista" :header="'consultar documentos de venta de propiedad'"
+        :show="openReportesLista" :listadereportes="ListaReportes" :request="request"
+        @closeReportes="openReportesLista = false"></Reporteador>
     </vs-popup>
   </div>
 </template>
@@ -65,6 +45,7 @@
 import Reporteador from "@pages/Reporteador";
 import funeraria from "@services/funeraria";
 export default {
+  name: "ReportesServicio",
   components: {
     Reporteador,
   },
@@ -82,28 +63,26 @@ export default {
       type: Number,
       required: true,
     },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index58k",
+    },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$refs["lista_reportes"].$el.querySelector(".vs-icon").onclick =
-          () => {
-            this.cancelar();
-          };
-      } else {
-        /**cerrar ventana */
-      }
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.$popupManager.register(this, this.cancelar, "input");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     get_compra_id: {
       get() {
         return this.id_compra;
@@ -115,6 +94,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       referencia: "",
       documentos: [
         {
@@ -140,7 +120,6 @@ export default {
       this.$emit("closeListaReportes");
       return;
     },
-
     openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
       this.ListaReportes = [];
       this.ListaReportes.push({
@@ -155,16 +134,18 @@ export default {
       this.$vs.loading.close();
     },
   },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
   mounted() {
-    //cerrando el confirmar con esc
-    document.body.addEventListener("keyup", (e) => {
-      if (e.keyCode === 27) {
-        if (this.showVentana) {
-          //CIERRO EL CONFIRMAR AL PRESONAR ESC
-          //this.cancelar();
-        }
-      }
-    });
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

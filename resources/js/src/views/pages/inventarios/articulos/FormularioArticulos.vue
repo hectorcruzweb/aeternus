@@ -1,12 +1,7 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup popup-50', z_index]"
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
+    <vs-popup :class="['forms-popup popup-70', z_index]" :fullscreen="true" close="cancelar" :title="title"
+      :active="localShow" :ref="this.$options.name">
       <div class="flex flex-wrap">
         <div class="w-full lg:w-5/12 px-2" hidden>
           <!--Contenido de la imagen-->
@@ -15,36 +10,17 @@
             <div class="form-group-content">
               <div class="flex flex-wrap">
                 <div class="w-full">
-                  <input
-                    ref="fileImage"
-                    type="file"
-                    name="fileToUpload"
-                    id="fileToUpload"
-                    class="hidden"
-                    accept="image/*"
-                    @change="display"
-                  />
+                  <input ref="fileImage" type="file" name="fileToUpload" id="fileToUpload" class="hidden"
+                    accept="image/*" @change="display" />
                   <div class="text-center w-auto">
-                    <img
-                      class="cursor-pointer img-articulo py-6 mr-auto ml-auto"
-                      :src="
-                        form.imagen != ''
-                          ? form.imagen
-                          : require('@assets/images/no-image-icon.png')
-                      "
-                      @click="imagen()"
-                    />
+                    <img class="cursor-pointer img-articulo py-6 mr-auto ml-auto" :src="form.imagen != ''
+                      ? form.imagen
+                      : require('@assets/images/no-image-icon.png')
+                      " @click="imagen()" />
                   </div>
                   <div v-if="verQuitarImagen" class="w-full text-center">
-                    <vs-button
-                      class="w-auto"
-                      color="danger"
-                      type="flat"
-                      @click="quitar"
-                    >
-                      <span class="font-medium text-base"
-                        >Dejar imagen anterior</span
-                      >
+                    <vs-button class="w-auto" color="danger" type="flat" @click="quitar">
+                      <span class="font-medium text-base">Dejar imagen anterior</span>
                     </vs-button>
                   </div>
                 </div>
@@ -67,17 +43,9 @@
                     <span>(*)</span>
                   </label>
 
-                  <vs-input
-                    ref="descripcion"
-                    name="descripcion"
-                    data-vv-as=" "
-                    v-validate.disabled="'required'"
-                    maxlength="100"
-                    type="text"
-                    class="w-full"
-                    placeholder="Ej. Ataúd metálico"
-                    v-model.trim="form.descripcion"
-                  />
+                  <vs-input ref="descripcion" name="descripcion" data-vv-as=" " v-validate.disabled="'required'"
+                    maxlength="100" type="text" class="w-full" placeholder="Ej. Ataúd metálico"
+                    v-model.trim="form.descripcion" />
 
                   <span>{{ errors.first("descripcion") }}</span>
 
@@ -91,18 +59,9 @@
                     Tipo de Artículo a Inventariar
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="tipo_articulos"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.tipo_articulo"
-                    class="w-full"
-                    v-validate:tipo_articulo_validacion_computed.immediate="
-                      'required'
-                    "
-                    name="tipo_articulo"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="tipo_articulos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.tipo_articulo" class="w-full" v-validate:tipo_articulo_validacion_computed.immediate="'required'
+                      " name="tipo_articulo" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
 
@@ -118,22 +77,12 @@
                     <span class="">(*)</span>
                   </label>
 
-                  <vs-input
-                    v-validate:requiere_codigo_barras.disabled="'required'"
-                    name="codigo_barras"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    :placeholder="
-                      form.tipo_articulo.value == 1
-                        ? 'Ej. 495394038130'
-                        : 'Se crea Automáticamente'
-                    "
-                    v-model="form.codigo_barras"
-                    maxlength="25"
-                    ref="codigo_barras"
-                    :disabled="!requiere_codigo_barras"
-                  />
+                  <vs-input v-validate:requiere_codigo_barras.disabled="'required'" name="codigo_barras" data-vv-as=" "
+                    type="text" class="w-full" :placeholder="form.tipo_articulo.value == 1
+                      ? 'Ej. 495394038130'
+                      : 'Se crea Automáticamente'
+                      " v-model="form.codigo_barras" maxlength="25" ref="codigo_barras"
+                    :disabled="!requiere_codigo_barras" />
 
                   <span class="">{{ errors.first("codigo_barras") }}</span>
 
@@ -146,18 +95,9 @@
                     Departamentos
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="departamentos"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.departamento"
-                    class="w-full"
-                    v-validate:departamento_validacion_computed.immediate="
-                      'required'
-                    "
-                    name="plan_validacion"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="departamentos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.departamento" class="w-full" v-validate:departamento_validacion_computed.immediate="'required'
+                      " name="plan_validacion" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
 
@@ -172,18 +112,9 @@
                     Categorías
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="categorias"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.categoria"
-                    class="w-full"
-                    v-validate:categoria_validacion_computed.immediate="
-                      'required'
-                    "
-                    name="categoria"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="categorias" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.categoria" class="w-full" v-validate:categoria_validacion_computed.immediate="'required'
+                      " name="categoria" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
 
@@ -210,18 +141,9 @@
                     Unidad de Servicio o Producto SAT
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="unidades_sat"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.unidad_sat"
-                    class="w-full"
-                    v-validate:unidad_sat_validacion_computed.immediate="
-                      'required'
-                    "
-                    name="antiguedad_validacion"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="unidades_sat" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.unidad_sat" class="w-full" v-validate:unidad_sat_validacion_computed.immediate="'required'
+                      " name="antiguedad_validacion" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
                   <span class="">
@@ -236,16 +158,9 @@
                     Unidad del SAT
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="unidades"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.unidad"
-                    class="w-full"
-                    v-validate:unidad_validacion_computed.immediate="'required'"
-                    name="unidades_sat"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="unidades" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="form.unidad"
+                    class="w-full" v-validate:unidad_validacion_computed.immediate="'required'" name="unidades_sat"
+                    data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
                   <span class="">{{ errors.first("unidades_sat") }}</span>
@@ -259,15 +174,8 @@
                     Grava IVA
                     <span class="">(*)</span>
                   </label>
-                  <v-select
-                    :options="opciones_sino"
-                    :clearable="false"
-                    :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="form.opcion_iva"
-                    class="w-full"
-                    name="opcion_iva"
-                    data-vv-as=" "
-                  >
+                  <v-select :options="opciones_sino" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                    v-model="form.opcion_iva" class="w-full" name="opcion_iva" data-vv-as=" ">
                     <div slot="no-options">Seleccione 1</div>
                   </v-select>
                   <span class="">
@@ -283,17 +191,9 @@
                     Mínimo Inventario
                     <span class="">(*)</span>
                   </label>
-                  <vs-input
-                    v-validate.disabled="'required|min_value:1|integer'"
-                    name="minimo_inventario"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    placeholder="Cantidad mínima de inventario"
-                    v-model="form.minimo_inventario"
-                    maxlength="5"
-                    :disabled="this.form.tipo_articulo.value == 2"
-                  />
+                  <vs-input v-validate.disabled="'required|min_value:1|integer'" name="minimo_inventario" data-vv-as=" "
+                    type="text" class="w-full" placeholder="Cantidad mínima de inventario"
+                    v-model="form.minimo_inventario" maxlength="5" :disabled="this.form.tipo_articulo.value == 2" />
 
                   <span class="">{{ errors.first("minimo_inventario") }}</span>
 
@@ -306,20 +206,11 @@
                     Máximo Inventario
                     <span class="">(*)</span>
                   </label>
-                  <vs-input
-                    v-validate.disabled="
-                      'required|integer|min_value:' +
-                      this.form.minimo_inventario
-                    "
-                    name="maximo_inventario"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    placeholder="Cantidad máxima de inventario"
-                    v-model="form.maximo_inventario"
-                    maxlength="12"
-                    :disabled="this.form.tipo_articulo.value == 2"
-                  />
+                  <vs-input v-validate.disabled="'required|integer|min_value:' +
+                    this.form.minimo_inventario
+                    " name="maximo_inventario" data-vv-as=" " type="text" class="w-full"
+                    placeholder="Cantidad máxima de inventario" v-model="form.maximo_inventario" maxlength="12"
+                    :disabled="this.form.tipo_articulo.value == 2" />
                   <span class="">{{ errors.first("maximo_inventario") }}</span>
                   <span class="" v-if="this.errores.maximo_inventario">{{
                     errores.maximo_inventario[0]
@@ -331,16 +222,8 @@
                     $ Costo Compra
                     <span class="">(*)</span>
                   </label>
-                  <vs-input
-                    v-validate.disabled="'required|decimal:2'"
-                    name="costo_compra"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    placeholder="Costo neto de compra"
-                    v-model="form.costo_compra"
-                    maxlength="16"
-                  />
+                  <vs-input v-validate.disabled="'required|decimal:2'" name="costo_compra" data-vv-as=" " type="text"
+                    class="w-full" placeholder="Costo neto de compra" v-model="form.costo_compra" maxlength="16" />
                   <span class="">{{ errors.first("costo_compra") }}</span>
                   <span class="" v-if="this.errores.costo_compra">{{
                     errores.costo_compra[0]
@@ -352,16 +235,8 @@
                     $ Costo Neto de Venta
                     <span class="">(*)</span>
                   </label>
-                  <vs-input
-                    v-validate.disabled="'required|decimal:2'"
-                    name="costo_venta"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full"
-                    placeholder="Costo neto de venta"
-                    v-model="form.costo_venta"
-                    maxlength="16"
-                  />
+                  <vs-input v-validate.disabled="'required|decimal:2'" name="costo_venta" data-vv-as=" " type="text"
+                    class="w-full" placeholder="Costo neto de venta" v-model="form.costo_venta" maxlength="16" />
                   <span class="">{{ errors.first("costo_venta") }}</span>
                   <span class="" v-if="this.errores.costo_venta">{{
                     errores.costo_venta[0]
@@ -376,16 +251,8 @@
             <div class="form-group-content">
               <div class="flex flex-wrap">
                 <div class="w-full input-text px-2">
-                  <vs-textarea
-                    height="120px"
-                    :rows="5"
-                    size="large"
-                    ref="nota"
-                    type="text"
-                    class="w-full"
-                    placeholder="Ingrese una nota..."
-                    v-model.trim="form.nota"
-                  />
+                  <vs-textarea height="120px" :rows="5" size="large" ref="nota" type="text" class="w-full"
+                    placeholder="Ingrese una nota..." v-model.trim="form.nota" />
                 </div>
               </div>
             </div>
@@ -401,14 +268,8 @@
         </div>
 
         <div class="w-full">
-          <vs-button
-            class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-            color="primary"
-            @click="acceptAlert()"
-          >
-            <span class="" v-if="this.getTipoformulario == 'agregar'"
-              >Guardar Artículo</span
-            >
+          <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="primary" @click="acceptAlert()">
+            <span class="" v-if="this.getTipoformulario == 'agregar'">Guardar Artículo</span>
             <span class="" v-else>Modificar Artículo</span>
           </vs-button>
         </div>
@@ -416,29 +277,16 @@
 
       <!--fin proveedor-->
     </vs-popup>
-    <Password
-      :show="operConfirmar"
-      :callback-on-success="callback"
-      @closeVerificar="closeChecker"
-      :accion="accionNombre"
-    ></Password>
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
+    <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback" @closeVerificar="closeChecker"
+      :accion="accionNombre"></Password>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
 
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar a este artículo'"
-      :confirmarButton="'Guardar Artículo'"
-    ></ConfirmarAceptar>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index58k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar a este artículo'" :confirmarButton="'Guardar Artículo'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -451,6 +299,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormularioArticulos",
   components: {
     "v-select": vSelect,
     Password,
@@ -478,19 +327,11 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      this.limpiarValidation();
-      if (newValue == true) {
-        this.imagen_anterior = require("@assets/images/no-image-icon.png");
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() =>
-          this.$refs["nombre_comercial"].$el.querySelector("input").focus()
-        );
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.imagen_anterior = require("@assets/images/no-image-icon.png");
           await this.get_sat_unidades();
           await this.get_unidades();
           await this.get_categorias();
@@ -502,8 +343,12 @@ export default {
             this.form.opcion_caducidad = this.opciones_sino[1];
             this.title = "Registrar Artículo/Servicio";
           }
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, "input");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
     "form.departamento": function (newValue, oldValue) {
       if (newValue.value != "") {
@@ -543,14 +388,6 @@ export default {
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
     getTipoformulario: {
       get() {
         return this.tipo;
@@ -621,6 +458,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       imagen_anterior: "",
       title: "",
       accionConfirmarSinPassword: "",
@@ -995,7 +833,7 @@ export default {
             })();
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     },
     async guardar_articulo() {
       //aqui mando guardar los datos
@@ -1136,11 +974,15 @@ export default {
       this.$emit("closeVentana");
     },
     cancelar() {
-      this.botonConfirmarSinPassword = "Salir y limpiar";
-      this.accionConfirmarSinPassword =
-        "Esta acción limpiará los datos que capturó en el formulario.";
-      this.openConfirmarSinPassword = true;
-      this.callBackConfirmar = this.cerrarVentana;
+      if (this.getTipoformulario == "modificar") {
+        this.botonConfirmarSinPassword = "Salir y limpiar";
+        this.accionConfirmarSinPassword =
+          "Esta acción limpiará los datos que capturó en el formulario.";
+        this.openConfirmarSinPassword = true;
+        this.callBackConfirmar = this.cerrarVentana;
+      } else {
+        this.cerrarVentana();
+      }
     },
     cerrarVentana() {
       this.openConfirmarSinPassword = false;
@@ -1206,6 +1048,18 @@ export default {
       this.operConfirmar = false;
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

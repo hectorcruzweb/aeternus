@@ -1,36 +1,22 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup bg-content-theme', z_index]"
-      fullscreen
-      title="Catálogo de articulos registrados"
-      :active.sync="showVentana"
-      ref="buscador_articulo"
-    >
+    <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen title="Catálogo de articulos registrados"
+      :active="localShow" :ref="this.$options.name">
       <div class="w-full text-right">
-        <vs-button
-          class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-          color="primary"
-          @click="verFormularioArticulos = true"
-        >
+        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+          @click="verFormularioArticulos = true">
           <span>Registrar Artículo</span>
         </vs-button>
       </div>
 
       <!--inicio de buscador-->
       <div class="py-3">
-        <vx-card
-          no-radius
-          title="Filtros de selección"
-          refresh-content-action
-          @refresh="reset"
-          :collapse-action="false"
-        >
+        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+          :collapse-action="false">
           <template slot="no-body">
             <div>
               <div class="flex flex-wrap px-4 py-4">
-                <div
-                  class="
+                <div class="
                     w-full
                     sm:w-12/12
                     md:w-2/12
@@ -38,22 +24,11 @@
                     xl:w-2/12
                     px-2
                     input-text
-                  "
-                >
-                  <label class="text-sm opacity-75 font-bold"
-                    >Núm. articulo</label
-                  >
-                  <vs-input
-                    name="num_articulo"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full pb-1 pt-1"
-                    placeholder="Ej. 1258"
-                    maxlength="6"
-                    v-model.trim="serverOptions.id_articulo"
-                    v-on:keyup.enter="get_data('id_articulo', 1)"
-                    v-on:blur="get_data('id_articulo', 1, 'blur')"
-                  />
+                  ">
+                  <label class="text-sm opacity-75 font-bold">Núm. articulo</label>
+                  <vs-input name="num_articulo" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                    placeholder="Ej. 1258" maxlength="6" v-model.trim="serverOptions.id_articulo"
+                    v-on:keyup.enter="get_data('id_articulo', 1)" v-on:blur="get_data('id_articulo', 1, 'blur')" />
                   <div>
                     <span class="text-danger text-sm">
                       {{ errors.first("num_articulo") }}
@@ -61,8 +36,7 @@
                   </div>
                   <div class="mt-2"></div>
                 </div>
-                <div
-                  class="
+                <div class="
                     w-full
                     sm:w-12/12
                     md:w-2/12
@@ -70,22 +44,11 @@
                     xl:w-2/12
                     px-2
                     input-text
-                  "
-                >
-                  <label class="text-sm opacity-75 font-bold"
-                    >Código de Barras</label
-                  >
-                  <vs-input
-                    name="codigo_barras"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full pb-1 pt-1"
-                    placeholder="ej. 0000001"
-                    maxlength="13"
-                    v-model.trim="serverOptions.codigo_barras"
-                    v-on:keyup.enter="get_data('codigo_barras', 1)"
-                    v-on:blur="get_data('codigo_barras', 1, 'blur')"
-                  />
+                  ">
+                  <label class="text-sm opacity-75 font-bold">Código de Barras</label>
+                  <vs-input name="codigo_barras" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                    placeholder="ej. 0000001" maxlength="13" v-model.trim="serverOptions.codigo_barras"
+                    v-on:keyup.enter="get_data('codigo_barras', 1)" v-on:blur="get_data('codigo_barras', 1, 'blur')" />
                   <div>
                     <span class="text-danger text-sm">
                       {{ errors.first("codigo_barras") }}
@@ -93,8 +56,7 @@
                   </div>
                   <div class="mt-2"></div>
                 </div>
-                <div
-                  class="
+                <div class="
                     w-full
                     sm:w-12/12
                     md:w-8/12
@@ -102,22 +64,11 @@
                     xl:w-8/12
                     px-2
                     input-text
-                  "
-                >
-                  <label class="text-sm opacity-75 font-bold"
-                    >Nombre del Artículo</label
-                  >
-                  <vs-input
-                    name="nombre_articulo"
-                    data-vv-as=" "
-                    type="text"
-                    class="w-full pb-1 pt-1"
-                    placeholder="Ej. Ataúd de Madera"
-                    maxlength="12"
-                    v-model.trim="serverOptions.articulo"
-                    v-on:keyup.enter="get_data('articulo', 1)"
-                    v-on:blur="get_data('articulo', 1, 'blur')"
-                  />
+                  ">
+                  <label class="text-sm opacity-75 font-bold">Nombre del Artículo</label>
+                  <vs-input name="nombre_articulo" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                    placeholder="Ej. Ataúd de Madera" maxlength="12" v-model.trim="serverOptions.articulo"
+                    v-on:keyup.enter="get_data('articulo', 1)" v-on:blur="get_data('articulo', 1, 'blur')" />
                   <div>
                     <span class="text-danger text-sm">
                       {{ errors.first("nombre_articulo") }}
@@ -132,23 +83,14 @@
 
         <div class="resultados_articulos mt-10">
           <div class="w-full text-right">
-            <vs-button
-              class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-              color="success"
-              @click="SeleccionarTodos"
-            >
+            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
+              @click="SeleccionarTodos">
               <span>Seleccionar Todos</span>
             </vs-button>
           </div>
 
-          <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page"
-            :data="articulos"
-            stripe
-            noDataText="0 Resultados"
-            class="tabla-datos mt-4"
-          >
+          <vs-table :sst="true" :max-items="serverOptions.per_page" :data="articulos" stripe noDataText="0 Resultados"
+            class="tabla-datos mt-4">
             <template slot="header">
               <h3>Lista actualizada de artículos registrados</h3>
             </template>
@@ -180,46 +122,31 @@
                   }}</span>
                 </vs-td>
                 <vs-td :data="data[indextr].precio_venta">
-                  <span class="uppercase"
-                    >$
+                  <span class="uppercase">$
                     {{
                       data[indextr].precio_venta | numFormat("0,000.00")
-                    }}</span
-                  >
+                    }}</span>
                 </vs-td>
                 <vs-td :data="data[indextr].existencia">
                   <span class="uppercase">{{ data[indextr].existencia }}</span>
                 </vs-td>
                 <vs-td :data="data[indextr].id">
                   <div class="flex flex-start">
-                    <img
-                      width="25"
-                      class="cursor-pointer ml-auto mr-auto"
-                      src="@assets/images/checked.svg"
-                      @click="retornarSeleccion(data[indextr])"
-                    />
+                    <img width="25" class="cursor-pointer ml-auto mr-auto" src="@assets/images/checked.svg"
+                      @click="retornarSeleccion(data[indextr])" />
                   </div>
                 </vs-td>
               </vs-tr>
             </template>
           </vs-table>
           <div>
-            <vs-pagination
-              v-if="verPaginado"
-              :total="this.total"
-              v-model="actual"
-              class="mt-3"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
           </div>
         </div>
       </div>
-      <FormularioArticulos
-        :tipo="'agregar'"
-        :show="verFormularioArticulos"
-        @closeVentana="verFormularioArticulos = false"
-        @retornar_id="retorno_id"
-        :z_index="'z-index55k'"
-      ></FormularioArticulos>
+      <FormularioArticulos v-if="verFormularioArticulos" :tipo="'agregar'" :show="verFormularioArticulos"
+        @closeVentana="verFormularioArticulos = false" @retornar_id="retorno_id" :z_index="'z-index56k'">
+      </FormularioArticulos>
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -232,6 +159,7 @@ import Datepicker from "vuejs-datepicker";
 import { es } from "vuejs-datepicker/dist/locale";
 
 export default {
+  name: "SearcherArticulos",
   components: {
     "v-select": vSelect,
     Datepicker,
@@ -255,39 +183,30 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data("", this.actual);
     },
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$nextTick(() =>
-          this.$refs["nombre_articulo"].$el.querySelector("input").focus()
-        );
-        this.$refs["buscador_articulo"].$el.querySelector(".vs-icon").onclick =
-          () => {
-            this.cancelar();
-          };
-
-        this.get_data("", 1);
-      } else {
-        /**cerrar y limpiar el formulario */
-        this.serverOptions.id_articulo = "";
-        this.serverOptions.articulo = "";
-        this.serverOptions.codigo_barras = "";
-        this.serverOptions.celular = "";
-        this.serverOptions.nacionalidad = this.nacionalidades[0];
-      }
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.get_data("", 1);
+          this.$popupManager.register(this, this.cancelar, "nombre_articulo");
+        } else {
+          /**cerrar y limpiar el formulario */
+          this.serverOptions.id_articulo = "";
+          this.serverOptions.articulo = "";
+          this.serverOptions.codigo_barras = "";
+          this.serverOptions.celular = "";
+          this.serverOptions.nacionalidad = this.nacionalidades[0];
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
   },
   data() {
     return {
+      localShow: false,
       verFormularioArticulos: false,
       selected: [],
       nacionalidades: [],
@@ -382,26 +301,48 @@ export default {
           }
         });
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
     retornarSeleccion(datos) {
       let dato = [];
       dato.push(datos);
       /**retorna los datos seleccionados a la venta que los solicita */
       this.$emit("retornoArticulo", dato);
-      this.$emit("closeBuscador");
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$emit("closeBuscador");
+        }, 50);
+      });
     },
     SeleccionarTodos() {
       /**retorna todos los articulos que se listan los datos seleccionados */
       this.$emit("retornoArticulo", this.articulos);
-      this.$emit("closeBuscador");
+
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$emit("closeBuscador");
+        }, 50);
+      });
+
     },
 
     retorno_id(dato) {
       this.get_data("", this.actual);
     },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>

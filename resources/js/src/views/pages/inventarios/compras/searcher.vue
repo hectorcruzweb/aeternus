@@ -1,60 +1,32 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup popup-85', z_index]"
-      title="Catálogo de proveedores registrados"
-      :active.sync="showVentana"
-      ref="buscador_proveedor"
-    >
+    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de proveedores registrados" :active="localShow"
+      :ref="this.$options.name">
       <div class="w-full text-right">
-        <vs-button
-          class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-          color="primary"
-          @click="verFormularioProveedores = true"
-        >
+        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+          @click="verFormularioProveedores = true">
           <span>Registrar Proveedor</span>
         </vs-button>
       </div>
 
       <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-        <vx-card
-          no-radius
-          title="Filtros de selección"
-          refresh-content-action
-          @refresh="reset"
-          :collapse-action="false"
-        >
+        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+          :collapse-action="false">
           <div class="flex flex-wrap pb-6">
             <div class="w-full input-text xl:w-3/12 px-2">
               <label>Núm. Proveedor</label>
-              <vs-input
-                name="num_proveedor"
-                data-vv-as=" "
-                type="text"
-                class="w-full"
-                placeholder="Ej. 1258"
-                maxlength="6"
-                v-model.trim="serverOptions.numero_control"
-                v-on:keyup.enter="get_data('numero_control', 1)"
-                v-on:blur="get_data('numero_control', 1, 'blur')"
-              />
+              <vs-input name="num_proveedor" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
+                maxlength="6" v-model.trim="serverOptions.numero_control"
+                v-on:keyup.enter="get_data('numero_control', 1)" v-on:blur="get_data('numero_control', 1, 'blur')" />
               <span class="">{{ errors.first("num_proveedor") }}</span>
             </div>
 
             <div class="w-full input-text xl:w-9/12 px-2">
               <label>Nombre</label>
-              <vs-input
-                ref="nombre_proveedor"
-                name="nombre_proveedor"
-                data-vv-as=" "
-                type="text"
-                class="w-full"
-                placeholder="Ej. Juan Pérez"
-                maxlength="12"
-                v-model.trim="serverOptions.nombre_comercial"
+              <vs-input ref="nombre_proveedor" name="nombre_proveedor" data-vv-as=" " type="text" class="w-full"
+                placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.nombre_comercial"
                 v-on:keyup.enter="get_data('nombre_comercial', 1)"
-                v-on:blur="get_data('nombre_comercial', 1, 'blur')"
-              />
+                v-on:blur="get_data('nombre_comercial', 1, 'blur')" />
               <span class="">{{ errors.first("nombre_proveedor") }}</span>
             </div>
           </div>
@@ -64,14 +36,8 @@
       <!--inicio de buscador-->
       <div class="py-6">
         <div class="resultados_proveedores py-6">
-          <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="proveedores"
-            stripe
-            noDataText="0 Resultados"
-            class="tabla-datos"
-          >
+          <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="proveedores" stripe
+            noDataText="0 Resultados" class="tabla-datos">
             <template slot="header">
               <h3>Lista actualizada de proveedores registrados</h3>
             </template>
@@ -100,39 +66,26 @@
 
                 <vs-td :data="data[indextr].id_user">
                   <div class="flex justify-center">
-                    <img
-                      class="cursor-pointer img-btn-20 mx-3"
-                      src="@assets/images/checked.svg"
-                      @click="
-                        retornarSeleccion(
-                          data[indextr].nombre_comercial,
-                          data[indextr].id,
-                          data[indextr]
-                        )
-                      "
-                    />
+                    <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
+                      retornarSeleccion(
+                        data[indextr].nombre_comercial,
+                        data[indextr].id,
+                        data[indextr]
+                      )
+                      " />
                   </div>
                 </vs-td>
               </vs-tr>
             </template>
           </vs-table>
           <div>
-            <vs-pagination
-              v-if="verPaginado"
-              :total="this.total"
-              v-model="actual"
-              class="mt-6"
-            ></vs-pagination>
+            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
           </div>
         </div>
       </div>
-      <FormularioProveedores
-        :tipo="'agregar'"
-        :z_index="'z-index58k'"
-        :show="verFormularioProveedores"
-        @closeVentana="verFormularioProveedores = false"
-        @retornar_id="retorno_id"
-      ></FormularioProveedores>
+      <FormularioProveedores v-if="verFormularioProveedores" :tipo="'agregar'" :z_index="'z-index58k'"
+        :show="verFormularioProveedores" @closeVentana="verFormularioProveedores = false" @retornar_id="retorno_id">
+      </FormularioProveedores>
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -145,6 +98,7 @@ import Datepicker from "vuejs-datepicker";
 import { es } from "vuejs-datepicker/dist/locale";
 
 export default {
+  name: "ProveedoresSearcher",
   components: {
     "v-select": vSelect,
     Datepicker,
@@ -168,36 +122,28 @@ export default {
     actual: function (newValue, oldValue) {
       this.get_data("", this.actual);
     },
-    show: function (newValue, oldValue) {
-      if (newValue == true) {
-        this.$nextTick(() =>
-          this.$refs["nombre_proveedor"].$el.querySelector("input").focus()
-        );
-        this.$refs["buscador_proveedor"].$el.querySelector(".vs-icon").onclick =
-          () => {
-            this.cancelar();
-          };
-        this.get_data("", 1);
-      } else {
-        /**cerrar y limpiar el formulario */
-        this.serverOptions.numero_control = "";
-        this.serverOptions.nombre_comercial = "";
-        this.serverOptions.rfc = "";
-      }
-    },
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          this.get_data("", 1);
+          this.$popupManager.register(this, this.cancelar, "nombre_proveedor");
+        } else {
+          /**cerrar y limpiar el formulario */
+          this.serverOptions.numero_control = "";
+          this.serverOptions.nombre_comercial = "";
+          this.serverOptions.rfc = "";
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
+    }
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
   },
   data() {
     return {
+      localShow: false,
       verFormularioProveedores: false,
       selected: [],
       nacionalidades: [],
@@ -287,9 +233,9 @@ export default {
           }
         });
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
     retornarSeleccion(nombre = "", id = "", todos_los_datos = []) {
       /**retorna los datos seleccionados a la venta que los solicita */
       this.$emit("retornoCliente", {
@@ -297,11 +243,28 @@ export default {
         nombre: nombre,
         datos: todos_los_datos,
       });
-      this.$emit("closeBuscador");
+      this.$nextTick(() => {
+        setTimeout(() => {
+          this.$emit("closeBuscador");
+        }, 50);
+      });
     },
     retorno_id(dato) {
       this.get_data("", this.actual);
     },
+  },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
   },
 };
 </script>

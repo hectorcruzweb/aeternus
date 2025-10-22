@@ -9,7 +9,6 @@ consultar estados de cuenta15
 para saber si se debe desplegar algun boton o accion se hace llamando la funcion global
 this.$modulo.permiso(this.$route.path,11)
 con la ruta especifica del modulo que se desea consultar y el id del permiso
-
 -->
 <template>
     <div>
@@ -135,13 +134,15 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
         </div>
         <pre ref="pre"></pre>
 
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
+        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
             :accion="accionNombre">
         </Password>
-        <Reporteador :header="'consultar reporte de venta'" :show="openReportesLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="openReportesLista = false"></Reporteador>
-        <FormularioProveedores :id_proveedor="id_proveedor_modificar" :tipo="tipoFormulario"
-            :show="verFormularioProveedores" @closeVentana="verFormularioProveedores = false" @retornar_id="retorno_id">
+        <Reporteador v-if="openReportesLista" :header="'consultar reporte de venta'" :show="openReportesLista"
+            :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+        </Reporteador>
+        <FormularioProveedores v-if="verFormularioProveedores" :id_proveedor="id_proveedor_modificar"
+            :tipo="tipoFormulario" :show="verFormularioProveedores" @closeVentana="verFormularioProveedores = false"
+            @retornar_id="retorno_id">
         </FormularioProveedores>
     </div>
 </template>
@@ -163,6 +164,7 @@ import { mostrarOptions, PermisosModulo } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 
 export default {
+    name: "ProveedoresList",
     components: {
         "v-select": vSelect,
         Password,
@@ -455,8 +457,21 @@ export default {
             }
         },
     },
+    // Lifecycle hooks
     created() {
-        this.get_data(this.actual);
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+        (async () => {
+            await this.get_data(this.actual);
+        })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

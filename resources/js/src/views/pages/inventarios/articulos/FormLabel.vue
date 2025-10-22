@@ -1,17 +1,8 @@
-<template >
+<template>
   <div class="centerx">
-    <vs-popup
-      :class="['forms-popup bg-content-theme', z_index]"
-      fullscreen
-      close="cancelar"
-      :title="title"
-      :active.sync="showVentana"
-      ref="formulario"
-    >
-      <div
-        class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2"
-        v-if="form.lotes[0]"
-      >
+    <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen close="cancelar" :title="title"
+      :active="localShow" :ref="this.$options.name">
+      <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2" v-if="form.lotes[0]">
         <vx-card no-radius>
           <div class="flex flex-wrap">
             <div class="w-full mb-1 px-2">
@@ -19,28 +10,22 @@
                 Cantidad de etiquetas a imprimir
               </span>
             </div>
-            <div
-              class="w-full sm:w-12/12 md:w-8/12 lg:w-8/12 xl:w-8/12 mb-1 px-2"
-            >
+            <div class="w-full sm:w-12/12 md:w-8/12 lg:w-8/12 xl:w-8/12 mb-1 px-2">
               <div class="mt-3">
                 <div class="text-left">
                   <label class="text-md font-bold opacity-75">Total </label>
                 </div>
                 <div class="text-left mt-3">
-                  <label
-                    :class="[
-                      'text-md opacity-75 total_etiquetas',
-                      total_etiquetas > 1500 ? 'text-danger' : '',
-                    ]"
-                    >{{ total_etiquetas }}
+                  <label :class="[
+                    'text-md opacity-75 total_etiquetas',
+                    total_etiquetas > 1500 ? 'text-danger' : '',
+                  ]">{{ total_etiquetas }}
                   </label>
                 </div>
               </div>
             </div>
 
-            <div
-              class="w-full sm:w-12/12 md:w-4/12 lg:w-4/12 xl:w-4/12 mb-1 px-2"
-            >
+            <div class="w-full sm:w-12/12 md:w-4/12 lg:w-4/12 xl:w-4/12 mb-1 px-2">
               <div class="w-full text-right">
                 <vs-button color="success" @click="openReporte()">
                   <span>Imprimir Seleccionados</span>
@@ -51,23 +36,13 @@
         </vx-card>
       </div>
       <!--comienzo de tabla-->
-      <vs-table
-        :sst="true"
-        noDataText="0 Resultados"
-        :data="form.lotes"
-        class="tabla-datos"
-      >
+      <vs-table :sst="true" noDataText="0 Resultados" :data="form.lotes" class="tabla-datos">
         <template slot="header">
           <h3>Lotes Disponibles del artículo</h3>
         </template>
         <template slot="thead">
           <vs-th>
-            <vs-checkbox
-              ref="imprimirtodos"
-              color="primary"
-              class="mt-3 ml-auto mr-auto"
-              v-model="todos"
-            ></vs-checkbox>
+            <vs-checkbox ref="imprimirtodos" color="primary" class="mt-3 ml-auto mr-auto" v-model="todos"></vs-checkbox>
           </vs-th>
           <vs-th>Clave Artículo</vs-th>
           <vs-th>Descripción</vs-th>
@@ -79,17 +54,13 @@
         <template slot-scope="{ data }">
           <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
             <vs-td :data="data[indextr].id">
-              <vs-checkbox
-                ref="imprimir"
-                color="primary"
-                class="mt-3 ml-auto mr-auto"
-                v-model="data[indextr].imprimir"
-              ></vs-checkbox>
+              <vs-checkbox ref="imprimir" color="primary" class="mt-3 ml-auto mr-auto"
+                v-model="data[indextr].imprimir"></vs-checkbox>
             </vs-td>
             <vs-td :data="data[indextr].id">
               <span class="font-semibold">{{
                 data[indextr].articulos_id
-              }}</span>
+                }}</span>
             </vs-td>
             <vs-td :data="data[indextr].id">
               <span class="">{{ data[indextr].descripcion }}</span>
@@ -101,17 +72,11 @@
               <span class="">{{ data[indextr].existencia }}</span>
             </vs-td>
             <vs-td class="w-2/12">
-              <vs-input
-                :name="'cantidad' + indextr"
-                data-vv-as=" "
-                data-vv-validate-on="blur"
-                v-validate="
-                  'required|integer|min_value:' +
-                  0 +
-                  '|max_value:' +
-                  form.lotes[indextr].existencia
-                "
-                class="
+              <vs-input :name="'cantidad' + indextr" data-vv-as=" " data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
+                0 +
+                '|max_value:' +
+                form.lotes[indextr].existencia
+                " class="
                   w-full
                   sm:w-10/12
                   md:w-8/12
@@ -121,21 +86,15 @@
                   ml-auto
                   mt-1
                   cantidad
-                "
-                maxlength="4"
-                v-model="form.lotes[indextr].cantidad_imprimir"
-              />
+                " maxlength="4" v-model="form.lotes[indextr].cantidad_imprimir" />
               <div>
                 <span class="text-danger text-xs">{{
                   errors.first("cantidad" + indextr)
-                }}</span>
+                  }}</span>
               </div>
 
               <div>
-                <span
-                  class="text-danger text-xs"
-                  v-if="errores['lotes.' + indextr + '.cantidad']"
-                >
+                <span class="text-danger text-xs" v-if="errores['lotes.' + indextr + '.cantidad']">
                   {{ errores["lotes." + indextr + ".cantidad"][0] }}
                 </span>
               </div>
@@ -143,14 +102,10 @@
 
             <vs-td :data="data[indextr].id" hidden>
               <div class="flex flex-start">
-                <img
-                  class="cursor-pointer img-btn-32 mr-auto ml-auto"
-                  src="@assets/images/printer.svg"
-                  title="Habilitar"
-                  @click="
+                <img class="cursor-pointer img-btn-32 mr-auto ml-auto" src="@assets/images/printer.svg"
+                  title="Habilitar" @click="
                     altaArticulo(data[indextr].id, data[indextr].descripcion)
-                  "
-                />
+                    " />
               </div>
             </vs-td>
           </vs-tr>
@@ -159,30 +114,16 @@
       <!--fin de tabla-->
     </vs-popup>
 
-    <ConfirmarDanger
-      :z_index="'z-index58k'"
-      :show="openConfirmarSinPassword"
-      :callback-on-success="callBackConfirmar"
-      @closeVerificar="openConfirmarSinPassword = false"
-      :accion="accionConfirmarSinPassword"
-      :confirmarButton="botonConfirmarSinPassword"
-    ></ConfirmarDanger>
-    <Reporteador
-      :header="'Impresión de inventario'"
-      :show="openReportesLista"
-      :listadereportes="ListaReportes"
-      :request="request"
-      @closeReportes="openReportesLista = false"
-      :z_index="'z-index68k'"
-    ></Reporteador>
-    <ConfirmarAceptar
-      :z_index="'z-index58k'"
-      :show="openConfirmarAceptar"
-      :callback-on-success="callBackConfirmarAceptar"
-      @closeVerificar="openConfirmarAceptar = false"
-      :accion="'He revisado la información y quiero registrar a este artículo'"
-      :confirmarButton="'Guardar Artículo'"
-    ></ConfirmarAceptar>
+    <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index58k'" :show="openConfirmarSinPassword"
+      :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+      :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+    <Reporteador v-if="openReportesLista" :header="'Impresión de inventario'" :show="openReportesLista"
+      :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false"
+      :z_index="'z-index68k'"></Reporteador>
+    <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index58k'" :show="openConfirmarAceptar"
+      :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+      :accion="'He revisado la información y quiero registrar a este artículo'" :confirmarButton="'Guardar Artículo'">
+    </ConfirmarAceptar>
   </div>
 </template>
 <script>
@@ -195,6 +136,7 @@ import ConfirmarAceptar from "@pages/confirmarAceptar.vue";
 /**VARIABLES GLOBALES */
 
 export default {
+  name: "FormLabel",
   components: {
     "v-select": vSelect,
     ConfirmarDanger,
@@ -213,18 +155,10 @@ export default {
     },
   },
   watch: {
-    show: function (newValue, oldValue) {
-      this.limpiarValidation();
-      if (newValue == true) {
-        //cargo nacionalidades
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-          this.cancelar();
-        };
-        this.$nextTick(() => {
-          //this.$refs["nombre_comercial"].$el.querySelector("input").focus()
-        });
-
-        (async () => {
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
           this.title = "Imprimir etiquetado de inventario";
           await this.get_inventario();
           this.$nextTick(() => {
@@ -234,20 +168,15 @@ export default {
               this.CheckTodos($event, "btn");
             };
           });
-        })();
-      }
+          this.$popupManager.register(this, this.cancelar, "input");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
-    },
-
     lotes_a_imprimir: function () {
       let etiquetas = [];
       this.form.lotes.forEach((element) => {
@@ -271,6 +200,7 @@ export default {
   },
   data() {
     return {
+      localShow: false,
       openReportesLista: false,
       request: {
         etiquetas: "",
@@ -479,10 +409,22 @@ export default {
     closeChecker() {
       this.operConfirmar = false;
     },
-    handleSearch(searching) {},
-    handleChangePage(page) {},
-    handleSort(key, active) {},
+    handleSearch(searching) { },
+    handleChangePage(page) { },
+    handleSort(key, active) { },
   },
-  created() {},
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>
