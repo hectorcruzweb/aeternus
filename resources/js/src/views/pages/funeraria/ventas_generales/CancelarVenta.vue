@@ -1,15 +1,20 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup fullscreen" title="Cancelar Venta en General" :active.sync="showVentana"
-            ref="cancelar_venta">
+        <vs-popup
+            class="forms-popup fullscreen"
+            title="Cancelar Venta en General"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="flex flex-wrap">
                 <div class="w-full alerta pt-4 pb-6 px-2">
                     <div class="danger">
                         <h3>¿Está seguro de querer cancelar esta venta?</h3>
                         <p>
-                            Una vez realizado el proceso de cancelación no habrá manera de
-                            volver a habilitar la venta. Es recomendable llevar a cabo este
-                            proceso una vez esté seguro de que es necesario.
+                            Una vez realizado el proceso de cancelación no habrá
+                            manera de volver a habilitar la venta. Es
+                            recomendable llevar a cabo este proceso una vez esté
+                            seguro de que es necesario.
                         </p>
                     </div>
                 </div>
@@ -20,9 +25,18 @@
                             <div class="flex flex-wrap">
                                 <div class="w-full xl:w-4/12 input-text px-2">
                                     <label>$ Monto a devolver:</label>
-                                    <vs-input size="large" v-model="form.cantidad"
-                                        v-validate="'required|decimal:2|min_value:0'" name="cantidad" data-vv-as=" "
-                                        type="text" class="w-full" placeholder=" $ 00.00 Pesos MXN" maxlength="7" />
+                                    <vs-input
+                                        v-model="form.cantidad"
+                                        v-validate="
+                                            'required|decimal:2|min_value:0'
+                                        "
+                                        name="cantidad"
+                                        data-vv-as=" "
+                                        type="text"
+                                        class="w-full"
+                                        placeholder=" $ 00.00 Pesos MXN"
+                                        maxlength="7"
+                                    />
                                     <span>{{ errors.first("cantidad") }}</span>
                                     <span v-if="this.errores.cantidad">{{
                                         errores.cantidad[0]
@@ -30,11 +44,22 @@
                                 </div>
 
                                 <div class="w-full xl:w-8/12 input-text px-2">
-                                    <label>Seleccione un motivo de cancelación:</label>
-                                    <v-select :options="motivos" :clearable="false" v-model="form.motivo"
-                                        :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full large_select"
-                                        v-validate:motivo_computed.immediate="'required'" name="plan_venta"
-                                        data-vv-as=" ">
+                                    <label
+                                        >Seleccione un motivo de
+                                        cancelación:</label
+                                    >
+                                    <v-select
+                                        :options="motivos"
+                                        :clearable="false"
+                                        v-model="form.motivo"
+                                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                        class="w-full"
+                                        v-validate:motivo_computed.immediate="
+                                            'required'
+                                        "
+                                        name="plan_venta"
+                                        data-vv-as=" "
+                                    >
                                         <div slot="no-options">
                                             No Se Ha Seleccionado Ningún Motivo
                                         </div>
@@ -48,10 +73,17 @@
                         </div>
 
                         <div class="w-full input-text px-2">
-                            <label>Agregue un comentario respecto a la cancelación de esta
-                                venta:</label>
-                            <vs-textarea class="w-full" label="Detalle de la cancelación..." height="150px"
-                                v-model="form.comentario" ref="comentario" />
+                            <label
+                                >Agregue un comentario respecto a la cancelación
+                                de esta venta:</label
+                            >
+                            <vs-textarea
+                                class="w-full"
+                                label="Detalle de la cancelación..."
+                                height="150px"
+                                v-model="form.comentario"
+                                ref="comentario"
+                            />
                         </div>
                     </div>
                 </div>
@@ -59,21 +91,36 @@
             <div class="bottom-buttons-section">
                 <div class="text-advice">
                     <span class="ojo-advice">Ojo:</span>
-                    Por favor revise la información ingresada, si todo es correcto de
-                    click en el "Botón de Abajo”.
+                    Por favor revise la información ingresada, si todo es
+                    correcto de click en el "Botón de Abajo”.
                 </div>
                 <div class="w-full">
-                    <vs-button v-if="!fueCancelada" class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
-                        color="danger" @click="acceptAlert()">
+                    <vs-button
+                        v-if="!fueCancelada"
+                        class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
+                        color="danger"
+                        @click="acceptAlert()"
+                    >
                         <span>Cancelar Venta</span>
                     </vs-button>
                 </div>
             </div>
-            <Password :show="openConfirmar" :callback-on-success="callback" @closeVerificar="openConfirmar = false"
-                :accion="'Cancelar venta de propiedad'"></Password>
-            <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
-                :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
-                :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+            <Password
+                v-if="openConfirmar"
+                :show="openConfirmar"
+                :callback-on-success="callback"
+                @closeVerificar="openConfirmar = false"
+                :accion="'Cancelar venta de propiedad'"
+            ></Password>
+            <ConfirmarDanger
+                v-if="openConfirmarSinPassword"
+                :z_index="'z-index58k'"
+                :show="openConfirmarSinPassword"
+                :callback-on-success="callBackConfirmar"
+                @closeVerificar="openConfirmarSinPassword = false"
+                :accion="accionConfirmarSinPassword"
+                :confirmarButton="botonConfirmarSinPassword"
+            ></ConfirmarDanger>
         </vs-popup>
     </div>
 </template>
@@ -84,11 +131,12 @@ import funeraria from "@services/funeraria";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 import ResumenVenta from "@pages/funeraria/ventas_generales/ResumenVenta";
 export default {
+    name: "CancelarVentaGeneral",
     components: {
         Password,
         "v-select": vSelect,
         ConfirmarDanger,
-        ResumenVenta
+        ResumenVenta,
     },
     props: {
         show: {
@@ -102,17 +150,10 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["cancelar_venta"].$el.querySelector(".vs-icon").onclick =
-                    () => {
-                        this.cancelar();
-                    };
-                this.$nextTick(() => {
-                    this.$refs["comentario"].$el.querySelector("textarea").focus();
-                });
-
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     this.form.cantidad = "0.00";
                     this.$vs.loading();
                     try {
@@ -150,21 +191,21 @@ export default {
 
                         this.cerrarVentana();
                     }
-                })();
-            }
+                    this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "comentario"
+                    );
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
         motivo_computed: function () {
             return this.form.motivo.value;
-        },
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
         },
         getVentaId: {
             get() {
@@ -177,6 +218,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             botonConfirmarSinPassword: "",
             accionConfirmarSinPassword: "",
             callBackConfirmar: Function,
@@ -233,7 +275,7 @@ export default {
                         })();
                     }
                 })
-                .catch(() => { });
+                .catch(() => {});
         },
 
         cancelar() {
@@ -271,8 +313,12 @@ export default {
                         color: "success",
                         time: 5000,
                     });
-                    this.$emit("closeCancelarVenta", res.data);
-                    this.$emit("ConsultarVenta", res.data);
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.$emit("closeCancelarVenta", res.data);
+                            this.$emit("ConsultarVenta", res.data);
+                        }, 50);
+                    });
                 } else {
                     this.$vs.notify({
                         title: "Ventas en Gral.",
@@ -336,17 +382,18 @@ export default {
             }
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    //this.cancelar();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

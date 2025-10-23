@@ -1,10 +1,17 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-90" title="Entregar entrega en General" :active.sync="showVentana"
-            ref="entregar_venta">
+        <vs-popup
+            class="forms-popup popup-90"
+            title="Entregar entrega en General"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="flex flex-wrap">
                 <div class="w-full">
-                    <ResumenVenta :id_venta="getVentaId" @showNoInvetario="showNoInvetario"></ResumenVenta>
+                    <ResumenVenta
+                        :id_venta="getVentaId"
+                        @showNoInvetario="showNoInvetario"
+                    ></ResumenVenta>
                     <div class="flex flex-wrap py-6">
                         <div class="w-full form-group">
                             <div class="title-form-group">
@@ -13,44 +20,93 @@
                             <div class="form-group-content">
                                 <div class="w-full xl:w-12/12 pt-6">
                                     <div class="flex flex-wrap">
-                                        <div class="w-full xl:w-4/12 input-text px-2 large-size">
+                                        <div
+                                            class="w-full xl:w-4/12 input-text px-2"
+                                        >
                                             <label>
                                                 Fecha de Entrega
                                                 <span>(*)</span>
                                             </label>
-                                            <flat-pickr name="fecha_entrega" data-vv-as=" "
-                                                v-validate:fecha_entrega_validacion_computed.immediate="'required'
-                                                    " :config="configdateTimePickerFullMonth"
-                                                v-model="form.fecha_entrega" placeholder="Fecha de la entrega"
-                                                class="w-full" />
+                                            <flat-pickr
+                                                name="fecha_entrega"
+                                                data-vv-as=" "
+                                                v-validate:fecha_entrega_validacion_computed.immediate="
+                                                    'required'
+                                                "
+                                                :config="
+                                                    configdateTimePickerFullMonth
+                                                "
+                                                v-model="form.fecha_entrega"
+                                                placeholder="Fecha de la entrega"
+                                                class="w-full"
+                                            />
                                             <span>
-                                                {{ errors.first("fecha_entrega") }}
+                                                {{
+                                                    errors.first(
+                                                        "fecha_entrega"
+                                                    )
+                                                }}
                                             </span>
-                                            <span v-if="this.errores.fecha_entrega">{{
-                                                errores.fecha_entrega[0]
-                                            }}</span>
+                                            <span
+                                                v-if="
+                                                    this.errores.fecha_entrega
+                                                "
+                                                >{{
+                                                    errores.fecha_entrega[0]
+                                                }}</span
+                                            >
                                         </div>
-                                        <div class="w-full xl:w-8/12 input-text px-2 ">
-                                            <label>Responsable de entrega:</label>
-                                            <v-select disabled :options="entregadores" :clearable="false"
-                                                v-model="form.entregador" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                                class="w-full large_select" name="entregador_entrega" data-vv-as=" ">
+                                        <div
+                                            class="w-full xl:w-8/12 input-text px-2"
+                                        >
+                                            <label
+                                                >Responsable de entrega:</label
+                                            >
+                                            <v-select
+                                                disabled
+                                                :options="entregadores"
+                                                :clearable="false"
+                                                v-model="form.entregador"
+                                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                                class="w-full"
+                                                name="entregador_entrega"
+                                                data-vv-as=" "
+                                            >
                                                 <div slot="no-options">
-                                                    No Se Ha Seleccionado Ningún Motivo
+                                                    No Se Ha Seleccionado Ningún
+                                                    Motivo
                                                 </div>
                                             </v-select>
-                                            <span>{{ errors.first("entregador") }}</span>
-                                            <span v-if="this.errores['entregador.value']">{{
-                                                errores["entregador.value"][0]
+                                            <span>{{
+                                                errors.first("entregador")
                                             }}</span>
+                                            <span
+                                                v-if="
+                                                    this.errores[
+                                                        'entregador.value'
+                                                    ]
+                                                "
+                                                >{{
+                                                    errores[
+                                                        "entregador.value"
+                                                    ][0]
+                                                }}</span
+                                            >
                                         </div>
                                     </div>
                                 </div>
                                 <div class="w-full input-text px-2">
-                                    <label>Agregue un comentario respecto a la entrega de esta
-                                        entrega:</label>
-                                    <vs-textarea class="w-full" label="Detalle de la entrega..." height="120px"
-                                        v-model="form.comentario" ref="comentario" />
+                                    <label
+                                        >Agregue un comentario respecto a la
+                                        entrega de esta entrega:</label
+                                    >
+                                    <vs-textarea
+                                        class="w-full"
+                                        label="Detalle de la entrega..."
+                                        height="120px"
+                                        v-model="form.comentario"
+                                        ref="comentario"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -60,22 +116,35 @@
             <div class="bottom-buttons-section">
                 <div class="text-advice">
                     <span class="ojo-advice">Ojo:</span>
-                    Por favor revise la información ingresada, si todo es correcto de
-                    click en el "Botón de Abajo”.
+                    Por favor revise la información ingresada, si todo es
+                    correcto de click en el "Botón de Abajo”.
                 </div>
                 <div class="w-full">
-                    <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                        @click="acceptAlert()">
+                    <vs-button
+                        class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
+                        color="success"
+                        @click="acceptAlert()"
+                    >
                         <span>Guardar Entrega</span>
                     </vs-button>
                 </div>
             </div>
-            <Password :show="openConfirmar" :callback-on-success="callback" @closeVerificar="openConfirmar = false"
-                :accion="'Marcar Venta Como Entregada'"></Password>
-            <ConfirmarDanger :z_index="'z-index58k'" :show="openConfirmarSinPassword"
-                :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
-                :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
-
+            <Password
+                v-if="openConfirmar"
+                :show="openConfirmar"
+                :callback-on-success="callback"
+                @closeVerificar="openConfirmar = false"
+                :accion="'Marcar Venta Como Entregada'"
+            ></Password>
+            <ConfirmarDanger
+                v-if="openConfirmarSinPassword"
+                :z_index="'z-index58k'"
+                :show="openConfirmarSinPassword"
+                :callback-on-success="callBackConfirmar"
+                @closeVerificar="openConfirmarSinPassword = false"
+                :accion="accionConfirmarSinPassword"
+                :confirmarButton="botonConfirmarSinPassword"
+            ></ConfirmarDanger>
         </vs-popup>
     </div>
 </template>
@@ -91,12 +160,13 @@ import "flatpickr/dist/themes/airbnb.css";
 /**VARIABLES GLOBALES */
 import { configdateTimePickerFullMonth } from "@/VariablesGlobales";
 export default {
+    name: "EntregarVenta",
     components: {
         Password,
         "v-select": vSelect,
         ConfirmarDanger,
         ResumenVenta,
-        flatPickr
+        flatPickr,
     },
     props: {
         show: {
@@ -110,22 +180,30 @@ export default {
         },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["entregar_venta"].$el.querySelector(".vs-icon").onclick =
-                    () => {
-                        this.cancelar();
-                    };
-                this.$nextTick(() => {
-                    this.$refs["comentario"].$el.querySelector("textarea").focus();
-                });
-
-                (async () => {
-                    let activeUserInfo = JSON.parse(localStorage.getItem("userInfo"));
-                    this.entregadores.push({ value: activeUserInfo.user_id, label: activeUserInfo.nombre });
-                    this.form.entregador = this.entregadores[0];
-                })();
-            }
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    (async () => {
+                        let activeUserInfo = JSON.parse(
+                            localStorage.getItem("userInfo")
+                        );
+                        this.entregadores.push({
+                            value: activeUserInfo.user_id,
+                            label: activeUserInfo.nombre,
+                        });
+                        this.form.entregador = this.entregadores[0];
+                    })();
+                    this.$popupManager.register(
+                        this,
+                        this.cancelar,
+                        "comentario"
+                    );
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
@@ -134,14 +212,6 @@ export default {
         },
         motivo_computed: function () {
             return this.form.motivo.value;
-        },
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
         },
         getVentaId: {
             get() {
@@ -154,6 +224,7 @@ export default {
     },
     data() {
         return {
+            localShow: false,
             configdateTimePickerFullMonth: configdateTimePickerFullMonth,
             botonConfirmarSinPassword: "",
             accionConfirmarSinPassword: "",
@@ -165,7 +236,7 @@ export default {
             entregadores: [],
             datosVenta: [],
             form: {
-                fecha_entrega: '',
+                fecha_entrega: "",
                 entregador: {},
                 venta_id: "",
                 comentario: "",
@@ -205,7 +276,7 @@ export default {
                         })();
                     }
                 })
-                .catch(() => { });
+                .catch(() => {});
         },
         cancelar() {
             this.botonConfirmarSinPassword = "Salir y limpiar";
@@ -219,8 +290,8 @@ export default {
             this.form.comentario = "";
             this.form.entregadores = [];
             this.entregadores.push({ value: "", label: "Seleccione 1" });
-            this.form.entregador = this.entregadores[0]
-            this.form.fecha_entrega = ""
+            this.form.entregador = this.entregadores[0];
+            this.form.fecha_entrega = "";
             this.$emit("closeEntregarVenta");
             return;
         },
@@ -305,17 +376,18 @@ export default {
             }
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    //this.cancelar();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

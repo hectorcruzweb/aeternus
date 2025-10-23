@@ -256,6 +256,7 @@
         </div>
 
         <Password
+            v-if="openStatus"
             :show="openStatus"
             :callback-on-success="callback"
             @closeVerificar="closeStatus"
@@ -264,6 +265,7 @@
         </Password>
 
         <ReportesServicio
+            v-if="openReportes"
             :verAcuse="verAcuse"
             :show="openReportes"
             @closeListaReportes="closeListaReportes"
@@ -271,6 +273,7 @@
         ></ReportesServicio>
 
         <FormularioVentas
+            v-if="verFormularioVentas"
             :id_venta="id_venta"
             :tipo="tipoFormulario"
             :show="verFormularioVentas"
@@ -279,12 +282,14 @@
         </FormularioVentas>
 
         <CancelarVenta
+            v-if="openCancelar"
             :show="openCancelar"
             @closeCancelarVenta="openCancelar = false"
             @ConsultarVenta="ConsultarVenta"
             :id_venta="id_venta_cancelar"
         ></CancelarVenta>
         <EntregarVenta
+            v-if="openEntregar"
             :show="openEntregar"
             @closeEntregarVenta="closeEntregarVenta"
             @ConsultarVenta="ConsultarVentaNota"
@@ -314,6 +319,7 @@ import CancelarVenta from "../ventas_generales/CancelarVenta";
 import EntregarVenta from "../ventas_generales/EntregarVenta";
 import vSelect from "vue-select";
 export default {
+    name: "VentasGeneralesList",
     components: {
         "v-select": vSelect,
         Password,
@@ -656,11 +662,19 @@ export default {
             })();
         },
     },
-
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         (async () => {
             await this.get_data(this.actual);
         })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {},
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
