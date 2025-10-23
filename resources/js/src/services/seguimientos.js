@@ -50,9 +50,19 @@ export default {
      */
     async programarSeguimiento(tipo_request, data) {
         try {
-            const url = `/seguimientos/programar_segumientos/${tipo_request}`;
+            let url = "";
+            switch (tipo_request) {
+                case "modificar":
+                    url = `/seguimientos/programar_segumientos_modificar/${tipo_request}`;
+                    break;
+                case "cancelar":
+                    url = `/seguimientos/cancelar_segumientos_programados/${tipo_request}`;
+                    break;
+                default:
+                    url = `/seguimientos/programar_segumientos/${tipo_request}`;
+                    break;
+            }
             const response = await axios.post(url, data);
-
             // Optional: Check if response is JSON
             if (!response || typeof response.data !== "object") {
                 throw new Error("Invalid JSON response");
@@ -82,7 +92,18 @@ export default {
      */
     async registrarSeguimiento(tipo_request, data) {
         try {
-            const url = `/seguimientos/registrar_seguimientos/${tipo_request}`;
+            let url = "";
+            switch (tipo_request) {
+                case "modificar":
+                    url = `/seguimientos/registrar_seguimientos_modificar/${tipo_request}`;
+                    break;
+                case "cancelar":
+                    url = `/seguimientos/cancelar_segumientos_registrados/${tipo_request}`;
+                    break;
+                default:
+                    url = `/seguimientos/registrar_seguimientos/${tipo_request}`;
+                    break;
+            }
             const response = await axios.post(url, data);
 
             // Optional: Check if response is JSON

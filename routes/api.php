@@ -98,8 +98,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('monedas/', 'SATMonedasController@getAll');
 
     /**CLIENTES */
-    Route::post('/seguimientos/programar_segumientos/{tipo_request}', 'SeguimientosController@programar_segumientos');
-    Route::post('/seguimientos/registrar_seguimientos/{tipo_request}', 'SeguimientosController@registrar_seguimientos');
+    //seguimientos mod 26, permisos 74 Registrar Seguimientos, 75 Modificar Seguimientos, 76 Cancelar Seguimientos, 77 Consultar Seguimientos
+    Route::post('/seguimientos/programar_segumientos/{tipo_request}', 'SeguimientosController@programar_segumientos')->middleware('permiso:26,74');
+    Route::post('/seguimientos/cancelar_segumientos_programados/{tipo_request}', 'SeguimientosController@programar_segumientos')->middleware('permiso:26,76');
+    Route::post('/seguimientos/programar_segumientos_modificar/{tipo_request}', 'SeguimientosController@programar_segumientos')->middleware('permiso:26,75');
+    Route::post('/seguimientos/registrar_seguimientos/{tipo_request}', 'SeguimientosController@registrar_seguimientos')->middleware('permiso:26,75');
+    Route::post('/seguimientos/registrar_seguimientos_modificar/{tipo_request}', 'SeguimientosController@registrar_seguimientos')->middleware('permiso:26,75');
+    Route::post('/seguimientos/cancelar_segumientos_registrados/{tipo_request}', 'SeguimientosController@registrar_seguimientos')->middleware('permiso:26,77');
     Route::get('/seguimientos/get_seguimientos', 'SeguimientosController@get_seguimientos');
     Route::get('/seguimientos/get_motivos', 'SeguimientosController@getMotivos');
     Route::get('/seguimientos/get_medios', 'SeguimientosController@getMedios');
