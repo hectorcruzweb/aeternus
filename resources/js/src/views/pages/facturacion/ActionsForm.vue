@@ -3,8 +3,8 @@
         <vs-popup
             close="cancelar"
             :title="'CONSULTA DE CFDI'"
-            :active.sync="showVentana"
-            ref="formulario"
+            :active="localShow"
+            :ref="this.$options.name"
             fullscreen
             class="forms-popup popup-70"
         >
@@ -172,9 +172,7 @@
                                             v-if="motivo.value == '03'"
                                         >
                                             <div class="success">
-                                                <h3>
-                                                    Cancelar CFDI
-                                                </h3>
+                                                <h3>Cancelar CFDI</h3>
                                                 <p>
                                                     Puede proceder a cancelar el
                                                     CFDI.
@@ -184,27 +182,28 @@
                                         <div v-else>
                                             <div
                                                 class="w-full alerta pt-4 pb-6 px-2"
-                                                v-if="uuid_a_sustituir!=''"
+                                                v-if="uuid_a_sustituir != ''"
                                             >
                                                 <div class="success">
-                                                    <h3>
-                                                        Cancelar CFDI
-                                                    </h3>
+                                                    <h3>Cancelar CFDI</h3>
                                                     <p>
-                                                        Este CFDI será cancelado y sustituido por el CFDI con UUID: {{uuid_a_sustituir}}
+                                                        Este CFDI será cancelado
+                                                        y sustituido por el CFDI
+                                                        con UUID:
+                                                        {{ uuid_a_sustituir }}
                                                     </p>
                                                 </div>
                                             </div>
-                                              <div
+                                            <div
                                                 class="w-full alerta pt-4 pb-6 px-2"
                                                 v-else
                                             >
                                                 <div class="danger">
-                                                    <h3>
-                                                        Cancelar CFDI
-                                                    </h3>
+                                                    <h3>Cancelar CFDI</h3>
                                                     <p>
-                                                        No se ha seleccionado el CFDI que sustituye a este CFDI.
+                                                        No se ha seleccionado el
+                                                        CFDI que sustituye a
+                                                        este CFDI.
                                                     </p>
                                                 </div>
                                             </div>
@@ -289,12 +288,14 @@
             </div>
         </vs-popup>
         <Password
+            v-if="openPassword"
             :show="openPassword"
             :callback-on-success="callback"
             @closeVerificar="closePassword"
             :accion="accionNombre"
         ></Password>
         <Reporteador
+            v-if="openReportesLista"
             :header="'consultar CFDIs'"
             :show="openReportesLista"
             :listadereportes="ListaReportes"
@@ -310,45 +311,40 @@ import facturacion from "@services/facturacion";
 import Reporteador from "@pages/Reporteador";
 import vSelect from "vue-select";
 export default {
+    name: "ActionsForm",
     components: {
         "v-select": vSelect,
         Password,
-        Reporteador
+        Reporteador,
     },
     props: {
         show: {
             type: Boolean,
-            required: true
+            required: true,
         },
         //para saber que tipo de formulario es
         id_cfdi: {
             type: Number,
-            required: true
+            required: true,
         },
         uuid_a_sustituir: {
             type: String,
             required: false,
-            default: ""
-        }
+            default: "",
+        },
     },
     watch: {
-        show: function(newValue, oldValue) {
-            if (newValue == true) {
-                this.$refs["formulario"].$el.querySelector(
-                    ".vs-icon"
-                ).onclick = () => {
-                    this.cerrarVentana();
-                };
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_cfdi_id();
-                })();
-                this.uuid_a_sustituir_cancelar=this.getUuidSustituir
-            } else {
-                /**acciones al cerrar el formulario */
-                //this.uuid_a_sustituir=''
-                  this.$emit("reset_uuid_a_sustituir");
-            }
-        }
+                    this.uuid_a_sustituir_cancelar = this.getUuidSustituir;
+                    this.$popupManager.register(this, this.cerrarVentana, null);
+                }
+                this.localShow = newValue;
+            },
+        },
     },
     computed: {
         showVentana: {
@@ -357,7 +353,7 @@ export default {
             },
             set(newValue) {
                 return newValue;
-            }
+            },
         },
         getFolio: {
             get() {
@@ -365,7 +361,7 @@ export default {
             },
             set(newValue) {
                 return newValue;
-            }
+            },
         },
         getUuidSustituir: {
             get() {
@@ -373,44 +369,44 @@ export default {
             },
             set(newValue) {
                 return newValue;
-            }
-        }
+            },
+        },
     },
     data() {
         return {
+            localShow: false,
             cfdi: [],
             openReportesLista: false,
             folio_id: "",
-            uuid_a_sustituir_cancelar:'',
+            uuid_a_sustituir_cancelar: "",
             motivos: [
                 {
                     value: "01",
-                    label: "Comprobante emitido con errores con relación."
+                    label: "Comprobante emitido con errores con relación.",
                 },
                 {
                     value: "02",
-                    label: "Comprobante emitido con errores sin relación."
+                    label: "Comprobante emitido con errores sin relación.",
                 },
                 { value: "03", label: "No se llevó a cabo la operación." },
                 {
                     value: "04",
-                    label:
-                        "Operación nominativa relacionada en la factura global."
-                }
+                    label: "Operación nominativa relacionada en la factura global.",
+                },
             ],
             motivo: {
                 value: "01",
-                label: "Comprobante emitido con errores con relación."
+                label: "Comprobante emitido con errores con relación.",
             },
             ListaReportes: [],
             request: {
                 folio_id: "",
                 email: "",
-                destinatario: ""
+                destinatario: "",
             },
             openPassword: false,
             accionNombre: "Timbrar CFDI",
-            callback: Function
+            callback: Function,
         };
     },
     methods: {
@@ -424,7 +420,7 @@ export default {
             this.request.destinatario = this.cfdi.cliente_nombre;
             this.ListaReportes.push({
                 nombre: nombre_reporte,
-                url: link
+                url: link,
             });
             this.openReportesLista = true;
         },
@@ -453,19 +449,18 @@ export default {
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success",
-                        time: 5000
+                        time: 5000,
                     });
                 } catch (error) {
                     /**error al cargar vendedores */
                     this.$vs.notify({
                         title: "Error",
-                        text:
-                            "Ha ocurrido un error al tratar de descargar el CFDI seleccionado.",
+                        text: "Ha ocurrido un error al tratar de descargar el CFDI seleccionado.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
                         position: "bottom-right",
-                        time: "9000"
+                        time: "9000",
                     });
                     this.$vs.loading.close();
                     this.cerrarVentana();
@@ -473,6 +468,7 @@ export default {
             })();
         },
         cerrarVentana() {
+            this.$emit("reset_uuid_a_sustituir");
             this.$emit("closeVentana");
         },
         async get_cfdi_id() {
@@ -485,13 +481,12 @@ export default {
                 /**error al cargar vendedores */
                 this.$vs.notify({
                     title: "Error",
-                    text:
-                        "Ha ocurrido un error al tratar de cargar el CFDI seleccionado.",
+                    text: "Ha ocurrido un error al tratar de cargar el CFDI seleccionado.",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "danger",
                     position: "bottom-right",
-                    time: "9000"
+                    time: "9000",
                 });
                 this.$vs.loading.close();
                 this.cerrarVentana();
@@ -516,7 +511,7 @@ export default {
                             icon: "icon-alert-circle",
                             color: "danger",
                             position: "bottom-right",
-                            time: "8000"
+                            time: "8000",
                         });
                     }
                 })();
@@ -527,12 +522,15 @@ export default {
             this.errores = [];
             this.$vs.loading();
             try {
-              let motivos={motivo:this.motivo.value,uuid_a_sustituir_cancelar:this.uuid_a_sustituir_cancelar};
-              let datos_cfdi={};
-               datos_cfdi={
-                 ...this.cfdi,
-                 ...motivos
-               };
+                let motivos = {
+                    motivo: this.motivo.value,
+                    uuid_a_sustituir_cancelar: this.uuid_a_sustituir_cancelar,
+                };
+                let datos_cfdi = {};
+                datos_cfdi = {
+                    ...this.cfdi,
+                    ...motivos,
+                };
                 let res = await facturacion.cancelar_cfdi_folio(datos_cfdi);
                 if (res.data >= 1) {
                     //success
@@ -542,7 +540,7 @@ export default {
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success",
-                        time: 5000
+                        time: 5000,
                     });
                     await this.get_cfdi_id();
                     //this.cerrarVentana();
@@ -553,7 +551,7 @@ export default {
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
-                        time: 4000
+                        time: 4000,
                     });
                 }
 
@@ -564,24 +562,22 @@ export default {
                         /**FORBIDDEN ERROR */
                         this.$vs.notify({
                             title: "Permiso denegado",
-                            text:
-                                "Verifique sus permisos con el administrador del sistema.",
+                            text: "Verifique sus permisos con el administrador del sistema.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "warning",
-                            time: 4000
+                            time: 4000,
                         });
                     } else if (err.response.status == 422) {
                         //checo si existe cada error
                         this.errores = err.response.data.error;
                         this.$vs.notify({
                             title: "Timbrar CFDI 4.0",
-                            text:
-                                "Verifique los errores encontrados en los datos.",
+                            text: "Verifique los errores encontrados en los datos.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 5000
+                            time: 5000,
                         });
                     } else if (err.response.status == 409) {
                         this.$vs.notify({
@@ -590,14 +586,26 @@ export default {
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 30000
+                            time: 30000,
                         });
                     }
                 }
                 this.$vs.loading.close();
             }
-        }
+        },
     },
-    created() {}
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>
