@@ -1,256 +1,177 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            :class="['forms-popup popup-85', z_index]"
-            title="Catálogo de Terrenos Vendidos"
-            :active="localShow"
-            :ref="this.$options.name"
-        >
-            <div class="w-full text-right">
-                <vs-button
-                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
-                    color="primary"
-                    @click="verFormularioVentas = true"
-                >
-                    <span>Vender Propiedad</span>
-                </vs-button>
-            </div>
+        <vs-popup :class="['forms-popup popup-85', z_index]" fullscreen title="Catálogo de Terrenos Vendidos"
+            :active="localShow" :ref="this.$options.name">
 
             <!--inicio de buscador-->
-            <div class="py-3">
-                <vx-card
-                    no-radius
-                    title="Filtros de selección"
-                    refresh-content-action
-                    @refresh="reset"
-                >
-                    <template slot="no-body">
-                        <div>
-                            <div class="flex flex-wrap px-4 py-4">
-                                <div class="w-full xl:w-3/12 px-2">
-                                    <label class="text-sm opacity-75 font-bold"
-                                        >Núm. Convenio</label
-                                    >
-                                    <vs-input
-                                        name="numero_control"
-                                        data-vv-as=" "
-                                        type="text"
-                                        class="w-full pb-1 pt-1"
-                                        placeholder="Ej. 1258"
-                                        maxlength="6"
-                                        v-model.trim="
-                                            serverOptions.numero_control
-                                        "
-                                        v-on:keyup.enter="
-                                            get_data('numero_control', 1)
-                                        "
-                                        v-on:blur="
-                                            get_data(
-                                                'numero_control',
-                                                1,
-                                                'blur'
-                                            )
-                                        "
-                                    />
-                                    <div>
-                                        <span class="text-danger text-sm">{{
-                                            errors.first("numero_control")
-                                        }}</span>
+            <div class="flex flex-col flex-1 h-full">
+                <div class="w-full text-right">
+                    <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+                        @click="verFormularioVentas = true">
+                        <span>Vender Propiedad</span>
+                    </vs-button>
+                </div>
+                <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
+                    <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
+                        <template slot="no-body">
+                            <div>
+                                <div class="flex flex-wrap px-4 py-4">
+                                    <div class="w-full xl:w-3/12 px-2">
+                                        <label class="text-sm opacity-75 font-bold">Núm. Convenio</label>
+                                        <vs-input name="numero_control" data-vv-as=" " type="text"
+                                            class="w-full pb-1 pt-1" placeholder="Ej. 1258" maxlength="6" v-model.trim="serverOptions.numero_control
+                                                " v-on:keyup.enter="
+                                                    get_data('numero_control', 1)
+                                                    " v-on:blur="
+                                                        get_data(
+                                                            'numero_control',
+                                                            1,
+                                                            'blur'
+                                                        )
+                                                        " />
+                                        <div>
+                                            <span class="text-danger text-sm">{{
+                                                errors.first("numero_control")
+                                                }}</span>
+                                        </div>
+                                        <div class="mt-2"></div>
                                     </div>
-                                    <div class="mt-2"></div>
-                                </div>
 
-                                <div class="w-full xl:w-9/12 px-2">
-                                    <label class="text-sm opacity-75 font-bold"
-                                        >Titular de la Propiedad</label
-                                    >
-                                    <vs-input
-                                        ref="nombre_titular"
-                                        name="nombre_titular"
-                                        data-vv-as=" "
-                                        type="text"
-                                        class="w-full pb-1 pt-1"
-                                        placeholder="Ej. Juan Pérez"
-                                        maxlength="12"
-                                        v-model.trim="serverOptions.titular"
-                                        v-on:keyup.enter="
-                                            get_data('titular', 1)
-                                        "
-                                        v-on:blur="
-                                            get_data('titular', 1, 'blur')
-                                        "
-                                    />
-                                    <div>
-                                        <span class="text-danger text-sm">{{
-                                            errors.first("nombre_titular")
-                                        }}</span>
+                                    <div class="w-full xl:w-9/12 px-2">
+                                        <label class="text-sm opacity-75 font-bold">Titular de la Propiedad</label>
+                                        <vs-input ref="nombre_titular" name="nombre_titular" data-vv-as=" " type="text"
+                                            class="w-full pb-1 pt-1" placeholder="Ej. Juan Pérez" maxlength="12"
+                                            v-model.trim="serverOptions.titular" v-on:keyup.enter="
+                                                get_data('titular', 1)
+                                                " v-on:blur="
+                                                    get_data('titular', 1, 'blur')
+                                                    " />
+                                        <div>
+                                            <span class="text-danger text-sm">{{
+                                                errors.first("nombre_titular")
+                                                }}</span>
+                                        </div>
+                                        <div class="mt-2"></div>
                                     </div>
-                                    <div class="mt-2"></div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-                </vx-card>
-                <div class="mt-6">
-                    <vs-table
-                        :sst="true"
-                        :max-items="serverOptions.per_page"
-                        :data="terrenos"
-                        stripe
-                        noDataText="0 Resultados"
-                        class="tabla-datos"
-                    >
-                        <template slot="header">
-                            <h3>Lista actualizada de clientes registrados</h3>
                         </template>
-                        <template slot="thead">
-                            <vs-th>Núm. Venta</vs-th>
-                            <vs-th>Núm. Convenio</vs-th>
-                            <vs-th>Núm. Título</vs-th>
-                            <vs-th>Titular</vs-th>
-                            <vs-th>Ubicación</vs-th>
-                            <vs-th>Estado</vs-th>
-                            <vs-th>Seleccionar</vs-th>
-                        </template>
-                        <template slot-scope="{ data }">
-                            <vs-tr
-                                :data="tr"
-                                :key="indextr"
-                                v-for="(tr, indextr) in data"
-                            >
-                                <vs-td
-                                    :data="data[indextr].venta_terreno"
-                                    :class="
-                                        data[indextr].operacion_status == 0
+                    </vx-card>
+                </div>
+                <div id="resultados" class="mt-5 flex flex-col flex-1">
+                    <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                        <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+                    </div>
+                    <div v-else id="results" class="w-full flex flex-wrap">
+                        <div class="w-full py-2">
+                            <vs-table :sst="true" :max-items="serverOptions.per_page" :data="terrenos" stripe
+                                noDataText="0 Resultados" class="tabla-datos">
+                                <template slot="header">
+                                    <h3>Lista actualizada de clientes registrados</h3>
+                                </template>
+                                <template slot="thead">
+                                    <vs-th>Núm. Venta</vs-th>
+                                    <vs-th>Núm. Convenio</vs-th>
+                                    <vs-th>Núm. Título</vs-th>
+                                    <vs-th>Titular</vs-th>
+                                    <vs-th>Ubicación</vs-th>
+                                    <vs-th>Estado</vs-th>
+                                    <vs-th>Seleccionar</vs-th>
+                                </template>
+                                <template slot-scope="{ data }">
+                                    <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                                        <vs-td :data="data[indextr].venta_terreno" :class="data[indextr].operacion_status == 0
                                             ? 'text-danger'
                                             : ''
-                                    "
-                                >
-                                    <span class="font-semibold">{{
-                                        data[indextr].venta_terreno.id
-                                    }}</span>
-                                </vs-td>
-                                <vs-td
-                                    :data="data[indextr].id"
-                                    :class="
-                                        data[indextr].operacion_status == 0
+                                            ">
+                                            <span class="font-semibold">{{
+                                                data[indextr].venta_terreno.id
+                                            }}</span>
+                                        </vs-td>
+                                        <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0
                                             ? 'text-danger'
                                             : ''
-                                    "
-                                    >{{ data[indextr].numero_convenio }}</vs-td
-                                >
-                                <vs-td
-                                    :data="data[indextr].id"
-                                    :class="
-                                        data[indextr].operacion_status == 0
+                                            ">{{ data[indextr].numero_convenio }}</vs-td>
+                                        <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0
                                             ? 'text-danger'
                                             : ''
-                                    "
-                                >
-                                    <span
-                                        v-if="data[indextr].numero_titulo == ''"
-                                    >
-                                        Pendiente
-                                    </span>
-                                    <span v-else>
-                                        {{ data[indextr].numero_titulo }}
-                                    </span>
-                                </vs-td>
-                                <vs-td
-                                    :data="data[indextr].id"
-                                    :class="
-                                        data[indextr].operacion_status == 0
+                                            ">
+                                            <span v-if="data[indextr].numero_titulo == ''">
+                                                Pendiente
+                                            </span>
+                                            <span v-else>
+                                                {{ data[indextr].numero_titulo }}
+                                            </span>
+                                        </vs-td>
+                                        <vs-td :data="data[indextr].id" :class="data[indextr].operacion_status == 0
                                             ? 'text-danger'
                                             : ''
-                                    "
-                                    >{{ data[indextr].nombre }}</vs-td
-                                >
-                                <vs-td
-                                    :data="data[indextr].venta_terreno"
-                                    :class="
-                                        data[indextr].operacion_status == 0
+                                            ">{{ data[indextr].nombre }}</vs-td>
+                                        <vs-td :data="data[indextr].venta_terreno" :class="data[indextr].operacion_status == 0
                                             ? 'text-danger'
                                             : ''
-                                    "
-                                    >{{
-                                        data[indextr].venta_terreno
-                                            .ubicacion_texto +
-                                        " (" +
-                                        data[indextr].venta_terreno
-                                            .tipo_propiedad.tipo +
-                                        ")"
-                                    }}</vs-td
-                                >
-                                <vs-td :data="data[indextr].operacion_status">
-                                    <p
-                                        v-if="
-                                            data[indextr].operacion_status == 0
-                                        "
-                                    >
-                                        {{ data[indextr].status_texto }}
-                                        <span class="dot-danger"></span>
-                                    </p>
-                                    <p
-                                        v-else-if="
-                                            data[indextr].operacion_status == 1
-                                        "
-                                    >
-                                        {{ data[indextr].status_texto }}
-                                        <span class="dot-warning"></span>
-                                    </p>
-                                    <p
-                                        v-else-if="
-                                            data[indextr].operacion_status == 2
-                                        "
-                                    >
-                                        {{ data[indextr].status_texto }}
-                                        <span class="dot-success"></span>
-                                    </p>
-                                </vs-td>
-                                <vs-td :data="data[indextr].id">
-                                    <img
-                                        class="cursor-pointer img-btn-20 mx-3"
-                                        src="@assets/images/checked.svg"
-                                        @click="
-                                            retornarSeleccion(
+                                            ">{{
                                                 data[indextr].venta_terreno
                                                     .ubicacion_texto +
-                                                    ' (' +
-                                                    data[indextr].venta_terreno
-                                                        .tipo_propiedad.tipo +
-                                                    ' Convenio ' +
-                                                    data[indextr]
-                                                        .numero_convenio +
-                                                    ')',
-                                                data[indextr].venta_terreno.id,
-                                                data[indextr].operacion_status,
-                                                data[indextr].saldo_neto
-                                            )
-                                        "
-                                    />
-                                </vs-td>
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                    <div>
-                        <vs-pagination
-                            v-if="verPaginado"
-                            :total="this.total"
-                            v-model="actual"
-                            class="py-6"
-                        ></vs-pagination>
+                                                " (" +
+                                                data[indextr].venta_terreno
+                                                    .tipo_propiedad.tipo +
+                                                ")"
+                                            }}</vs-td>
+                                        <vs-td :data="data[indextr].operacion_status">
+                                            <p v-if="
+                                                data[indextr].operacion_status == 0
+                                            ">
+                                                {{ data[indextr].status_texto }}
+                                                <span class="dot-danger"></span>
+                                            </p>
+                                            <p v-else-if="
+                                                data[indextr].operacion_status == 1
+                                            ">
+                                                {{ data[indextr].status_texto }}
+                                                <span class="dot-warning"></span>
+                                            </p>
+                                            <p v-else-if="
+                                                data[indextr].operacion_status == 2
+                                            ">
+                                                {{ data[indextr].status_texto }}
+                                                <span class="dot-success"></span>
+                                            </p>
+                                        </vs-td>
+                                        <vs-td :data="data[indextr].id">
+                                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg"
+                                                @click="
+                                                    retornarSeleccion(
+                                                        data[indextr].venta_terreno
+                                                            .ubicacion_texto +
+                                                        ' (' +
+                                                        data[indextr].venta_terreno
+                                                            .tipo_propiedad.tipo +
+                                                        ' Convenio ' +
+                                                        data[indextr]
+                                                            .numero_convenio +
+                                                        ')',
+                                                        data[indextr].venta_terreno.id,
+                                                        data[indextr].operacion_status,
+                                                        data[indextr].saldo_neto
+                                                    )
+                                                    " />
+                                        </vs-td>
+                                    </vs-tr>
+                                </template>
+                            </vs-table>
+                            <div>
+                                <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual"
+                                    class="py-6"></vs-pagination>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <FormularioVentas
-                v-if="verFormularioVentas"
-                :z_index="'z-index57k'"
-                :id_venta="''"
-                :tipo="'agregar'"
-                :show="verFormularioVentas"
-                @closeVentana="verFormularioVentas = false"
-                @ver_pdfs_nueva_venta="get_data('', 1)"
-            ></FormularioVentas>
+            <FormularioVentas v-if="verFormularioVentas" :z_index="'z-index57k'" :id_venta="''" :tipo="'agregar'"
+                :show="verFormularioVentas" @closeVentana="verFormularioVentas = false"
+                @ver_pdfs_nueva_venta="get_data('', 1)">
+            </FormularioVentas>
             <!--fin de buscador-->
         </vs-popup>
     </div>
@@ -307,7 +228,11 @@ export default {
             },
         },
     },
-    computed: {},
+    computed: {
+        noDataFound() {
+            return this.terrenos.length === 0;
+        },
+    },
     data() {
         return {
             localShow: false,
@@ -392,9 +317,9 @@ export default {
                     }
                 });
         },
-        handleSearch(searching) {},
-        handleChangePage(page) {},
-        handleSort(key, active) {},
+        handleSearch(searching) { },
+        handleChangePage(page) { },
+        handleSort(key, active) { },
         retornarSeleccion(
             ubicacion = "",
             id = "",

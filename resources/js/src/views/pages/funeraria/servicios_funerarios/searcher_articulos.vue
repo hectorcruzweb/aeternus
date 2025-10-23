@@ -1,99 +1,109 @@
 <template>
   <div>
-    <vs-popup :class="['forms-popup popup-90', z_index]" title="Catálogo de Artículos y Servicios" :active="localShow"
-      :ref="this.$options.name">
+    <vs-popup :class="['forms-popup popup-90', z_index]" fullscreen title="Catálogo de Artículos y Servicios"
+      :active="localShow" :ref="this.$options.name">
       <!--inicio de buscador-->
-      <div class="py-3">
-        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
-          <template slot="no-body">
-            <div>
-              <div class="flex flex-wrap px-4 py-6">
-                <div class="w-full xl:w-5/12 px-2 input-text">
-                  <label>
-                    Categorías
-                    <span>(*)</span>
-                  </label>
-                  <v-select :options="categorias" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                    v-model="serverOptions.categoria" class="w-full" name="categoria" data-vv-as=" ">
-                    <div slot="no-options">Seleccione 1</div>
-                  </v-select>
+      <!--inicio de buscador-->
+      <div class="flex flex-col flex-1 h-full">
+        <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
+          <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset">
+            <template slot="no-body">
+              <div>
+                <div class="flex flex-wrap px-4 py-6">
+                  <div class="w-full xl:w-5/12 px-2 input-text">
+                    <label>
+                      Categorías
+                      <span>(*)</span>
+                    </label>
+                    <v-select :options="categorias" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                      v-model="serverOptions.categoria" class="w-full" name="categoria" data-vv-as=" ">
+                      <div slot="no-options">Seleccione 1</div>
+                    </v-select>
 
-                  <span>{{ errors.first("categoria") }}</span>
-                </div>
+                    <span>{{ errors.first("categoria") }}</span>
+                  </div>
 
-                <div class="w-full xl:w-7/12 px-2 input-text">
-                  <label>Descripción</label>
-                  <vs-input ref="descripcion" name="descripcion" data-vv-as=" " type="text" class="w-full"
-                    placeholder="Ej. Ataúd de Madera" maxlength="12" v-model.trim="serverOptions.descripcion"
-                    v-on:keyup.enter="get_data('descripcion', 1)" v-on:blur="get_data('descripcion', 1, 'blur')" />
-                  <span>{{ errors.first("descripcion") }}</span>
+                  <div class="w-full xl:w-7/12 px-2 input-text">
+                    <label>Descripción</label>
+                    <vs-input ref="descripcion" name="descripcion" data-vv-as=" " type="text" class="w-full"
+                      placeholder="Ej. Ataúd de Madera" maxlength="12" v-model.trim="serverOptions.descripcion"
+                      v-on:keyup.enter="get_data('descripcion', 1)" v-on:blur="get_data('descripcion', 1, 'blur')" />
+                    <span>{{ errors.first("descripcion") }}</span>
+                  </div>
                 </div>
               </div>
+            </template>
+          </vx-card>
+        </div>
+
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+          <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+            <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+          </div>
+          <div v-else id="results" class="w-full flex flex-wrap">
+            <div class="w-full py-2">
+              <vs-table :sst="true" :max-items="serverOptions.per_page" :data="lotes" stripe noDataText="0 Resultados"
+                class="tabla-datos">
+                <template slot="header">
+                  <h3>Lista de Artículos y Servicios por Lotes</h3>
+                </template>
+                <template slot="thead">
+                  <vs-th>Clave</vs-th>
+                  <vs-th>Cód. Barras</vs-th>
+                  <vs-th>Tipo</vs-th>
+                  <vs-th>Categoría</vs-th>
+                  <vs-th>Descripción</vs-th>
+
+                  <vs-th>$ Costo</vs-th>
+                  <vs-th>Existencia</vs-th>
+                  <vs-th>Seleccionar</vs-th>
+                </template>
+                <template slot-scope="{ data }">
+                  <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                    <vs-td :data="data[indextr].id">
+                      <span>{{ data[indextr].id }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].codigo_barras">
+                      <span>{{ data[indextr].codigo_barras }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].tipo">
+                      {{ data[indextr].tipo }}
+                    </vs-td>
+
+                    <vs-td :data="data[indextr].categoria">{{
+                      data[indextr].categoria
+                    }}</vs-td>
+                    <vs-td :data="data[indextr].descripcion">{{
+                      data[indextr].descripcion
+                    }}</vs-td>
+                    <vs-td :data="data[indextr].costo_neto_normal">
+                      $
+                      {{ data[indextr].costo_neto_normal | numFormat("0,000.00") }}
+                    </vs-td>
+                    <vs-td :data="data[indextr].existencia">
+                      <p v-if="data[indextr].existencia > 0">
+                        {{ data[indextr].existencia }}
+                        <span class="dot-success"></span>
+                      </p>
+                      <p v-else>
+                        {{ data[indextr].existencia }}
+                        <span class="dot-danger"></span>
+                      </p>
+                    </vs-td>
+                    <vs-td :data="data[indextr].id">
+                      <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg"
+                        @click="retornarSeleccion(data[indextr])" />
+                    </vs-td>
+                  </vs-tr>
+                </template>
+              </vs-table>
+              <div>
+                <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
+              </div>
             </div>
-          </template>
-        </vx-card>
-        <div class="py-6">
-          <vs-table :sst="true" :max-items="serverOptions.per_page" :data="lotes" stripe noDataText="0 Resultados"
-            class="tabla-datos">
-            <template slot="header">
-              <h3>Lista de Artículos y Servicios por Lotes</h3>
-            </template>
-            <template slot="thead">
-              <vs-th>Clave</vs-th>
-              <vs-th>Cód. Barras</vs-th>
-              <vs-th>Tipo</vs-th>
-              <vs-th>Categoría</vs-th>
-              <vs-th>Descripción</vs-th>
-
-              <vs-th>$ Costo</vs-th>
-              <vs-th>Existencia</vs-th>
-              <vs-th>Seleccionar</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-              <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                <vs-td :data="data[indextr].id">
-                  <span>{{ data[indextr].id }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].codigo_barras">
-                  <span>{{ data[indextr].codigo_barras }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].tipo">
-                  {{ data[indextr].tipo }}
-                </vs-td>
-
-                <vs-td :data="data[indextr].categoria">{{
-                  data[indextr].categoria
-                }}</vs-td>
-                <vs-td :data="data[indextr].descripcion">{{
-                  data[indextr].descripcion
-                }}</vs-td>
-                <vs-td :data="data[indextr].costo_neto_normal">
-                  $
-                  {{ data[indextr].costo_neto_normal | numFormat("0,000.00") }}
-                </vs-td>
-                <vs-td :data="data[indextr].existencia">
-                  <p v-if="data[indextr].existencia > 0">
-                    {{ data[indextr].existencia }}
-                    <span class="dot-success"></span>
-                  </p>
-                  <p v-else>
-                    {{ data[indextr].existencia }}
-                    <span class="dot-danger"></span>
-                  </p>
-                </vs-td>
-                <vs-td :data="data[indextr].id">
-                  <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg"
-                    @click="retornarSeleccion(data[indextr])" />
-                </vs-td>
-              </vs-tr>
-            </template>
-          </vs-table>
-          <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
           </div>
         </div>
       </div>
-
       <!--fin de buscador-->
     </vs-popup>
   </div>
@@ -198,13 +208,8 @@ export default {
     },
   },
   computed: {
-    showVentana: {
-      get() {
-        return this.show;
-      },
-      set(newValue) {
-        return newValue;
-      },
+    noDataFound() {
+      return this.lotes.length === 0;
     },
   },
   data() {
@@ -227,7 +232,7 @@ export default {
         categorias_id: "",
         filtro_especifico_opcion: 1,
         page: "",
-        per_page: "",
+        per_page: '',
         numero_control: "",
         descripcion: "",
       },
@@ -260,8 +265,8 @@ export default {
 
     reset(card) {
       card.removeRefreshAnimation(500);
-      this.serverOptions.numero_control = "";
-      this.serverOptions.titular = "";
+      this.serverOptions.categoria = this.categorias[0];
+      this.serverOptions.descripcion = "";
       this.get_data("", this.actual);
     },
     cancelar() {
@@ -291,7 +296,7 @@ export default {
       this.$vs.loading();
       this.verPaginado = false;
       this.serverOptions.page = page;
-      this.serverOptions.per_page = 24;
+      this.serverOptions.per_page = 15;
       this.serverOptions.categorias_id = this.serverOptions.categoria.value;
       funeraria
         .get_inventario_servicios(this.serverOptions)

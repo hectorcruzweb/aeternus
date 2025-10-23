@@ -1,152 +1,95 @@
 <template>
     <div>
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card
-                no-radius
-                title="Filtros de elaboración de reportes"
-                refresh-content-action
-                @refresh="reset"
-                :collapse-action="false"
-            >
+            <vx-card no-radius title="Filtros de elaboración de reportes" refresh-content-action @refresh="reset"
+                :collapse-action="false">
                 <div class="flex flex-wrap">
-                    <div class="w-full xl:w-4/12 mb-1 px-2 input-text">
+                    <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Módulo del Sistema</label>
-                        <v-select
-                            :options="modulos"
-                            :clearable="false"
-                            v-model="form.modulo"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            class="w-full"
-                        />
+                        <v-select :options="modulos" :clearable="false" v-model="form.modulo"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" />
                     </div>
-                    <div class="w-full xl:w-4/12 mb-1 px-2 input-text">
+                    <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Tipo de Reporte</label>
-                        <v-select
-                            :options="reportes"
-                            v-model="form.reporte"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            class="w-full"
-                        />
+                        <v-select :options="reportes" v-model="form.reporte" :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" />
                     </div>
-
-                    <div
-                        class="w-full xl:w-4/12 mb-1 px-2 input-text"
-                        v-show="ver_fecha_rango"
-                    >
+                    <div class="w-full xl:w-3/12 mb-1 px-2 input-text" v-show="ver_fecha_rango">
                         <label class="">
                             Rango de Fechas año/mes/dia
                             <span>(*)</span>
                         </label>
-                        <flat-pickr
-                            name="rango_fechas"
-                            data-vv-as=" "
-                            :config="configdateTimePickerRange"
-                            v-model="form.rango_fechas"
-                            placeholder="Rango de fechas del reporte"
-                            class="w-full"
-                            @on-close="onCloseDate"
-                        />
+                        <flat-pickr name="rango_fechas" data-vv-as=" " :config="configdateTimePickerRange"
+                            v-model="form.rango_fechas" placeholder="Rango de fechas del reporte" class="w-full"
+                            @on-close="onCloseDate" />
                     </div>
-                    <div
-                        class="w-full xl:w-4/12 px-2 input-text"
-                        v-show="ver_fecha"
-                    >
+                    <div class="w-full xl:w-3/12 px-2 input-text" v-show="ver_fecha">
                         <label>
                             Fecha del Reporte
                             <span>(*)</span>
                         </label>
-                        <flat-pickr
-                            name="fecha"
-                            data-vv-as=" "
-                            :config="configdateTimePicker"
-                            v-model="form.fecha"
-                            placeholder="Fecha del Reporte"
-                            class="w-full"
-                        />
+                        <flat-pickr name="fecha" data-vv-as=" " :config="configdateTimePicker" v-model="form.fecha"
+                            placeholder="Fecha del Reporte" class="w-full" />
                     </div>
                 </div>
-
                 <div class="flex flex-wrap" v-if="ver_filtros_cementerio_mapa">
                     <div class="w-full xl:w-4/12 mb-1 px-2 input-text">
                         <label class="">Tipo de Propiedad</label>
-                        <v-select
-                            :options="tipo_propiedades"
-                            :clearable="false"
-                            v-model="form.tipo_propiedad"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            class="w-full"
-                        />
+                        <v-select :options="tipo_propiedades" :clearable="false" v-model="form.tipo_propiedad"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" />
                     </div>
                     <div class="w-full xl:w-4/12 mb-1 px-2 input-text">
                         <label class="">Área/Sección</label>
-                        <v-select
-                            :options="areas_propiedades"
-                            v-model="form.area_propiedades"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            class="w-full"
-                        />
+                        <v-select :options="areas_propiedades" v-model="form.area_propiedades" :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" />
                     </div>
 
                     <div class="w-full xl:w-4/12 mb-1 px-2 input-text">
                         <label class="">Filtro de Selección</label>
-                        <v-select
-                            :options="filtros_seleccion"
-                            v-model="form.filtro_seleccion"
-                            :clearable="false"
-                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            class="w-full"
-                        />
+                        <v-select :options="filtros_seleccion" v-model="form.filtro_seleccion" :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'" class="w-full" />
                     </div>
                 </div>
             </vx-card>
-
-            <div class="w-full pt-8" v-if="form.reporte.value">
-                <vs-table
-                    class="tabla-datos tabla-datos-no-data"
-                    :data="[]"
-                    noDataText="0 Resultados"
-                >
-                    <template slot="header">
-                        <h3>Consultar / Descargar el Reporte Seleccionado</h3>
-                    </template>
-                    <template slot="thead">
-                        <vs-th>Reporte</vs-th>
-                        <vs-th>Detalle del reporte</vs-th>
-                        <vs-th>Consultar</vs-th>
-                    </template>
-                    <template>
-                        <vs-tr>
-                            <vs-td>
-                                {{ form.reporte.label }}
-                            </vs-td>
-                            <vs-td>
-                                {{ form.reporte.detalle }}
-                            </vs-td>
-                            <vs-td>
-                                <div class="flex justify-center">
-                                    <img
-                                        class="cursor-pointer img-btn-24 mx-2"
-                                        src="@assets/images/pdf.svg"
-                                        title="Ver Reporte"
-                                        @click="openReporte()"
-                                    />
-                                </div>
-                            </vs-td>
-                        </vs-tr>
-                    </template>
-                </vs-table>
-            </div>
-            <Reporteador
-                v-if="openReportesLista"
-                :header="'consultar documentos de venta de propiedad'"
-                :show="openReportesLista"
-                :listadereportes="ListaReportes"
-                :request="form"
-                @closeReportes="openReportesLista = false"
-            ></Reporteador>
         </div>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+                <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table class="tabla-datos tabla-datos-no-data" :data="[]" noDataText="0 Resultados">
+                        <template slot="header">
+                            <h3>Consultar / Descargar el Reporte Seleccionado</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Reporte</vs-th>
+                            <vs-th>Detalle del reporte</vs-th>
+                            <vs-th>Consultar</vs-th>
+                        </template>
+                        <template>
+                            <vs-tr>
+                                <vs-td>
+                                    {{ form.reporte.label }}
+                                </vs-td>
+                                <vs-td>
+                                    {{ form.reporte.detalle }}
+                                </vs-td>
+                                <vs-td>
+                                    <div class="flex justify-center">
+                                        <img class="cursor-pointer img-btn-24 mx-2" src="@assets/images/pdf.svg"
+                                            title="Ver Reporte" @click="openReporte()" />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                </div>
+            </div>
+        </div>
+        <Reporteador v-if="openReportesLista" :header="'consultar documentos de venta de propiedad'"
+            :show="openReportesLista" :listadereportes="ListaReportes" :request="form"
+            @closeReportes="openReportesLista = false"></Reporteador>
     </div>
 </template>
 
@@ -171,6 +114,9 @@ export default {
         Reporteador,
     },
     computed: {
+        noDataFound() {
+            return (!this.form.modulo.value || !this.form.reporte.value);
+        },
         ver_fecha: function () {
             let ver = true;
             if (this.form.modulo.value == 1) {
@@ -209,7 +155,6 @@ export default {
             }
             return ver;
         },
-
         ver_filtros_cementerio_mapa: function () {
             let ver = false;
             if (this.form.modulo.value == 2) {
@@ -458,9 +403,9 @@ export default {
                 /**hay fechas que buscar */
                 if (
                     this.form.fecha_inicio !=
-                        moment(selectedDates[0]).format("YYYY-MM-DD") ||
+                    moment(selectedDates[0]).format("YYYY-MM-DD") ||
                     this.form.fecha_fin !=
-                        moment(selectedDates[1]).format("YYYY-MM-DD")
+                    moment(selectedDates[1]).format("YYYY-MM-DD")
                 ) {
                     /**agreggo la fecha 1 */
                     this.form.fecha_inicio = moment(selectedDates[0]).format(
@@ -504,7 +449,6 @@ export default {
                     }
                 }
             }
-
             this.ListaReportes = [];
             this.ListaReportes.push({
                 nombre: this.form.reporte.label,
@@ -515,9 +459,7 @@ export default {
             this.form.email = "";
             this.form.destinatario = "";
             this.openReportesLista = true;
-            this.$vs.loading.close();
         },
-
         validarFecha() {
             if (this.form.fecha == "") {
                 this.$vs.notify({
@@ -564,7 +506,7 @@ export default {
     mounted() {
         this.$log("Component mounted! " + this.$options.name);
     },
-    beforeDestroy() {},
+    beforeDestroy() { },
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

@@ -29,7 +29,7 @@ documento, index_documento
                                     <vs-td>
                                         <span class="">{{
                                             documento.documento
-                                            }}</span>
+                                        }}</span>
                                     </vs-td>
 
                                     <vs-td>
@@ -112,7 +112,7 @@ programados, index_programado
                                 ]">
                                     <span class="">{{
                                         programados.num_pago
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
 
                                 <vs-td :class="[
@@ -129,7 +129,7 @@ programados, index_programado
                                         : '',
                                 ]">{{
                                     programados.fecha_programada_abr
-                                    }}</vs-td>
+                                }}</vs-td>
 
                                 <vs-td :class="[
                                     programados.status_pago == 0
@@ -261,7 +261,7 @@ programados, index_programado
                                 ]">
                                     <span class="">{{
                                         index_programado + 1
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
 
                                 <vs-td :class="[
@@ -286,7 +286,7 @@ programados, index_programado
                                         : '',
                                 ]">{{
                                     programados.fecha_programada_abr
-                                    }}</vs-td>
+                                }}</vs-td>
 
                                 <vs-td :class="[
                                     programados.status_pago == 0
@@ -413,7 +413,7 @@ programados, index_programado
                                 ]">
                                     <span class="">{{
                                         pago.fecha_pago_texto
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
 
                                 <vs-td :class="[
@@ -435,7 +435,7 @@ programados, index_programado
                                 ]">
                                     <span class="">{{
                                         pago.movimientos_pagos_texto
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
 
                                 <vs-td :class="[
@@ -445,7 +445,7 @@ programados, index_programado
                                 ]">
                                     <span class="">{{
                                         pago.cobrador.nombre
-                                        }}</span>
+                                    }}</span>
                                 </vs-td>
 
                                 <vs-td>
@@ -489,13 +489,13 @@ programados, index_programado
             </Reporteador>
             <Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
                 :operacion_id="operacion_id" :tipo="'operacion'" @closeFirmas="openFirmas = false"></Firmas>
-            <CancelarPago v-if="openCancelar" :z_index="'z-index58k'" :show="openCancelar"
+            <CancelarPago v-if="openCancelar" :z_index="'z-index59k'" :show="openCancelar"
                 @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
-            <FormularioPagos v-if="verFormularioPagos" :z_index="'z-index58k'" :referencia="referencia"
+            <FormularioPagos v-if="verFormularioPagos" :z_index="'z-index59k'" :referencia="referencia"
                 :show="verFormularioPagos" @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos">
             </FormularioPagos>
             <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
-                @closeVentana="openSeguimientos = false" :z_index="'z-index58k'">
+                @closeVentana="openSeguimientos = false" :z_index="'z-index59k'">
             </FormularioSeguimientos>
         </vs-popup>
     </div>

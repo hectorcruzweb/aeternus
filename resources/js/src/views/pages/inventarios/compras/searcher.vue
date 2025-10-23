@@ -1,85 +1,89 @@
 <template>
   <div class="centerx">
-    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de proveedores registrados" :active="localShow"
-      :ref="this.$options.name">
-      <div class="w-full text-right">
-        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-          @click="verFormularioProveedores = true">
-          <span>Registrar Proveedor</span>
-        </vs-button>
-      </div>
-
-      <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-          :collapse-action="false">
-          <div class="flex flex-wrap pb-6">
-            <div class="w-full input-text xl:w-3/12 px-2">
-              <label>Núm. Proveedor</label>
-              <vs-input name="num_proveedor" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
-                maxlength="6" v-model.trim="serverOptions.numero_control"
-                v-on:keyup.enter="get_data('numero_control', 1)" v-on:blur="get_data('numero_control', 1, 'blur')" />
-              <span class="">{{ errors.first("num_proveedor") }}</span>
-            </div>
-
-            <div class="w-full input-text xl:w-9/12 px-2">
-              <label>Nombre</label>
-              <vs-input ref="nombre_proveedor" name="nombre_proveedor" data-vv-as=" " type="text" class="w-full"
-                placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.nombre_comercial"
-                v-on:keyup.enter="get_data('nombre_comercial', 1)"
-                v-on:blur="get_data('nombre_comercial', 1, 'blur')" />
-              <span class="">{{ errors.first("nombre_proveedor") }}</span>
-            </div>
-          </div>
-        </vx-card>
-      </div>
+    <vs-popup :class="['forms-popup popup-85', z_index]" fullscreen title="Catálogo de proveedores registrados"
+      :active="localShow" :ref="this.$options.name">
 
       <!--inicio de buscador-->
-      <div class="py-6">
-        <div class="resultados_proveedores py-6">
-          <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="proveedores" stripe
-            noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-              <h3>Lista actualizada de proveedores registrados</h3>
-            </template>
-            <template slot="thead">
-              <vs-th>Núm. Cliente</vs-th>
-              <vs-th>Nombre</vs-th>
-              <vs-th>Domicilio</vs-th>
-              <vs-th>Celular</vs-th>
+      <div class="flex flex-col flex-1 h-full">
+        <div class="w-full text-right">
+          <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+            @click="verFormularioProveedores = true">
+            <span>Registrar Proveedor</span>
+          </vs-button>
+        </div>
+        <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
+          <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+            :collapse-action="false">
+            <div class="flex flex-wrap pb-6">
+              <div class="w-full input-text xl:w-3/12 px-2">
+                <label>Núm. Proveedor</label>
+                <vs-input name="num_proveedor" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
+                  maxlength="6" v-model.trim="serverOptions.numero_control"
+                  v-on:keyup.enter="get_data('numero_control', 1)" v-on:blur="get_data('numero_control', 1, 'blur')" />
+                <span class="">{{ errors.first("num_proveedor") }}</span>
+              </div>
 
-              <vs-th>Seleccionar</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-              <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                <vs-td :data="data[indextr].id">
-                  <span class="font-semibold">{{ data[indextr].id }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].nombre_comercial">{{
-                  data[indextr].nombre_comercial
-                }}</vs-td>
-                <vs-td :data="data[indextr].direccion">{{
-                  data[indextr].direccion
-                }}</vs-td>
-                <vs-td :data="data[indextr].telefono">
-                  <span class="font-medium">{{ data[indextr].telefono }}</span>
-                </vs-td>
-
-                <vs-td :data="data[indextr].id_user">
-                  <div class="flex justify-center">
-                    <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
-                      retornarSeleccion(
-                        data[indextr].nombre_comercial,
-                        data[indextr].id,
-                        data[indextr]
-                      )
-                      " />
-                  </div>
-                </vs-td>
-              </vs-tr>
-            </template>
-          </vs-table>
-          <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
+              <div class="w-full input-text xl:w-9/12 px-2">
+                <label>Nombre</label>
+                <vs-input ref="nombre_proveedor" name="nombre_proveedor" data-vv-as=" " type="text" class="w-full"
+                  placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.nombre_comercial"
+                  v-on:keyup.enter="get_data('nombre_comercial', 1)"
+                  v-on:blur="get_data('nombre_comercial', 1, 'blur')" />
+                <span class="">{{ errors.first("nombre_proveedor") }}</span>
+              </div>
+            </div>
+          </vx-card>
+        </div>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+          <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+            <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+          </div>
+          <div v-else id="results" class="w-full flex flex-wrap">
+            <div class="w-full py-2">
+              <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="proveedores" stripe
+                noDataText="0 Resultados" class="tabla-datos">
+                <template slot="header">
+                  <h3>Lista actualizada de proveedores registrados</h3>
+                </template>
+                <template slot="thead">
+                  <vs-th>Núm. Cliente</vs-th>
+                  <vs-th>Nombre</vs-th>
+                  <vs-th>Domicilio</vs-th>
+                  <vs-th>Celular</vs-th>
+                  <vs-th>Seleccionar</vs-th>
+                </template>
+                <template slot-scope="{ data }">
+                  <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                    <vs-td :data="data[indextr].id">
+                      <span class="font-semibold">{{ data[indextr].id }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].nombre_comercial">{{
+                      data[indextr].nombre_comercial
+                      }}</vs-td>
+                    <vs-td :data="data[indextr].direccion">{{
+                      data[indextr].direccion
+                      }}</vs-td>
+                    <vs-td :data="data[indextr].telefono">
+                      <span class="font-medium">{{ data[indextr].telefono }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].id_user">
+                      <div class="flex justify-center">
+                        <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
+                          retornarSeleccion(
+                            data[indextr].nombre_comercial,
+                            data[indextr].id,
+                            data[indextr]
+                          )
+                          " />
+                      </div>
+                    </vs-td>
+                  </vs-tr>
+                </template>
+              </vs-table>
+              <div>
+                <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -140,6 +144,9 @@ export default {
     }
   },
   computed: {
+    noDataFound() {
+      return this.proveedores.length === 0;
+    },
   },
   data() {
     return {

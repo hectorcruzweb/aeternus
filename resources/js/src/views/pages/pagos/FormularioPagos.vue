@@ -1,1059 +1,760 @@
 <template>
     <div class="centerx">
-        <vs-popup
-            :class="[
-                'forms-popup',
-                !mostrar_datos_operacion ? 'popup-85' : '',
-                z_index,
-            ]"
-            :fullscreen="mostrar_datos_operacion"
-            close="cancelar"
-            :title="'control de cobranza'"
-            :active="localShow"
-            :ref="this.$options.name"
-        >
-            <div class="form-group">
-                <div class="title-form-group">
-                    <span>Referencia de pago</span>
-                </div>
-                <div class="form-group-content">
-                    <div class="flex flex-wrap">
-                        <div class="w-full md:w-6/12 xl:w-4/12 px-2 input-text">
-                            <label>
-                                Referencia de Pago
-                                <span>(*)</span>
-                            </label>
+        <vs-popup :class="[
+            'forms-popup',
+            !mostrar_datos_operacion ? 'popup-85' : '',
+            z_index,
+        ]" :fullscreen="true" close="cancelar" :title="'control de cobranza'" :active="localShow"
+            :ref="this.$options.name">
+            <div class="flex flex-col flex-1 h-full">
+                <div class="form-group">
+                    <div class="title-form-group">
+                        <span>Referencia de pago</span>
+                    </div>
+                    <div class="form-group-content">
+                        <div class="flex flex-wrap">
+                            <div class="w-full md:w-6/12 xl:w-4/12 px-2 input-text">
+                                <label>
+                                    Referencia de Pago
+                                    <span>(*)</span>
+                                </label>
 
-                            <vs-input
-                                data-vv-scope="form_calcular_adeudo"
-                                ref="referencia"
-                                name="referencia"
-                                data-vv-as=" "
-                                data-vv-validate-on="blur"
-                                maxlength="25"
-                                type="text"
-                                class="w-full"
-                                v-validate="'required'"
-                                placeholder="Núm. de referencia del pago"
-                                v-model.trim="form.referencia"
-                                :disabled="getReferencia != '' ? true : false"
-                                @keypress.enter="CalcularPago()"
-                            />
-                            <span>{{
-                                errors.first("form_calcular_adeudo.referencia")
-                            }}</span>
-                            <span v-if="this.errores.referencia">{{
-                                errores.referencia[0]
-                            }}</span>
-                        </div>
-                        <div class="w-full md:w-6/12 xl:w-4/12 px-3 input-text">
-                            <label>
-                                Fecha y Hora del Pago
-                                <span>(*)</span>
-                            </label>
-                            <flat-pickr
-                                data-vv-scope="form_calcular_adeudo"
-                                name="fecha_pago"
-                                data-vv-as=" "
-                                v-validate:fecha_pago_validacion_computed.immediate="
-                                    'required'
-                                "
-                                :config="configdateTimePickerWithTime"
-                                v-model="form.fecha_pago"
-                                placeholder="Fecha del Pago"
-                                class="w-full"
-                            />
-                            <span>{{
-                                errors.first("form_calcular_adeudo.fecha_pago")
-                            }}</span>
-                            <span v-if="this.errores.fecha_pago">{{
-                                errores.fecha_pago[0]
-                            }}</span>
-                        </div>
-                        <div
-                            class="w-full md:w-6/12 xl:w-2/12 px-2 text-center input-text"
-                        >
-                            <label>Habilitar Multipago</label>
-                            <div>
-                                <vs-switch
-                                    class="mx-auto mt-2"
-                                    ref="permiso"
-                                    color="success"
-                                    v-model="form.multipago"
-                                    :vs-value="false"
-                                />
+                                <vs-input data-vv-scope="form_calcular_adeudo" ref="referencia" name="referencia"
+                                    data-vv-as=" " data-vv-validate-on="blur" maxlength="25" type="text" class="w-full"
+                                    v-validate="'required'" placeholder="Núm. de referencia del pago"
+                                    v-model.trim="form.referencia" :disabled="getReferencia != '' ? true : false"
+                                    @keypress.enter="CalcularPago()" />
+                                <span>{{
+                                    errors.first("form_calcular_adeudo.referencia")
+                                    }}</span>
+                                <span v-if="this.errores.referencia">{{
+                                    errores.referencia[0]
+                                    }}</span>
                             </div>
-                        </div>
-                        <div
-                            class="w-full md:w-6/12 xl:w-2/12 px-2 text-center xl:text-right"
-                        >
-                            <vs-button
-                                class="w-full my-2 mt-6 md:mt-4"
-                                @click="CalcularPago()"
-                            >
-                                <span>Calcular Adeudo</span>
-                            </vs-button>
+                            <div class="w-full md:w-6/12 xl:w-4/12 px-3 input-text">
+                                <label>
+                                    Fecha y Hora del Pago
+                                    <span>(*)</span>
+                                </label>
+                                <flat-pickr data-vv-scope="form_calcular_adeudo" name="fecha_pago" data-vv-as=" "
+                                    v-validate:fecha_pago_validacion_computed.immediate="'required'
+                                        " :config="configdateTimePickerWithTime" v-model="form.fecha_pago"
+                                    placeholder="Fecha del Pago" class="w-full" />
+                                <span>{{
+                                    errors.first("form_calcular_adeudo.fecha_pago")
+                                    }}</span>
+                                <span v-if="this.errores.fecha_pago">{{
+                                    errores.fecha_pago[0]
+                                    }}</span>
+                            </div>
+                            <div class="w-full md:w-6/12 xl:w-2/12 px-2 text-center input-text">
+                                <label>Habilitar Multipago</label>
+                                <div>
+                                    <vs-switch class="mx-auto mt-2" ref="permiso" color="success"
+                                        v-model="form.multipago" :vs-value="false" />
+                                </div>
+                            </div>
+                            <div class="w-full md:w-6/12 xl:w-2/12 px-2 text-center xl:text-right">
+                                <vs-button class="w-full my-2 mt-6 md:mt-4" @click="CalcularPago()">
+                                    <span>Calcular Adeudo</span>
+                                </vs-button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="form-group" v-if="mostrar_datos_operacion">
-                <div class="title-form-group">
-                    <span>Referencias a Pagar</span>
-                </div>
-                <div class="form-group-content">
-                    <div class="flex flex-wrap">
-                        <!--incio de tabla-->
-                        <div class="w-full">
-                            <vs-table
-                                :data="form.datos_operacion.pagos_programados"
-                                noDataText="0 Resultados"
-                                class="tabla-datos"
-                            >
-                                <template slot="header">
-                                    <h3>Listado de pagos programados</h3>
-                                </template>
-                                <template slot="thead">
-                                    <vs-th>
-                                        <vs-checkbox
-                                            ref="seleccionar_todos"
-                                            color="primary"
-                                            class="capitalize font-medium mt-2 permiso"
-                                            :vs-value="true"
-                                            v-model="seleccionar_todos"
-                                        ></vs-checkbox>
-                                    </vs-th>
-                                    <vs-th>#</vs-th>
-                                    <vs-th>Concepto</vs-th>
-                                    <vs-th>Referencia</vs-th>
-                                    <vs-th>Fecha Programada</vs-th>
-                                    <vs-th>Monto Programado $</vs-th>
-                                    <vs-th>Intereses Generados $</vs-th>
-                                    <vs-th hidden>Descuento Disponible $</vs-th>
-                                    <vs-th> Saldo del Pago $</vs-th>
-                                </template>
-                                <template slot-scope="{ data }">
-                                    <vs-tr
-                                        :data="programados"
-                                        v-show="
-                                            programados.status == 1 &&
-                                            programados.status_pago != 2
-                                        "
-                                        v-for="(programados, indextr) in form
-                                            .datos_operacion.pagos_programados"
-                                        v-bind:key="programados.id"
-                                        ref="row"
-                                    >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .num_pago
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                        >
-                                            <vs-checkbox
-                                                ref="pago_seleccionado"
-                                                color="primary"
-                                                :vs-value="programados"
-                                                v-model="form.pagos_a_cubrir"
-                                            ></vs-checkbox>
-                                        </vs-td>
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .num_pago
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                        >
-                                            <span class="font-semibold">{{
-                                                programados.num_pago
-                                            }}</span>
-                                        </vs-td>
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .concepto_texto
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >{{
-                                                programados.concepto_texto
-                                            }}</vs-td
-                                        >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .referencia_pago
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >{{
-                                                programados.referencia_pago
-                                            }}</vs-td
-                                        >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .fecha_programada_abr
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >{{
-                                                programados.fecha_programada_abr
-                                            }}</vs-td
-                                        >
-
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .status_pago
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >$
-                                            {{
-                                                (programados.monto_programado -
-                                                    programados.total_cubierto)
-                                                    | numFormat("0,000.00")
-                                            }}</vs-td
-                                        >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .intereses
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >$
-                                            {{
-                                                programados.intereses
-                                                    | numFormat("0,000.00")
-                                            }}</vs-td
-                                        >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .status_pago
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            hidden
-                                            >$
-                                            {{
-                                                programados.descuento_pronto_pago
-                                                    | numFormat("0,000.00")
-                                            }}</vs-td
-                                        >
-                                        <vs-td
-                                            :data="
-                                                form.datos_operacion
-                                                    .pagos_programados[indextr]
-                                                    .saldo_neto
-                                            "
-                                            :class="[
-                                                programados.status_pago == 0
-                                                    ? 'color-danger-900'
-                                                    : '',
-                                            ]"
-                                            >$
-                                            {{
-                                                programados.saldo_neto
-                                                    | numFormat("0,000.00")
-                                            }}</vs-td
-                                        >
-                                    </vs-tr>
-                                    <vs-tr
-                                        class="font-medium color-primary-900 size-base"
-                                    >
-                                        <vs-td colspan="5">
-                                            <div class="py-2"></div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2 uppercase">
-                                                Monto Programado $
-                                            </div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2 uppercase">
-                                                Intereses Generados $
-                                            </div>
-                                        </vs-td>
-                                        <vs-td hidden>
-                                            <div class="py-2 uppercase">
-                                                Descuento Disponible $
-                                            </div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2 uppercase">
-                                                Saldo del Pago $
-                                            </div>
-                                        </vs-td>
-                                    </vs-tr>
-                                    <vs-tr
-                                        class="font-medium color-black-900 size-base"
-                                    >
-                                        <vs-td colspan="5">
-                                            <div
-                                                class="py-2 font-bold uppercase"
-                                            >
-                                                Totales $
-                                            </div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2">
-                                                $
-                                                {{
-                                                    maximo_abono
-                                                        | numFormat("0,000.00")
-                                                }}
-                                            </div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2">
-                                                $
-                                                {{
-                                                    maximo_interes
-                                                        | numFormat("0,000.00")
-                                                }}
-                                            </div>
-                                        </vs-td>
-                                        <vs-td hidden>
-                                            <div class="py-2">
-                                                $
-                                                {{
-                                                    maximo_descuento
-                                                        | numFormat("0,000.00")
-                                                }}
-                                            </div>
-                                        </vs-td>
-                                        <vs-td>
-                                            <div class="py-2">
-                                                $
-                                                {{
-                                                    maximo_saldo
-                                                        | numFormat("0,000.00")
-                                                }}
-                                            </div>
-                                        </vs-td>
-                                    </vs-tr>
-                                </template>
-                            </vs-table>
+                <div id="resultados" class="mt-5 flex flex-col flex-1">
+                    <div v-if="error != ''" class="w-full skeleton flex-1 items-center justify-center">
+                        <div class="">
+                            <p class="color-danger-900 h4 font-medium">Error</p>
+                            <span class="color-danger-900 text-lg font-normal"> {{ error }}</span>
                         </div>
-                        <!--FIN de tabla-->
-                        <div class="w-full">
-                            <div class="flex flex-wrap">
-                                <div class="w-full lg:w-8/12">
+                    </div>
+                    <div v-else-if="!mostrar_datos_operacion"
+                        class="w-full skeleton flex-1 items-center justify-center">
+                        <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+                    </div>
+                    <div v-else id="results" class="w-full flex flex-wrap">
+                        <div class="w-full py-2">
+                            <div class="form-group">
+                                <!--fin mostrar datos de operacion-->
+                                <div class="title-form-group">
+                                    <span>Referencias a Pagar</span>
+                                </div>
+                                <div class="form-group-content">
                                     <div class="flex flex-wrap">
-                                        <div class="w-full xl:w-6/12 px-2">
-                                            <div class="form-group mt-6">
-                                                <div class="title-form-group">
-                                                    <span>Método del pago</span>
-                                                </div>
-                                                <div class="form-group-content">
-                                                    <div class="flex flex-wrap">
-                                                        <!--Forma de pago-->
-                                                        <div
-                                                            class="w-full px-2 input-text"
-                                                        >
-                                                            <label>
-                                                                Forma de Pago
-                                                                <span>(*)</span>
-                                                            </label>
-                                                            <v-select
-                                                                v-validate:forma_pago_validacion_computed.immediate="
-                                                                    'required'
-                                                                "
-                                                                data-vv-scope="pago_form"
-                                                                :options="
-                                                                    FormasPago
-                                                                "
-                                                                :clearable="
-                                                                    false
-                                                                "
-                                                                :dir="
-                                                                    $vs.rtl
-                                                                        ? 'rtl'
-                                                                        : 'ltr'
-                                                                "
-                                                                v-model="
-                                                                    form.formaPago
-                                                                "
-                                                                class=""
-                                                                name="forma_pago"
-                                                                data-vv-as=" "
-                                                            >
-                                                                <div
-                                                                    slot="no-options"
-                                                                >
-                                                                    No Se Ha
-                                                                    Seleccionado
-                                                                    Ninguna
-                                                                    Opción
-                                                                </div>
-                                                            </v-select>
-                                                            <span>{{
-                                                                errors.first(
-                                                                    "pago_form.forma_pago"
-                                                                )
-                                                            }}</span>
-                                                            <span
-                                                                v-if="
-                                                                    this
-                                                                        .errores[
-                                                                        'formaPago.value'
-                                                                    ]
-                                                                "
-                                                                >{{
-                                                                    errores[
-                                                                        "formaPago.value"
-                                                                    ][0]
-                                                                }}</span
-                                                            >
-                                                        </div>
+                                        <!--incio de tabla-->
+                                        <div class="w-full">
+                                            <vs-table :data="form.datos_operacion.pagos_programados"
+                                                noDataText="0 Resultados" class="tabla-datos">
+                                                <template slot="header">
+                                                    <h3>Listado de pagos programados</h3>
+                                                </template>
+                                                <template slot="thead">
+                                                    <vs-th>
+                                                        <vs-checkbox ref="seleccionar_todos" color="primary"
+                                                            class="capitalize font-medium mt-2 permiso" :vs-value="true"
+                                                            v-model="seleccionar_todos"></vs-checkbox>
+                                                    </vs-th>
+                                                    <vs-th>#</vs-th>
+                                                    <vs-th>Concepto</vs-th>
+                                                    <vs-th>Referencia</vs-th>
+                                                    <vs-th>Fecha Programada</vs-th>
+                                                    <vs-th>Monto Programado $</vs-th>
+                                                    <vs-th>Intereses Generados $</vs-th>
+                                                    <vs-th hidden>Descuento Disponible $</vs-th>
+                                                    <vs-th> Saldo del Pago $</vs-th>
+                                                </template>
+                                                <template slot-scope="{ data }">
+                                                    <vs-tr :data="programados" v-show="programados.status == 1 &&
+                                                        programados.status_pago != 2
+                                                        " v-for="(programados, indextr) in form
+                                                            .datos_operacion.pagos_programados"
+                                                        v-bind:key="programados.id" ref="row">
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .num_pago
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">
+                                                            <vs-checkbox ref="pago_seleccionado" color="primary"
+                                                                :vs-value="programados"
+                                                                v-model="form.pagos_a_cubrir"></vs-checkbox>
+                                                        </vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .num_pago
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">
+                                                            <span class="font-semibold">{{
+                                                                programados.num_pago
+                                                                }}</span>
+                                                        </vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .concepto_texto
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">{{
+                                                                programados.concepto_texto
+                                                            }}</vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .referencia_pago
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">{{
+                                                                programados.referencia_pago
+                                                            }}</vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .fecha_programada_abr
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">{{
+                                                                programados.fecha_programada_abr
+                                                            }}</vs-td>
 
-                                                        <div
-                                                            class="w-full px-2 input-text"
-                                                        >
-                                                            <label>
-                                                                Cobrado Por:
-                                                                <span>(*)</span>
-                                                            </label>
-
-                                                            <v-select
-                                                                v-validate:cobrador_validacion_computed.immediate="
-                                                                    'required'
-                                                                "
-                                                                data-vv-scope="pago_form"
-                                                                :options="
-                                                                    Cobradores
-                                                                "
-                                                                :clearable="
-                                                                    false
-                                                                "
-                                                                :dir="
-                                                                    $vs.rtl
-                                                                        ? 'rtl'
-                                                                        : 'ltr'
-                                                                "
-                                                                v-model="
-                                                                    form.cobrador
-                                                                "
-                                                                class=""
-                                                                name="forma_pago"
-                                                                data-vv-as=" "
-                                                            >
-                                                                <div
-                                                                    slot="no-options"
-                                                                >
-                                                                    No Se Ha
-                                                                    Seleccionado
-                                                                    Ninguna
-                                                                    Opción
-                                                                </div>
-                                                            </v-select>
-
-                                                            <span>{{
-                                                                errors.first(
-                                                                    "pago_form.forma_pago"
-                                                                )
-                                                            }}</span>
-
-                                                            <span
-                                                                v-if="
-                                                                    this
-                                                                        .errores[
-                                                                        'formaPago.value'
-                                                                    ]
-                                                                "
-                                                                >{{
-                                                                    errores[
-                                                                        "formaPago.value"
-                                                                    ][0]
-                                                                }}</span
-                                                            >
-                                                        </div>
-
-                                                        <div
-                                                            class="w-full px-2 input-text"
-                                                        >
-                                                            <label
-                                                                >Referencia de
-                                                                abono
-                                                                (depósito/transferencia)</label
-                                                            >
-
-                                                            <vs-input
-                                                                data-vv-scope="pago_form"
-                                                                size="large"
-                                                                name="referencia_sobre_pago"
-                                                                data-vv-as=" "
-                                                                type="text"
-                                                                class="w-full"
-                                                                placeholder="Ej. cheque número 1"
-                                                                v-model="
-                                                                    form.referencia_sobre_pago
-                                                                "
-                                                            />
-
-                                                            <span>{{
-                                                                errors.first(
-                                                                    "pago_form.referencia"
-                                                                )
-                                                            }}</span>
-
-                                                            <span
-                                                                v-if="
-                                                                    this.errores
-                                                                        .referencia_sobre_pago
-                                                                "
-                                                                >{{
-                                                                    errores
-                                                                        .referencia_sobre_pago[0]
-                                                                }}</span
-                                                            >
-                                                        </div>
-                                                        <div
-                                                            class="w-full px-2 input-text"
-                                                        >
-                                                            <label
-                                                                >Nombre del
-                                                                banco
-                                                            </label>
-                                                            <vs-input
-                                                                data-vv-scope="pago_form"
-                                                                size="large"
-                                                                name="banco"
-                                                                data-vv-as=" "
-                                                                type="text"
-                                                                class="w-full"
-                                                                placeholder="Ej. Santander"
-                                                                v-model="
-                                                                    form.banco
-                                                                "
-                                                            />
-                                                            <span>{{
-                                                                errors.first(
-                                                                    "pago_form.banco"
-                                                                )
-                                                            }}</span>
-                                                            <span
-                                                                v-if="
-                                                                    this.errores
-                                                                        .banco
-                                                                "
-                                                                >{{
-                                                                    errores
-                                                                        .banco[0]
-                                                                }}</span
-                                                            >
-                                                        </div>
-                                                        <!--Forma de pago-->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="w-full lg:w-6/12 hidden xl:block"
-                                        >
-                                            <!--Datos de resumen-->
-                                            <div class="flex pt-6 px-2">
-                                                <!--Resumen de pago-->
-                                                <div
-                                                    class="w-full p-4 border-gray-solid-1 mx-auto rounded-lg"
-                                                >
-                                                    <h3
-                                                        class="size-base font-bold color-black-900 text-center uppercase"
-                                                    >
-                                                        Resumen del pago
-                                                    </h3>
-                                                    <div class="flex pt-6 pb-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Fecha del pago
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right"
-                                                        >
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .status_pago
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">$
                                                             {{
-                                                                form
-                                                                    .datos_operacion
-                                                                    .fecha_a_pagar_texto
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex py-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Beneficiario
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right"
-                                                        >
+                                                                (programados.monto_programado -
+                                                                    programados.total_cubierto)
+                                                                | numFormat("0,000.00")
+                                                            }}</vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .intereses
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">$
                                                             {{
-                                                                form
-                                                                    .datos_operacion
-                                                                    .nombre
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex py-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Concepto del pago
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right"
-                                                        >
+                                                                programados.intereses
+                                                                | numFormat("0,000.00")
+                                                            }}</vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .status_pago
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]" hidden>$
                                                             {{
-                                                                form
-                                                                    .datos_operacion
-                                                                    .operacion_texto
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex py-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Tipo de Cambio
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right uppercase"
-                                                        >
-                                                            peso mexicano ($1.00
-                                                            MXN)
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex py-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Forma de pago
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right uppercase"
-                                                        >
+                                                                programados.descuento_pronto_pago
+                                                                | numFormat("0,000.00")
+                                                            }}</vs-td>
+                                                        <vs-td :data="form.datos_operacion
+                                                            .pagos_programados[indextr]
+                                                            .saldo_neto
+                                                            " :class="[
+                                                                programados.status_pago == 0
+                                                                    ? 'color-danger-900'
+                                                                    : '',
+                                                            ]">$
                                                             {{
-                                                                form.formaPago[
-                                                                    "label"
-                                                                ]
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex py-2">
-                                                        <div
-                                                            class="w-6/12 text-left font-medium"
-                                                        >
-                                                            Cobrado por:
-                                                        </div>
-                                                        <div
-                                                            class="w-6/12 text-right uppercase"
-                                                        >
-                                                            {{
-                                                                form.cobrador
-                                                                    .label
-                                                            }}
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        class="flex flex-wrap mt-2 theme-background py-6"
-                                                    >
-                                                        <div
-                                                            class="w-full text-center font-medium color-black-900 uppercase"
-                                                        >
-                                                            Total a pagar
-                                                        </div>
-                                                        <div
-                                                            class="w-full text-center font-medium color-black-700 uppercase pt-2"
-                                                        >
-                                                            <span
-                                                                v-if="
-                                                                    total_pagar >
-                                                                    0
-                                                                "
-                                                                class="uppercase"
-                                                            >
+                                                                programados.saldo_neto
+                                                                | numFormat("0,000.00")
+                                                            }}</vs-td>
+                                                    </vs-tr>
+                                                    <vs-tr class="font-medium color-primary-900 size-base">
+                                                        <vs-td colspan="5">
+                                                            <div class="py-2"></div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2 uppercase">
+                                                                Monto Programado $
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2 uppercase">
+                                                                Intereses Generados $
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td hidden>
+                                                            <div class="py-2 uppercase">
+                                                                Descuento Disponible $
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2 uppercase">
+                                                                Saldo del Pago $
+                                                            </div>
+                                                        </vs-td>
+                                                    </vs-tr>
+                                                    <vs-tr class="font-medium color-black-900 size-base">
+                                                        <vs-td colspan="5">
+                                                            <div class="py-2 font-bold uppercase">
+                                                                Totales $
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2">
                                                                 $
                                                                 {{
-                                                                    total_pagar
-                                                                        | numFormat(
-                                                                            "0,000.00"
-                                                                        )
+                                                                    maximo_abono
+                                                                    | numFormat("0,000.00")
                                                                 }}
-                                                                Pesos mexicanos
-                                                            </span>
-                                                            <span
-                                                                v-else
-                                                                class="uppercase color-danger-900 font-normal"
-                                                            >
-                                                                no se ha
-                                                                ingresado la
-                                                                cantidad a pagar
-                                                            </span>
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2">
+                                                                $
+                                                                {{
+                                                                    maximo_interes
+                                                                    | numFormat("0,000.00")
+                                                                }}
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td hidden>
+                                                            <div class="py-2">
+                                                                $
+                                                                {{
+                                                                    maximo_descuento
+                                                                    | numFormat("0,000.00")
+                                                                }}
+                                                            </div>
+                                                        </vs-td>
+                                                        <vs-td>
+                                                            <div class="py-2">
+                                                                $
+                                                                {{
+                                                                    maximo_saldo
+                                                                    | numFormat("0,000.00")
+                                                                }}
+                                                            </div>
+                                                        </vs-td>
+                                                    </vs-tr>
+                                                </template>
+                                            </vs-table>
+                                        </div>
+                                        <!--FIN de tabla-->
+                                        <div class="w-full">
+                                            <div class="flex flex-wrap">
+                                                <div class="w-full lg:w-8/12">
+                                                    <div class="flex flex-wrap">
+                                                        <div class="w-full xl:w-6/12 px-2">
+                                                            <div class="form-group mt-6">
+                                                                <div class="title-form-group">
+                                                                    <span>Método del pago</span>
+                                                                </div>
+                                                                <div class="form-group-content">
+                                                                    <div class="flex flex-wrap">
+                                                                        <!--Forma de pago-->
+                                                                        <div class="w-full px-2 input-text">
+                                                                            <label>
+                                                                                Forma de Pago
+                                                                                <span>(*)</span>
+                                                                            </label>
+                                                                            <v-select
+                                                                                v-validate:forma_pago_validacion_computed.immediate="'required'
+                                                                                    " data-vv-scope="pago_form"
+                                                                                :options="FormasPago
+                                                                                    " :clearable="false
+                                                                                        " :dir="$vs.rtl
+                                                                                            ? 'rtl'
+                                                                                            : 'ltr'
+                                                                                            " v-model="form.formaPago
+                                                                                                " class=""
+                                                                                name="forma_pago" data-vv-as=" ">
+                                                                                <div slot="no-options">
+                                                                                    No Se Ha
+                                                                                    Seleccionado
+                                                                                    Ninguna
+                                                                                    Opción
+                                                                                </div>
+                                                                            </v-select>
+                                                                            <span>{{
+                                                                                errors.first(
+                                                                                    "pago_form.forma_pago"
+                                                                                )
+                                                                            }}</span>
+                                                                            <span v-if="
+                                                                                this
+                                                                                    .errores[
+                                                                                'formaPago.value'
+                                                                                ]
+                                                                            ">{{
+                                                                                errores[
+                                                                                "formaPago.value"
+                                                                                ][0]
+                                                                            }}</span>
+                                                                        </div>
+
+                                                                        <div class="w-full px-2 input-text">
+                                                                            <label>
+                                                                                Cobrado Por:
+                                                                                <span>(*)</span>
+                                                                            </label>
+
+                                                                            <v-select
+                                                                                v-validate:cobrador_validacion_computed.immediate="'required'
+                                                                                    " data-vv-scope="pago_form"
+                                                                                :options="Cobradores
+                                                                                    " :clearable="false
+                                                                                        " :dir="$vs.rtl
+                                                                                            ? 'rtl'
+                                                                                            : 'ltr'
+                                                                                            " v-model="form.cobrador
+                                                                                                " class=""
+                                                                                name="forma_pago" data-vv-as=" ">
+                                                                                <div slot="no-options">
+                                                                                    No Se Ha
+                                                                                    Seleccionado
+                                                                                    Ninguna
+                                                                                    Opción
+                                                                                </div>
+                                                                            </v-select>
+
+                                                                            <span>{{
+                                                                                errors.first(
+                                                                                    "pago_form.forma_pago"
+                                                                                )
+                                                                            }}</span>
+
+                                                                            <span v-if="
+                                                                                this
+                                                                                    .errores[
+                                                                                'formaPago.value'
+                                                                                ]
+                                                                            ">{{
+                                                                                errores[
+                                                                                "formaPago.value"
+                                                                                ][0]
+                                                                            }}</span>
+                                                                        </div>
+
+                                                                        <div class="w-full px-2 input-text">
+                                                                            <label>Referencia de
+                                                                                abono
+                                                                                (depósito/transferencia)</label>
+
+                                                                            <vs-input data-vv-scope="pago_form"
+                                                                                size="large"
+                                                                                name="referencia_sobre_pago"
+                                                                                data-vv-as=" " type="text"
+                                                                                class="w-full"
+                                                                                placeholder="Ej. cheque número 1"
+                                                                                v-model="form.referencia_sobre_pago
+                                                                                    " />
+
+                                                                            <span>{{
+                                                                                errors.first(
+                                                                                    "pago_form.referencia"
+                                                                                )
+                                                                            }}</span>
+
+                                                                            <span v-if="
+                                                                                this.errores
+                                                                                    .referencia_sobre_pago
+                                                                            ">{{
+                                                                                errores
+                                                                                    .referencia_sobre_pago[0]
+                                                                            }}</span>
+                                                                        </div>
+                                                                        <div class="w-full px-2 input-text">
+                                                                            <label>Nombre del
+                                                                                banco
+                                                                            </label>
+                                                                            <vs-input data-vv-scope="pago_form"
+                                                                                size="large" name="banco" data-vv-as=" "
+                                                                                type="text" class="w-full"
+                                                                                placeholder="Ej. Santander" v-model="form.banco
+                                                                                    " />
+                                                                            <span>{{
+                                                                                errors.first(
+                                                                                    "pago_form.banco"
+                                                                                )
+                                                                            }}</span>
+                                                                            <span v-if="
+                                                                                this.errores
+                                                                                    .banco
+                                                                            ">{{
+                                                                                errores
+                                                                                    .banco[0]
+                                                                            }}</span>
+                                                                        </div>
+                                                                        <!--Forma de pago-->
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="w-full lg:w-6/12 hidden xl:block">
+                                                            <!--Datos de resumen-->
+                                                            <div class="flex pt-6 px-2">
+                                                                <!--Resumen de pago-->
+                                                                <div
+                                                                    class="w-full p-4 border-gray-solid-1 mx-auto rounded-lg">
+                                                                    <h3
+                                                                        class="size-base font-bold color-black-900 text-center uppercase">
+                                                                        Resumen del pago
+                                                                    </h3>
+                                                                    <div class="flex pt-6 pb-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Fecha del pago
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right">
+                                                                            {{
+                                                                                form
+                                                                                    .datos_operacion
+                                                                                    .fecha_a_pagar_texto
+                                                                            }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex py-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Beneficiario
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right">
+                                                                            {{
+                                                                                form
+                                                                                    .datos_operacion
+                                                                                    .nombre
+                                                                            }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex py-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Concepto del pago
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right">
+                                                                            {{
+                                                                                form
+                                                                                    .datos_operacion
+                                                                                    .operacion_texto
+                                                                            }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex py-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Tipo de Cambio
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right uppercase">
+                                                                            peso mexicano ($1.00
+                                                                            MXN)
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex py-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Forma de pago
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right uppercase">
+                                                                            {{
+                                                                                form.formaPago[
+                                                                                "label"
+                                                                                ]
+                                                                            }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="flex py-2">
+                                                                        <div class="w-6/12 text-left font-medium">
+                                                                            Cobrado por:
+                                                                        </div>
+                                                                        <div class="w-6/12 text-right uppercase">
+                                                                            {{
+                                                                                form.cobrador
+                                                                                    .label
+                                                                            }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div
+                                                                        class="flex flex-wrap mt-2 theme-background py-6">
+                                                                        <div
+                                                                            class="w-full text-center font-medium color-black-900 uppercase">
+                                                                            Total a pagar
+                                                                        </div>
+                                                                        <div
+                                                                            class="w-full text-center font-medium color-black-700 uppercase pt-2">
+                                                                            <span v-if="
+                                                                                total_pagar >
+                                                                                0
+                                                                            " class="uppercase">
+                                                                                $
+                                                                                {{
+                                                                                    total_pagar
+                                                                                    | numFormat(
+                                                                                        "0,000.00"
+                                                                                    )
+                                                                                }}
+                                                                                Pesos mexicanos
+                                                                            </span>
+                                                                            <span v-else
+                                                                                class="uppercase color-danger-900 font-normal">
+                                                                                no se ha
+                                                                                ingresado la
+                                                                                cantidad a pagar
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <!--Fin de Resumen de pago-->
+                                                            </div>
+                                                            <!--FIN de resumen-->
+                                                        </div>
+                                                        <div class="w-full input-text mt-6 px-2">
+                                                            <label> Nota u observación: </label>
+                                                            <vs-textarea :rows="6" size="large" ref="nota" type="text"
+                                                                class="w-full" placeholder="Ingrese una nota..."
+                                                                v-model.trim="form.nota" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <!--Fin de Resumen de pago-->
-                                            </div>
-                                            <!--FIN de resumen-->
-                                        </div>
-                                        <div
-                                            class="w-full input-text mt-6 px-2"
-                                        >
-                                            <label> Nota u observación: </label>
-                                            <vs-textarea
-                                                :rows="6"
-                                                size="large"
-                                                ref="nota"
-                                                type="text"
-                                                class="w-full"
-                                                placeholder="Ingrese una nota..."
-                                                v-model.trim="form.nota"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="w-full lg:w-4/12 px-2">
-                                    <div class="form-group lg:mt-6">
-                                        <div class="title-form-group">
-                                            <span>Realizar Pago</span>
-                                        </div>
-                                        <div class="form-group-content">
-                                            <div class="flex flex-wrap">
-                                                <!-- realizar pago -->
-                                                <div
-                                                    class="w-full input-text px-2"
-                                                >
-                                                    <label>
-                                                        $ ABONO A CAPITAL
-                                                        <span>(*)</span>
-                                                    </label>
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="abono"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:' +
-                                                            minimo_abono +
-                                                            '|max_value:' +
-                                                            maximo_abono
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder="$ 0.00"
-                                                        v-model.trim="
-                                                            form.abono
-                                                        "
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.abono"
-                                                        )
-                                                    }}</span>
-                                                    <span
-                                                        v-if="
-                                                            this.errores.abono
-                                                        "
-                                                        >{{
-                                                            errores.abono[0]
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div
-                                                    class="w-full input-text px-2"
-                                                >
-                                                    <label>
-                                                        $ INTERESES MORATORIOS
-                                                        <span>(*)</span>
-                                                    </label>
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="intereses"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:0|max_value:' +
-                                                            maximo_interes
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder="$ 0.00"
-                                                        v-model.trim="
-                                                            form.intereses
-                                                        "
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.intereses"
-                                                        )
-                                                    }}</span>
-                                                    <span
-                                                        v-if="
-                                                            this.errores
-                                                                .intereses
-                                                        "
-                                                        >{{
-                                                            errores.intereses[0]
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div
-                                                    class="w-full input-text px-2 hidden"
-                                                >
-                                                    <label>
-                                                        $ DESCUENTO POR PRONTO
-                                                        PAGO
-                                                        <span>(*)</span>
-                                                    </label>
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="descuento"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:0|max_value:' +
-                                                            maximo_descuento
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder="$ 0.00"
-                                                        v-model.trim="
-                                                            form.descuento_pronto_pago
-                                                        "
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.descuento"
-                                                        )
-                                                    }}</span>
-                                                    <span
-                                                        v-if="
-                                                            this.errores
-                                                                .descuento
-                                                        "
-                                                        >{{
-                                                            errores.descuento[0]
-                                                        }}</span
-                                                    >
-                                                </div>
-                                                <div
-                                                    class="w-full input-text px-2"
-                                                >
-                                                    <label>
-                                                        $ TOTAL A PAGAR
-                                                        <span>(*)</span>
-                                                    </label>
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="total"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:0|max_value:' +
-                                                            maximo_saldo
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder=""
-                                                        v-model.trim="
-                                                            total_pagar
-                                                        "
-                                                        readonly
-                                                        :disabled="true"
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.total"
-                                                        )
-                                                    }}</span>
-                                                    <span
-                                                        v-if="
-                                                            this.errores.total
-                                                        "
-                                                        >{{
-                                                            errores.total[0]
-                                                        }}</span
-                                                    >
-                                                </div>
+                                                <div class="w-full lg:w-4/12 px-2">
+                                                    <div class="form-group lg:mt-6">
+                                                        <div class="title-form-group">
+                                                            <span>Realizar Pago</span>
+                                                        </div>
+                                                        <div class="form-group-content">
+                                                            <div class="flex flex-wrap">
+                                                                <!-- realizar pago -->
+                                                                <div class="w-full input-text px-2">
+                                                                    <label>
+                                                                        $ ABONO A CAPITAL
+                                                                        <span>(*)</span>
+                                                                    </label>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="abono" data-vv-as=" "
+                                                                        v-validate="'required|decimal:2|min_value:' +
+                                                                            minimo_abono +
+                                                                            '|max_value:' +
+                                                                            maximo_abono
+                                                                            " type="text" class="w-full"
+                                                                        placeholder="$ 0.00" v-model.trim="form.abono
+                                                                            " />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.abono"
+                                                                        )
+                                                                    }}</span>
+                                                                    <span v-if="
+                                                                        this.errores.abono
+                                                                    ">{{
+                                                                        errores.abono[0]
+                                                                    }}</span>
+                                                                </div>
+                                                                <div class="w-full input-text px-2">
+                                                                    <label>
+                                                                        $ INTERESES MORATORIOS
+                                                                        <span>(*)</span>
+                                                                    </label>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="intereses" data-vv-as=" "
+                                                                        v-validate="'required|decimal:2|min_value:0|max_value:' +
+                                                                            maximo_interes
+                                                                            " type="text" class="w-full"
+                                                                        placeholder="$ 0.00" v-model.trim="form.intereses
+                                                                            " />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.intereses"
+                                                                        )
+                                                                    }}</span>
+                                                                    <span v-if="
+                                                                        this.errores
+                                                                            .intereses
+                                                                    ">{{
+                                                                        errores.intereses[0]
+                                                                    }}</span>
+                                                                </div>
+                                                                <div class="w-full input-text px-2 hidden">
+                                                                    <label>
+                                                                        $ DESCUENTO POR PRONTO
+                                                                        PAGO
+                                                                        <span>(*)</span>
+                                                                    </label>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="descuento" data-vv-as=" "
+                                                                        v-validate="'required|decimal:2|min_value:0|max_value:' +
+                                                                            maximo_descuento
+                                                                            " type="text" class="w-full"
+                                                                        placeholder="$ 0.00" v-model.trim="form.descuento_pronto_pago
+                                                                            " />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.descuento"
+                                                                        )
+                                                                    }}</span>
+                                                                    <span v-if="
+                                                                        this.errores
+                                                                            .descuento
+                                                                    ">{{
+                                                                        errores.descuento[0]
+                                                                    }}</span>
+                                                                </div>
+                                                                <div class="w-full input-text px-2">
+                                                                    <label>
+                                                                        $ TOTAL A PAGAR
+                                                                        <span>(*)</span>
+                                                                    </label>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="total" data-vv-as=" "
+                                                                        v-validate="'required|decimal:2|min_value:0|max_value:' +
+                                                                            maximo_saldo
+                                                                            " type="text" class="w-full" placeholder=""
+                                                                        v-model.trim="total_pagar
+                                                                            " readonly :disabled="true" />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.total"
+                                                                        )
+                                                                    }}</span>
+                                                                    <span v-if="
+                                                                        this.errores.total
+                                                                    ">{{
+                                                                        errores.total[0]
+                                                                    }}</span>
+                                                                </div>
 
-                                                <div
-                                                    class="w-full input-text px-2"
-                                                >
-                                                    <label>
-                                                        $ CANTIDAD CON QUE PAGÓ
-                                                        <span>(*)</span>
-                                                    </label>
+                                                                <div class="w-full input-text px-2">
+                                                                    <label>
+                                                                        $ CANTIDAD CON QUE PAGÓ
+                                                                        <span>(*)</span>
+                                                                    </label>
 
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="pago_con_cantidad"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:' +
-                                                            cantidad_a_regresar +
-                                                            '|max_value:' +
-                                                            maximo_cantidad_pago
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder=""
-                                                        v-model.trim="
-                                                            form.pago_con_cantidad
-                                                        "
-                                                        :disabled="
-                                                            this.form.formaPago
-                                                                .value != 1
-                                                                ? true
-                                                                : false
-                                                        "
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.pago_con_cantidad"
-                                                        )
-                                                    }}</span>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="pago_con_cantidad"
+                                                                        data-vv-as=" " v-validate="'required|decimal:2|min_value:' +
+                                                                            cantidad_a_regresar +
+                                                                            '|max_value:' +
+                                                                            maximo_cantidad_pago
+                                                                            " type="text" class="w-full" placeholder=""
+                                                                        v-model.trim="form.pago_con_cantidad
+                                                                            " :disabled="this.form.formaPago
+                                                                                .value != 1
+                                                                                ? true
+                                                                                : false
+                                                                                " />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.pago_con_cantidad"
+                                                                        )
+                                                                    }}</span>
 
-                                                    <span
-                                                        v-if="
-                                                            this.errores
-                                                                .pago_con_cantidad
-                                                        "
-                                                        >{{
-                                                            errores
-                                                                .pago_con_cantidad[0]
-                                                        }}</span
-                                                    >
-                                                </div>
+                                                                    <span v-if="
+                                                                        this.errores
+                                                                            .pago_con_cantidad
+                                                                    ">{{
+                                                                        errores
+                                                                            .pago_con_cantidad[0]
+                                                                    }}</span>
+                                                                </div>
 
-                                                <div
-                                                    class="w-full input-text px-2"
-                                                >
-                                                    <label>
-                                                        $ CAMBIO A REGRESAR
-                                                        <span>(*)</span>
-                                                    </label>
-                                                    <vs-input
-                                                        data-vv-scope="pago_form"
-                                                        maxlength="9"
-                                                        size="large"
-                                                        name="cambio_pago"
-                                                        data-vv-as=" "
-                                                        v-validate="
-                                                            'required|decimal:2|min_value:0'
-                                                        "
-                                                        type="text"
-                                                        class="w-full"
-                                                        placeholder=""
-                                                        v-model.trim="
-                                                            cantidad_a_regresar
-                                                        "
-                                                        readonly
-                                                        :disabled="true"
-                                                    />
-                                                    <span>{{
-                                                        errors.first(
-                                                            "pago_form.cambio_pago"
-                                                        )
-                                                    }}</span>
-                                                    <span
-                                                        v-if="
-                                                            this.errores
-                                                                .cambio_pago
-                                                        "
-                                                        >{{
-                                                            errores
-                                                                .cambio_pago[0]
-                                                        }}</span
-                                                    >
-                                                </div>
+                                                                <div class="w-full input-text px-2">
+                                                                    <label>
+                                                                        $ CAMBIO A REGRESAR
+                                                                        <span>(*)</span>
+                                                                    </label>
+                                                                    <vs-input data-vv-scope="pago_form" maxlength="9"
+                                                                        size="large" name="cambio_pago" data-vv-as=" "
+                                                                        v-validate="'required|decimal:2|min_value:0'
+                                                                            " type="text" class="w-full" placeholder=""
+                                                                        v-model.trim="cantidad_a_regresar
+                                                                            " readonly :disabled="true" />
+                                                                    <span>{{
+                                                                        errors.first(
+                                                                            "pago_form.cambio_pago"
+                                                                        )
+                                                                    }}</span>
+                                                                    <span v-if="
+                                                                        this.errores
+                                                                            .cambio_pago
+                                                                    ">{{
+                                                                        errores
+                                                                            .cambio_pago[0]
+                                                                    }}</span>
+                                                                </div>
 
-                                                <div class="w-full px-2">
-                                                    <div
-                                                        class="text-center py-6"
-                                                    >
-                                                        <span
-                                                            class="color-danger-900"
-                                                            >Ojo:</span
-                                                        >
-                                                        Por favor revise la
-                                                        información ingresada,
-                                                        si todo es correcto de
-                                                        click en "Botón de
-                                                        Abajo”.
+                                                                <div class="w-full px-2">
+                                                                    <div class="text-center py-6">
+                                                                        <span class="color-danger-900">Ojo:</span>
+                                                                        Por favor revise la
+                                                                        información ingresada,
+                                                                        si todo es correcto de
+                                                                        click en "Botón de
+                                                                        Abajo”.
+                                                                    </div>
+                                                                    <div v-if="
+                                                                        form.formaPago
+                                                                            .value == 7
+                                                                    ">
+                                                                        <h3
+                                                                            class="w-full size-base color-danger-900 pb-6 font-normal">
+                                                                            Advertencia, la
+                                                                            forma de pago
+                                                                            seleccionada se
+                                                                            tomará como un
+                                                                            descuento.
+                                                                        </h3>
+                                                                    </div>
+                                                                    <vs-button class="w-full" @click="acceptAlert()"
+                                                                        color="success">
+                                                                        <span class="">Guardar Pago</span>
+                                                                    </vs-button>
+                                                                </div>
+
+                                                                <!-- realizar pago -->
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div
-                                                        v-if="
-                                                            form.formaPago
-                                                                .value == 7
-                                                        "
-                                                    >
-                                                        <h3
-                                                            class="w-full size-base color-danger-900 pb-6 font-normal"
-                                                        >
-                                                            Advertencia, la
-                                                            forma de pago
-                                                            seleccionada se
-                                                            tomará como un
-                                                            descuento.
-                                                        </h3>
-                                                    </div>
-                                                    <vs-button
-                                                        class="w-full"
-                                                        @click="acceptAlert()"
-                                                        color="success"
-                                                    >
-                                                        <span class=""
-                                                            >Guardar Pago</span
-                                                        >
-                                                    </vs-button>
                                                 </div>
-
-                                                <!-- realizar pago -->
                                             </div>
                                         </div>
                                     </div>
@@ -1063,50 +764,16 @@
                     </div>
                 </div>
             </div>
-
-            <div class="form-group" v-if="error != ''">
-                <div class="title-form-group">
-                    <span>Errores encontrados</span>
-                </div>
-                <div class="form-group-content">
-                    <div class="flex flex-wrap">
-                        <div class="w-full px-2">
-                            <div class="font-normal size-base color-danger-900">
-                                {{ error }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!--fin mostrar datos de operacion-->
         </vs-popup>
-        <Password
-            v-if="operConfirmar"
-            :show="operConfirmar"
-            :callback-on-success="callback"
-            @closeVerificar="closeChecker"
-            :accion="accionNombre"
-        >
+        <Password :z_index="'z-index60k'" v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
+            @closeVerificar="closeChecker" :accion="accionNombre">
         </Password>
-        <ConfirmarDanger
-            v-if="openConfirmarSinPassword"
-            :z_index="'z-index59k'"
-            :show="openConfirmarSinPassword"
-            :callback-on-success="callBackConfirmar"
-            @closeVerificar="openConfirmarSinPassword = false"
-            :accion="accionConfirmarSinPassword"
-            :confirmarButton="botonConfirmarSinPassword"
-        ></ConfirmarDanger>
-        <ConfirmarAceptar
-            v-if="openConfirmarAceptar"
-            :z_index="'z-index59k'"
-            :show="openConfirmarAceptar"
-            :callback-on-success="callBackConfirmarAceptar"
-            @closeVerificar="openConfirmarAceptar = false"
-            :accion="'He revisado la información y quiero registrar este pago'"
-            :confirmarButton="'Registrar Pago'"
-        >
+        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index60k'" :show="openConfirmarSinPassword"
+            :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
+            :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
+        <ConfirmarAceptar v-if="openConfirmarAceptar" :z_index="'z-index60k'" :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false"
+            :accion="'He revisado la información y quiero registrar este pago'" :confirmarButton="'Registrar Pago'">
         </ConfirmarAceptar>
     </div>
 </template>
@@ -1154,28 +821,14 @@ export default {
             immediate: true, // runs when component is mounted too
             async handler(newValue) {
                 if (newValue) {
-                    //yyyy-mm-dd
+                    //yyyy-mm-dd hh:mm
                     let today = new Date();
-                    var mm =
-                        (today.getMinutes() + 1 < 10 ? "0" : "") +
-                        (today.getMinutes() + 1);
-                    var hh =
-                        (today.getHours() + 1 < 10 ? "0" : "") +
-                        (today.getHours() + 1);
-
-                    // 1970, 1971, ... 2015, 2016, ...
-                    var yyyy = today.getFullYear();
-                    var month =
-                        (today.getMonth() + 1 < 10 ? "0" : "") +
-                        (today.getMonth() + 1);
-                    // 01, 02, 03, ... 29, 30, 31
-                    var dd =
-                        (today.getDate() < 10 ? "0" : "") + today.getDate();
-                    let fecha =
-                        yyyy + "-" + month + "-" + dd + " " + hh + ":" + mm;
-                    // 01, 02, 03, ... 10, 11, 12
-                    this.form.fecha_pago = fecha;
-
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, "0");
+                    const dd = String(today.getDate()).padStart(2, "0");
+                    const hh = String(today.getHours()).padStart(2, "0");
+                    const min = String(today.getMinutes()).padStart(2, "0");
+                    this.form.fecha_pago = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
                     /**de manera asincrona para evitar errores en popular los selects */
                     /**cargando los tipos de propeidades */
                     this.title = "control de cobranza";
@@ -1189,7 +842,6 @@ export default {
                     } finally {
                         this.$vs.loading.close();
                     }
-
                     if (this.getReferencia != "") {
                         /**se envio una referencia por default
                          * se debe de llamar el servicio de calcular pago
@@ -1607,11 +1259,13 @@ export default {
             this.form.datos_operacion = [];
             this.errores = [];
             try {
-                let res = await pagos.calcular_adeudo({
+                let params = {
                     fecha_pago: this.form.fecha_pago,
                     referencia: this.form.referencia,
                     multipago: this.form.multipago,
-                });
+                };
+                this.$log("🚀 ~ params:", params)
+                let res = await pagos.calcular_adeudo(params);
                 this.form.empresa_operaciones_id =
                     res.data[0].empresa_operaciones_id;
                 this.form.pagos_a_cubrir = [];
@@ -1629,9 +1283,9 @@ export default {
                                     ].$el.querySelector("input").onchange = (
                                         $event
                                     ) => {
-                                        /**revisar si se activo el check */
-                                        this.checkSeleccionarTodos();
-                                    };
+                                            /**revisar si se activo el check */
+                                            this.checkSeleccionarTodos();
+                                        };
                                     index_pago++;
                                 }
                             }
@@ -1719,7 +1373,7 @@ export default {
                         })();
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         },
 
         acceptAlert() {
@@ -1758,7 +1412,7 @@ export default {
                         }
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         },
 
         cancelar() {

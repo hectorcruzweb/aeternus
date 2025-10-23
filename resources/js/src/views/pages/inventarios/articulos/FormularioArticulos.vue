@@ -51,7 +51,7 @@
 
                   <span v-if="this.errores.descripcion">{{
                     errores.descripcion[0]
-                  }}</span>
+                    }}</span>
                 </div>
 
                 <div class="w-full xl:w-6/12 px-2 input-text">
@@ -69,7 +69,7 @@
 
                   <span class="" v-if="this.errores['tipo_articulo.value']">{{
                     errores["tipo_articulo.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
                 <div class="w-full xl:w-6/12 px-2 input-text">
                   <label>
@@ -88,7 +88,7 @@
 
                   <span class="" v-if="this.errores.codigo_barras">{{
                     errores.codigo_barras[0]
-                  }}</span>
+                    }}</span>
                 </div>
                 <div class="w-full xl:w-6/12 px-2 input-text">
                   <label>
@@ -105,7 +105,7 @@
 
                   <span class="" v-if="this.errores['plan_funerario.value']">{{
                     errores["plan_funerario.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
                 <div class="w-full xl:w-6/12 px-2 input-text">
                   <label>
@@ -124,7 +124,7 @@
 
                   <span class="" v-if="this.errores['categoria.value']">{{
                     errores["categoria.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </div>
@@ -151,7 +151,7 @@
                   </span>
                   <span class="" v-if="this.errores['unidad_sat.value']">{{
                     errores["unidad_sat.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
                 <div class="w-full xl:w-6/12 input-text px-2">
                   <label>
@@ -166,7 +166,7 @@
                   <span class="">{{ errors.first("unidades_sat") }}</span>
                   <span class="" v-if="this.errores['unidad.value']">{{
                     errores["unidad.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
 
                 <div class="w-full xl:w-6/12 input-text px-2">
@@ -183,7 +183,7 @@
                   </span>
                   <span class="" v-if="this.errores['opcion_iva.value']">{{
                     errores["opcion_iva.value"][0]
-                  }}</span>
+                    }}</span>
                 </div>
 
                 <div class="w-full xl:w-6/12 input-text px-2">
@@ -199,7 +199,7 @@
 
                   <span class="" v-if="this.errores.minimo_inventario">{{
                     errores.minimo_inventario[0]
-                  }}</span>
+                    }}</span>
                 </div>
                 <div class="w-full xl:w-6/12 input-text px-2">
                   <label>
@@ -214,7 +214,7 @@
                   <span class="">{{ errors.first("maximo_inventario") }}</span>
                   <span class="" v-if="this.errores.maximo_inventario">{{
                     errores.maximo_inventario[0]
-                  }}</span>
+                    }}</span>
                 </div>
 
                 <div class="w-full xl:w-6/12 input-text px-2">
@@ -227,7 +227,7 @@
                   <span class="">{{ errors.first("costo_compra") }}</span>
                   <span class="" v-if="this.errores.costo_compra">{{
                     errores.costo_compra[0]
-                  }}</span>
+                    }}</span>
                 </div>
 
                 <div class="w-full xl:w-6/12 input-text px-2">
@@ -240,7 +240,7 @@
                   <span class="">{{ errors.first("costo_venta") }}</span>
                   <span class="" v-if="this.errores.costo_venta">{{
                     errores.costo_venta[0]
-                  }}</span>
+                    }}</span>
                 </div>
               </div>
             </div>
@@ -343,7 +343,7 @@ export default {
             this.form.opcion_caducidad = this.opciones_sino[1];
             this.title = "Registrar Artículo/Servicio";
           }
-          this.$popupManager.register(this, this.cancelar, "input");
+          this.$popupManager.register(this, this.cancelar, "descripcion");
         } else {
           this.$popupManager.unregister(this.$options.name);
         }

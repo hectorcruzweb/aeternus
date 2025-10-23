@@ -1,83 +1,89 @@
 <template>
   <div class="centerx">
-    <vs-popup :class="['forms-popup popup-85', z_index]" title="Catálogo de clientes registrados" :active="localShow"
-      :ref="this.$options.name">
-      <div class="w-full text-right">
-        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-          @click="verFormularioClientes = true">
-          <span>Registrar Cliente</span>
-        </vs-button>
-      </div>
-
-      <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-          :collapse-action="false">
-          <div class="flex flex-wrap pb-6">
-            <div class="w-full input-text xl:w-3/12 px-2">
-              <label>Núm. Cliente</label>
-              <vs-input name="num_cliente" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
-                maxlength="6" v-model.trim="serverOptions.id_cliente" v-on:keyup.enter="get_data('id_cliente', 1)"
-                v-on:blur="get_data('id_cliente', 1, 'blur')" />
-              <span class="">{{ errors.first("num_cliente") }}</span>
-            </div>
-
-            <div class="w-full input-text xl:w-9/12 px-2">
-              <label>Nombre</label>
-              <vs-input ref="nombre_cliente" name="nombre_cliente" data-vv-as=" " type="text" class="w-full"
-                placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.cliente"
-                v-on:keyup.enter="get_data('cliente', 1)" v-on:blur="get_data('cliente', 1, 'blur')" />
-              <span class="">{{ errors.first("nombre_cliente") }}</span>
-            </div>
-          </div>
-        </vx-card>
-      </div>
-
+    <vs-popup :class="['forms-popup popup-85', z_index]" fullscreen title="Catálogo de clientes registrados"
+      :active="localShow" :ref="this.$options.name">
       <!--inicio de buscador-->
-      <div class="py-6">
-        <div class="resultados_clientes py-6">
-          <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="clientes" stripe
-            noDataText="0 Resultados" class="tabla-datos">
-            <template slot="header">
-              <h3>Lista actualizada de clientes registrados</h3>
-            </template>
-            <template slot="thead">
-              <vs-th>Núm. Cliente</vs-th>
-              <vs-th>Nombre</vs-th>
-              <vs-th>Domicilio</vs-th>
-              <vs-th>Celular</vs-th>
-              <vs-th>Seleccionar</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-              <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                <vs-td :data="data[indextr].id">
-                  <span class="font-semibold">{{ data[indextr].id }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].nombre">{{
-                  data[indextr].nombre
-                }}</vs-td>
-                <vs-td :data="data[indextr].direccion">{{
-                  data[indextr].direccion
-                }}</vs-td>
-                <vs-td :data="data[indextr].celular">
-                  <span class="font-medium">{{ data[indextr].celular }}</span>
-                </vs-td>
+      <div class="flex flex-col flex-1 h-full">
+        <div class="w-full text-right">
+          <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+            @click="verFormularioClientes = true">
+            <span>Registrar Cliente</span>
+          </vs-button>
+        </div>
+        <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
+          <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+            :collapse-action="false">
+            <div class="flex flex-wrap pb-6">
+              <div class="w-full input-text xl:w-3/12 px-2">
+                <label>Núm. Cliente</label>
+                <vs-input name="num_cliente" data-vv-as=" " type="text" class="w-full" placeholder="Ej. 1258"
+                  maxlength="6" v-model.trim="serverOptions.id_cliente" v-on:keyup.enter="get_data('id_cliente', 1)"
+                  v-on:blur="get_data('id_cliente', 1, 'blur')" />
+                <span class="">{{ errors.first("num_cliente") }}</span>
+              </div>
 
-                <vs-td :data="data[indextr].id_user">
-                  <div class="flex justify-center">
-                    <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
-                      retornarSeleccion(
-                        data[indextr].nombre,
-                        data[indextr].id,
-                        data[indextr]
-                      )
-                      " />
-                  </div>
-                </vs-td>
-              </vs-tr>
-            </template>
-          </vs-table>
-          <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
+              <div class="w-full input-text xl:w-9/12 px-2">
+                <label>Nombre</label>
+                <vs-input ref="nombre_cliente" name="nombre_cliente" data-vv-as=" " type="text" class="w-full"
+                  placeholder="Ej. Juan Pérez" maxlength="12" v-model.trim="serverOptions.cliente"
+                  v-on:keyup.enter="get_data('cliente', 1)" v-on:blur="get_data('cliente', 1, 'blur')" />
+                <span class="">{{ errors.first("nombre_cliente") }}</span>
+              </div>
+            </div>
+          </vx-card>
+        </div>
+
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+          <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+            <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
+          </div>
+          <div v-else id="results" class="w-full flex flex-wrap">
+            <div class="w-full py-2">
+              <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="clientes" stripe
+                noDataText="0 Resultados" class="tabla-datos">
+                <template slot="header">
+                  <h3>Lista actualizada de clientes registrados</h3>
+                </template>
+                <template slot="thead">
+                  <vs-th>Núm. Cliente</vs-th>
+                  <vs-th>Nombre</vs-th>
+                  <vs-th>Domicilio</vs-th>
+                  <vs-th>Celular</vs-th>
+                  <vs-th>Seleccionar</vs-th>
+                </template>
+                <template slot-scope="{ data }">
+                  <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                    <vs-td :data="data[indextr].id">
+                      <span class="font-semibold">{{ data[indextr].id }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].nombre">{{
+                      data[indextr].nombre
+                    }}</vs-td>
+                    <vs-td :data="data[indextr].direccion">{{
+                      data[indextr].direccion
+                    }}</vs-td>
+                    <vs-td :data="data[indextr].celular">
+                      <span class="font-medium">{{ data[indextr].celular }}</span>
+                    </vs-td>
+
+                    <vs-td :data="data[indextr].id_user">
+                      <div class="flex justify-center">
+                        <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/checked.svg" @click="
+                          retornarSeleccion(
+                            data[indextr].nombre,
+                            data[indextr].id,
+                            data[indextr]
+                          )
+                          " />
+                      </div>
+                    </vs-td>
+                  </vs-tr>
+                </template>
+              </vs-table>
+              <div>
+                <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-6"></vs-pagination>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -140,6 +146,9 @@ export default {
     },
   },
   computed: {
+    noDataFound() {
+      return this.clientes.length === 0;
+    },
   },
   data() {
     return {

@@ -2,21 +2,22 @@
   <div class="centerx">
     <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen title="Catálogo de articulos registrados"
       :active="localShow" :ref="this.$options.name">
-      <div class="w-full text-right">
-        <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-          @click="verFormularioArticulos = true">
-          <span>Registrar Artículo</span>
-        </vs-button>
-      </div>
 
       <!--inicio de buscador-->
-      <div class="py-3">
-        <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-          :collapse-action="false">
-          <template slot="no-body">
-            <div>
-              <div class="flex flex-wrap px-4 py-4">
-                <div class="
+      <div class="flex flex-col flex-1 h-full">
+        <div class="w-full text-right">
+          <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
+            @click="verFormularioArticulos = true">
+            <span>Registrar Artículo</span>
+          </vs-button>
+        </div>
+        <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
+          <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
+            :collapse-action="false">
+            <template slot="no-body">
+              <div>
+                <div class="flex flex-wrap px-4 py-4">
+                  <div class="
                     w-full
                     sm:w-12/12
                     md:w-2/12
@@ -25,18 +26,18 @@
                     px-2
                     input-text
                   ">
-                  <label class="text-sm opacity-75 font-bold">Núm. articulo</label>
-                  <vs-input name="num_articulo" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
-                    placeholder="Ej. 1258" maxlength="6" v-model.trim="serverOptions.id_articulo"
-                    v-on:keyup.enter="get_data('id_articulo', 1)" v-on:blur="get_data('id_articulo', 1, 'blur')" />
-                  <div>
-                    <span class="text-danger text-sm">
-                      {{ errors.first("num_articulo") }}
-                    </span>
+                    <label class="text-sm opacity-75 font-bold">Núm. articulo</label>
+                    <vs-input name="num_articulo" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                      placeholder="Ej. 1258" maxlength="6" v-model.trim="serverOptions.id_articulo"
+                      v-on:keyup.enter="get_data('id_articulo', 1)" v-on:blur="get_data('id_articulo', 1, 'blur')" />
+                    <div>
+                      <span class="text-danger text-sm">
+                        {{ errors.first("num_articulo") }}
+                      </span>
+                    </div>
+                    <div class="mt-2"></div>
                   </div>
-                  <div class="mt-2"></div>
-                </div>
-                <div class="
+                  <div class="
                     w-full
                     sm:w-12/12
                     md:w-2/12
@@ -45,18 +46,19 @@
                     px-2
                     input-text
                   ">
-                  <label class="text-sm opacity-75 font-bold">Código de Barras</label>
-                  <vs-input name="codigo_barras" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
-                    placeholder="ej. 0000001" maxlength="13" v-model.trim="serverOptions.codigo_barras"
-                    v-on:keyup.enter="get_data('codigo_barras', 1)" v-on:blur="get_data('codigo_barras', 1, 'blur')" />
-                  <div>
-                    <span class="text-danger text-sm">
-                      {{ errors.first("codigo_barras") }}
-                    </span>
+                    <label class="text-sm opacity-75 font-bold">Código de Barras</label>
+                    <vs-input name="codigo_barras" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
+                      placeholder="ej. 0000001" maxlength="13" v-model.trim="serverOptions.codigo_barras"
+                      v-on:keyup.enter="get_data('codigo_barras', 1)"
+                      v-on:blur="get_data('codigo_barras', 1, 'blur')" />
+                    <div>
+                      <span class="text-danger text-sm">
+                        {{ errors.first("codigo_barras") }}
+                      </span>
+                    </div>
+                    <div class="mt-2"></div>
                   </div>
-                  <div class="mt-2"></div>
-                </div>
-                <div class="
+                  <div class="
                     w-full
                     sm:w-12/12
                     md:w-8/12
@@ -65,82 +67,89 @@
                     px-2
                     input-text
                   ">
-                  <label class="text-sm opacity-75 font-bold">Nombre del Artículo</label>
-                  <vs-input name="nombre_articulo" data-vv-as=" " type="text" class="w-full pb-1 pt-1"
-                    placeholder="Ej. Ataúd de Madera" maxlength="12" v-model.trim="serverOptions.articulo"
-                    v-on:keyup.enter="get_data('articulo', 1)" v-on:blur="get_data('articulo', 1, 'blur')" />
-                  <div>
-                    <span class="text-danger text-sm">
-                      {{ errors.first("nombre_articulo") }}
-                    </span>
+                    <label class="text-sm opacity-75 font-bold">Nombre del Artículo</label>
+                    <vs-input ref="nombre_articulo" name="nombre_articulo" data-vv-as=" " type="text"
+                      class="w-full pb-1 pt-1" placeholder="Ej. Ataúd de Madera" maxlength="12"
+                      v-model.trim="serverOptions.articulo" v-on:keyup.enter="get_data('articulo', 1)"
+                      v-on:blur="get_data('articulo', 1, 'blur')" />
+                    <div>
+                      <span class="text-danger text-sm">
+                        {{ errors.first("nombre_articulo") }}
+                      </span>
+                    </div>
+                    <div class="mt-2"></div>
                   </div>
-                  <div class="mt-2"></div>
                 </div>
               </div>
-            </div>
-          </template>
-        </vx-card>
-
-        <div class="resultados_articulos mt-10">
-          <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-              @click="SeleccionarTodos">
-              <span>Seleccionar Todos</span>
-            </vs-button>
+            </template>
+          </vx-card>
+        </div>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+          <div v-if="noDataFound" class="w-full skeleton flex-1 items-center justify-center">
+            <span class="text-gray-600 text-lg font-normal">No hay datos que mostrar</span>
           </div>
-
-          <vs-table :sst="true" :max-items="serverOptions.per_page" :data="articulos" stripe noDataText="0 Resultados"
-            class="tabla-datos mt-4">
-            <template slot="header">
-              <h3>Lista actualizada de artículos registrados</h3>
-            </template>
-            <template slot="thead">
-              <vs-th>Núm. Artículo</vs-th>
-              <vs-th>Código Barras</vs-th>
-              <vs-th>Descripción</vs-th>
-              <vs-th hidden>Caduca</vs-th>
-              <vs-th>($) Precio Venta</vs-th>
-              <vs-th>Existencias</vs-th>
-              <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-              <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                <vs-td :data="data[indextr].id">
-                  <span class="font-semibold">{{ data[indextr].id }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].codigo_barras">
-                  <span class="font-semibold">
-                    {{ data[indextr].codigo_barras }}
-                  </span>
-                </vs-td>
-                <vs-td :data="data[indextr].descripcion">
-                  <span class="uppercase">{{ data[indextr].descripcion }}</span>
-                </vs-td>
-                <vs-td hidden :data="data[indextr].caduca_texto">
-                  <span class="uppercase">{{
-                    data[indextr].caduca_texto
-                  }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].precio_venta">
-                  <span class="uppercase">$
-                    {{
-                      data[indextr].precio_venta | numFormat("0,000.00")
-                    }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].existencia">
-                  <span class="uppercase">{{ data[indextr].existencia }}</span>
-                </vs-td>
-                <vs-td :data="data[indextr].id">
-                  <div class="flex flex-start">
-                    <img width="25" class="cursor-pointer ml-auto mr-auto" src="@assets/images/checked.svg"
-                      @click="retornarSeleccion(data[indextr])" />
-                  </div>
-                </vs-td>
-              </vs-tr>
-            </template>
-          </vs-table>
-          <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
+          <div v-else id="results" class="w-full flex flex-wrap">
+            <div class="w-full py-2">
+              <div class="w-full text-right">
+                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
+                  @click="SeleccionarTodos">
+                  <span>Seleccionar Todos</span>
+                </vs-button>
+              </div>
+              <vs-table :sst="true" :max-items="serverOptions.per_page" :data="articulos" stripe
+                noDataText="0 Resultados" class="tabla-datos mt-4">
+                <template slot="header">
+                  <h3>Lista actualizada de artículos registrados</h3>
+                </template>
+                <template slot="thead">
+                  <vs-th>Núm. Artículo</vs-th>
+                  <vs-th>Código Barras</vs-th>
+                  <vs-th>Descripción</vs-th>
+                  <vs-th hidden>Caduca</vs-th>
+                  <vs-th>($) Precio Venta</vs-th>
+                  <vs-th>Existencias</vs-th>
+                  <vs-th>Acciones</vs-th>
+                </template>
+                <template slot-scope="{ data }">
+                  <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                    <vs-td :data="data[indextr].id">
+                      <span class="font-semibold">{{ data[indextr].id }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].codigo_barras">
+                      <span class="font-semibold">
+                        {{ data[indextr].codigo_barras }}
+                      </span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].descripcion">
+                      <span class="uppercase">{{ data[indextr].descripcion }}</span>
+                    </vs-td>
+                    <vs-td hidden :data="data[indextr].caduca_texto">
+                      <span class="uppercase">{{
+                        data[indextr].caduca_texto
+                      }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].precio_venta">
+                      <span class="uppercase">$
+                        {{
+                          data[indextr].precio_venta | numFormat("0,000.00")
+                        }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].existencia">
+                      <span class="uppercase">{{ data[indextr].existencia }}</span>
+                    </vs-td>
+                    <vs-td :data="data[indextr].id">
+                      <div class="flex flex-start">
+                        <img width="25" class="cursor-pointer ml-auto mr-auto" src="@assets/images/checked.svg"
+                          @click="retornarSeleccion(data[indextr])" />
+                      </div>
+                    </vs-td>
+                  </vs-tr>
+                </template>
+              </vs-table>
+              <div>
+                <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-3"></vs-pagination>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -203,6 +212,9 @@ export default {
     },
   },
   computed: {
+    noDataFound() {
+      return this.articulos.length === 0;
+    },
   },
   data() {
     return {
