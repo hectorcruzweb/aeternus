@@ -1,45 +1,82 @@
 <template>
     <div>
         <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="formulario('agregar')">
+            <vs-button
+                class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
+                color="success"
+                @click="formulario('agregar')"
+            >
                 <span class="">Capturar Pago</span>
             </vs-button>
         </div>
 
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full lg:w-3/12 xl:w-3/12 px-2 input-text">
                         <label class="">Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="w-full" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full lg:w-3/12 xl:w-3/12 px-2 input-text">
                         <label class="">Estado</label>
-                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado" class="w-full" />
+                        <v-select
+                            :options="estadosOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full lg:w-3/12 xl:w-3/12 px-2 input-text">
                         <label class="">Fecha de Pago</label>
-                        <flat-pickr data-vv-scope="form_calcular_adeudo" name="fecha_pago" data-vv-as=" "
-                            v-validate:fecha_pago_validacion_computed.immediate="'required'"
-                            :config="configdateTimePicker" v-model="serverOptions.fecha_pago"
-                            placeholder="Fecha del Pago" class="w-full" />
+                        <flat-pickr
+                            data-vv-scope="form_calcular_adeudo"
+                            name="fecha_pago"
+                            data-vv-as=" "
+                            v-validate:fecha_pago_validacion_computed.immediate="
+                                'required'
+                            "
+                            :config="configdateTimePicker"
+                            v-model="serverOptions.fecha_pago"
+                            placeholder="Fecha del Pago"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full lg:w-3/12 xl:w-3/12 px-2 input-text">
                         <label class="">Número de Movimiento</label>
-                        <vs-input class="w-full" icon="search" maxlength="14"
-                            placeholder="Filtrar por Número de Movimiento" v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="14"
+                            placeholder="Filtrar por Número de Movimiento"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
         <br />
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="pagos" noDataText="0 Resultados"
-            class="tabla-datos">
+        <vs-table
+            :sst="true"
+            :max-items="serverOptions.per_page.value"
+            :data="pagos"
+            noDataText="0 Resultados"
+            class="tabla-datos"
+        >
             <template slot="header">
                 <h3>Listado de Movimientos Realizados</h3>
             </template>
@@ -62,9 +99,13 @@
                     </vs-td>
                     <vs-td :data="data[indextr].movimientos_pagos_texto">
                         <span v-if="data[indextr].parent_pago_id > 0">
-                            {{ data[indextr].movimientos_pagos_texto }}(Sobre el pago
+                            {{ data[indextr].movimientos_pagos_texto }}(Sobre el
+                            pago
                             {{ data[indextr].parent_pago_id }}
-                            <img width="10" src="@assets/images/included.svg" />)
+                            <img
+                                width="10"
+                                src="@assets/images/included.svg"
+                            />)
                         </span>
                         <span v-else>
                             {{ data[indextr].movimientos_pagos_texto }}
@@ -73,15 +114,15 @@
                     <vs-td :data="data[indextr].fecha_pago_texto">
                         <span class="font-medium">{{
                             data[indextr].fecha_pago_texto
-                            }}</span>
+                        }}</span>
                     </vs-td>
                     <vs-td :data="data[indextr].tipo_operacion_texto">{{
                         data[indextr].tipo_operacion_texto
-                        }}</vs-td>
+                    }}</vs-td>
                     <vs-td :data="data[indextr].referencias_cubiertas">{{
-                        data[indextr].referencias_cubiertas[0].operacion_del_pago.cliente
-                        .nombre
-                        }}</vs-td>
+                        data[indextr].referencias_cubiertas[0]
+                            .operacion_del_pago.cliente.nombre
+                    }}</vs-td>
                     <vs-td :data="data[indextr].monto_pago">
                         $ {{ data[indextr].monto_pago | numFormat("0,000.00") }}
                     </vs-td>
@@ -93,17 +134,26 @@
                     </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center py-1">
-                            <img class="img-btn-20 mx-2" src="@assets/images/pdf.svg" title="Ver Recibo"
-                                @click="openReporte(data[indextr])" />
+                            <img
+                                class="img-btn-20 mx-2"
+                                src="@assets/images/pdf.svg"
+                                title="Ver Recibo"
+                                @click="openReporte(data[indextr])"
+                            />
                             <!--verificar que tipo de movimeinto es, me itneresa que el id del pago a cancelar sea el del pago parent siempre-->
-                            <img v-if="data[indextr].status == 1" class="img-btn-20 mx-2"
-                                src="@assets/images/cancel.svg" title="Cancelar Movimiento" @click="
+                            <img
+                                v-if="data[indextr].status == 1"
+                                class="img-btn-20 mx-2"
+                                src="@assets/images/cancel.svg"
+                                title="Cancelar Movimiento"
+                                @click="
                                     cancelarPago(
                                         data[indextr].parent_pago_id > 0
                                             ? data[indextr].parent_pago_id
                                             : data[indextr].id
                                     )
-                                    " />
+                                "
+                            />
                         </div>
                     </vs-td>
                     <template class="expand-user" slot="expand"></template>
@@ -111,17 +161,43 @@
             </template>
         </vs-table>
         <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+            <vs-pagination
+                v-if="verPaginado"
+                :total="this.total"
+                v-model="actual"
+                class="mt-8"
+            ></vs-pagination>
         </div>
-        <FormularioPagos :show="verFormularioPagos" @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos">
+        <FormularioPagos
+            v-if="verFormularioPagos"
+            :show="verFormularioPagos"
+            @closeVentana="closeFormularioPagos"
+            @retorno_pagos="retorno_pagos"
+        >
         </FormularioPagos>
-        <Password :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
-            :accion="accionNombre">
+        <Password
+            v-if="openStatus"
+            :show="openStatus"
+            :callback-on-success="callback"
+            @closeVerificar="closeStatus"
+            :accion="accionNombre"
+        >
         </Password>
-        <Reporteador :header="'consultar pago'" :show="openReportesListaLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="closeListaReportes"></Reporteador>
-        <CancelarPago :show="openCancelar" @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago"
-            :id_pago="id_pago"></CancelarPago>
+        <Reporteador
+            v-if="openReportesListaLista"
+            :header="'consultar pago'"
+            :show="openReportesListaLista"
+            :listadereportes="ListaReportes"
+            :request="request"
+            @closeReportes="closeListaReportes"
+        ></Reporteador>
+        <CancelarPago
+            v-if="openCancelar"
+            :show="openCancelar"
+            @closeCancelarPago="closeCancelarPago"
+            @retorno_pago="retorno_pago"
+            :id_pago="id_pago"
+        ></CancelarPago>
     </div>
 </template>
 
@@ -140,6 +216,7 @@ import Password from "@pages/confirmar_password";
 import { mostrarOptions, configdateTimePicker } from "@/VariablesGlobales";
 import vSelect from "vue-select";
 export default {
+    name: "PagosList",
     components: {
         "v-select": vSelect,
         Password,
@@ -257,8 +334,7 @@ export default {
                     this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Error",
-                        text:
-                            "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
+                        text: "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
@@ -371,8 +447,7 @@ export default {
                     this.$vs.loading.close();
                     this.$vs.notify({
                         title: "Error",
-                        text:
-                            "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
+                        text: "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
@@ -383,10 +458,19 @@ export default {
             })();
         },
     },
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         (async () => {
             await this.get_data(this.actual);
         })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {},
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
