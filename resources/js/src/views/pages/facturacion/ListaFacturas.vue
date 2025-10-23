@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="text-right buttons-container-header">
             <vs-button
                 class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
                 color="success"
@@ -9,9 +9,7 @@
                 <span>Crear Factura</span>
             </vs-button>
         </div>
-
-        <!--inicio de buscador-->
-        <div class="py-3">
+        <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
             <vx-card
                 no-radius
                 title="Filtros de selección"
@@ -101,132 +99,166 @@
                     </div>
                 </div>
             </vx-card>
-            <div class="mt-10">
-                <vs-table
-                    :sst="true"
-                    :max-items="serverOptions.per_page"
-                    :data="cfdis"
-                    stripe
-                    noDataText="0 Resultados"
-                    class="tabla-datos"
+        </div>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
                 >
-                    <template slot="header">
-                        <h3>Lista de Artículos y Servicios por Lotes</h3>
-                    </template>
-                    <template slot="thead">
-                        <vs-th>Folio</vs-th>
-                        <vs-th>UUID</vs-th>
-                        <vs-th>Fecha</vs-th>
-                        <vs-th>Cliente</vs-th>
-                        <vs-th>RFC</vs-th>
-                        <vs-th>Tipo</vs-th>
-                        <vs-th>M. de Pago</vs-th>
-                        <vs-th>Estatus</vs-th>
-                        <vs-th>$ Monto</vs-th>
-                        <vs-th>$ Saldo</vs-th>
-                        <vs-th>Acciones</vs-th>
-                    </template>
-                    <template slot-scope="{ data }">
-                        <vs-tr
-                            :data="tr"
-                            :key="indextr"
-                            v-for="(tr, indextr) in data"
-                            :class="[tr.status == 0 ? 'text-danger' : '']"
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <div class="mt-10">
+                        <vs-table
+                            :sst="true"
+                            :max-items="serverOptions.per_page"
+                            :data="cfdis"
+                            stripe
+                            noDataText="0 Resultados"
+                            class="tabla-datos"
                         >
-                            <vs-td :data="data[indextr].id">
-                                <span class="font-semibold">{{
-                                    data[indextr].id
-                                }}</span>
-                            </vs-td>
-                            <vs-td :data="data[indextr].uuid">
-                                {{ data[indextr].uuid }}
-                                <img
-                                    title="De click para seleccionar factura a sustituir."
-                                    v-if="data[indextr].status == 1"
-                                    width="16"
-                                    class="cursor-pointer"
-                                    src="@assets/images/copytoclipboard.svg"
-                                    v-clipboard:copy="data[indextr].uuid"
-                                    v-clipboard:success="onCopy"
-                                    v-clipboard:error="onError"
-                                />
-                            </vs-td>
-                            <vs-td :data="data[indextr].fecha_timbrado_texto">{{
-                                data[indextr].fecha_timbrado_texto
-                            }}</vs-td>
-                            <vs-td :data="data[indextr].cliente_nombre">{{
-                                data[indextr].cliente_nombre
-                            }}</vs-td>
-                            <vs-td :data="data[indextr].rfc_receptor">{{
-                                data[indextr].rfc_receptor
-                            }}</vs-td>
-                            <vs-td
-                                :data="data[indextr].tipo_comprobante_texto"
-                                >{{
-                                    data[indextr].tipo_comprobante_texto
-                                }}</vs-td
-                            >
-                            <vs-td
-                                :data="data[indextr].sat_metodos_pago_texto"
-                                >{{
-                                    data[indextr].sat_metodos_pago_texto
-                                }}</vs-td
-                            >
-                            <vs-td :data="data[indextr].status_texto"
-                                >{{ data[indextr].status_texto }}
-                            </vs-td>
-                            <vs-td :data="data[indextr].total">
-                                {{
-                                    data[indextr].total | numFormat("0,000.00")
-                                }}</vs-td
-                            >
-                            <vs-td :data="data[indextr].saldo_cfdi">
-                                {{
-                                    data[indextr].saldo_cfdi
-                                        | numFormat("0,000.00")
-                                }}</vs-td
-                            >
-                            <vs-td :data="data[indextr].id">
-                                <img
-                                    v-if="data[indextr].nota"
-                                    class="cursor-pointer img-btn-20 mr-6"
-                                    src="@assets/images/notepad_ver.svg"
-                                    title="Notas"
-                                    @click="
-                                        verNota(
-                                            data[indextr].nota.trim(),
+                            <template slot="header">
+                                <h3>
+                                    Lista de Artículos y Servicios por Lotes
+                                </h3>
+                            </template>
+                            <template slot="thead">
+                                <vs-th>Folio</vs-th>
+                                <vs-th>UUID</vs-th>
+                                <vs-th>Fecha</vs-th>
+                                <vs-th>Cliente</vs-th>
+                                <vs-th>RFC</vs-th>
+                                <vs-th>Tipo</vs-th>
+                                <vs-th>M. de Pago</vs-th>
+                                <vs-th>Estatus</vs-th>
+                                <vs-th>$ Monto</vs-th>
+                                <vs-th>$ Saldo</vs-th>
+                                <vs-th>Acciones</vs-th>
+                            </template>
+                            <template slot-scope="{ data }">
+                                <vs-tr
+                                    :data="tr"
+                                    :key="indextr"
+                                    v-for="(tr, indextr) in data"
+                                    :class="[
+                                        tr.status == 0 ? 'text-danger' : '',
+                                    ]"
+                                >
+                                    <vs-td :data="data[indextr].id">
+                                        <span class="font-semibold">{{
+                                            data[indextr].id
+                                        }}</span>
+                                    </vs-td>
+                                    <vs-td :data="data[indextr].uuid">
+                                        {{ data[indextr].uuid }}
+                                        <img
+                                            title="De click para seleccionar factura a sustituir."
+                                            v-if="data[indextr].status == 1"
+                                            width="16"
+                                            class="cursor-pointer"
+                                            src="@assets/images/copytoclipboard.svg"
+                                            v-clipboard:copy="
+                                                data[indextr].uuid
+                                            "
+                                            v-clipboard:success="onCopy"
+                                            v-clipboard:error="onError"
+                                        />
+                                    </vs-td>
+                                    <vs-td
+                                        :data="
+                                            data[indextr].fecha_timbrado_texto
+                                        "
+                                        >{{
+                                            data[indextr].fecha_timbrado_texto
+                                        }}</vs-td
+                                    >
+                                    <vs-td
+                                        :data="data[indextr].cliente_nombre"
+                                        >{{
                                             data[indextr].cliente_nombre
-                                        )
-                                    "
-                                />
-                                <img
-                                    v-else
-                                    class="cursor-pointer img-btn-20 mr-6"
-                                    src="@assets/images/notepad_ver_no.svg"
-                                    title="Notas"
-                                />
+                                        }}</vs-td
+                                    >
+                                    <vs-td :data="data[indextr].rfc_receptor">{{
+                                        data[indextr].rfc_receptor
+                                    }}</vs-td>
+                                    <vs-td
+                                        :data="
+                                            data[indextr].tipo_comprobante_texto
+                                        "
+                                        >{{
+                                            data[indextr].tipo_comprobante_texto
+                                        }}</vs-td
+                                    >
+                                    <vs-td
+                                        :data="
+                                            data[indextr].sat_metodos_pago_texto
+                                        "
+                                        >{{
+                                            data[indextr].sat_metodos_pago_texto
+                                        }}</vs-td
+                                    >
+                                    <vs-td :data="data[indextr].status_texto"
+                                        >{{ data[indextr].status_texto }}
+                                    </vs-td>
+                                    <vs-td :data="data[indextr].total">
+                                        {{
+                                            data[indextr].total
+                                                | numFormat("0,000.00")
+                                        }}</vs-td
+                                    >
+                                    <vs-td :data="data[indextr].saldo_cfdi">
+                                        {{
+                                            data[indextr].saldo_cfdi
+                                                | numFormat("0,000.00")
+                                        }}</vs-td
+                                    >
+                                    <vs-td :data="data[indextr].id">
+                                        <img
+                                            v-if="data[indextr].nota"
+                                            class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver.svg"
+                                            title="Notas"
+                                            @click="
+                                                verNota(
+                                                    data[indextr].nota.trim(),
+                                                    data[indextr].cliente_nombre
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver_no.svg"
+                                            title="Notas"
+                                        />
 
-                                <img
-                                    width="25"
-                                    class="cursor-pointer"
-                                    src="@assets/images/cfdicog.svg"
-                                    @click="openActions(data[indextr].id)"
-                                />
-                            </vs-td>
-                        </vs-tr>
-                    </template>
-                </vs-table>
-                <div>
-                    <vs-pagination
-                        v-if="verPaginado"
-                        :total="this.total"
-                        v-model="actual"
-                        class="mt-3"
-                    ></vs-pagination>
+                                        <img
+                                            width="25"
+                                            class="cursor-pointer"
+                                            src="@assets/images/cfdicog.svg"
+                                            @click="
+                                                openActions(data[indextr].id)
+                                            "
+                                        />
+                                    </vs-td>
+                                </vs-tr>
+                            </template>
+                        </vs-table>
+                        <div>
+                            <vs-pagination
+                                v-if="verPaginado"
+                                :total="this.total"
+                                v-model="actual"
+                                class="mt-3"
+                            ></vs-pagination>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
         <VerNotas
             v-if="openVerNotas"
             :show="openVerNotas"
@@ -295,6 +327,9 @@ export default {
     computed: {
         fechatimbrado_validacion_computed: function () {
             return this.serverOptions.fecha_timbrado;
+        },
+        noDataFound() {
+            return this.cfdis.length === 0;
         },
     },
     data() {

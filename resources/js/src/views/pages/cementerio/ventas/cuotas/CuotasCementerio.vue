@@ -1,118 +1,241 @@
 <template>
     <div class="centerx">
-        <vs-popup class="forms-popup popup-90" title="cuotas de mantenimiento en cementerio" :active="localShow"
-            :ref="this.$options.name">
+        <vs-popup
+            class="forms-popup popup-90"
+            title="cuotas de mantenimiento en cementerio"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="w-full text-right">
-                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-                    type="border" @click="
-                        openReporte(documentos[0].documento, documentos[0].url, '', '')
-                        ">
+                <vs-button
+                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                    color="primary"
+                    type="border"
+                    @click="
+                        openReporte(
+                            documentos[0].documento,
+                            documentos[0].url,
+                            '',
+                            ''
+                        )
+                    "
+                >
                     <span>Imprimir lista de cuotas</span>
                 </vs-button>
-                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                    @click="agregar()">
+                <vs-button
+                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                    color="success"
+                    @click="agregar()"
+                >
                     <span>Registrar Cuota</span>
                 </vs-button>
             </div>
+            <div class="pb-5">
+                <div class="form-group">
+                    <div class="title-form-group">
+                        Cuotas del cementerio registradas
+                    </div>
+                    <div class="form-group-content">
+                        <div class="flex flex-wrap">
+                            <vs-table
+                                :data="cuotas"
+                                noDataText="0 Resultados"
+                                class="tabla-datos w-full mt-6"
+                            >
+                                <template slot="header">
+                                    <h3>CUOTAS DE MANTENIMIENTO REGISTRADAS</h3>
+                                </template>
+                                <template slot="thead">
+                                    <vs-th>Clave</vs-th>
+                                    <vs-th>Descripción</vs-th>
+                                    <vs-th>Periodo</vs-th>
+                                    <vs-th>Monto Cuota ($)</vs-th>
+                                    <vs-th>Total de Propiedades</vs-th>
+                                    <vs-th>Total a Cobrar ($)</vs-th>
+                                    <vs-th>Total Cobrado ($)</vs-th>
+                                    <vs-th>Saldo Neto ($)</vs-th>
+                                    <vs-th>Estatus</vs-th>
+                                    <vs-th>Acciones</vs-th>
+                                </template>
+                                <template slot-scope="{ data }">
+                                    <vs-tr
+                                        :data="cuotas"
+                                        :key="index_cuota"
+                                        v-for="(cuotas, index_cuota) in data"
+                                    >
+                                        <vs-td :data="data[index_cuota].id">
+                                            <span class="font-semibold">{{
+                                                cuotas.id
+                                            }}</span>
+                                        </vs-td>
+                                        <vs-td
+                                            :data="
+                                                data[index_cuota].descripcion
+                                            "
+                                            >{{ cuotas.descripcion }}</vs-td
+                                        >
+                                        <vs-td
+                                            :data="data[index_cuota].periodo"
+                                            >{{ cuotas.periodo }}</vs-td
+                                        >
 
-            <div class="form-group">
-                <div class="title-form-group">Cuotas del cementerio registradas</div>
-                <div class="form-group-content">
-                    <div class="flex flex-wrap">
-                        <vs-table :data="cuotas" noDataText="0 Resultados" class="tabla-datos w-full mt-6">
-                            <template slot="header">
-                                <h3>CUOTAS DE MANTENIMIENTO REGISTRADAS</h3>
-                            </template>
-                            <template slot="thead">
-                                <vs-th>Clave</vs-th>
-                                <vs-th>Descripción</vs-th>
-                                <vs-th>Periodo</vs-th>
-                                <vs-th>Monto Cuota ($)</vs-th>
-                                <vs-th>Total de Propiedades</vs-th>
-                                <vs-th>Total a Cobrar ($)</vs-th>
-                                <vs-th>Total Cobrado ($)</vs-th>
-                                <vs-th>Saldo Neto ($)</vs-th>
-                                <vs-th>Estatus</vs-th>
-                                <vs-th>Acciones</vs-th>
-                            </template>
-                            <template slot-scope="{ data }">
-                                <vs-tr :data="cuotas" :key="index_cuota" v-for="(cuotas, index_cuota) in data">
-                                    <vs-td :data="data[index_cuota].id">
-                                        <span class="font-semibold">{{ cuotas.id }}</span>
-                                    </vs-td>
-                                    <vs-td :data="data[index_cuota].descripcion">{{
-                                        cuotas.descripcion
-                                    }}</vs-td>
-                                    <vs-td :data="data[index_cuota].periodo">{{
-                                        cuotas.periodo
-                                    }}</vs-td>
+                                        <vs-td
+                                            :data="
+                                                data[index_cuota].cuota_total
+                                            "
+                                            >$
+                                            {{
+                                                cuotas.cuota_total
+                                                    | numFormat("0,000.00")
+                                            }}</vs-td
+                                        >
 
-                                    <vs-td :data="data[index_cuota].cuota_total">$ {{ cuotas.cuota_total |
-                                        numFormat("0,000.00") }}</vs-td>
+                                        <vs-td
+                                            :data="
+                                                data[index_cuota]
+                                                    .num_pagos_programados_vigentes
+                                            "
+                                            >{{
+                                                cuotas.num_pagos_programados_vigentes
+                                            }}</vs-td
+                                        >
 
-                                    <vs-td :data="data[index_cuota].num_pagos_programados_vigentes">{{
-                                        cuotas.num_pagos_programados_vigentes }}</vs-td>
+                                        <vs-td
+                                            :data="
+                                                data[index_cuota].total_x_cuota
+                                            "
+                                            >$
+                                            {{
+                                                cuotas.total_x_cuota
+                                                    | numFormat("0,000.00")
+                                            }}</vs-td
+                                        >
 
-                                    <vs-td :data="data[index_cuota].total_x_cuota">$ {{ cuotas.total_x_cuota |
-                                        numFormat("0,000.00") }}</vs-td>
+                                        <vs-td
+                                            :data="
+                                                data[index_cuota].total_cubierto
+                                            "
+                                            >$
+                                            {{
+                                                cuotas.total_cubierto
+                                                    | numFormat("0,000.00")
+                                            }}</vs-td
+                                        >
+                                        <vs-td
+                                            :data="data[index_cuota].saldo_neto"
+                                            >$
+                                            {{
+                                                cuotas.saldo_neto
+                                                    | numFormat("0,000.00")
+                                            }}</vs-td
+                                        >
+                                        <vs-td :data="data[index_cuota].status">
+                                            <p
+                                                v-if="
+                                                    data[index_cuota].status ==
+                                                    0
+                                                "
+                                            >
+                                                Cancelada
+                                                <span class="dot-danger"></span>
+                                            </p>
+                                            <p v-else>
+                                                Activo
+                                                <span
+                                                    class="dot-success"
+                                                ></span>
+                                            </p>
+                                        </vs-td>
 
-                                    <vs-td :data="data[index_cuota].total_cubierto">$
-                                        {{ cuotas.total_cubierto | numFormat("0,000.00") }}</vs-td>
-                                    <vs-td :data="data[index_cuota].saldo_neto">$ {{ cuotas.saldo_neto |
-                                        numFormat("0,000.00") }}</vs-td>
-                                    <vs-td :data="data[index_cuota].status">
-                                        <p v-if="data[index_cuota].status == 0">
-                                            Cancelada
-                                            <span class="dot-danger"></span>
-                                        </p>
-                                        <p v-else>
-                                            Activo
-                                            <span class="dot-success"></span>
-                                        </p>
-                                    </vs-td>
-
-                                    <vs-td :data="data[index_cuota].status">
-                                        <img class="cursor-pointer img-btn-22 mx-2 hidden" src="@assets/images/pdf.svg"
-                                            title="Consultar Documento" @click="
-                                                openReporte(
-                                                    documentos[0].documento,
-                                                    documentos[0].url,
-                                                    data[index_cuota].id,
-                                                    ''
-                                                )
-                                                " />
-                                        <img v-if="data[index_cuota].status == 1" class="cursor-pointer img-btn-18 mx-2"
-                                            src="@assets/images/edit.svg" title="Modificar"
-                                            @click="openModificar(data[index_cuota].id)" />
-                                        <img v-if="data[index_cuota].status == 1" class="img-btn-24 mx-2"
-                                            src="@assets/images/trash.svg" title="Cancelar Cuota" @click="
-                                                cancelar_cuotas(
-                                                    data[index_cuota].id,
-                                                    data[index_cuota].descripcion,
-                                                    'cancelar'
-                                                )
-                                                " />
-                                    </vs-td>
-                                </vs-tr>
-                            </template>
-                        </vs-table>
+                                        <vs-td :data="data[index_cuota].status">
+                                            <img
+                                                class="cursor-pointer img-btn-22 mx-2 hidden"
+                                                src="@assets/images/pdf.svg"
+                                                title="Consultar Documento"
+                                                @click="
+                                                    openReporte(
+                                                        documentos[0].documento,
+                                                        documentos[0].url,
+                                                        data[index_cuota].id,
+                                                        ''
+                                                    )
+                                                "
+                                            />
+                                            <img
+                                                v-if="
+                                                    data[index_cuota].status ==
+                                                    1
+                                                "
+                                                class="cursor-pointer img-btn-18 mx-2"
+                                                src="@assets/images/edit.svg"
+                                                title="Modificar"
+                                                @click="
+                                                    openModificar(
+                                                        data[index_cuota].id
+                                                    )
+                                                "
+                                            />
+                                            <img
+                                                v-if="
+                                                    data[index_cuota].status ==
+                                                    1
+                                                "
+                                                class="img-btn-24 mx-2"
+                                                src="@assets/images/trash.svg"
+                                                title="Cancelar Cuota"
+                                                @click="
+                                                    cancelar_cuotas(
+                                                        data[index_cuota].id,
+                                                        data[index_cuota]
+                                                            .descripcion,
+                                                        'cancelar'
+                                                    )
+                                                "
+                                            />
+                                        </vs-td>
+                                    </vs-tr>
+                                </template>
+                            </vs-table>
+                        </div>
                     </div>
                 </div>
             </div>
             <!--componente de confirmar sin contraseña-->
-            <ConfirmarDanger v-if="operConfirmar" :z_index="'z-index58k'" :show="operConfirmar"
-                :callback-on-success="callback" @closeVerificar="operConfirmar = false"
+            <ConfirmarDanger
+                v-if="operConfirmar"
+                :z_index="'z-index58k'"
+                :show="operConfirmar"
+                :callback-on-success="callback"
+                @closeVerificar="operConfirmar = false"
                 :accion="'¿Desea eliminar este plan de mensualidades? Los datos quedarán eliminados del sistema.'"
-                :confirmarButton="'Eliminar'"></ConfirmarDanger>
-            <Password v-if="openPassword" :show="openPassword" :callback-on-success="callbackPassword"
-                @closeVerificar="openPassword = false" :accion="accionPassword"></Password>
+                :confirmarButton="'Eliminar'"
+            ></ConfirmarDanger>
+            <Password
+                v-if="openPassword"
+                :show="openPassword"
+                :callback-on-success="callbackPassword"
+                @closeVerificar="openPassword = false"
+                :accion="accionPassword"
+            ></Password>
 
-            <FormularioCuotas v-if="verFormularioCuotas" :id_cuota="id_cuotas_modificar" :tipo="tipoFormulario"
-                :show="verFormularioCuotas" @closeVentana="verFormularioCuotas = false" @retornar_id="retorno_id">
+            <FormularioCuotas
+                v-if="verFormularioCuotas"
+                :id_cuota="id_cuotas_modificar"
+                :tipo="tipoFormulario"
+                :show="verFormularioCuotas"
+                @closeVentana="verFormularioCuotas = false"
+                @retornar_id="retorno_id"
+            >
             </FormularioCuotas>
 
-            <Reporteador v-if="openReportesLista" :header="'Consultar cuotas x propiedad'" :show="openReportesLista"
-                :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+            <Reporteador
+                v-if="openReportesLista"
+                :header="'Consultar cuotas x propiedad'"
+                :show="openReportesLista"
+                :listadereportes="ListaReportes"
+                :request="request"
+                @closeReportes="openReportesLista = false"
+            >
             </Reporteador>
             <!--fin de compornentes-->
         </vs-popup>
@@ -188,8 +311,7 @@ export default {
             //datos que mando para actualizar
         };
     },
-    computed: {
-    },
+    computed: {},
     methods: {
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
             this.ListaReportes = [];

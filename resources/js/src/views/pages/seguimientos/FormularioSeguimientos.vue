@@ -609,6 +609,7 @@
                 "
             />
             <ClientesSearcherSeguimientos
+                :z_index="'z-index58k'"
                 v-if="ShowBuscadorClientes"
                 :show="ShowBuscadorClientes"
                 @closeVentana="ShowBuscadorClientes = false"

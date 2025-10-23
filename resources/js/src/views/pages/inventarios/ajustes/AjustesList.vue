@@ -13,117 +13,183 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
 -->
 <template>
     <div>
-        <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-                @click="openReporteLotes()" type="border">
+        <div class="text-right buttons-container-header">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="primary"
+                @click="openReporteLotes()"
+                type="border"
+            >
                 <span>Ver Lotes del Inventario</span>
             </vs-button>
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="formulario('agregar')">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="success"
+                @click="formulario('agregar')"
+            >
                 <span>Ajustar Inventario</span>
             </vs-button>
         </div>
 
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="text-sm opacity-75">Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="mb-4 sm:mb-0" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="mb-4 sm:mb-0"
+                        />
                     </div>
 
-                    <div class="
-              w-full
-              sm:w-12/12
-              md:w-3/12
-              lg:w-3/12
-              xl:w-3/12
-              mb-1
-              px-2
-              input-text
-            ">
-                        <label class="text-sm opacity-75">Filtrar Específico</label>
-                        <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="filtroEspecifico" class="mb-4 md:mb-0" />
+                    <div
+                        class="w-full sm:w-12/12 md:w-3/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text"
+                    >
+                        <label class="text-sm opacity-75"
+                            >Filtrar Específico</label
+                        >
+                        <v-select
+                            :options="filtrosEspecificos"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="filtroEspecifico"
+                            class="mb-4 md:mb-0"
+                        />
                     </div>
-                    <div class="
-              w-full
-              sm:w-12/12
-              md:w-3/12
-              lg:w-3/12
-              xl:w-3/12
-              mb-4
-              px-2
-              input-text
-            ">
+                    <div
+                        class="w-full sm:w-12/12 md:w-3/12 lg:w-3/12 xl:w-3/12 mb-4 px-2 input-text"
+                    >
                         <label class="text-sm opacity-75">{{
                             this.filtroEspecifico.label
-                            }}</label>
-                        <vs-input class="w-full" icon="search" maxlength="75" placeholder="Filtrar por dato específico"
-                            v-model="serverOptions.numero_control" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" />
+                        }}</label>
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="75"
+                            placeholder="Filtrar por dato específico"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="ajustes"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Ajustes Realizados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Ajuste</vs-th>
+                            <vs-th>Tipo de Ajuste</vs-th>
+                            <vs-th>Fecha del Ajuste</vs-th>
+                            <vs-th>Realizado Por</vs-th>
+                            <vs-th>Ver Detalle</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].id">
+                                    <span class="font-semibold">{{
+                                        data[indextr].id
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].tipo_ajuste_texto">
+                                    <span class="font-semibold">{{
+                                        data[indextr].tipo_ajuste_texto
+                                    }}</span>
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].fecha_registro_texto"
+                                >
+                                    <span class="font-semibold">{{
+                                        data[indextr].fecha_registro_texto
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].registro.nombre">
+                                    <span class="uppercase">
+                                        {{ data[indextr].registro.nombre }}
+                                    </span>
+                                </vs-td>
 
-        <br />
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="ajustes" noDataText="0 Resultados"
-            class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Ajustes Realizados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Ajuste</vs-th>
-                <vs-th>Tipo de Ajuste</vs-th>
-                <vs-th>Fecha del Ajuste</vs-th>
-                <vs-th>Realizado Por</vs-th>
-                <vs-th>Ver Detalle</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span class="font-semibold">{{ data[indextr].id }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].tipo_ajuste_texto">
-                        <span class="font-semibold">{{
-                            data[indextr].tipo_ajuste_texto
-                            }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_registro_texto">
-                        <span class="font-semibold">{{
-                            data[indextr].fecha_registro_texto
-                            }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].registro.nombre">
-                        <span class="uppercase">
-                            {{ data[indextr].registro.nombre }}
-                        </span>
-                    </vs-td>
-
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex flex-start">
-                            <img class="cursor-pointer img-btn ml-auto mr-auto" src="@assets/images/pdf.svg"
-                                title="Modificar" @click="openReporte(data[indextr].id)" />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex flex-start">
+                                        <img
+                                            class="cursor-pointer img-btn ml-auto mr-auto"
+                                            src="@assets/images/pdf.svg"
+                                            title="Modificar"
+                                            @click="
+                                                openReporte(data[indextr].id)
+                                            "
+                                        />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                    <pre ref="pre"></pre>
+                </div>
+            </div>
         </div>
-        <pre ref="pre"></pre>
-
-        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
-            :accion="accionNombre">
+        <Password
+            v-if="openStatus"
+            :show="openStatus"
+            :callback-on-success="callback"
+            @closeVerificar="closeStatus"
+            :accion="accionNombre"
+        >
         </Password>
-        <Reporteador v-if="openReportesLista" :header="'consultar reporte de venta'" :show="openReportesLista"
-            :listadereportes="ListaReportes" :request="request" @closeReportes="closeReportes"></Reporteador>
-        <FormularioAjustes v-if="verFormularioAjustes" :show="verFormularioAjustes"
-            @closeVentana="verFormularioAjustes = false" @retornar_id="retorno_id">
+        <Reporteador
+            v-if="openReportesLista"
+            :header="'consultar reporte de venta'"
+            :show="openReportesLista"
+            :listadereportes="ListaReportes"
+            :request="request"
+            @closeReportes="closeReportes"
+        ></Reporteador>
+        <FormularioAjustes
+            v-if="verFormularioAjustes"
+            :show="verFormularioAjustes"
+            @closeVentana="verFormularioAjustes = false"
+            @retornar_id="retorno_id"
+        >
         </FormularioAjustes>
     </div>
 </template>
@@ -161,6 +227,11 @@ export default {
         },
         estado: function (newVal, previousVal) {
             this.get_data(1);
+        },
+    },
+    computed: {
+        noDataFound() {
+            return this.ajustes.length === 0;
         },
     },
     data() {
@@ -273,7 +344,8 @@ export default {
             this.verPaginado = false;
             this.serverOptions.page = page;
             this.serverOptions.per_page = this.mostrar.value;
-            this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+            this.serverOptions.filtro_especifico_opcion =
+                this.filtroEspecifico.value;
             inventario
                 .get_ajustes(this.serverOptions)
                 .then((res) => {
@@ -301,9 +373,9 @@ export default {
                     }
                 });
         },
-        handleSearch(searching) { },
-        handleChangePage(page) { },
-        handleSort(key, active) { },
+        handleSearch(searching) {},
+        handleChangePage(page) {},
+        handleSort(key, active) {},
 
         //eliminar usuario logicamente
 
@@ -465,9 +537,7 @@ export default {
     mounted() {
         this.$log("Component mounted! " + this.$options.name);
     },
-    beforeDestroy() {
-
-    },
+    beforeDestroy() {},
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

@@ -1,227 +1,379 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['forms-popup bg-content-theme', z_index]" fullscreen close="cancelar" :title="title"
-            :active="localShow" :ref="this.$options.name">
-            <div class="w-full text-right">
-                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-                    @click="openBuscador = true">
-                    <span>Buscar Articulos</span>
-                </vs-button>
-            </div>
+        <vs-popup
+            :class="['forms-popup bg-content-theme', z_index]"
+            fullscreen
+            close="cancelar"
+            :title="title"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
+            <div class="flex flex-col flex-1 h-full">
+                <div class="w-full text-right">
+                    <vs-button
+                        class="w-full"
+                        color="primary"
+                        @click="openBuscador = true"
+                    >
+                        <span>Buscar Articulos</span>
+                    </vs-button>
+                </div>
+                <div id="resultados" class="mt-5 flex flex-col flex-1">
+                    <div
+                        v-if="noDataFound"
+                        class="w-full skeleton flex-1 items-center justify-center"
+                    >
+                        <span class="text-gray-600 text-lg font-normal"
+                            >No hay datos que mostrar</span
+                        >
+                    </div>
+                    <div v-else id="results" class="w-full flex flex-wrap">
+                        <div class="w-full py-2">
+                            <div class="flex flex-wrap px-2">
+                                <div
+                                    class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2"
+                                >
+                                    <vx-card
+                                        no-radius
+                                        title="Filtros de selección"
+                                        :collapse-action="false"
+                                    >
+                                        <div class="flex flex-wrap">
+                                            <div class="w-full text-right">
+                                                <vs-button
+                                                    v-if="
+                                                        form.ajuste.length > 0
+                                                    "
+                                                    class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                                                    color="danger"
+                                                    @click="quitarTodos"
+                                                >
+                                                    <span
+                                                        >Quitar todos los
+                                                        Artículos</span
+                                                    >
+                                                </vs-button>
+                                            </div>
+                                            <div
+                                                class="w-full sm:w-12/12 md:w-3/12 lg:w-3/12 xl:w-3/12 mb-1 px-2 input-text"
+                                            >
+                                                <label
+                                                    class="text-base opacity-75 font-medium"
+                                                    >Datos del Ajuste</label
+                                                >
+                                                <v-select
+                                                    :options="tipoAjustes"
+                                                    :clearable="false"
+                                                    :dir="
+                                                        $vs.rtl ? 'rtl' : 'ltr'
+                                                    "
+                                                    v-model="form.tipoAjuste"
+                                                    class="mb-4 md:mb-0 mt-1"
+                                                    :disabled="
+                                                        this.form.ajuste
+                                                            .length > 0
+                                                    "
+                                                />
+                                            </div>
+                                            <div
+                                                class="w-full sm:w-12/12 md:w-9/12 lg:w-9/12 xl:w-9/12 mb-4 px-2 input-text"
+                                            >
+                                                <label
+                                                    class="text-base opacity-75 font-medium"
+                                                    >Nota:</label
+                                                >
+                                                <vs-input
+                                                    class="w-full mt-1"
+                                                    maxlength="250"
+                                                    placeholder="Nota sobre el ajuste"
+                                                    v-model.trim="form.nota"
+                                                />
+                                            </div>
+                                        </div>
+                                    </vx-card>
+                                </div>
+                                <div
+                                    class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 mt-5"
+                                >
+                                    <vs-table
+                                        :data="form.ajuste"
+                                        noDataText="0 Resultados"
+                                    >
+                                        <template slot="header">
+                                            <h3>
+                                                Lista de Artículos a Inventariar
+                                            </h3>
+                                        </template>
+                                        <template slot="thead">
+                                            <vs-th>Núm. Artículo</vs-th>
+                                            <vs-th>Código Barras</vs-th>
+                                            <vs-th>Descripción</vs-th>
+                                            <vs-th>Núm. Lote</vs-th>
+                                            <vs-th>Existencia Sistema</vs-th>
+                                            <vs-th>Existencia Física</vs-th>
+                                            <vs-th hidden
+                                                >Fecha Caducidad</vs-th
+                                            >
+                                            <vs-th>Nota/Observación</vs-th>
+                                            <vs-th>Acciones</vs-th>
+                                        </template>
+                                        <template slot-scope="{ data }">
+                                            <vs-tr
+                                                :data="tr"
+                                                :key="indextr"
+                                                v-for="(tr, indextr) in data"
+                                            >
+                                                <vs-td :data="data[indextr].id">
+                                                    <span
+                                                        class="font-semibold"
+                                                        >{{
+                                                            data[indextr].id
+                                                        }}</span
+                                                    >
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="
+                                                        data[indextr]
+                                                            .codigo_barras
+                                                    "
+                                                >
+                                                    <span
+                                                        class="font-semibold"
+                                                        >{{
+                                                            data[indextr]
+                                                                .codigo_barras
+                                                        }}</span
+                                                    >
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="
+                                                        data[indextr]
+                                                            .descripcion
+                                                    "
+                                                >
+                                                    <span class="uppercase">{{
+                                                        data[indextr]
+                                                            .descripcion
+                                                    }}</span>
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="data[indextr].lote"
+                                                >
+                                                    <span class="uppercase">{{
+                                                        data[indextr]
+                                                            .num_lote_inventario
+                                                    }}</span>
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="
+                                                        data[indextr]
+                                                            .existencia_sistema
+                                                    "
+                                                >
+                                                    <span class="uppercase">{{
+                                                        data[indextr]
+                                                            .existencia_sistema
+                                                    }}</span>
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="
+                                                        data[indextr]
+                                                            .existencia_fisica
+                                                    "
+                                                >
+                                                    <vs-input
+                                                        :name="
+                                                            'existencia_fisica' +
+                                                            indextr
+                                                        "
+                                                        data-vv-as=" "
+                                                        data-vv-validate-on="blur"
+                                                        v-validate="
+                                                            'required|integer|min_value:' +
+                                                            min_existencia
+                                                        "
+                                                        class="w-full sm:w-10/12 md:w-8/12 lg:w-8/12 xl:w-8/12 mr-auto ml-auto mt-1 cantidad"
+                                                        maxlength="4"
+                                                        v-model="
+                                                            form.ajuste[indextr]
+                                                                .existencia_fisica
+                                                        "
+                                                    />
+                                                    <div>
+                                                        <span
+                                                            class="text-danger text-xs"
+                                                        >
+                                                            {{
+                                                                errors.first(
+                                                                    "existencia_fisica" +
+                                                                        indextr
+                                                                )
+                                                            }}
+                                                        </span>
+                                                    </div>
+                                                </vs-td>
+                                                <vs-td
+                                                    hidden
+                                                    :data="
+                                                        data[indextr]
+                                                            .fecha_caducidad
+                                                    "
+                                                >
+                                                    <span
+                                                        v-if="
+                                                            data[indextr]
+                                                                .caduca_b == 1
+                                                        "
+                                                    >
+                                                        <flat-pickr
+                                                            :name="
+                                                                'fecha_venta' +
+                                                                indextr
+                                                            "
+                                                            data-vv-as=" "
+                                                            v-validate="
+                                                                'required'
+                                                            "
+                                                            :config="
+                                                                configdateTimePickerFechasCaducidad
+                                                            "
+                                                            placeholder="Fecha de caducidad"
+                                                            class="w-full sm:w-10/12 md:w-8/12 lg:w-8/12 xl:w-8/12 mr-auto ml-auto mt-1 text-center"
+                                                            v-model="
+                                                                form.ajuste[
+                                                                    indextr
+                                                                ]
+                                                                    .fecha_caducidad
+                                                            "
+                                                        />
+                                                        <div>
+                                                            <span
+                                                                class="text-danger text-xs"
+                                                            >
+                                                                {{
+                                                                    errors.first(
+                                                                        "fecha_venta" +
+                                                                            indextr
+                                                                    )
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                    </span>
 
-            <div class="flex flex-wrap px-2">
-                <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-                    <vx-card no-radius title="Filtros de selección" :collapse-action="false">
-                        <div class="flex flex-wrap">
-                            <div class="w-full text-right">
-                                <vs-button v-if="form.ajuste.length > 0" class="
-                    w-full
-                    sm:w-full sm:w-auto
-                    md:w-auto
-                    md:ml-2
-                    my-2
-                    md:mt-0
-                  " color="danger" @click="quitarTodos">
-                                    <span>Quitar todos los Artículos</span>
-                                </vs-button>
+                                                    <span
+                                                        v-else
+                                                        class="uppercase"
+                                                        >{{
+                                                            data[indextr]
+                                                                .fecha_caducidad
+                                                        }}</span
+                                                    >
+                                                </vs-td>
+                                                <vs-td
+                                                    :data="data[indextr].nota"
+                                                >
+                                                    <vs-input
+                                                        :name="'nota' + indextr"
+                                                        class="w-full sm:w-11/12 md:w-11/12 lg:w-11/12 xl:w-11/12 mr-auto ml-auto mt-1 cantidad"
+                                                        maxlength="150"
+                                                        v-model="
+                                                            form.ajuste[indextr]
+                                                                .nota
+                                                        "
+                                                    />
+                                                </vs-td>
+                                                <vs-td :data="data[indextr].id">
+                                                    <div
+                                                        class="flex flex-start"
+                                                    >
+                                                        <img
+                                                            class="cursor-pointer img-btn mr-auto ml-auto"
+                                                            src="@assets/images/cancel.svg"
+                                                            title="Remover"
+                                                            @click="
+                                                                deleteArticulo(
+                                                                    data[
+                                                                        indextr
+                                                                    ],
+                                                                    indextr
+                                                                )
+                                                            "
+                                                        />
+                                                    </div>
+                                                </vs-td>
+                                            </vs-tr>
+                                        </template>
+                                    </vs-table>
+                                </div>
                             </div>
-
-                            <div class="
-                  w-full
-                  sm:w-12/12
-                  md:w-3/12
-                  lg:w-3/12
-                  xl:w-3/12
-                  mb-1
-                  px-2
-                  input-text
-                ">
-                                <label class="text-base opacity-75 font-medium">Datos del Ajuste</label>
-                                <v-select :options="tipoAjustes" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                    v-model="form.tipoAjuste" class="mb-4 md:mb-0 mt-1"
-                                    :disabled="this.form.ajuste.length > 0" />
-                            </div>
-                            <div class="
-                  w-full
-                  sm:w-12/12
-                  md:w-9/12
-                  lg:w-9/12
-                  xl:w-9/12
-                  mb-4
-                  px-2
-                  input-text
-                ">
-                                <label class="text-base opacity-75 font-medium">Nota:</label>
-                                <vs-input class="w-full mt-1" maxlength="250" placeholder="Nota sobre el ajuste"
-                                    v-model.trim="form.nota" />
+                            <div class="flex flex-wrap px-2 mt-10">
+                                <div class="w-full px-2">
+                                    <div class="mt-2">
+                                        <p class="text-center">
+                                            <span
+                                                class="text-danger font-medium"
+                                                >Ojo:</span
+                                            >
+                                            Por favor revise la información
+                                            ingresada, si todo es correcto de
+                                            click en "Botón de Abajo”.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="w-full text-center">
+                                    <vs-button
+                                        class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2"
+                                        color="success"
+                                        @click="acceptAlert()"
+                                    >
+                                        <span>Ajustar Inventario</span>
+                                    </vs-button>
+                                </div>
                             </div>
                         </div>
-                    </vx-card>
-                </div>
-                <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2 mt-5">
-                    <vs-table :data="form.ajuste" noDataText="0 Resultados">
-                        <template slot="header">
-                            <h3>Lista de Artículos a Inventariar</h3>
-                        </template>
-                        <template slot="thead">
-                            <vs-th>Núm. Artículo</vs-th>
-                            <vs-th>Código Barras</vs-th>
-                            <vs-th>Descripción</vs-th>
-                            <vs-th>Núm. Lote</vs-th>
-                            <vs-th>Existencia Sistema</vs-th>
-                            <vs-th>Existencia Física</vs-th>
-                            <vs-th hidden>Fecha Caducidad</vs-th>
-                            <vs-th>Nota/Observación</vs-th>
-                            <vs-th>Acciones</vs-th>
-                        </template>
-                        <template slot-scope="{ data }">
-                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                                <vs-td :data="data[indextr].id">
-                                    <span class="font-semibold">{{
-                                        data[indextr].id
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].codigo_barras">
-                                    <span class="font-semibold">{{
-                                        data[indextr].codigo_barras
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].descripcion">
-                                    <span class="uppercase">{{
-                                        data[indextr].descripcion
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].lote">
-                                    <span class="uppercase">{{
-                                        data[indextr].num_lote_inventario
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].existencia_sistema">
-                                    <span class="uppercase">{{
-                                        data[indextr].existencia_sistema
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].existencia_fisica">
-                                    <vs-input :name="'existencia_fisica' + indextr" data-vv-as=" "
-                                        data-vv-validate-on="blur" v-validate="'required|integer|min_value:' +
-                                            min_existencia
-                                            " class="
-                      w-full
-                      sm:w-10/12
-                      md:w-8/12
-                      lg:w-8/12
-                      xl:w-8/12
-                      mr-auto
-                      ml-auto
-                      mt-1
-                      cantidad
-                    " maxlength="4" v-model="form.ajuste[indextr]
-                        .existencia_fisica
-                        " />
-                                    <div>
-                                        <span class="text-danger text-xs">
-                                            {{
-                                                errors.first(
-                                                    "existencia_fisica" +
-                                                    indextr
-                                                )
-                                            }}
-                                        </span>
-                                    </div>
-                                </vs-td>
-                                <vs-td hidden :data="data[indextr].fecha_caducidad">
-                                    <span v-if="data[indextr].caduca_b == 1">
-                                        <flat-pickr :name="'fecha_venta' + indextr" data-vv-as=" "
-                                            v-validate="'required'" :config="configdateTimePickerFechasCaducidad
-                                                " placeholder="Fecha de caducidad" class="
-                        w-full
-                        sm:w-10/12
-                        md:w-8/12
-                        lg:w-8/12
-                        xl:w-8/12
-                        mr-auto
-                        ml-auto
-                        mt-1
-                        text-center
-                      " v-model="form.ajuste[indextr]
-                        .fecha_caducidad
-                        " />
-                                        <div>
-                                            <span class="text-danger text-xs">
-                                                {{
-                                                    errors.first(
-                                                        "fecha_venta" + indextr
-                                                    )
-                                                }}
-                                            </span>
-                                        </div>
-                                    </span>
-
-                                    <span v-else class="uppercase">{{
-                                        data[indextr].fecha_caducidad
-                                    }}</span>
-                                </vs-td>
-                                <vs-td :data="data[indextr].nota">
-                                    <vs-input :name="'nota' + indextr" class="
-                      w-full
-                      sm:w-11/12
-                      md:w-11/12
-                      lg:w-11/12
-                      xl:w-11/12
-                      mr-auto
-                      ml-auto
-                      mt-1
-                      cantidad
-                    " maxlength="150" v-model="form.ajuste[indextr].nota" />
-                                </vs-td>
-                                <vs-td :data="data[indextr].id">
-                                    <div class="flex flex-start">
-                                        <img class="cursor-pointer img-btn mr-auto ml-auto"
-                                            src="@assets/images/cancel.svg" title="Remover" @click="
-                                                deleteArticulo(
-                                                    data[indextr],
-                                                    indextr
-                                                )
-                                                " />
-                                    </div>
-                                </vs-td>
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                </div>
-            </div>
-            <div class="flex flex-wrap px-2 mt-10">
-                <div class="w-full px-2">
-                    <div class="mt-2">
-                        <p class="text-center">
-                            <span class="text-danger font-medium">Ojo:</span>
-                            Por favor revise la información ingresada, si todo
-                            es correcto de click en "Botón de Abajo”.
-                        </p>
                     </div>
-                </div>
-                <div class="w-full text-center">
-                    <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2" color="success"
-                        @click="acceptAlert()">
-                        <span>Ajustar Inventario</span>
-                    </vs-button>
                 </div>
             </div>
         </vs-popup>
-        <Password v-if="operConfirmar" :show="operConfirmar" :callback-on-success="callback"
-            @closeVerificar="closeChecker" :accion="accionNombre">
+        <Password
+            v-if="operConfirmar"
+            :show="operConfirmar"
+            :callback-on-success="callback"
+            @closeVerificar="closeChecker"
+            :accion="accionNombre"
+        >
         </Password>
-        <ConfirmarDanger v-if="openConfirmarSinPassword" :z_index="'z-index58k'" :show="openConfirmarSinPassword"
-            :callback-on-success="callBackConfirmar" @closeVerificar="openConfirmarSinPassword = false"
-            :accion="accionConfirmarSinPassword" :confirmarButton="botonConfirmarSinPassword"></ConfirmarDanger>
-        <ConfirmarAceptar v-if="openConfirmarAceptar" :show="openConfirmarAceptar"
-            :callback-on-success="callBackConfirmarAceptar" @closeVerificar="openConfirmarAceptar = false" :accion="'He revisado la información y quiero registrar a este proveedor'
-                " :confirmarButton="'Guardar Proveedor'"></ConfirmarAceptar>
-        <ArticulosBuscador v-if="openBuscador" :show="openBuscador" @closeBuscador="openBuscador = false"
-            @retornoArticulo="articuloSeleccionado">
+        <ConfirmarDanger
+            v-if="openConfirmarSinPassword"
+            :z_index="'z-index58k'"
+            :show="openConfirmarSinPassword"
+            :callback-on-success="callBackConfirmar"
+            @closeVerificar="openConfirmarSinPassword = false"
+            :accion="accionConfirmarSinPassword"
+            :confirmarButton="botonConfirmarSinPassword"
+        ></ConfirmarDanger>
+        <ConfirmarAceptar
+            v-if="openConfirmarAceptar"
+            :show="openConfirmarAceptar"
+            :callback-on-success="callBackConfirmarAceptar"
+            @closeVerificar="openConfirmarAceptar = false"
+            :accion="'He revisado la información y quiero registrar a este proveedor'"
+            :confirmarButton="'Guardar Proveedor'"
+        ></ConfirmarAceptar>
+        <ArticulosBuscador
+            v-if="openBuscador"
+            :show="openBuscador"
+            @closeBuscador="openBuscador = false"
+            @retornoArticulo="articuloSeleccionado"
+        >
         </ArticulosBuscador>
-        <Cantidad v-if="openCantidad" :show="openCantidad" :articulo="articulo" @closeCantidad="openCantidad = false"
-            @retornoCantidad="retornoCantidad"></Cantidad>
+        <Cantidad
+            v-if="openCantidad"
+            :show="openCantidad"
+            :articulo="articulo"
+            @closeCantidad="openCantidad = false"
+            @retornoCantidad="retornoCantidad"
+        ></Cantidad>
     </div>
 </template>
 <script>
@@ -249,18 +401,18 @@ export default {
         ConfirmarDanger,
         ConfirmarAceptar,
         ArticulosBuscador,
-        Cantidad
+        Cantidad,
     },
     props: {
         show: {
             type: Boolean,
-            required: true
+            required: true,
         },
         z_index: {
             type: String,
             required: false,
-            default: "z-index54k"
-        }
+            default: "z-index54k",
+        },
     },
     watch: {
         show: {
@@ -269,6 +421,7 @@ export default {
                 if (newValue) {
                     this.title = "Realizar Ajuste del Inventario";
                     this.$popupManager.register(this, this.cancelar, "input");
+                    this.openBuscador = true;
                 } else {
                     this.$popupManager.unregister(this.$options.name);
                 }
@@ -281,12 +434,16 @@ export default {
             if (this.form.tipoAjuste.value == 1) {
                 return 1;
             } else return 0;
-        }
+        },
+        noDataFound() {
+            return this.form.ajuste.length === 0;
+        },
     },
     data() {
         return {
             localShow: false,
-            configdateTimePickerFechasCaducidad: configdateTimePickerFechasCaducidad,
+            configdateTimePickerFechasCaducidad:
+                configdateTimePickerFechasCaducidad,
             openCantidad: false,
             openBuscador: false,
             title: "",
@@ -308,17 +465,17 @@ export default {
         */
                 {
                     label: "Inventario Actual",
-                    value: "2"
-                }
+                    value: "2",
+                },
             ],
             articulo: [],
             form: {
                 nota: "",
                 ajuste: [],
                 //tipoAjuste: { label: "Lote no Inventariado", value: "1" },
-                tipoAjuste: { label: "Inventario Actual", value: "2" }
+                tipoAjuste: { label: "Inventario Actual", value: "2" },
             },
-            errores: []
+            errores: [],
         };
     },
     methods: {
@@ -351,11 +508,11 @@ export default {
             /**aqui se agrega el articulo seleccionado */
             /**se verifica qur tipo de ajuste es */
             if (this.form.tipoAjuste.value == 1) {
-                datos.forEach(articulo => {
+                datos.forEach((articulo) => {
                     /**es un ajuste de articulos fuera de inventario */
                     /**es caducable */
                     let esta = 0;
-                    this.form.ajuste.forEach(ajuste => {
+                    this.form.ajuste.forEach((ajuste) => {
                         if (ajuste.id == articulo.id) {
                             esta = 1;
                             return;
@@ -377,12 +534,12 @@ export default {
                             lote: "N/A",
                             existencia_sistema: 0,
                             existencia_fisica: 1,
-                            nota: ""
+                            nota: "",
                         });
                     }
                 });
             } else {
-                datos.forEach(articulo => {
+                datos.forEach((articulo) => {
                     /**es un ajuste del inventario actual
                      * se debe de agregar todos los productos de cada lote que tiene activo el inventario
                      */
@@ -390,14 +547,14 @@ export default {
                         articulo.caduca_b == 1
                             ? articulo.fecha_caducidad
                             : "N/A";
-                    articulo.inventario.forEach(element => {
+                    articulo.inventario.forEach((element) => {
                         /**verificand que no este en el ajuste a mandar el concepto seleccionado */
                         let esta = 0;
-                        this.form.ajuste.forEach(ajuste => {
+                        this.form.ajuste.forEach((ajuste) => {
                             if (
                                 ajuste.id == element.articulos_id &&
                                 ajuste.fecha_caducidad ==
-                                element.fecha_caducidad &&
+                                    element.fecha_caducidad &&
                                 ajuste.lote == element.lotes_id
                             ) {
                                 esta = 1;
@@ -418,7 +575,7 @@ export default {
                                     element.num_lote_inventario,
                                 existencia_sistema: element.existencia,
                                 existencia_fisica: element.existencia,
-                                nota: ""
+                                nota: "",
                             });
                         }
                     });
@@ -428,34 +585,32 @@ export default {
         acceptAlert() {
             this.$validator
                 .validateAll()
-                .then(result => {
+                .then((result) => {
                     if (!result) {
                         this.$vs.notify({
                             title: "Guardar Artículo",
-                            text:
-                                "Verifique que todos los datos han sido capturados",
+                            text: "Verifique que todos los datos han sido capturados",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
                             position: "bottom-right",
-                            time: "4000"
+                            time: "4000",
                         });
                     } else {
                         if (this.form.ajuste.length == 0) {
                             this.$vs.notify({
                                 title: "Guardar Artículo",
-                                text:
-                                    "Verifique que ha capturado al menos un Artículo",
+                                text: "Verifique que ha capturado al menos un Artículo",
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "danger",
                                 position: "bottom-right",
-                                time: "4000"
+                                time: "4000",
                             });
                         } else {
                             /**verificando que al menos cambio el valor de un articulo que desea ajustar */
                             let cambio = false;
-                            this.form.ajuste.forEach(element => {
+                            this.form.ajuste.forEach((element) => {
                                 if (
                                     element.existencia_sistema !=
                                     element.existencia_fisica
@@ -467,13 +622,12 @@ export default {
                             if (cambio == false) {
                                 this.$vs.notify({
                                     title: "Guardar Artículo",
-                                    text:
-                                        "No hay diferencias en los articulos que ha seleccionado",
+                                    text: "No hay diferencias en los articulos que ha seleccionado",
                                     iconPack: "feather",
                                     icon: "icon-alert-circle",
                                     color: "danger",
                                     position: "bottom-right",
-                                    time: "4000"
+                                    time: "4000",
                                 });
                             } else {
                                 this.errores = [];
@@ -486,7 +640,7 @@ export default {
                         }
                     }
                 })
-                .catch(() => { });
+                .catch(() => {});
         },
         async ajustar_inventario() {
             //aqui mando guardar los datos
@@ -502,19 +656,18 @@ export default {
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success",
-                        time: 5000
+                        time: 5000,
                     });
                     this.$emit("retornar_id", res.data);
                     this.cerrarVentana();
                 } else {
                     this.$vs.notify({
                         title: "Ajuste de Inventario",
-                        text:
-                            "Error al guardar el ajuste, por favor reintente.",
+                        text: "Error al guardar el ajuste, por favor reintente.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
-                        time: 4000
+                        time: 4000,
                     });
                 }
                 this.$vs.loading.close();
@@ -524,24 +677,22 @@ export default {
                         /**FORBIDDEN ERROR */
                         this.$vs.notify({
                             title: "Permiso denegado",
-                            text:
-                                "Verifique sus permisos con el administrador del sistema.",
+                            text: "Verifique sus permisos con el administrador del sistema.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "warning",
-                            time: 12000
+                            time: 12000,
                         });
                     } else if (err.response.status == 422) {
                         //checo si existe cada error
                         this.errores = err.response.data.error;
                         this.$vs.notify({
                             title: "Ajuste de Inventario",
-                            text:
-                                "Verifique los errores encontrados en los datos.",
+                            text: "Verifique los errores encontrados en los datos.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 12000
+                            time: 12000,
                         });
                     } else if (err.response.status == 409) {
                         /**FORBIDDEN ERROR */
@@ -551,7 +702,7 @@ export default {
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 15000
+                            time: 15000,
                         });
                     }
                 }
@@ -562,11 +713,15 @@ export default {
             this.$emit("closeVentana");
         },
         cancelar() {
-            this.botonConfirmarSinPassword = "Salir y limpiar";
-            this.accionConfirmarSinPassword =
-                "Esta acción limpiará los datos que capturó en el formulario.";
-            this.openConfirmarSinPassword = true;
-            this.callBackConfirmar = this.cerrarVentana;
+            if (this.form.ajuste.length > 0) {
+                this.botonConfirmarSinPassword = "Salir y limpiar";
+                this.accionConfirmarSinPassword =
+                    "Esta acción limpiará los datos que capturó en el formulario.";
+                this.openConfirmarSinPassword = true;
+                this.callBackConfirmar = this.cerrarVentana;
+            } else {
+                this.$emit("closeVentana");
+            }
         },
         cerrarVentana() {
             this.openConfirmarSinPassword = false;
@@ -583,8 +738,8 @@ export default {
             this.$validator.pause();
             this.$nextTick(() => {
                 this.$validator.errors.clear();
-                this.$validator.fields.items.forEach(field => field.reset());
-                this.$validator.fields.items.forEach(field =>
+                this.$validator.fields.items.forEach((field) => field.reset());
+                this.$validator.fields.items.forEach((field) =>
                     this.errors.remove(field)
                 );
                 this.$validator.resume();
@@ -592,7 +747,7 @@ export default {
         },
         closeChecker() {
             this.operConfirmar = false;
-        }
+        },
     },
     // Lifecycle hooks
     created() {

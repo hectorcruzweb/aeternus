@@ -92,132 +92,170 @@
                 </div>
             </vx-card>
         </div>
-        <br />
-        <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="cotizaciones"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
-            <template slot="header">
-                <h3>Listado de Cotizaciones</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Cotización</vs-th>
-                <vs-th>Cliente</vs-th>
-                <vs-th>Tel. / Celular</vs-th>
-                <vs-th>Fecha Elaboración</vs-th>
-                <vs-th>Fecha de Vencimiento</vs-th>
-                <vs-th>Tipo</vs-th>
-                <vs-th>Estatus</vs-th>
-                <vs-th>Seguimientos</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span class="font-semibold">{{
-                            data[indextr].id
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].cliente_nombre">
-                        {{ data[indextr].cliente_nombre }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].cliente_telefono">
-                        <span
-                            class="font-medium"
-                            v-if="data[indextr].cliente_telefono"
-                        >
-                            {{ data[indextr].cliente_telefono }}
-                        </span>
-                        <span class="font-medium" v-else> N/A </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].fecha_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_vencimiento_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].fecha_vencimiento_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].tipo_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].tipo_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td>
-                        <p v-if="data[indextr].status == 0">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status == 1">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-warning"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status == 2">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status == 3">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id_user">
-                        <div class="flex justify-center">
-                            <img
-                                class="img-btn-24 mx-2"
-                                src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos"
-                                @click="OpenFormSeguimientos(tr)"
-                            />
-                        </div>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img
-                                class="cursor-pointer img-btn-20 mx-3"
-                                src="@assets/images/pdf.svg"
-                                title="Expediente"
-                                @click="openReporte(data[indextr])"
-                            />
-                            <img
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/edit.svg"
-                                title="Modificar Cotización"
-                                @click="openModificar(data[indextr])"
-                            />
-                            <img
-                                v-if="data[indextr].status > 0"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg"
-                                title="Cancelar Cotización"
-                                @click="cancelarCotizacion(data[indextr])"
-                            />
-                            <img
-                                v-else-if="data[indextr].status == 0"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg"
-                                title="Esta cotización ya fue cancelada."
-                                @click="openReporte(data[indextr])"
-                            />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="cotizaciones"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Cotizaciones</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Cotización</vs-th>
+                            <vs-th>Cliente</vs-th>
+                            <vs-th>Tel. / Celular</vs-th>
+                            <vs-th>Fecha Elaboración</vs-th>
+                            <vs-th>Fecha de Vencimiento</vs-th>
+                            <vs-th>Tipo</vs-th>
+                            <vs-th>Estatus</vs-th>
+                            <vs-th>Seguimientos</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].id">
+                                    <span class="font-semibold">{{
+                                        data[indextr].id
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].cliente_nombre">
+                                    {{ data[indextr].cliente_nombre }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].cliente_telefono">
+                                    <span
+                                        class="font-medium"
+                                        v-if="data[indextr].cliente_telefono"
+                                    >
+                                        {{ data[indextr].cliente_telefono }}
+                                    </span>
+                                    <span class="font-medium" v-else>
+                                        N/A
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].fecha_texto">
+                                    <span class="font-medium">
+                                        {{ data[indextr].fecha_texto }}
+                                    </span>
+                                </vs-td>
+                                <vs-td
+                                    :data="
+                                        data[indextr].fecha_vencimiento_texto
+                                    "
+                                >
+                                    <span class="font-medium">
+                                        {{
+                                            data[indextr]
+                                                .fecha_vencimiento_texto
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].tipo_texto">
+                                    <span class="font-medium">
+                                        {{ data[indextr].tipo_texto }}
+                                    </span>
+                                </vs-td>
+                                <vs-td>
+                                    <p v-if="data[indextr].status == 0">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].status == 1">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-warning"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].status == 2">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].status == 3">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id_user">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="img-btn-24 mx-2"
+                                            src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos"
+                                            @click="OpenFormSeguimientos(tr)"
+                                        />
+                                    </div>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-3"
+                                            src="@assets/images/pdf.svg"
+                                            title="Expediente"
+                                            @click="openReporte(data[indextr])"
+                                        />
+                                        <img
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Cotización"
+                                            @click="
+                                                openModificar(data[indextr])
+                                            "
+                                        />
+                                        <img
+                                            v-if="data[indextr].status > 0"
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Cotización"
+                                            @click="
+                                                cancelarCotizacion(
+                                                    data[indextr]
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else-if="
+                                                data[indextr].status == 0
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash-open.svg"
+                                            title="Esta cotización ya fue cancelada."
+                                            @click="openReporte(data[indextr])"
+                                        />
+                                    </div>
+                                </vs-td>
+                                <template
+                                    class="expand-user"
+                                    slot="expand"
+                                ></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <!--Componentes-->
         <FormularioCotizaciones
             v-if="verFormularioCotizaciones"
@@ -299,6 +337,11 @@ export default {
                 (async () => {
                     await this.get_data(1);
                 })();
+        },
+    },
+    computed: {
+        noDataFound() {
+            return this.cotizaciones.length === 0;
         },
     },
     data() {

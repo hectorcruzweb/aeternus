@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="w-full text-right buttons-container-header">
             <vs-button
                 class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
                 color="success"
@@ -88,171 +88,234 @@
                 </div>
             </vx-card>
         </div>
-        <br />
-        <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="ventas"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
-            <template slot="header">
-                <h3>Listado de Ventas en Gral.</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Venta</vs-th>
-                <vs-th>Cliente</vs-th>
-                <vs-th>Fecha Venta</vs-th>
-                <vs-th>$ Total Venta</vs-th>
-                <vs-th>$ Saldo Venta</vs-th>
-                <vs-th>Estatus Entrega</vs-th>
-                <vs-th>Estatus Pago</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].ventas_generales_id">
-                        <span class="font-semibold">{{
-                            data[indextr].ventas_generales_id
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre">
-                        {{ data[indextr].nombre }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_operacion_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].fecha_operacion_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].total">
-                        <span class="font-medium">
-                            $
-                            {{ data[indextr].total | numFormat("0,000.00") }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].saldo">
-                        <span class="font-medium">
-                            $
-                            {{ data[indextr].saldo | numFormat("0,000.00") }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].venta_general">
-                        <p>
-                            {{
-                                data[indextr].venta_general
-                                    .status_entregado_texto
-                            }}
-                            <span
-                                :class="[
-                                    data[indextr].venta_general.entregado_b == 0
-                                        ? 'dot-warning'
-                                        : 'dot-success',
-                                ]"
-                            ></span>
-                        </p>
-                    </vs-td>
-                    <vs-td>
-                        <p v-if="data[indextr].status_texto == 'Cancelada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                        <p
-                            v-else-if="
-                                data[indextr].status_texto == 'Por Pagar'
-                            "
-                        >
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-warning"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status_texto == 'Pagada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img
-                                class="img-btn-24 mx-4"
-                                src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos"
-                                @click="OpenFormSeguimientos(tr)"
-                            />
-                            <img
-                                v-if="data[indextr].operacion_status == 0"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/deliver-disabled.svg"
-                                title="Hacer Entrega de Venta"
-                                @click="openEntregarVenta(data[indextr])"
-                            />
-                            <img
-                                v-else-if="
-                                    data[indextr].operacion_status >= 1 &&
-                                    data[indextr].venta_general.entregado_b == 0
-                                "
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/deliver-yes.svg"
-                                title="Hacer Entrega de Venta"
-                                @click="openEntregarVenta(data[indextr])"
-                            />
-                            <img
-                                v-else
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/deliver-no.svg"
-                                title="Esta venta ya fue entregada."
-                                @click="openEntregarVenta(data[indextr])"
-                            />
-                            <img
-                                class="cursor-pointer img-btn-20 mx-3"
-                                src="@assets/images/folder.svg"
-                                title="Expediente"
-                                @click="
-                                    ConsultarVenta(
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="ventas"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Ventas en Gral.</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Venta</vs-th>
+                            <vs-th>Cliente</vs-th>
+                            <vs-th>Fecha Venta</vs-th>
+                            <vs-th>$ Total Venta</vs-th>
+                            <vs-th>$ Saldo Venta</vs-th>
+                            <vs-th>Estatus Entrega</vs-th>
+                            <vs-th>Estatus Pago</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td
+                                    :data="data[indextr].ventas_generales_id"
+                                >
+                                    <span class="font-semibold">{{
                                         data[indextr].ventas_generales_id
-                                    )
-                                "
-                            />
-                            <img
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/edit.svg"
-                                title="Modificar Venta"
-                                @click="openModificar(data[indextr])"
-                            />
-                            <img
-                                v-if="data[indextr].operacion_status >= 1"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg"
-                                title="Cancelar Venta"
-                                @click="
-                                    cancelarVenta(
-                                        data[indextr].ventas_generales_id
-                                    )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg"
-                                title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
-                                @click="
-                                    ConsultarVentaAcuse(
-                                        data[indextr].ventas_generales_id
-                                    )
-                                "
-                            />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre">
+                                    {{ data[indextr].nombre }}
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].fecha_operacion_texto"
+                                >
+                                    <span class="font-medium">
+                                        {{
+                                            data[indextr].fecha_operacion_texto
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].total">
+                                    <span class="font-medium">
+                                        $
+                                        {{
+                                            data[indextr].total
+                                                | numFormat("0,000.00")
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].saldo">
+                                    <span class="font-medium">
+                                        $
+                                        {{
+                                            data[indextr].saldo
+                                                | numFormat("0,000.00")
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].venta_general">
+                                    <p>
+                                        {{
+                                            data[indextr].venta_general
+                                                .status_entregado_texto
+                                        }}
+                                        <span
+                                            :class="[
+                                                data[indextr].venta_general
+                                                    .entregado_b == 0
+                                                    ? 'dot-warning'
+                                                    : 'dot-success',
+                                            ]"
+                                        ></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td>
+                                    <p
+                                        v-if="
+                                            data[indextr].status_texto ==
+                                            'Cancelada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Por Pagar'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-warning"></span>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Pagada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="img-btn-24 mx-4"
+                                            src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos"
+                                            @click="OpenFormSeguimientos(tr)"
+                                        />
+                                        <img
+                                            v-if="
+                                                data[indextr]
+                                                    .operacion_status == 0
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/deliver-disabled.svg"
+                                            title="Hacer Entrega de Venta"
+                                            @click="
+                                                openEntregarVenta(data[indextr])
+                                            "
+                                        />
+                                        <img
+                                            v-else-if="
+                                                data[indextr]
+                                                    .operacion_status >= 1 &&
+                                                data[indextr].venta_general
+                                                    .entregado_b == 0
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/deliver-yes.svg"
+                                            title="Hacer Entrega de Venta"
+                                            @click="
+                                                openEntregarVenta(data[indextr])
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/deliver-no.svg"
+                                            title="Esta venta ya fue entregada."
+                                            @click="
+                                                openEntregarVenta(data[indextr])
+                                            "
+                                        />
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-3"
+                                            src="@assets/images/folder.svg"
+                                            title="Expediente"
+                                            @click="
+                                                ConsultarVenta(
+                                                    data[indextr]
+                                                        .ventas_generales_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Venta"
+                                            @click="
+                                                openModificar(data[indextr])
+                                            "
+                                        />
+                                        <img
+                                            v-if="
+                                                data[indextr]
+                                                    .operacion_status >= 1
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Venta"
+                                            @click="
+                                                cancelarVenta(
+                                                    data[indextr]
+                                                        .ventas_generales_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash-open.svg"
+                                            title="Esta venta ya fue cancelada, puede hacer click aquí para consultar"
+                                            @click="
+                                                ConsultarVentaAcuse(
+                                                    data[indextr]
+                                                        .ventas_generales_id
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </vs-td>
+                                <template
+                                    class="expand-user"
+                                    slot="expand"
+                                ></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
 
-        <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <Password
@@ -344,6 +407,11 @@ export default {
             (async () => {
                 await this.get_data(1);
             })();
+        },
+    },
+    computed: {
+        noDataFound() {
+            return this.ventas.length === 0;
         },
     },
     data() {

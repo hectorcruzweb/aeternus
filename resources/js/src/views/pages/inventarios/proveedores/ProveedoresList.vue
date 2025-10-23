@@ -12,137 +12,241 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
 -->
 <template>
     <div>
-        <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="formulario('agregar')">
+        <div class="text-right buttons-container-header">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="success"
+                @click="formulario('agregar')"
+            >
                 <span>Registrar Proveedor</span>
             </vs-button>
         </div>
 
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label>Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="mb-4 sm:mb-0" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="mb-4 sm:mb-0"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label>Estado</label>
-                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado" class="mb-4 md:mb-0" />
+                        <v-select
+                            :options="estadosOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado"
+                            class="mb-4 md:mb-0"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label>Filtrar Específico</label>
-                        <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="filtroEspecifico" class="mb-4 md:mb-0" />
+                        <v-select
+                            :options="filtrosEspecificos"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="filtroEspecifico"
+                            class="mb-4 md:mb-0"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label>{{ this.filtroEspecifico.label }}</label>
-                        <vs-input class="w-full" icon="search" maxlength="75" placeholder="Filtrar por dato específico"
-                            v-model="serverOptions.numero_control" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="75"
+                            placeholder="Filtrar por dato específico"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
                     <div class="w-full px-2 py-4">
                         <h3 class="text-base">
-                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
-                            Titular
+                            <feather-icon
+                                icon="UserIcon"
+                                class="mr-2"
+                                svgClasses="w-5 h-5"
+                            />Filtrar por Nombre del Titular
                         </h3>
                     </div>
                     <div class="w-full mb-1 px-2 input-text">
                         <label>Nombre del Proveedor</label>
-                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Proveedor"
-                            v-model="serverOptions.nombre_comercial" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Proveedor"
+                            v-model="serverOptions.nombre_comercial"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                            maxlength="75"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
 
-        <br />
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="proveedores" noDataText="0 Resultados"
-            class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Proveedores Registrados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Clave</vs-th>
-                <vs-th>Proveedor</vs-th>
-                <vs-th>Contacto</vs-th>
-                <vs-th>Teléfono</vs-th>
-                <vs-th>Status</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span class="font-semibold">{{ data[indextr].id }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre_comercial">
-                        <span class="uppercase">
-                            {{ data[indextr].nombre_comercial }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre_contacto">
-                        <span class="uppercase">
-                            {{ data[indextr].nombre_contacto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].telefono">
-                        <span class="">{{ data[indextr].telefono }}</span>
-                    </vs-td>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="proveedores"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Proveedores Registrados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Clave</vs-th>
+                            <vs-th>Proveedor</vs-th>
+                            <vs-th>Contacto</vs-th>
+                            <vs-th>Teléfono</vs-th>
+                            <vs-th>Status</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].id">
+                                    <span class="font-semibold">{{
+                                        data[indextr].id
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre_comercial">
+                                    <span class="uppercase">
+                                        {{ data[indextr].nombre_comercial }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre_contacto">
+                                    <span class="uppercase">
+                                        {{ data[indextr].nombre_contacto }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].telefono">
+                                    <span class="">{{
+                                        data[indextr].telefono
+                                    }}</span>
+                                </vs-td>
 
-                    <vs-td :data="data[indextr].status">
-                        <p v-if="data[indextr].status == 1">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status == 0">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id_user">
-                        <div class="flex justify-center">
-                            <img class="img-btn-18 mx-3" src="@assets/images/edit.svg" title="Modificar Proveedor"
-                                @click="openModificar(data[indextr].id)" />
-                            <img v-if="data[indextr].status == 1" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
-                                title="Desactivar Proveedor" @click="
-                                    deleteProveedor(
-                                        data[indextr].id,
-                                        data[indextr].nombre_comercial
-                                    )
-                                    " />
-                            <img v-else class="img-btn-22 mx-3" src="@assets/images/trash-open.svg" title="Habilitar"
-                                @click="
-                                    altaProveedor(
-                                        data[indextr].id,
-                                        data[indextr].nombre_comercial
-                                    )
-                                    " />
-                        </div>
-                    </vs-td>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                                <vs-td :data="data[indextr].status">
+                                    <p v-if="data[indextr].status == 1">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else-if="data[indextr].status == 0">
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id_user">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="img-btn-18 mx-3"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Proveedor"
+                                            @click="
+                                                openModificar(data[indextr].id)
+                                            "
+                                        />
+                                        <img
+                                            v-if="data[indextr].status == 1"
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Desactivar Proveedor"
+                                            @click="
+                                                deleteProveedor(
+                                                    data[indextr].id,
+                                                    data[indextr]
+                                                        .nombre_comercial
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash-open.svg"
+                                            title="Habilitar"
+                                            @click="
+                                                altaProveedor(
+                                                    data[indextr].id,
+                                                    data[indextr]
+                                                        .nombre_comercial
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </vs-td>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
-        <pre ref="pre"></pre>
 
-        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
-            :accion="accionNombre">
+        <!--<pre ref="pre"></pre>-->
+
+        <Password
+            v-if="openStatus"
+            :show="openStatus"
+            :callback-on-success="callback"
+            @closeVerificar="closeStatus"
+            :accion="accionNombre"
+        >
         </Password>
-        <Reporteador v-if="openReportesLista" :header="'consultar reporte de venta'" :show="openReportesLista"
-            :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
+        <Reporteador
+            v-if="openReportesLista"
+            :header="'consultar reporte de venta'"
+            :show="openReportesLista"
+            :listadereportes="ListaReportes"
+            :request="request"
+            @closeReportes="openReportesLista = false"
+        >
         </Reporteador>
-        <FormularioProveedores v-if="verFormularioProveedores" :id_proveedor="id_proveedor_modificar"
-            :tipo="tipoFormulario" :show="verFormularioProveedores" @closeVentana="verFormularioProveedores = false"
-            @retornar_id="retorno_id">
+        <FormularioProveedores
+            v-if="verFormularioProveedores"
+            :id_proveedor="id_proveedor_modificar"
+            :tipo="tipoFormulario"
+            :show="verFormularioProveedores"
+            @closeVentana="verFormularioProveedores = false"
+            @retornar_id="retorno_id"
+        >
         </FormularioProveedores>
     </div>
 </template>
@@ -170,6 +274,11 @@ export default {
         Password,
         FormularioProveedores,
         Reporteador,
+    },
+    computed: {
+        noDataFound() {
+            return this.proveedores.length === 0;
+        },
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -288,7 +397,8 @@ export default {
             this.serverOptions.page = page;
             this.serverOptions.per_page = this.mostrar.value;
             this.serverOptions.status = this.estado.value;
-            this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+            this.serverOptions.filtro_especifico_opcion =
+                this.filtroEspecifico.value;
             proveedores
                 .get_proveedores(this.serverOptions)
                 .then((res) => {
@@ -306,8 +416,7 @@ export default {
                             /**FORBIDDEN ERROR */
                             this.$vs.notify({
                                 title: "Permiso denegado",
-                                text:
-                                    "Verifique sus permisos con el administrador del sistema.",
+                                text: "Verifique sus permisos con el administrador del sistema.",
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "warning",
@@ -317,9 +426,9 @@ export default {
                     }
                 });
         },
-        handleSearch(searching) { },
-        handleChangePage(page) { },
-        handleSort(key, active) { },
+        handleSearch(searching) {},
+        handleChangePage(page) {},
+        handleSort(key, active) {},
 
         //eliminar usuario logicamente
 
@@ -467,9 +576,7 @@ export default {
     mounted() {
         this.$log("Component mounted! " + this.$options.name);
     },
-    beforeDestroy() {
-
-    },
+    beforeDestroy() {},
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

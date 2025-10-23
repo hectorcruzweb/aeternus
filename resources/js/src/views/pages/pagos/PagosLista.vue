@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="w-full text-right buttons-container-header">
             <vs-button
                 class="w-full sm:w-full md:w-auto md:ml-2 my-2 md:mt-0"
                 color="success"
@@ -69,104 +69,151 @@
                 </div>
             </vx-card>
         </div>
-        <br />
-        <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="pagos"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
-            <template slot="header">
-                <h3>Listado de Movimientos Realizados</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Movimiento</vs-th>
-                <vs-th>Tipo Movimiento</vs-th>
-                <vs-th>Fecha</vs-th>
-                <vs-th>Tipo de Operación</vs-th>
-                <vs-th>Cliente</vs-th>
-                <vs-th>$ Monto</vs-th>
-                <vs-th>Estatus</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].id">
-                        <span class="font-semibold">
-                            {{ data[indextr].id }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].movimientos_pagos_texto">
-                        <span v-if="data[indextr].parent_pago_id > 0">
-                            {{ data[indextr].movimientos_pagos_texto }}(Sobre el
-                            pago
-                            {{ data[indextr].parent_pago_id }}
-                            <img
-                                width="10"
-                                src="@assets/images/included.svg"
-                            />)
-                        </span>
-                        <span v-else>
-                            {{ data[indextr].movimientos_pagos_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_pago_texto">
-                        <span class="font-medium">{{
-                            data[indextr].fecha_pago_texto
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].tipo_operacion_texto">{{
-                        data[indextr].tipo_operacion_texto
-                    }}</vs-td>
-                    <vs-td :data="data[indextr].referencias_cubiertas">{{
-                        data[indextr].referencias_cubiertas[0]
-                            .operacion_del_pago.cliente.nombre
-                    }}</vs-td>
-                    <vs-td :data="data[indextr].monto_pago">
-                        $ {{ data[indextr].monto_pago | numFormat("0,000.00") }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].status">
-                        <p v-if="data[indextr].status == 1">
-                            Cobrado <span class="dot-success"></span>
-                        </p>
-                        <p v-else>Cancelado <span class="dot-danger"></span></p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center py-1">
-                            <img
-                                class="img-btn-20 mx-2"
-                                src="@assets/images/pdf.svg"
-                                title="Ver Recibo"
-                                @click="openReporte(data[indextr])"
-                            />
-                            <!--verificar que tipo de movimeinto es, me itneresa que el id del pago a cancelar sea el del pago parent siempre-->
-                            <img
-                                v-if="data[indextr].status == 1"
-                                class="img-btn-20 mx-2"
-                                src="@assets/images/cancel.svg"
-                                title="Cancelar Movimiento"
-                                @click="
-                                    cancelarPago(
-                                        data[indextr].parent_pago_id > 0
-                                            ? data[indextr].parent_pago_id
-                                            : data[indextr].id
-                                    )
-                                "
-                            />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
-        <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="pagos"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Movimientos Realizados</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Movimiento</vs-th>
+                            <vs-th>Tipo Movimiento</vs-th>
+                            <vs-th>Fecha</vs-th>
+                            <vs-th>Tipo de Operación</vs-th>
+                            <vs-th>Cliente</vs-th>
+                            <vs-th>$ Monto</vs-th>
+                            <vs-th>Estatus</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].id">
+                                    <span class="font-semibold">
+                                        {{ data[indextr].id }}
+                                    </span>
+                                </vs-td>
+                                <vs-td
+                                    :data="
+                                        data[indextr].movimientos_pagos_texto
+                                    "
+                                >
+                                    <span
+                                        v-if="data[indextr].parent_pago_id > 0"
+                                    >
+                                        {{
+                                            data[indextr]
+                                                .movimientos_pagos_texto
+                                        }}(Sobre el pago
+                                        {{ data[indextr].parent_pago_id }}
+                                        <img
+                                            width="10"
+                                            src="@assets/images/included.svg"
+                                        />)
+                                    </span>
+                                    <span v-else>
+                                        {{
+                                            data[indextr]
+                                                .movimientos_pagos_texto
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].fecha_pago_texto">
+                                    <span class="font-medium">{{
+                                        data[indextr].fecha_pago_texto
+                                    }}</span>
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].tipo_operacion_texto"
+                                    >{{
+                                        data[indextr].tipo_operacion_texto
+                                    }}</vs-td
+                                >
+                                <vs-td
+                                    :data="data[indextr].referencias_cubiertas"
+                                    >{{
+                                        data[indextr].referencias_cubiertas[0]
+                                            .operacion_del_pago.cliente.nombre
+                                    }}</vs-td
+                                >
+                                <vs-td :data="data[indextr].monto_pago">
+                                    $
+                                    {{
+                                        data[indextr].monto_pago
+                                            | numFormat("0,000.00")
+                                    }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].status">
+                                    <p v-if="data[indextr].status == 1">
+                                        Cobrado
+                                        <span class="dot-success"></span>
+                                    </p>
+                                    <p v-else>
+                                        Cancelado
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center py-1">
+                                        <img
+                                            class="img-btn-20 mx-2"
+                                            src="@assets/images/pdf.svg"
+                                            title="Ver Recibo"
+                                            @click="openReporte(data[indextr])"
+                                        />
+                                        <!--verificar que tipo de movimeinto es, me itneresa que el id del pago a cancelar sea el del pago parent siempre-->
+                                        <img
+                                            v-if="data[indextr].status == 1"
+                                            class="img-btn-20 mx-2"
+                                            src="@assets/images/cancel.svg"
+                                            title="Cancelar Movimiento"
+                                            @click="
+                                                cancelarPago(
+                                                    data[indextr]
+                                                        .parent_pago_id > 0
+                                                        ? data[indextr]
+                                                              .parent_pago_id
+                                                        : data[indextr].id
+                                                )
+                                            "
+                                        />
+                                    </div>
+                                </vs-td>
+                                <template
+                                    class="expand-user"
+                                    slot="expand"
+                                ></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
         <FormularioPagos
             v-if="verFormularioPagos"
@@ -247,6 +294,11 @@ export default {
                     await this.get_data(1);
                 })();
             }
+        },
+    },
+    computed: {
+        noDataFound() {
+            return this.pagos.length === 0;
         },
     },
     data() {

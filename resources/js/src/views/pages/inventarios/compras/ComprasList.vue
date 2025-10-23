@@ -1,134 +1,250 @@
 <template>
     <div>
-        <div class="w-full text-right">
-            <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
-                @click="OpenFormularioCompras('agregar')">
+        <div class="w-full text-right buttons-container-header">
+            <vs-button
+                class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0"
+                color="success"
+                @click="OpenFormularioCompras('agregar')"
+            >
                 <span>Registrar Compra</span>
             </vs-button>
         </div>
 
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="w-full" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full xl:w-3/12 mb-1 px-2 input-text">
                         <label class="">Estado</label>
-                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado" class="w-full" />
+                        <v-select
+                            :options="estadosOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
                         <label class="">Filtrar Específico</label>
-                        <v-select :options="filtrosEspecificos" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="filtroEspecifico" class="w-full" />
+                        <v-select
+                            :options="filtrosEspecificos"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="filtroEspecifico"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full sm:w-6/12 xl:w-3/12 input-text px-2">
                         <label class="">Número de Control</label>
-                        <vs-input class="w-full" icon="search" maxlength="14"
-                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="14"
+                            placeholder="Filtrar por Número de Control"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
                     <div class="w-full px-2">
                         <h3 class="text-base font-semibold my-3">
-                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
-                            Proveedor
+                            <feather-icon
+                                icon="UserIcon"
+                                class="mr-2"
+                                svgClasses="w-5 h-5"
+                            />Filtrar por Nombre del Proveedor
                         </h3>
                     </div>
                     <div class="w-full input-text px-2">
                         <label class="">Nombre del Proveedor</label>
-                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Proveedor"
-                            v-model="serverOptions.proveedor" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Proveedor"
+                            v-model="serverOptions.proveedor"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                            maxlength="75"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
 
-        <br />
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="compras" noDataText="0 Resultados"
-            class="tabla-datos">
-            <template slot="header">
-                <h3>Listado de Compras a Proveedores</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Registro</vs-th>
-                <vs-th>Proveedor</vs-th>
-                <vs-th>Ref. Factura/Nota</vs-th>
-                <vs-th>Fecha</vs-th>
-                <vs-th>$ Total Compra</vs-th>
-                <vs-th>Estatus</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].num_compra">
-                        <span class="font-semibold">{{ data[indextr].num_compra }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].num_compra">
-                        {{ data[indextr].razon_social }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].folio_referencia">
-                        {{ data[indextr].folio_referencia }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_compra_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].fecha_compra_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].total">
-                        <span class="font-medium">
-                            $
-                            {{ data[indextr].total | numFormat("0,000.00") }}
-                        </span>
-                    </vs-td>
-                    <vs-td>
-                        <p v-if="data[indextr].status_texto == 'Cancelada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status_texto == 'Por liquidar'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-warning"></span>
-                        </p>
-                        <p v-else-if="data[indextr].status_texto == 'Pagada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/folder.svg"
-                                title="Expediente" @click="ConsultarCompra(data[indextr].num_compra)" />
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="compras"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
+                    >
+                        <template slot="header">
+                            <h3>Listado de Compras a Proveedores</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Registro</vs-th>
+                            <vs-th>Proveedor</vs-th>
+                            <vs-th>Ref. Factura/Nota</vs-th>
+                            <vs-th>Fecha</vs-th>
+                            <vs-th>$ Total Compra</vs-th>
+                            <vs-th>Estatus</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].num_compra">
+                                    <span class="font-semibold">{{
+                                        data[indextr].num_compra
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].num_compra">
+                                    {{ data[indextr].razon_social }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].folio_referencia">
+                                    {{ data[indextr].folio_referencia }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].fecha_compra_texto">
+                                    <span class="font-medium">
+                                        {{ data[indextr].fecha_compra_texto }}
+                                    </span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].total">
+                                    <span class="font-medium">
+                                        $
+                                        {{
+                                            data[indextr].total
+                                                | numFormat("0,000.00")
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td>
+                                    <p
+                                        v-if="
+                                            data[indextr].status_texto ==
+                                            'Cancelada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Por liquidar'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-warning"></span>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Pagada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-3"
+                                            src="@assets/images/folder.svg"
+                                            title="Expediente"
+                                            @click="
+                                                ConsultarCompra(
+                                                    data[indextr].num_compra
+                                                )
+                                            "
+                                        />
 
-                            <img v-if="data[indextr].status >= 1" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
-                                title="Cancelar Contrato" @click="cancelarCompra(data[indextr].id)" />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
+                                        <img
+                                            v-if="data[indextr].status >= 1"
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Contrato"
+                                            @click="
+                                                cancelarCompra(data[indextr].id)
+                                            "
+                                        />
+                                    </div>
+                                </vs-td>
+                                <template
+                                    class="expand-user"
+                                    slot="expand"
+                                ></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
 
-        <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <Password v-if="openStatus" :show="openStatus" :callback-on-success="callback" @closeVerificar="closeStatus"
-            :accion="accionNombre">
+        <Password
+            v-if="openStatus"
+            :show="openStatus"
+            :callback-on-success="callback"
+            @closeVerificar="closeStatus"
+            :accion="accionNombre"
+        >
         </Password>
 
-        <ReportesServicio v-if="openReportes" :verAcuse="verAcuse" :show="openReportes"
-            @closeListaReportes="closeListaReportes" :id_compra="id_compra"></ReportesServicio>
+        <ReportesServicio
+            v-if="openReportes"
+            :verAcuse="verAcuse"
+            :show="openReportes"
+            @closeListaReportes="closeListaReportes"
+            :id_compra="id_compra"
+        ></ReportesServicio>
 
-        <FormularioCompras v-if="verFormularioCompras" :tipo="tipoFormulario" :show="verFormularioCompras"
-            @closeVentana="reloadList">
+        <FormularioCompras
+            v-if="verFormularioCompras"
+            :tipo="tipoFormulario"
+            :show="verFormularioCompras"
+            @closeVentana="reloadList"
+        >
         </FormularioCompras>
     </div>
 </template>
@@ -172,6 +288,11 @@ export default {
             (async () => {
                 await this.get_data(1);
             })();
+        },
+    },
+    computed: {
+        noDataFound() {
+            return this.compras.length === 0;
         },
     },
     data() {
@@ -269,7 +390,8 @@ export default {
             this.serverOptions.page = page;
             this.serverOptions.per_page = this.mostrar.value;
             this.serverOptions.status = this.estado.value;
-            this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
+            this.serverOptions.filtro_especifico_opcion =
+                this.filtroEspecifico.value;
 
             try {
                 let res = await inventario.get_compras(this.serverOptions);
@@ -422,9 +544,7 @@ export default {
     mounted() {
         this.$log("Component mounted! " + this.$options.name);
     },
-    beforeDestroy() {
-
-    },
+    beforeDestroy() {},
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

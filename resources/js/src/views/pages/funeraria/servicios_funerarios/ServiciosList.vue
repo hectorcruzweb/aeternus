@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="w-full text-right">
+        <div class="w-full text-right buttons-container-header">
             <vs-button
                 class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0 hidden"
                 color="primary"
@@ -97,207 +97,274 @@
             </vx-card>
         </div>
 
-        <br />
-        <vs-table
-            :sst="true"
-            :max-items="serverOptions.per_page.value"
-            :data="ventas"
-            noDataText="0 Resultados"
-            class="tabla-datos"
-        >
-            <template slot="header">
-                <h3>Listado de Servicios Funerarios Atendidos</h3>
-            </template>
-            <template slot="thead">
-                <vs-th>Núm. Servicio</vs-th>
-                <vs-th>Fallecido</vs-th>
-                <vs-th>Tipo Servicio</vs-th>
-                <vs-th>Fecha</vs-th>
-                <vs-th>$ Saldo</vs-th>
-                <vs-th>Estatus</vs-th>
-                <vs-th>Acciones</vs-th>
-            </template>
-            <template slot-scope="{ data }">
-                <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
-                    <vs-td :data="data[indextr].servicio_id">
-                        <span class="font-semibold">{{
-                            data[indextr].servicio_id
-                        }}</span>
-                    </vs-td>
-                    <vs-td :data="data[indextr].nombre_afectado">
-                        {{ data[indextr].nombre_afectado }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].tipo_solicitud_texto">
-                        {{ data[indextr].tipo_solicitud_texto }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].fecha_solicitud_texto">
-                        <span class="font-medium">
-                            {{ data[indextr].fecha_solicitud_texto }}
-                        </span>
-                    </vs-td>
-                    <vs-td
-                        :data="data[indextr].saldo"
-                        v-if="data[indextr].operacion"
+        <div id="resultados" class="mt-5 flex flex-col flex-1">
+            <div
+                v-if="noDataFound"
+                class="w-full skeleton flex-1 items-center justify-center"
+            >
+                <span class="text-gray-600 text-lg font-normal"
+                    >No hay datos que mostrar</span
+                >
+            </div>
+            <div v-else id="results" class="w-full flex flex-wrap">
+                <div class="w-full py-2">
+                    <vs-table
+                        :sst="true"
+                        :max-items="serverOptions.per_page.value"
+                        :data="ventas"
+                        noDataText="0 Resultados"
+                        class="tabla-datos"
                     >
-                        $
-                        {{
-                            data[indextr].operacion.saldo
-                                | numFormat("0,000.00")
-                        }}
-                    </vs-td>
-                    <vs-td :data="data[indextr].saldo" v-else>
-                        $ {{ 0.0 | numFormat("0,000.00") }}
-                    </vs-td>
-                    <vs-td>
-                        <p v-if="data[indextr].status_texto == 'Cancelada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-danger"></span>
-                        </p>
-                        <p
-                            v-else-if="
-                                data[indextr].status_texto == 'Por pagar'
-                            "
-                        >
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-warning"></span>
-                        </p>
-
-                        <p v-else-if="data[indextr].status_texto == 'Activa'">
-                            Sin Contrato
-                            <span class="dot-warning"></span>
-                        </p>
-
-                        <p v-else-if="data[indextr].status_texto == 'Pagada'">
-                            {{ data[indextr].status_texto }}
-                            <span class="dot-success"></span>
-                        </p>
-                    </vs-td>
-                    <vs-td :data="data[indextr].id">
-                        <div class="flex justify-center">
-                            <img
-                                class="img-btn-24 mx-6"
-                                src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos"
-                                @click="OpenFormSeguimientos(tr)"
-                            />
-                            <img
-                                v-if="data[indextr].nota_servicio"
-                                class="cursor-pointer img-btn-20 mr-6"
-                                src="@assets/images/notepad_ver.svg"
-                                title="Notas"
-                                @click="
-                                    verNota(
-                                        data[indextr].nota_servicio.trim(),
-                                        data[indextr].tipo_solicitud_texto +
-                                            '/ ' +
-                                            data[indextr].nombre_afectado
-                                    )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="cursor-pointer img-btn-20 mr-6"
-                                src="@assets/images/notepad_ver_no.svg"
-                                title="Notas"
-                            />
-                            <img
-                                v-show="data[indextr].permite_exhumar_b"
-                                class="cursor-pointer img-btn-20 mx-3 hidden"
-                                src="@assets/images/shovel.svg"
-                                title="Exhumar Cuerpo"
-                                @click="Exhumar(data[indextr].servicio_id)"
-                            />
-                            <img
-                                v-show="data[indextr].exhumado_b"
-                                class="cursor-pointer img-btn-20 mx-3 hidden"
-                                src="@assets/images/shovel_disabled.svg"
-                                title="Servicio Exhumado"
-                                @click="Exhumado()"
-                            />
-
-                            <img
-                                class="cursor-pointer img-btn-20 mx-3"
-                                src="@assets/images/folder.svg"
-                                title="Expediente"
-                                @click="
-                                    ConsultarVenta(data[indextr].servicio_id)
-                                "
-                            />
-                            <img
-                                v-show="verModificarSolicitud(data[indextr])"
-                                class="img-btn-18 mx-3"
-                                src="@assets/images/edit.svg"
-                                title="Modificar Solicitud de Servicio"
-                                @click="
-                                    openModificarSolicitud(
+                        <template slot="header">
+                            <h3>Listado de Servicios Funerarios Atendidos</h3>
+                        </template>
+                        <template slot="thead">
+                            <vs-th>Núm. Servicio</vs-th>
+                            <vs-th>Fallecido</vs-th>
+                            <vs-th>Tipo Servicio</vs-th>
+                            <vs-th>Fecha</vs-th>
+                            <vs-th>$ Saldo</vs-th>
+                            <vs-th>Estatus</vs-th>
+                            <vs-th>Acciones</vs-th>
+                        </template>
+                        <template slot-scope="{ data }">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
+                                <vs-td :data="data[indextr].servicio_id">
+                                    <span class="font-semibold">{{
                                         data[indextr].servicio_id
-                                    )
-                                "
-                            />
+                                    }}</span>
+                                </vs-td>
+                                <vs-td :data="data[indextr].nombre_afectado">
+                                    {{ data[indextr].nombre_afectado }}
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].tipo_solicitud_texto"
+                                >
+                                    {{ data[indextr].tipo_solicitud_texto }}
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].fecha_solicitud_texto"
+                                >
+                                    <span class="font-medium">
+                                        {{
+                                            data[indextr].fecha_solicitud_texto
+                                        }}
+                                    </span>
+                                </vs-td>
+                                <vs-td
+                                    :data="data[indextr].saldo"
+                                    v-if="data[indextr].operacion"
+                                >
+                                    $
+                                    {{
+                                        data[indextr].operacion.saldo
+                                            | numFormat("0,000.00")
+                                    }}
+                                </vs-td>
+                                <vs-td :data="data[indextr].saldo" v-else>
+                                    $ {{ 0.0 | numFormat("0,000.00") }}
+                                </vs-td>
+                                <vs-td>
+                                    <p
+                                        v-if="
+                                            data[indextr].status_texto ==
+                                            'Cancelada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-danger"></span>
+                                    </p>
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Por pagar'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-warning"></span>
+                                    </p>
 
-                            <img
-                                v-if="data[indextr].tipo_solicitud_id == 1"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/contrato.svg"
-                                title="Editar Contrato"
-                                @click="
-                                    openModificar(data[indextr].servicio_id)
-                                "
-                            />
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Activa'
+                                        "
+                                    >
+                                        Sin Contrato
+                                        <span class="dot-warning"></span>
+                                    </p>
 
-                            <img
-                                v-else
-                                class="img-btn-22 mx-3 hidden"
-                                src="@assets/images/contrato.svg"
-                                title="Editar Contrato"
-                                @click="
-                                    ModificarExhumacion(
-                                        data[indextr].servicio_id
-                                    )
-                                "
-                            />
+                                    <p
+                                        v-else-if="
+                                            data[indextr].status_texto ==
+                                            'Pagada'
+                                        "
+                                    >
+                                        {{ data[indextr].status_texto }}
+                                        <span class="dot-success"></span>
+                                    </p>
+                                </vs-td>
+                                <vs-td :data="data[indextr].id">
+                                    <div class="flex justify-center">
+                                        <img
+                                            class="img-btn-24 mx-6"
+                                            src="@assets/images/seguimientos.svg"
+                                            title="Control de Seguimientos"
+                                            @click="OpenFormSeguimientos(tr)"
+                                        />
+                                        <img
+                                            v-if="data[indextr].nota_servicio"
+                                            class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver.svg"
+                                            title="Notas"
+                                            @click="
+                                                verNota(
+                                                    data[
+                                                        indextr
+                                                    ].nota_servicio.trim(),
+                                                    data[indextr]
+                                                        .tipo_solicitud_texto +
+                                                        '/ ' +
+                                                        data[indextr]
+                                                            .nombre_afectado
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="cursor-pointer img-btn-20 mr-6"
+                                            src="@assets/images/notepad_ver_no.svg"
+                                            title="Notas"
+                                        />
+                                        <img
+                                            v-show="
+                                                data[indextr].permite_exhumar_b
+                                            "
+                                            class="cursor-pointer img-btn-20 mx-3 hidden"
+                                            src="@assets/images/shovel.svg"
+                                            title="Exhumar Cuerpo"
+                                            @click="
+                                                Exhumar(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-show="data[indextr].exhumado_b"
+                                            class="cursor-pointer img-btn-20 mx-3 hidden"
+                                            src="@assets/images/shovel_disabled.svg"
+                                            title="Servicio Exhumado"
+                                            @click="Exhumado()"
+                                        />
 
-                            <img
-                                v-if="data[indextr].status_b >= 1"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash.svg"
-                                title="Cancelar Contrato"
-                                @click="
-                                    cancelarVenta(data[indextr].servicio_id)
-                                "
-                            />
-                            <img
-                                v-else-if="data[indextr].operacion != null"
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg"
-                                title="Este contrato ya fue cancelado, puede hacer click aquí para consultar"
-                                @click="
-                                    ConsultarVentaAcuse(
-                                        data[indextr].servicio_id
-                                    )
-                                "
-                            />
-                            <img
-                                v-else
-                                class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg"
-                                title="Este servicio ya fue cancelado pero no tiene contrato asignado"
-                                @click="sinContrato()"
-                            />
-                        </div>
-                    </vs-td>
-                    <template class="expand-user" slot="expand"></template>
-                </vs-tr>
-            </template>
-        </vs-table>
+                                        <img
+                                            class="cursor-pointer img-btn-20 mx-3"
+                                            src="@assets/images/folder.svg"
+                                            title="Expediente"
+                                            @click="
+                                                ConsultarVenta(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-show="
+                                                verModificarSolicitud(
+                                                    data[indextr]
+                                                )
+                                            "
+                                            class="img-btn-18 mx-3"
+                                            src="@assets/images/edit.svg"
+                                            title="Modificar Solicitud de Servicio"
+                                            @click="
+                                                openModificarSolicitud(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
 
-        <div>
-            <vs-pagination
-                v-if="verPaginado"
-                :total="this.total"
-                v-model="actual"
-                class="mt-8"
-            ></vs-pagination>
+                                        <img
+                                            v-if="
+                                                data[indextr]
+                                                    .tipo_solicitud_id == 1
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/contrato.svg"
+                                            title="Editar Contrato"
+                                            @click="
+                                                openModificar(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+
+                                        <img
+                                            v-else
+                                            class="img-btn-22 mx-3 hidden"
+                                            src="@assets/images/contrato.svg"
+                                            title="Editar Contrato"
+                                            @click="
+                                                ModificarExhumacion(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+
+                                        <img
+                                            v-if="data[indextr].status_b >= 1"
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash.svg"
+                                            title="Cancelar Contrato"
+                                            @click="
+                                                cancelarVenta(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else-if="
+                                                data[indextr].operacion != null
+                                            "
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash-open.svg"
+                                            title="Este contrato ya fue cancelado, puede hacer click aquí para consultar"
+                                            @click="
+                                                ConsultarVentaAcuse(
+                                                    data[indextr].servicio_id
+                                                )
+                                            "
+                                        />
+                                        <img
+                                            v-else
+                                            class="img-btn-22 mx-3"
+                                            src="@assets/images/trash-open.svg"
+                                            title="Este servicio ya fue cancelado pero no tiene contrato asignado"
+                                            @click="sinContrato()"
+                                        />
+                                    </div>
+                                </vs-td>
+                                <template
+                                    class="expand-user"
+                                    slot="expand"
+                                ></template>
+                            </vs-tr>
+                        </template>
+                    </vs-table>
+
+                    <div>
+                        <vs-pagination
+                            v-if="verPaginado"
+                            :total="this.total"
+                            v-model="actual"
+                            class="mt-8"
+                        ></vs-pagination>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <Password
@@ -395,7 +462,11 @@ export default {
         VerNotas,
         FormularioSeguimientos,
     },
-    computed: {},
+    computed: {
+        noDataFound() {
+            return this.ventas.length === 0;
+        },
+    },
     watch: {
         actual: function (newValue, oldValue) {
             (async () => {
