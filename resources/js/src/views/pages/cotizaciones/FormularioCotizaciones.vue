@@ -9,8 +9,8 @@
                     ? 'Elaborar cotización'
                     : 'modificar cotización'
             "
-            :active.sync="showVentana"
-            ref="formulario"
+            :active="localShow"
+            :ref="this.$options.name"
         >
             <!--inicio de cotizacion-->
             <div class="flex flex-wrap">
@@ -316,7 +316,7 @@
                                 class="flex flex-wrap justify-between items-end px-2 w-full py-2"
                             >
                                 <div
-                                    class="hidden lg:flex flex-nonwrap justify-between w-full  lg:w-6/12 xl:w-5/12"
+                                    class="hidden lg:flex flex-nonwrap justify-between w-full lg:w-6/12 xl:w-5/12"
                                 >
                                     <img
                                         class="img-btn-20 mr-2 mt-5"
@@ -437,7 +437,7 @@
                                                     indextr + 1
                                                 }}</span>
                                             </vs-td>
-                                            <vs-td class=" padding-y-7 w-8/12">
+                                            <vs-td class="padding-y-7 w-8/12">
                                                 <vs-input
                                                     :ref="
                                                         'descripcion' + indextr
@@ -502,7 +502,7 @@
                                                 <vs-input
                                                     :name="
                                                         'costo_neto_normal' +
-                                                            indextr
+                                                        indextr
                                                     "
                                                     data-vv-as=" "
                                                     data-vv-validate-on="blur"
@@ -554,7 +554,7 @@
                                                 <vs-input
                                                     :name="
                                                         'costo_neto_descuento' +
-                                                            indextr
+                                                        indextr
                                                     "
                                                     data-vv-as=" "
                                                     data-vv-validate-on="blur"
@@ -673,7 +673,7 @@
                                     <NotasComponent
                                         :value="form.nota"
                                         @input="
-                                            val => {
+                                            (val) => {
                                                 this.form.nota = val;
                                             }
                                         "
@@ -704,7 +704,7 @@
                                                                 totalCotizacion <=
                                                                 0
                                                                     ? 'text-danger'
-                                                                    : ''
+                                                                    : '',
                                                             ]"
                                                             >$
                                                             {{
@@ -720,7 +720,7 @@
                                                             'w-full justify-between px-2 flex flex-wrap lg:py-1',
                                                             descuentoTotal > 0
                                                                 ? 'text-danger h5'
-                                                                : 'size-base'
+                                                                : 'size-base',
                                                         ]"
                                                     >
                                                         <span
@@ -873,12 +873,12 @@
                                                         data-vv-as=" "
                                                         v-validate.disable="
                                                             'required|decimal:2|min_value:' +
-                                                                0 +
-                                                                '|max_value:100'
+                                                            0 +
+                                                            '|max_value:100'
                                                         "
                                                         data-vv-validate-on="change"
                                                         type="text"
-                                                        class="w-full "
+                                                        class="w-full"
                                                         v-model="
                                                             form.pago_inicial_porcentaje
                                                         "
@@ -910,7 +910,7 @@
                                                 </div>
                                                 <div
                                                     :class="[
-                                                        'w-full text-center px-2 py-4 lg:py-0'
+                                                        'w-full text-center px-2 py-4 lg:py-0',
                                                     ]"
                                                 >
                                                     <span>{{
@@ -925,7 +925,7 @@
                                                     <span
                                                         v-if="
                                                             getTipoformulario ==
-                                                                'agregar'
+                                                            'agregar'
                                                         "
                                                         >Guardar
                                                         Cotización</span
@@ -946,12 +946,14 @@
             </div>
         </vs-popup>
         <ArticulosBuscador
+            v-if="openBuscadorArticulos"
             :z_index="'z-index56k'"
             :show="openBuscadorArticulos"
             @closeBuscador="openBuscadorArticulos = false"
             @LoteSeleccionado="LoteSeleccionado"
         ></ArticulosBuscador>
         <ConfirmarDanger
+            v-if="openConfirmarSinPassword"
             :z_index="'z-index58k'"
             :show="openConfirmarSinPassword"
             :callback-on-success="callBackConfirmar"
@@ -960,17 +962,17 @@
             :confirmarButton="botonConfirmarSinPassword"
         ></ConfirmarDanger>
         <ConfirmarAceptar
+            v-if="openConfirmarAceptar"
             :z_index="'z-index58k'"
             :show="openConfirmarAceptar"
             :callback-on-success="callBackConfirmarAceptar"
             @closeVerificar="openConfirmarAceptar = false"
-            :accion="
-                'He revisado la información y quiero guardar la cotización'
-            "
+            :accion="'He revisado la información y quiero guardar la cotización'"
             :confirmarButton="'Guardar Cotización'"
         >
         </ConfirmarAceptar>
         <Paquetes
+            v-if="ver_cotizaciones"
             :show="ver_cotizaciones"
             :tipo_cotizacion="tipo_cotizacion"
             @closeCotizaciones="ver_cotizaciones = false"
@@ -979,6 +981,7 @@
         >
         </Paquetes>
         <Password
+            v-if="openPassword"
             :z_index="'z-index56k'"
             :show="openPassword"
             :callback-on-success="callback"
@@ -988,11 +991,6 @@
     </div>
 </template>
 <script>
-import { VueEditor, Quill } from "vue2-editor";
-import { ImageDrop } from "quill-image-drop-module";
-import ImageResize from "quill-image-resize-vue";
-Quill.register("modules/imageDrop", ImageDrop);
-Quill.register("modules/imageResize", ImageResize);
 //componente de password
 import Password from "@pages/confirmar_password";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
@@ -1010,46 +1008,43 @@ import { configdateTimePicker } from "@/VariablesGlobales";
 import functions from "@/functions";
 import NotasComponent from "@pages/NotasComponent";
 export default {
+    name: "FormularioCotizaciones",
     components: {
         "v-select": vSelect,
         flatPickr,
         ArticulosBuscador,
-        VueEditor,
         Quill,
         ConfirmarDanger,
         Paquetes,
         ConfirmarAceptar,
         Password,
-        NotasComponent
+        NotasComponent,
     },
     props: {
         show: {
             type: Boolean,
-            required: true
+            required: true,
         },
         tipo: {
             type: String,
-            required: true
+            required: true,
         },
         z_index: {
             type: String,
             required: false,
-            default: "z-index54k"
+            default: "z-index54k",
         },
         id_cotizacion: {
             type: Number,
             required: false,
-            default: 0
-        }
+            default: 0,
+        },
     },
     watch: {
-        show: function(newValue, oldValue) {
-            if (newValue == true) {
-                this.limpiarVentana();
-                this.$nextTick(() => {
-                    this.$refs["cliente"].$el.querySelector("input").focus();
-                });
-                (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
                     await this.get_vendedores();
                     if (this.getTipoformulario == "modificar") {
                         //es modificar
@@ -1058,14 +1053,15 @@ export default {
                         await this.consultar_cotizacion();
                     }
                     this.watchers = true;
-                })();
-            } else {
-                /**acciones al cerrar el formulario */
-                //Lmpiamos el form
-                this.watchers = false;
-            }
+                    this.$popupManager.register(this, this.cancelar, "cliente");
+                } else {
+                    this.watchers = false;
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
+            },
         },
-        "form.modalidad_pago": function(newValue, oldValue) {
+        "form.modalidad_pago": function (newValue, oldValue) {
             if (this.watchers)
                 //this.form.pago_inicial = ''
                 this.$nextTick(() => {
@@ -1073,7 +1069,7 @@ export default {
                         .querySelector("input")
                         .focus();
                 });
-        }
+        },
     },
     computed: {
         get_cotizacion_id: {
@@ -1082,15 +1078,7 @@ export default {
             },
             set(newValue) {
                 return newValue;
-            }
-        },
-        showVentana: {
-            get() {
-                return this.show;
             },
-            set(newValue) {
-                return newValue;
-            }
         },
         getTipoformulario: {
             get() {
@@ -1098,21 +1086,21 @@ export default {
             },
             set(newValue) {
                 return newValue;
-            }
+            },
         },
-        vendedor_computed: function() {
+        vendedor_computed: function () {
             return this.form.vendedor.value;
         },
-        modalidad_computed: function() {
+        modalidad_computed: function () {
             return this.form.modalidad_pago.value;
         },
-        fecha_cotizacion_validacion_computed: function() {
+        fecha_cotizacion_validacion_computed: function () {
             return this.form.fecha_cotizacion;
         },
-        validez_validacion_computed: function() {
+        validez_validacion_computed: function () {
             return this.form.validez.value;
         },
-        totalCotizacion: function() {
+        totalCotizacion: function () {
             let total = 0;
             this.form.conceptos.forEach((element, index) => {
                 if (this.form.conceptos[index].descuento_b == 1) {
@@ -1136,7 +1124,7 @@ export default {
             }
             return functions.parseToDecimal(total);
         },
-        descuentoTotal: function() {
+        descuentoTotal: function () {
             let total = 0;
             this.form.conceptos.forEach((element, index) => {
                 if (this.form.conceptos[index].descuento_b == 1) {
@@ -1148,7 +1136,7 @@ export default {
             });
             return (total = functions.parseToDecimal(total));
         },
-        pago_inicial_validacion_computed: function() {
+        pago_inicial_validacion_computed: function () {
             let montoTotal =
                 functions.formatCurrency(this.totalCotizacion) + " MXN.";
             if (this.form.modalidad_pago.value > 1) {
@@ -1161,7 +1149,7 @@ export default {
                         this.totalCotizacion,
                     errorMessage:
                         "Cantidad mínima $ 0.00 y máxima " + montoTotal,
-                    label: "Pago Inicial"
+                    label: "Pago Inicial",
                 };
             } else {
                 //uso inmediato
@@ -1172,11 +1160,11 @@ export default {
                         "|min_value:" +
                         this.totalCotizacion,
                     errorMessage: "El pago debe ser de : $" + montoTotal,
-                    label: "Pago Único"
+                    label: "Pago Único",
                 };
             }
         },
-        descripcion_pagos: function() {
+        descripcion_pagos: function () {
             if (this.totalCotizacion <= 0)
                 return "Total de la cotización $0.00 MXN.";
             let pago_inicial = functions.parseToDecimal(this.form.pago_inicial);
@@ -1251,10 +1239,11 @@ export default {
                     );
                 }
             }
-        }
+        },
     },
     data() {
         return {
+            localShow: false,
             watchers: false,
             openConfirmarAceptar: false,
             callBackConfirmarAceptar: Function,
@@ -1265,20 +1254,20 @@ export default {
                     { align: "" },
                     { align: "center" },
                     { align: "right" },
-                    { align: "justify" }
+                    { align: "justify" },
                 ],
                 //["blockquote", "code-block"],
                 [{ list: "ordered" }, { list: "bullet" }, { list: "check" }],
                 [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
                 [{ color: [] }, { background: [] }], // dropdown with defaults from theme
                 ["link", "image", "video"],
-                ["clean"] // remove formatting button
+                ["clean"], // remove formatting button
             ],
             editorSettings: {
                 modules: {
                     imageDrop: true,
-                    imageResize: {}
-                }
+                    imageResize: {},
+                },
             },
             vendedores: [],
             modalidades_pago: [],
@@ -1288,7 +1277,7 @@ export default {
                 { label: "1 Semana", value: "3" },
                 { label: "2 Semanas", value: "4" },
                 { label: "3 Semanas", value: "5" },
-                { label: "1 Mes", value: "6" }
+                { label: "1 Mes", value: "6" },
             ],
             form: {
                 cliente: "",
@@ -1307,10 +1296,10 @@ export default {
                 descripcion_pagos: "",
                 total: "",
                 descuento: "",
-                id_cotizacion: ""
+                id_cotizacion: "",
             },
             serverOptions: {
-                numero_control: ""
+                numero_control: "",
             },
             configdateTimePicker: configdateTimePicker,
             openBuscadorArticulos: false,
@@ -1323,7 +1312,7 @@ export default {
             ver_cotizaciones: false,
             cotizacionVer: {},
             openPassword: false,
-            callback: Function
+            callback: Function,
         };
     },
     methods: {
@@ -1345,7 +1334,7 @@ export default {
                     this.form.email = res.cliente_email;
                     this.form.vendedor = {
                         value: res.vendedor.id,
-                        label: res.vendedor.nombre
+                        label: res.vendedor.nombre,
                     };
                     let partes_fecha = res.fecha.split("-");
                     //yyyy-mm-dd
@@ -1354,7 +1343,7 @@ export default {
                         partes_fecha[1] - 1,
                         partes_fecha[2]
                     );
-                    this.periodos_validez.forEach(element => {
+                    this.periodos_validez.forEach((element) => {
                         if (element.value == res.periodo_validez_id) {
                             this.form.validez = element;
                             return;
@@ -1372,21 +1361,19 @@ export default {
                         this.form.conceptos = res.conceptos;
                     }
                     this.form.nota = res.nota;
-                    this.form.modalidad_pago = this.modalidades_pago[
-                        res.modalidad - 1
-                    ];
+                    this.form.modalidad_pago =
+                        this.modalidades_pago[res.modalidad - 1];
                     this.form.pago_inicial = res.pago_inicial;
                     this.changePagoInicial(null);
                 } else {
                     //no se encontro la info
                     this.$vs.notify({
                         title: "Modificar Cotización",
-                        text:
-                            "No se ha encontrado esta cotización en el sistema.",
+                        text: "No se ha encontrado esta cotización en el sistema.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
-                        time: 4000
+                        time: 4000,
                     });
                     this.cerrarVentana();
                 }
@@ -1398,12 +1385,11 @@ export default {
                         /**FORBIDDEN ERROR */
                         this.$vs.notify({
                             title: "Permiso denegado",
-                            text:
-                                "Verifique sus permisos con el administrador del sistema.",
+                            text: "Verifique sus permisos con el administrador del sistema.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "warning",
-                            time: 4000
+                            time: 4000,
                         });
                     }
                 }
@@ -1422,17 +1408,16 @@ export default {
         acceptAlert() {
             this.$validator
                 .validateAll()
-                .then(result => {
+                .then((result) => {
                     if (!result) {
                         this.$vs.notify({
                             title: "Error",
-                            text:
-                                "Verifique que todos los datos han sido capturados",
+                            text: "Verifique que todos los datos han sido capturados",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
                             position: "bottom-right",
-                            time: "12000"
+                            time: "12000",
                         });
                         return;
                     } else {
@@ -1474,22 +1459,21 @@ export default {
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "success",
-                        time: 5000
+                        time: 5000,
                     });
                     this.$emit("ConsultarCotizacion", {
                         id: res.data,
                         cliente_email: this.form.email,
-                        cliente_nombre: this.form.cliente
+                        cliente_nombre: this.form.cliente,
                     });
                 } else {
                     this.$vs.notify({
                         title: "Cotizaciones",
-                        text:
-                            "Error al registrar la cotización, por favor reintente.",
+                        text: "Error al registrar la cotización, por favor reintente.",
                         iconPack: "feather",
                         icon: "icon-alert-circle",
                         color: "danger",
-                        time: 6000
+                        time: 6000,
                     });
                 }
                 this.$vs.loading.close();
@@ -1499,24 +1483,22 @@ export default {
                         /**FORBIDDEN ERROR */
                         this.$vs.notify({
                             title: "Permiso denegado",
-                            text:
-                                "Verifique sus permisos con el administrador del sistema.",
+                            text: "Verifique sus permisos con el administrador del sistema.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "warning",
-                            time: 4000
+                            time: 4000,
                         });
                     } else if (err.response.status == 422) {
                         //checo si existe cada error
                         this.errores = err.response.data.error;
                         this.$vs.notify({
                             title: "Cotizaciones",
-                            text:
-                                "Verifique los errores encontrados en los datos.",
+                            text: "Verifique los errores encontrados en los datos.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 5000
+                            time: 5000,
                         });
                     } else if (err.response.status == 409) {
                         //este error es por alguna condicion que el contrano no cumple para modificar
@@ -1527,7 +1509,7 @@ export default {
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "danger",
-                            time: 8000
+                            time: 8000,
                         });
                     }
                 }
@@ -1543,10 +1525,10 @@ export default {
                 this.vendedores = [];
                 this.vendedores.push({ label: "Seleccione 1", value: "" });
                 this.form.vendedor = this.vendedores[0];
-                res.data.forEach(element => {
+                res.data.forEach((element) => {
                     this.vendedores.push({
                         label: element.nombre,
-                        value: element.id
+                        value: element.id,
                     });
                 });
                 this.$vs.loading.close();
@@ -1554,13 +1536,12 @@ export default {
                 /**error al cargar vendedores */
                 this.$vs.notify({
                     title: "Error",
-                    text:
-                        "Ha ocurrido un error al tratar de cargar el catálogo de vendedores, por favor reintente.",
+                    text: "Ha ocurrido un error al tratar de cargar el catálogo de vendedores, por favor reintente.",
                     iconPack: "feather",
                     icon: "icon-alert-circle",
                     color: "danger",
                     position: "bottom-right",
-                    time: "9000"
+                    time: "9000",
                 });
                 this.$vs.loading.close();
                 this.cerrarVentana();
@@ -1617,7 +1598,7 @@ export default {
             this.$vs.loading();
             funeraria
                 .get_inventario_servicios_codigos(this.serverOptions)
-                .then(res => {
+                .then((res) => {
                     if (res.data.length > 0) {
                         let datos = res.data[0];
                         /**agrego el concepto al listado del contrato */
@@ -1627,17 +1608,16 @@ export default {
                             costo_neto_normal: datos.precio_venta,
                             descuento_b: 0,
                             costo_neto_descuento: 0,
-                            importe: 0
+                            importe: 0,
                         });
                     } else {
                         this.$vs.notify({
                             title: "Buscar artículos",
-                            text:
-                                "No se ha encontrado el concepto con el número de clave ingresado.",
+                            text: "No se ha encontrado el concepto con el número de clave ingresado.",
                             iconPack: "feather",
                             icon: "icon-alert-circle",
                             color: "warning",
-                            time: 8000
+                            time: 8000,
                         });
                     }
                     this.$vs.loading.close();
@@ -1648,7 +1628,7 @@ export default {
                             .focus()
                     );
                 })
-                .catch(err => {
+                .catch((err) => {
                     this.$vs.loading.close();
                     this.ver = true;
                     if (err.response) {
@@ -1656,12 +1636,11 @@ export default {
                             /**FORBIDDEN ERROR */
                             this.$vs.notify({
                                 title: "Permiso denegado",
-                                text:
-                                    "Verifique sus permisos con el administrador del sistema.",
+                                text: "Verifique sus permisos con el administrador del sistema.",
                                 iconPack: "feather",
                                 icon: "icon-alert-circle",
                                 color: "warning",
-                                time: 8000
+                                time: 8000,
                             });
                         }
                     }
@@ -1677,7 +1656,7 @@ export default {
                 costo_neto_normal: "",
                 descuento_b: 0,
                 costo_neto_descuento: 0,
-                importe: ""
+                importe: "",
             });
             this.$nextTick(() => {
                 let index = this.form.conceptos.length - 1;
@@ -1725,11 +1704,15 @@ export default {
             this.form.conceptos = [];
         },
         cancelar() {
-            this.botonConfirmarSinPassword = "Salir y limpiar";
-            this.accionConfirmarSinPassword =
-                "Esta acción limpiará los datos que capturó en el formulario.";
-            this.openConfirmarSinPassword = true;
-            this.callBackConfirmar = this.cerrarVentana;
+            if (this.getTipoformulario == "modificar") {
+                this.botonConfirmarSinPassword = "Salir y limpiar";
+                this.accionConfirmarSinPassword =
+                    "Esta acción limpiará los datos que capturó en el formulario.";
+                this.openConfirmarSinPassword = true;
+                this.callBackConfirmar = this.cerrarVentana;
+            } else {
+                this.$emit("closeVentana");
+            }
         },
         cerrarVentana() {
             this.openConfirmarSinPassword = false;
@@ -1767,23 +1750,29 @@ export default {
         },
         closePassword() {
             this.openPassword = false;
-        }
+        },
     },
-    created() {},
-    updated() {},
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
         this.modalidades_pago.push({ label: "Pago Único", value: "1" });
         this.modalidades_pago.push({ label: "2 Mensualidades", value: "2" });
         for (let index = 3; index <= 24; index++) {
             this.modalidades_pago.push({
                 label: +index + " Mensualidades",
-                value: index
+                value: index,
             });
         }
-        this.$refs["formulario"].$el.querySelector(".vs-icon").onclick = () => {
-            this.cancelar();
-        };
-    }
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
 };
 </script>
 

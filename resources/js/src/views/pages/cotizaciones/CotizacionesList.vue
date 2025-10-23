@@ -1,61 +1,105 @@
 <template>
     <div>
         <div class="text-right buttons-container-header">
-            <vs-button class="w-full md:w-auto   md:ml-2 md:mt-0" color="success"
-                @click="OpenFormularioCotizaciones('agregar')">
+            <vs-button
+                class="w-full md:w-auto md:ml-2 md:mt-0"
+                color="success"
+                @click="OpenFormularioCotizaciones('agregar')"
+            >
                 <span>Hacer Cotización</span>
             </vs-button>
         </div>
         <div class="mt-5 vx-col w-full md:w-2/2 lg:w-2/2 xl:w-2/2">
-            <vx-card no-radius title="Filtros de selección" refresh-content-action @refresh="reset"
-                :collapse-action="false">
+            <vx-card
+                no-radius
+                title="Filtros de selección"
+                refresh-content-action
+                @refresh="reset"
+                :collapse-action="false"
+            >
                 <div class="flex flex-wrap">
                     <div class="w-full sm:w-6/12 lg:w-3/12 px-2 input-text">
                         <label class="">Mostrar</label>
-                        <v-select :options="mostrarOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="mostrar" class="w-full" />
+                        <v-select
+                            :options="mostrarOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="mostrar"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 px-2 input-text">
                         <label class="">Estado</label>
-                        <v-select :options="estadosOptions" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                            v-model="estado" class="w-full" />
+                        <v-select
+                            :options="estadosOptions"
+                            :clearable="false"
+                            :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                            v-model="estado"
+                            class="w-full"
+                        />
                     </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
                         <label class="">
                             Rango de Fechas año/mes/dia
                             <span>(*)</span>
                         </label>
-                        <flat-pickr name="rango_fechas" data-vv-as=" " :config="configdateTimePickerRange"
-                            v-model="rango_fechas" placeholder="Rango de fechas" class="w-full"
-                            @on-close="onCloseDate" />
+                        <flat-pickr
+                            name="rango_fechas"
+                            data-vv-as=" "
+                            :config="configdateTimePickerRange"
+                            v-model="rango_fechas"
+                            placeholder="Rango de fechas"
+                            class="w-full"
+                            @on-close="onCloseDate"
+                        />
                     </div>
                     <div class="w-full sm:w-6/12 lg:w-3/12 input-text px-2">
                         <label class="">Número de Control</label>
-                        <vs-input class="w-full" icon="search" maxlength="14"
-                            placeholder="Filtrar por Número de Control" v-model="serverOptions.numero_control"
-                            v-on:keyup.enter="get_data(1)" v-on:blur="get_data(1, 'blur')" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            maxlength="14"
+                            placeholder="Filtrar por Número de Control"
+                            v-model="serverOptions.numero_control"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                        />
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
                     <div class="w-full px-2">
                         <h3 class="text-base font-semibold my-3">
-                            <feather-icon icon="UserIcon" class="mr-2" svgClasses="w-5 h-5" />Filtrar por Nombre del
-                            Cliente
+                            <feather-icon
+                                icon="UserIcon"
+                                class="mr-2"
+                                svgClasses="w-5 h-5"
+                            />Filtrar por Nombre del Cliente
                         </h3>
                     </div>
                     <div class="w-full input-text px-2">
                         <label class="">Nombre del Cliente</label>
-                        <vs-input class="w-full" icon="search" placeholder="Filtrar por Nombre del Cliente"
-                            v-model="serverOptions.cliente" v-on:keyup.enter="get_data(1)"
-                            v-on:blur="get_data(1, 'blur')" maxlength="75" />
+                        <vs-input
+                            class="w-full"
+                            icon="search"
+                            placeholder="Filtrar por Nombre del Cliente"
+                            v-model="serverOptions.cliente"
+                            v-on:keyup.enter="get_data(1)"
+                            v-on:blur="get_data(1, 'blur')"
+                            maxlength="75"
+                        />
                     </div>
                 </div>
             </vx-card>
         </div>
-        <br>
-        <vs-table :sst="true" :max-items="serverOptions.per_page.value" :data="cotizaciones" noDataText="0 Resultados"
-            class="tabla-datos">
+        <br />
+        <vs-table
+            :sst="true"
+            :max-items="serverOptions.per_page.value"
+            :data="cotizaciones"
+            noDataText="0 Resultados"
+            class="tabla-datos"
+        >
             <template slot="header">
                 <h3>Listado de Cotizaciones</h3>
             </template>
@@ -81,12 +125,13 @@
                         {{ data[indextr].cliente_nombre }}
                     </vs-td>
                     <vs-td :data="data[indextr].cliente_telefono">
-                        <span class="font-medium" v-if="data[indextr].cliente_telefono">
+                        <span
+                            class="font-medium"
+                            v-if="data[indextr].cliente_telefono"
+                        >
                             {{ data[indextr].cliente_telefono }}
                         </span>
-                        <span class="font-medium" v-else>
-                            N/A
-                        </span>
+                        <span class="font-medium" v-else> N/A </span>
                     </vs-td>
                     <vs-td :data="data[indextr].fecha_texto">
                         <span class="font-medium">
@@ -100,7 +145,6 @@
                     </vs-td>
                     <vs-td :data="data[indextr].tipo_texto">
                         <span class="font-medium">
-
                             {{ data[indextr].tipo_texto }}
                         </span>
                     </vs-td>
@@ -124,21 +168,42 @@
                     </vs-td>
                     <vs-td :data="data[indextr].id_user">
                         <div class="flex justify-center">
-                            <img class="img-btn-24 mx-2" src="@assets/images/seguimientos.svg"
-                                title="Control de Seguimientos" @click="OpenFormSeguimientos(tr)" />
+                            <img
+                                class="img-btn-24 mx-2"
+                                src="@assets/images/seguimientos.svg"
+                                title="Control de Seguimientos"
+                                @click="OpenFormSeguimientos(tr)"
+                            />
                         </div>
                     </vs-td>
                     <vs-td :data="data[indextr].id">
                         <div class="flex justify-center">
-                            <img class="cursor-pointer img-btn-20 mx-3" src="@assets/images/pdf.svg" title="Expediente"
-                                @click="openReporte(data[indextr])" />
-                            <img class=" img-btn-22 mx-3" src="@assets/images/edit.svg" title="Modificar Cotización"
-                                @click="openModificar(data[indextr])" />
-                            <img v-if="data[indextr].status > 0" class="img-btn-22 mx-3" src="@assets/images/trash.svg"
-                                title="Cancelar Cotización" @click="cancelarCotizacion(data[indextr])" />
-                            <img v-else-if="data[indextr].status == 0" class="img-btn-22 mx-3"
-                                src="@assets/images/trash-open.svg" title="Esta cotización ya fue cancelada."
-                                @click="openReporte(data[indextr])" />
+                            <img
+                                class="cursor-pointer img-btn-20 mx-3"
+                                src="@assets/images/pdf.svg"
+                                title="Expediente"
+                                @click="openReporte(data[indextr])"
+                            />
+                            <img
+                                class="img-btn-22 mx-3"
+                                src="@assets/images/edit.svg"
+                                title="Modificar Cotización"
+                                @click="openModificar(data[indextr])"
+                            />
+                            <img
+                                v-if="data[indextr].status > 0"
+                                class="img-btn-22 mx-3"
+                                src="@assets/images/trash.svg"
+                                title="Cancelar Cotización"
+                                @click="cancelarCotizacion(data[indextr])"
+                            />
+                            <img
+                                v-else-if="data[indextr].status == 0"
+                                class="img-btn-22 mx-3"
+                                src="@assets/images/trash-open.svg"
+                                title="Esta cotización ya fue cancelada."
+                                @click="openReporte(data[indextr])"
+                            />
                         </div>
                     </vs-td>
                     <template class="expand-user" slot="expand"></template>
@@ -146,21 +211,51 @@
             </template>
         </vs-table>
         <div>
-            <vs-pagination v-if="verPaginado" :total="this.total" v-model="actual" class="mt-8"></vs-pagination>
+            <vs-pagination
+                v-if="verPaginado"
+                :total="this.total"
+                v-model="actual"
+                class="mt-8"
+            ></vs-pagination>
         </div>
         <!--Componentes-->
-        <FormularioCotizaciones :id_cotizacion="id_cotizacion" :tipo="tipoFormulario" :show="verFormularioCotizaciones"
-            @closeVentana="reloadList" @ConsultarCotizacion="ConsultarCotizacion">
+        <FormularioCotizaciones
+            v-if="verFormularioCotizaciones"
+            :id_cotizacion="id_cotizacion"
+            :tipo="tipoFormulario"
+            :show="verFormularioCotizaciones"
+            @closeVentana="reloadList"
+            @ConsultarCotizacion="ConsultarCotizacion"
+        >
         </FormularioCotizaciones>
-        <Cancelar :datos="datos_cancelar" :show="verCancelar"
-            @closeCancelarCotizacion="() => { this.verCancelar = false; this.reloadList(); }"
-            @ConsultarCotizacion="ConsultarCotizacion">
+        <Cancelar
+            v-if="verCancelar"
+            :datos="datos_cancelar"
+            :show="verCancelar"
+            @closeCancelarCotizacion="
+                () => {
+                    this.verCancelar = false;
+                    this.reloadList();
+                }
+            "
+            @ConsultarCotizacion="ConsultarCotizacion"
+        >
         </Cancelar>
-        <Reporteador :header="'consultar cotizaciones'" :show="openReportesLista" :listadereportes="ListaReportes"
-            :request="request" @closeReportes="openReportesLista = false">
+        <Reporteador
+            v-if="openReportesLista"
+            :header="'consultar cotizaciones'"
+            :show="openReportesLista"
+            :listadereportes="ListaReportes"
+            :request="request"
+            @closeReportes="openReportesLista = false"
+        >
         </Reporteador>
-        <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
-            @closeVentana="openSeguimientos = false;">
+        <FormularioSeguimientos
+            v-if="openSeguimientos"
+            :show="openSeguimientos"
+            :filters="filtersSeguimientos"
+            @closeVentana="openSeguimientos = false"
+        >
         </FormularioSeguimientos>
     </div>
 </template>
@@ -177,13 +272,14 @@ const moment = require("moment");
 import cotizacionesService from "@services/cotizaciones";
 import vSelect from "vue-select";
 export default {
+    name: "CotizacionesList",
     components: {
         "v-select": vSelect,
         FormularioCotizaciones,
         flatPickr,
         Cancelar,
         Reporteador,
-        FormularioSeguimientos
+        FormularioSeguimientos,
     },
     watch: {
         actual: function (newValue, oldValue) {
@@ -219,7 +315,7 @@ export default {
                 cliente_id: null,
                 tipo_cliente_id: null,
                 operacion_id: null,
-                origen: 1//Formulario de Origen. 1-seguim
+                origen: 1, //Formulario de Origen. 1-seguim
             },
             verCancelar: false,
             datos_cancelar: {},
@@ -243,7 +339,7 @@ export default {
                 {
                     label: "Vencidas",
                     value: "3",
-                }
+                },
             ],
             mostrarOptions: mostrarOptions,
             mostrar: { label: "15", value: "15" },
@@ -263,14 +359,14 @@ export default {
             cotizaciones: [],
             tipoFormulario: "",
             verFormularioCotizaciones: false,
-            id_cotizacion: ''
-        }
+            id_cotizacion: "",
+        };
     },
     methods: {
         OpenFormSeguimientos(cliente) {
             this.filtersSeguimientos.cliente_id = cliente.id;
             this.filtersSeguimientos.tipo_cliente_id = 2; //cotizaciones
-            this.filtersSeguimientos.origen = 2;//clientes
+            this.filtersSeguimientos.origen = 2; //clientes
             this.openSeguimientos = true;
         },
         ConsultarCotizacion(cotizacion) {
@@ -305,9 +401,9 @@ export default {
                 this.serverOptions.fecha_inicio = "";
                 this.serverOptions.fecha_fin = "";
             } else if (selectedDates.length == 1) {
-                this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
-                    "YYYY-MM-DD"
-                );
+                this.serverOptions.fecha_inicio = moment(
+                    selectedDates[0]
+                ).format("YYYY-MM-DD");
                 this.serverOptions.fecha_fin = moment(selectedDates[0]).format(
                     "YYYY-MM-DD"
                 );
@@ -315,17 +411,17 @@ export default {
                 /**hay fechas que buscar */
                 if (
                     this.serverOptions.fecha_inicio !=
-                    moment(selectedDates[0]).format("YYYY-MM-DD") ||
+                        moment(selectedDates[0]).format("YYYY-MM-DD") ||
                     this.serverOptions.fecha_fin !=
-                    moment(selectedDates[1]).format("YYYY-MM-DD")
+                        moment(selectedDates[1]).format("YYYY-MM-DD")
                 ) {
                     /**agreggo la fecha 1 */
-                    this.serverOptions.fecha_inicio = moment(selectedDates[0]).format(
-                        "YYYY-MM-DD"
-                    );
-                    this.serverOptions.fecha_fin = moment(selectedDates[1]).format(
-                        "YYYY-MM-DD"
-                    );
+                    this.serverOptions.fecha_inicio = moment(
+                        selectedDates[0]
+                    ).format("YYYY-MM-DD");
+                    this.serverOptions.fecha_fin = moment(
+                        selectedDates[1]
+                    ).format("YYYY-MM-DD");
                 }
             }
             //aqui mando llamar los nuevos datos
@@ -381,7 +477,10 @@ export default {
             this.serverOptions.status = this.estado.value;
             //this.serverOptions.filtro_especifico_opcion = this.filtroEspecifico.value;
             try {
-                let res = await cotizacionesService.get_cotizaciones(this.serverOptions, true);
+                let res = await cotizacionesService.get_cotizaciones(
+                    this.serverOptions,
+                    true
+                );
                 if (res.data.data) {
                     this.cotizaciones = res.data.data;
                     this.total = res.data.last_page;
@@ -420,14 +519,19 @@ export default {
             this.verFormularioCotizaciones = true;
         },
     },
-    mounted(
-    ) {
-        //this.OpenFormularioCotizaciones("agregar");
-    },
+    // Lifecycle hooks
     created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
         (async () => {
             await this.get_data(this.actual);
         })();
+    },
+    mounted() {
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {},
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

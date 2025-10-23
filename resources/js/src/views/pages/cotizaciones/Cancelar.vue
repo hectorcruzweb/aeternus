@@ -1,56 +1,82 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['forms-popup popup-50', z_index]" title="Cancelar Cotizaciones" :active.sync="showVentana"
-            ref="cancelar_cotizacion">
+        <vs-popup
+            :class="['forms-popup popup-50', z_index]"
+            title="Cancelar Cotizaciones"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="flex flex-wrap">
                 <div class="w-full alerta py-2 px-2">
                     <div class="danger">
-                        <h3>¿Está seguro de querer cancelar esta cotización?</h3>
+                        <h3>
+                            ¿Está seguro de querer cancelar esta cotización?
+                        </h3>
                         <p>
-                            Una vez realizado el proceso de cancelación no habrá manera de
-                            volver a habilitar la cotización. Es recomendable llevar a cabo este
-                            proceso una vez esté seguro de que es necesario.
+                            Una vez realizado el proceso de cancelación no habrá
+                            manera de volver a habilitar la cotización. Es
+                            recomendable llevar a cabo este proceso una vez esté
+                            seguro de que es necesario.
                         </p>
                     </div>
                 </div>
 
                 <div class="w-full py-2 px-2">
-                    <div class="w-full text-center bg-data-table uppercase py-2">
+                    <div
+                        class="w-full text-center bg-data-table uppercase py-2"
+                    >
                         Datos de la cotización
                     </div>
                 </div>
                 <div class="w-full flex flex-wrap color-copy py-2 px-2">
                     <div class="w-full xl:w-3/12 px-2 text-center">
-                        <span class="font-medium color-black-700"> Núm. Cotización</span>
+                        <span class="font-medium color-black-700">
+                            Núm. Cotización</span
+                        >
                         <div class="w-full uppercase">
                             {{ this.datos.id }}
                         </div>
                     </div>
                     <div class="w-full xl:w-3/12 px-2 text-center">
                         <span class="font-medium color-black-700">
-                            Fecha de la cotización</span>
+                            Fecha de la cotización</span
+                        >
                         <div class="w-full uppercase">
                             {{ this.datos.fecha_texto }}
                         </div>
                     </div>
                     <div class="w-full xl:w-6/12 px-2 text-center">
                         <span class="font-medium color-black-700">
-                            Nombre del Cliente</span>
+                            Nombre del Cliente</span
+                        >
                         <div class="w-full uppercase">
                             {{ this.datos.cliente_nombre }}
                         </div>
                     </div>
                 </div>
                 <div class="w-full px-2 py-2">
-                    <NotasComponent :value="form.nota" @input="(val) => { this.form.nota = val; }" />
+                    <NotasComponent
+                        :value="form.nota"
+                        @input="
+                            (val) => {
+                                this.form.nota = val;
+                            }
+                        "
+                    />
                 </div>
                 <div class="w-full py-4 px-2">
                     <vs-button class="w-full" color="danger" @click="cancelar">
                         <span>Cancelar Cotización</span>
                     </vs-button>
                 </div>
-                <Password :z_index="'z-index56k'" :show="openPassword" :callback-on-success="callback"
-                    @closeVerificar="closePassword" :accion="'Modificar Cotización'"></Password>
+                <Password
+                    v-if="openPassword"
+                    :z_index="'z-index56k'"
+                    :show="openPassword"
+                    :callback-on-success="callback"
+                    @closeVerificar="closePassword"
+                    :accion="'Modificar Cotización'"
+                ></Password>
             </div>
         </vs-popup>
     </div>
@@ -60,9 +86,10 @@ import NotasComponent from "@pages/NotasComponent";
 import Password from "@pages/confirmar_password";
 import cotizaciones from "@services/cotizaciones";
 export default {
+    name: "CancelarCotizacion",
     components: {
         NotasComponent,
-        Password
+        Password,
     },
     props: {
         show: {
@@ -77,35 +104,36 @@ export default {
         datos: {
             type: Object,
             required: true,
-        }
-    },
-    watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-            } else {
-                //reinicias el form
-            }
         },
     },
-    computed: {
-        showVentana: {
-            get() {
-                return this.show;
+    watch: {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    this.$popupManager.register(
+                        this,
+                        this.cerrar_ventana,
+                        null
+                    );
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
+                }
+                this.localShow = newValue;
             },
-            set(newValue) {
-                return newValue;
-            },
-        }
+        },
     },
+    computed: {},
     data() {
         return {
+            localShow: false,
             errores: [],
             form: {
-                id: '',
-                nota: ''
+                id: "",
+                nota: "",
             },
             openPassword: false,
-            callback: Function
+            callback: Function,
         };
     },
     methods: {
@@ -133,16 +161,14 @@ export default {
                         })();
                     }
                 })
-                .catch(() => { });
+                .catch(() => {});
         },
         async cancelar_cotizacion() {
             //aqui mando guardar los datos
             this.errores = [];
             this.$vs.loading();
             try {
-                let res = await cotizaciones.cancelar_cotizacion(
-                    this.form
-                );
+                let res = await cotizaciones.cancelar_cotizacion(this.form);
                 if (res.data >= 1) {
                     //success
                     this.$vs.notify({
@@ -153,7 +179,15 @@ export default {
                         color: "success",
                         time: 5000,
                     });
-                    this.$emit("ConsultarCotizacion", { id: res.data, cliente_email: '', cliente_nombre: '' });
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.$emit("ConsultarCotizacion", {
+                                id: res.data,
+                                cliente_email: "",
+                                cliente_nombre: "",
+                            });
+                        }, 50);
+                    });
                 } else {
                     this.$vs.notify({
                         title: "Cotizaciones",
@@ -212,21 +246,18 @@ export default {
             return;
         },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        this.$refs["cancelar_cotizacion"].$el.querySelector(".vs-icon").onclick =
-            () => {
-                this.cerrar_ventana();
-            };
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    this.cerrar_ventana();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>

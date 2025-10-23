@@ -1,39 +1,71 @@
 <template>
     <div class="centerx">
-        <vs-popup :class="['forms-popup popup-50', z_index]" :title="formTitle" :active.sync="showVentana"
-            ref="cotizaciones_predefinidas">
+        <vs-popup
+            :class="['forms-popup popup-50', z_index]"
+            :title="formTitle"
+            :active="localShow"
+            :ref="this.$options.name"
+        >
             <div class="flex flex-wrap">
-                <div class="w-full lg:w-12/12 px-2 input-text large-size">
+                <div class="w-full lg:w-12/12 px-2 input-text">
                     <label>
                         Cotizaciones Predefinidas
                         <span>(*)</span>
                     </label>
-                    <v-select :options="cotizaciones" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                        v-model="form.cotizacion" class="w-full" name="cotizaciones" data-vv-as=" ">
+                    <v-select
+                        :options="cotizaciones"
+                        :clearable="false"
+                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                        v-model="form.cotizacion"
+                        class="w-full"
+                        name="cotizaciones"
+                        data-vv-as=" "
+                    >
                         <div slot="no-options">
                             No Se Ha Seleccionado Ninguna Cotización
                         </div>
                     </v-select>
                 </div>
 
-
                 <div class="w-full px-2 py-2 text-center">
-                    <div v-show="seccion.conceptos.length > 0" :key="indexSeccion"
-                        v-for="(seccion, indexSeccion) in form.cotizacion.secciones">
-                        <div class="bg-dark-600 text-white h5 font-bold uppercase">
-                            <span v-show="indexSeccion > 0" class="uppercase">solo en caso
-                                de </span> {{ seccion.seccion }}
+                    <div
+                        v-show="seccion.conceptos.length > 0"
+                        :key="indexSeccion"
+                        v-for="(seccion, indexSeccion) in form.cotizacion
+                            .secciones"
+                    >
+                        <div
+                            class="bg-dark-600 text-white h5 font-bold uppercase"
+                        >
+                            <span v-show="indexSeccion > 0" class="uppercase"
+                                >solo en caso de
+                            </span>
+                            {{ seccion.seccion }}
                         </div>
                         <div class="py-2">
-                            <span class="uppercase" :key="indexConcepto"
-                                v-for="(concepto, indexConcepto) in seccion.conceptos">
-                                {{ concepto }} {{ (indexConcepto + 1) < seccion.conceptos.length ? ' | ' : '' }} </span>
+                            <span
+                                class="uppercase"
+                                :key="indexConcepto"
+                                v-for="(
+                                    concepto, indexConcepto
+                                ) in seccion.conceptos"
+                            >
+                                {{ concepto }}
+                                {{
+                                    indexConcepto + 1 < seccion.conceptos.length
+                                        ? " | "
+                                        : ""
+                                }}
+                            </span>
                         </div>
                     </div>
                 </div>
                 <div class="w-full px-2 pb-2">
-                    <vs-table noDataText="" class="tabla-datos tabla-datos-no-data"
-                        :data="form.cotizacion.financiamientos">
+                    <vs-table
+                        noDataText=""
+                        class="tabla-datos tabla-datos-no-data"
+                        :data="form.cotizacion.financiamientos"
+                    >
                         <template slot="header">
                             <h3>Financiamientos</h3>
                         </template>
@@ -41,40 +73,79 @@
                             <vs-th>#</vs-th>
                             <vs-th><span class="px-2">DESCRIPCIÓN</span></vs-th>
                             <vs-th><span class="px-2">COSTO NETO</span></vs-th>
-                            <vs-th><span class="px-2">PAGO INICIAL</span></vs-th>
-                            <vs-th><span class="px-2">ABONO MENSUAL</span></vs-th>
+                            <vs-th
+                                ><span class="px-2">PAGO INICIAL</span></vs-th
+                            >
+                            <vs-th
+                                ><span class="px-2">ABONO MENSUAL</span></vs-th
+                            >
                         </template>
                         <template slot-scope="{ data }">
-                            <vs-tr :data="tr" :key="indextr" v-for="(tr, indextr) in data">
+                            <vs-tr
+                                :data="tr"
+                                :key="indextr"
+                                v-for="(tr, indextr) in data"
+                            >
                                 <vs-td>
-                                    <span class="font-semibold px-2">{{ indextr + 1 }}</span>
-                                </vs-td>
-                                <vs-td class="size-base padding-y-7">
-                                    <span class="px-2">{{ form.cotizacion.financiamientos[indextr].financiamiento
+                                    <span class="font-semibold px-2">{{
+                                        indextr + 1
                                     }}</span>
                                 </vs-td>
                                 <vs-td class="size-base padding-y-7">
-                                    <span class="px-2">$ {{ form.cotizacion.financiamientos[indextr].costo_neto
-                                        | numFormat("0,000.00") }}
-                                        MXN.</span>
+                                    <span class="px-2">{{
+                                        form.cotizacion.financiamientos[indextr]
+                                            .financiamiento
+                                    }}</span>
                                 </vs-td>
                                 <vs-td class="size-base padding-y-7">
-                                    <span class="px-2">$ {{ form.cotizacion.financiamientos[indextr].pago_inicial
-                                        | numFormat("0,000.00") }}
-                                        MXN.</span>
+                                    <span class="px-2"
+                                        >$
+                                        {{
+                                            form.cotizacion.financiamientos[
+                                                indextr
+                                            ].costo_neto | numFormat("0,000.00")
+                                        }}
+                                        MXN.</span
+                                    >
                                 </vs-td>
                                 <vs-td class="size-base padding-y-7">
-                                    <span class="px-2">$ {{ form.cotizacion.financiamientos[indextr].pago_mensual
-                                        | numFormat("0,000.00") }}
-                                        MXN.</span>
+                                    <span class="px-2"
+                                        >$
+                                        {{
+                                            form.cotizacion.financiamientos[
+                                                indextr
+                                            ].pago_inicial
+                                                | numFormat("0,000.00")
+                                        }}
+                                        MXN.</span
+                                    >
+                                </vs-td>
+                                <vs-td class="size-base padding-y-7">
+                                    <span class="px-2"
+                                        >$
+                                        {{
+                                            form.cotizacion.financiamientos[
+                                                indextr
+                                            ].pago_mensual
+                                                | numFormat("0,000.00")
+                                        }}
+                                        MXN.</span
+                                    >
                                 </vs-td>
                             </vs-tr>
                         </template>
                     </vs-table>
                 </div>
                 <div class="w-full py-4">
-                    <vs-button v-show="tipoCotizacion == 'funeraria' || tipoCotizacion == 'cementerio'" class="w-full"
-                        color="success" @click="seleccionarCotizacion()">
+                    <vs-button
+                        v-show="
+                            tipoCotizacion == 'funeraria' ||
+                            tipoCotizacion == 'cementerio'
+                        "
+                        class="w-full"
+                        color="success"
+                        @click="seleccionarCotizacion()"
+                    >
                         <span>Seleccionar Cotización</span>
                     </vs-button>
                 </div>
@@ -87,6 +158,7 @@ import vSelect from "vue-select";
 import planes from "@services/planes";
 import cementerio from "@services/cementerio";
 export default {
+    name: "Paquetes",
     components: {
         "v-select": vSelect,
     },
@@ -107,47 +179,45 @@ export default {
         cotizacionVer: {
             type: Object,
             required: false,
-            default: {}
-        }
+            default: {},
+        },
     },
     watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-                if (this.tipoCotizacion == 'funeraria') {
-                    (async () => {
+        show: {
+            immediate: true, // runs when component is mounted too
+            async handler(newValue) {
+                if (newValue) {
+                    if (this.tipoCotizacion == "funeraria") {
                         await this.get_planes_funerarios();
-                    })();
-                } else if (this.tipoCotizacion == 'cementerio') {
-                    (async () => {
+                    } else if (this.tipoCotizacion == "cementerio") {
                         await this.get_financiamientos();
-                    })();
-                } else if (this.tipoCotizacion == 'ver') {
-                    this.cotizaciones.push(this.GetCotizacionVer);
-                    this.form.cotizacion = this.cotizaciones[0];
+                    } else if (this.tipoCotizacion == "ver") {
+                        this.cotizaciones.push(this.GetCotizacionVer);
+                        this.form.cotizacion = this.cotizaciones[0];
+                    }
+                    this.$popupManager.register(
+                        this,
+                        this.cerrar_ventana,
+                        null
+                    );
+                } else {
+                    this.$popupManager.unregister(this.$options.name);
                 }
-            } else {
-                //reinicias el form
-                this.form.cotizacion = {};
-                this.cotizaciones = [];
-            }
+                this.localShow = newValue;
+            },
         },
     },
     computed: {
         formTitle() {
-            let title = '';
-            if (this.tipoCotizacion == 'funeraria' || this.tipoCotizacion == 'cementerio') {
-                return 'seleccionar cotización de ' + this.tipoCotizacion;
+            let title = "";
+            if (
+                this.tipoCotizacion == "funeraria" ||
+                this.tipoCotizacion == "cementerio"
+            ) {
+                return "seleccionar cotización de " + this.tipoCotizacion;
             } else {
-                return 'Visualizar cotización seleccionada';
+                return "Visualizar cotización seleccionada";
             }
-        },
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
         },
         tipoCotizacion: {
             get() {
@@ -164,14 +234,15 @@ export default {
             set(newValue) {
                 return newValue;
             },
-        }
+        },
     },
     data() {
         return {
+            localShow: false,
             cotizaciones: [],
             form: {
-                cotizacion: {}
-            }
+                cotizacion: {},
+            },
         };
     },
     methods: {
@@ -187,29 +258,39 @@ export default {
                         let financiamientos = [];
                         element.precios.forEach((financiamiento) => {
                             financiamientos.push({
-                                financiamiento: financiamiento.tipo_financiamiento,
+                                financiamiento:
+                                    financiamiento.tipo_financiamiento,
                                 costo_neto: financiamiento.costo_neto,
                                 pago_inicial: financiamiento.pago_inicial,
-                                pago_mensual: financiamiento.pago_mensual
-                            })
+                                pago_mensual: financiamiento.pago_mensual,
+                            });
                         });
                         //se agrega al cotizaciones object
                         this.cotizaciones.push({
                             tipo: this.tipoCotizacion,
-                            label: 'Espacio en cementerio tipo ' + element.tipo,
-                            secciones: [{
-                                //solo una seccion de incluye
-                                seccion: 'incluye',
-                                conceptos: [
-                                    'espacio en cementerio tipo ' + element.tipo + ' con capacidad de ' + element.capacidad + ' Persona(s).'
-                                ]
-                            }],
+                            label: "Espacio en cementerio tipo " + element.tipo,
+                            secciones: [
+                                {
+                                    //solo una seccion de incluye
+                                    seccion: "incluye",
+                                    conceptos: [
+                                        "espacio en cementerio tipo " +
+                                            element.tipo +
+                                            " con capacidad de " +
+                                            element.capacidad +
+                                            " Persona(s).",
+                                    ],
+                                },
+                            ],
                             financiamientos: financiamientos,
                         });
                     }
                 });
                 if (this.cotizaciones.length > 0) {
-                    this.form.cotizacion = this.cotizaciones.length > 1 ? this.cotizaciones[1] : this.cotizaciones[0];
+                    this.form.cotizacion =
+                        this.cotizaciones.length > 1
+                            ? this.cotizaciones[1]
+                            : this.cotizaciones[0];
                 } else {
                     this.$vs.notify({
                         title: "Error",
@@ -243,27 +324,31 @@ export default {
                 //creamos las diferentes cotizaciones
                 this.cotizaciones = [];
                 res.data.forEach((element) => {
-                    if (element.precios.length > 0 && element.secciones.length > 0) {
+                    if (
+                        element.precios.length > 0 &&
+                        element.secciones.length > 0
+                    ) {
                         //creamos el objeto con la informacion de esta cotizacion
                         let secciones = [];
                         element.secciones.forEach((seccion) => {
                             let conceptos = [];
                             seccion.conceptos.forEach((concepto) => {
-                                conceptos.push(concepto.concepto)
+                                conceptos.push(concepto.concepto);
                             });
                             secciones.push({
                                 seccion: seccion.seccion,
-                                conceptos: conceptos
+                                conceptos: conceptos,
                             });
                         });
                         let financiamientos = [];
                         element.precios.forEach((financiamiento) => {
                             financiamientos.push({
-                                financiamiento: financiamiento.tipo_financiamiento,
+                                financiamiento:
+                                    financiamiento.tipo_financiamiento,
                                 costo_neto: financiamiento.costo_neto,
                                 pago_inicial: financiamiento.pago_inicial,
-                                pago_mensual: financiamiento.pago_mensual
-                            })
+                                pago_mensual: financiamiento.pago_mensual,
+                            });
                         });
                         //se agrega al cotizaciones object
                         this.cotizaciones.push({
@@ -276,7 +361,10 @@ export default {
                 });
                 this.$vs.loading.close();
                 if (this.cotizaciones.length > 0) {
-                    this.form.cotizacion = this.cotizaciones.length > 1 ? this.cotizaciones[1] : this.cotizaciones[0];
+                    this.form.cotizacion =
+                        this.cotizaciones.length > 1
+                            ? this.cotizaciones[1]
+                            : this.cotizaciones[0];
                 } else {
                     this.$vs.notify({
                         title: "Error",
@@ -311,32 +399,35 @@ export default {
         seleccionarCotizacion() {
             //agregar
             //creamos el arreglo para cargar la cotización
-            this.$emit("agregarCotizacion", this.form.cotizacion);
             this.$vs.notify({
                 title: "Cotizaciones",
-                text: ("Se agregó el " + this.form.cotizacion.label).toUpperCase(),
+                text: (
+                    "Se agregó el " + this.form.cotizacion.label
+                ).toUpperCase(),
                 iconPack: "feather",
                 icon: "icon-alert-circle",
                 color: "success",
                 time: 8000,
             });
-        }
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    this.$emit("agregarCotizacion", this.form.cotizacion);
+                }, 50);
+            });
+        },
     },
-    created() { },
+    // Lifecycle hooks
+    created() {
+        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    },
     mounted() {
-        this.$refs["cotizaciones_predefinidas"].$el.querySelector(".vs-icon").onclick =
-            () => {
-                this.cerrar_ventana();
-            };
-        //cerrando el confirmar con esc
-        document.body.addEventListener("keyup", (e) => {
-            if (e.keyCode === 27) {
-                if (this.showVentana) {
-                    //CIERRO EL CONFIRMAR AL PRESONAR ESC
-                    //this.cancelar();
-                }
-            }
-        });
+        this.$log("Component mounted! " + this.$options.name);
+    },
+    beforeDestroy() {
+        this.$popupManager.unregister(this.$options.name);
+    },
+    destroyed() {
+        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },
 };
 </script>
