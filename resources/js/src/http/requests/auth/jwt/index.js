@@ -18,7 +18,7 @@ if (
 }
 
 function onAccessTokenFetched(access_token) {
-    subscribers = subscribers.filter(callback => callback(access_token));
+    subscribers = subscribers.filter((callback) => callback(access_token));
 }
 
 function addSubscriber(callback) {
@@ -28,10 +28,10 @@ function addSubscriber(callback) {
 export default {
     init() {
         axios.interceptors.response.use(
-            function(response) {
+            function (response) {
                 return response;
             },
-            function(error) {
+            function (error) {
                 // const { config, response: { status } } = error
                 const { config, response } = error;
                 const originalRequest = config;
@@ -41,14 +41,14 @@ export default {
             USUARIO A LOGUEARSE NUEVAMENTE */
                 if (
                     response &&
-                    response.status === 401 &&
+                    (response.status === 401 || response.status === 500) &&
                     originalRequest.url != "/refresh_token"
                 ) {
                     if (!isAlreadyFetchingAccessToken) {
                         isAlreadyFetchingAccessToken = true;
                         store
                             .dispatch("auth/fetchAccessToken")
-                            .then(access_token => {
+                            .then((access_token) => {
                                 /**ACTUALIZO EL LOCAL STORAGE CON LOS NUEVO VALORES DEL TOKEN Y EL REFRSH */
                                 localStorage.setItem(
                                     "accessToken",
@@ -67,8 +67,8 @@ export default {
                             });
                     }
 
-                    const retryOriginalRequest = new Promise(resolve => {
-                        addSubscriber(access_token => {
+                    const retryOriginalRequest = new Promise((resolve) => {
+                        addSubscriber((access_token) => {
                             /**PASANDO EL NUEVO TOKEN A LA ULTIMA PETICION QUE MANDO EL 401 */
                             originalRequest.headers.Authorization =
                                 "Bearer " + localStorage.getItem("accessToken");
@@ -102,20 +102,20 @@ export default {
     login(email, pwd) {
         return axios.post("/login_usuario", {
             username: email,
-            password: pwd
+            password: pwd,
         });
     },
     registerUser(name, email, pwd) {
         return axios.post("/api/auth/register", {
             displayName: name,
             email: email,
-            password: pwd
+            password: pwd,
         });
     },
     refreshToken() {
         //PASAR EL REFRESH TOKEN PARA SOLICITAR UN NUEVO TOKEN
         return axios.post("/refresh_token", {
-            refresh_token: localStorage.getItem("refreshToken")
+            refresh_token: localStorage.getItem("refreshToken"),
         });
-    }
+    },
 };
