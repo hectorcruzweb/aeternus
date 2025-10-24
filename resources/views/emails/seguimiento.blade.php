@@ -53,7 +53,7 @@
 <body>
     <div class="container">
         <div class="header">
-            {{ env('MAIL_FROM_NAME') }} | Seguimiento a Clientes
+            {{ config('mail.from.name') }} | Seguimiento a Clientes
         </div>
         <div class="content">
             <p>Hola {{ $seguimiento['cliente'] }},</p>
