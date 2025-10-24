@@ -58,7 +58,7 @@ class ChecadorController extends ApiController
                         WHEN usuarios.cementerio_funeraria_filtro = "1" THEN "Funeraria"
                         ELSE "Cementerio"
                         END) AS area_des')
-        )/*->whereHas('registros')*/ ->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%')->orderBy("id", "asc");
+        )/*->whereHas('registros')*/->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%')->orderBy("id", "asc");
         if ($request->area > 0) {
             $resultado_query = $resultado_query->where("cementerio_funeraria_filtro", "=", $request->area);
         }
@@ -136,7 +136,6 @@ class ChecadorController extends ApiController
             } else {
                 return $this->errorResponse("Error on save.", 409);
             }
-
         } catch (Exception $e) {
             return $this->errorResponse($e, 409);
         }
@@ -310,15 +309,15 @@ class ChecadorController extends ApiController
                 '(NULL) as mensaje'
             )
         )->with(
-                [
-                    'usuario' => function ($query) {
-                        $query->select('id', 'nombre', DB::raw('(CASE
+            [
+                'usuario' => function ($query) {
+                    $query->select('id', 'nombre', DB::raw('(CASE
                         WHEN usuarios.cementerio_funeraria_filtro = "1" THEN "Funeraria"
                         ELSE "Cementerio"
                         END) AS area_des'));
-                    }
-                ]
-            )->orderBy('fecha_hora', 'DESC');
+                }
+            ]
+        )->orderBy('fecha_hora', 'DESC');
         if ($area_filtro != 0) {
             $resultado_query = $resultado_query->whereHas('usuario', function ($query) use ($area_filtro) {
                 $query->where('cementerio_funeraria_filtro', '=', $area_filtro);
@@ -741,7 +740,6 @@ class ChecadorController extends ApiController
             } else {
                 return $this->errorResponse("Error on save.", 409);
             }
-
         } catch (Exception $e) {
             return $this->errorResponse($e, 409);
         }
@@ -774,7 +772,6 @@ class ChecadorController extends ApiController
                         ]
                     );
                 }
-
             }
             DB::commit();
             return 1;
@@ -818,151 +815,157 @@ class ChecadorController extends ApiController
 
     public function lista_registros(Request $request, $fecha_inicio = "all", $fecha_fin = "all", $usuario_id = "all")
     {
-        try {
-            $email = $request->email_send === 'true' ? true : false;
-            $email_to = $request->email_address;
-        } catch (\Throwable $th) {
-            $email = false;
-            $email_to = 'hector@gmail.com';
-        }
-        $area = $request->area;
-        $request = new \Illuminate\Http\Request();
-        $request->replace(
-            [
-                'fecha_inicio' => $fecha_inicio == "all" ? "" : $fecha_inicio,
-                'fecha_fin' => $fecha_fin == "all" ? "" : $fecha_fin
-            ]
-        );
-        $datos = $this->get_registros_checador($request, "all", $usuario_id, "no_paginated", $area);
-        /* if (empty($datos)) {
-        return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 409);
-        }
-         */
+        // --- 1️⃣ Determine if email should be sent ---
+        $email = $request->boolean('email_send'); // converts 'true'/'false' to boolean
+        $email_to = $request->email_address ?? 'hector@gmail.com';
+
+        $area = $request->area ?? null;
+
+        // --- 2️⃣ Prepare filter request for getting registros ---
+        $filterRequest = new \Illuminate\Http\Request([
+            'fecha_inicio' => $fecha_inicio === "all" ? "" : $fecha_inicio,
+            'fecha_fin' => $fecha_fin === "all" ? "" : $fecha_fin,
+        ]);
+
+        // --- 3️⃣ Get registros ---
+        $datos_registros = $this->get_registros_checador($filterRequest, "all", $usuario_id, "no_paginated", $area);
+
+        // --- 4️⃣ Get empresa info ---
         $get_funeraria = new EmpresaController();
         $empresa = $get_funeraria->get_empresa_data();
-        $empleado = User::select(
-            'nombre'
-        )->where("id", $usuario_id)->first();
-        $empleado = $usuario_id != "all" ? $empleado->nombre : "Todos";
-        $fecha = $fecha_inicio != "all" ? ("Del " . fecha_abr($fecha_inicio) . " al " . fecha_abr($fecha_fin)) : "Todo el Historial";
+
+        // --- 5️⃣ Get empleado info ---
+        $empleado = $usuario_id !== "all" ? optional(User::find($usuario_id))->nombre : "Todos";
+
+        // --- 6️⃣ Prepare date range string ---
+        $fecha = $fecha_inicio !== "all"
+            ? ("Del " . fecha_abr($fecha_inicio) . " al " . fecha_abr($fecha_fin))
+            : "Todo el Historial";
+
         $datos = [
             "empleado" => $empleado,
-            "datos" => $datos,
+            "datos" => $datos_registros,
             "rango_fechas" => $fecha,
         ];
-        $pdf = PDF::loadView('checador/registros/reporte', ['datos' => $datos, 'empresa' => $empresa]);
-        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf = "REGLAMENTO DE PAGO " . strtoupper("nombre del reporte") . '.pdf';
-        $pdf->setOptions([
-            'title' => $name_pdf,
-            'footer-html' => view('checador.registros.footer', ['empresa' => $empresa]),
-        ]);
-        $pdf->setOption('orientation', 'landscape');
-        $pdf->setOption('margin-left', 13.4);
-        $pdf->setOption('margin-right', 13.4);
-        $pdf->setOption('margin-top', 9.4);
-        $pdf->setOption('margin-bottom', 13.4);
-        $pdf->setOption('page-size', 'Letter');
-        if ($email == true) {
-            /**email */
-            /**
-             * parameters lista de la funcion
-             * to destinatario
-             * to_name nombre del destinatario
-             * subject motivo del correo
-             * name_pdf nombre del pdf
-             * pdf archivo pdf a enviar
-             */
-            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
+
+        // --- 7️⃣ Generate PDF safely ---
+        try {
+            $pdf = PDF::loadView('checador/registros/reporte', [
+                'datos' => $datos,
+                'empresa' => $empresa
+            ]);
+
+            $name_pdf = "REGLAMENTO DE PAGO " . strtoupper("nombre del reporte") . '.pdf';
+
+            $pdf->setOptions([
+                'title' => $name_pdf,
+                'footer-html' => view('checador.registros.footer', ['empresa' => $empresa]),
+                'orientation' => 'landscape',
+                'page-size' => 'Letter',
+                'margin-left' => 13.4,
+                'margin-right' => 13.4,
+                'margin-top' => 9.4,
+                'margin-bottom' => 13.4,
+            ]);
+        } catch (\RuntimeException $e) {
+            \Log::error('PDF generation failed: ' . $e->getMessage());
+            return $this->errorResponse('Error generating PDF', 500);
+        }
+
+        // --- 8️⃣ Send email if requested ---
+        if ($email) {
+            $pdfContent = $pdf->output(); // raw PDF content
             $email_controller = new EmailController();
-            $enviar_email = $email_controller->pdf_email(
+            return $email_controller->pdf_email(
                 $email_to,
                 strtoupper($empleado),
-                'reporte de registros de checador ' . $fecha,
+                'Reporte de registros de checador ' . $fecha,
                 $name_pdf,
-                $pdf
+                $pdfContent
             );
-            return $enviar_email;
-            /**email fin */
-        } else {
-            return $pdf->inline($name_pdf);
         }
+
+        // --- 9️⃣ Otherwise return inline PDF for browser ---
+        return $pdf->inline($name_pdf);
     }
+
 
     public function reporte_tarjeta(Request $request)
     {
-
-        if (!isset($request->fecha_inicio) || !isset($request->fecha_fin)) {
+        // --- 1️⃣ Validate required dates ---
+        if (!$request->filled('fecha_inicio') || !$request->filled('fecha_fin')) {
             return $this->errorResponse('Error, debe ingresar la fecha de inicio y fin del reporte.', 409);
         }
 
-        try {
-            $email = $request->email_send === 'true' ? true : false;
-            $email_to = $request->email_address;
-        } catch (\Throwable $th) {
-            $email = false;
-            $email_to = 'hector@gmail.com';
-        }
-        $requestService = new \Illuminate\Http\Request();
-        $requestService->replace(
-            [
-                'fecha_inicio' => $request->fecha_inicio,
-                'fecha_fin' => $request->fecha_fin,
-                'usuario_id' => $request->usuario_id,
-                'nombre' => $request->nombre,
-                'cementerio_funeraria_filtro' => $request->cementerio_funeraria_filtro
-            ]
-        );
+        // --- 2️⃣ Determine if email should be sent ---
+        $email = $request->boolean('email_send'); // converts 'true'/'false' to boolean
+        $email_to = $request->email_address ?? 'hector@gmail.com';
 
+        // --- 3️⃣ Prepare request for service method ---
+        $requestService = new \Illuminate\Http\Request([
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'usuario_id' => $request->usuario_id ?? null,
+            'nombre' => $request->nombre ?? null,
+            'cementerio_funeraria_filtro' => $request->cementerio_funeraria_filtro ?? null,
+        ]);
+
+        // --- 4️⃣ Prepare report date string ---
         $fecha_del_reporte = strtoupper("DEL " . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
 
+        // --- 5️⃣ Get asistencia data ---
         $datos = $this->get_asistencia_reporte($requestService);
-        if (empty($datos["tarjetas"])) {
+        if (empty($datos['tarjetas'])) {
             return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 204);
-        } else {
-            if (!isset($request->usuario_id)) {
-                $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE TODOS LOS EMPLEADOS " . $fecha_del_reporte) . '.pdf';
-            } else {
-                $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE " . $datos["tarjetas"][0]["empleado"] . " " . $fecha_del_reporte) . '.pdf';
-            }
         }
+
+        // --- 6️⃣ Prepare PDF name ---
+        if (!$request->filled('usuario_id')) {
+            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE TODOS LOS EMPLEADOS " . $fecha_del_reporte) . '.pdf';
+        } else {
+            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE " . $datos['tarjetas'][0]['empleado'] . " " . $fecha_del_reporte) . '.pdf';
+        }
+
+        // --- 7️⃣ Get empresa data ---
         $get_funeraria = new EmpresaController();
         $empresa = $get_funeraria->get_empresa_data();
-        $pdf = PDF::loadView('checador/tarjeta/reporte', ['datos' => $datos, "fecha_del_reporte" => $fecha_del_reporte, 'empresa' => $empresa]);
-        //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $pdf->setOptions([
-            'title' => $name_pdf,
-            'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
-        ]);
-        //$pdf->setOption('orientation', 'landscape');
-        $pdf->setOption('margin-left', 13.4);
-        $pdf->setOption('margin-right', 9.4);
-        $pdf->setOption('margin-top', 9.4);
-        $pdf->setOption('margin-bottom', 9.4);
-        $pdf->setOption('page-size', 'Letter');
-        if ($email == true) {
-            /**email */
-            /**
-             * parameters lista de la funcion
-             * to destinatario
-             * to_name nombre del destinatario
-             * subject motivo del correo
-             * name_pdf nombre del pdf
-             * pdf archivo pdf a enviar
-             */
-            /**quiere decir que el usuario desa mandar el archivo por correo y no consultarlo */
-            $email_controller = new EmailController();
-            $enviar_email = $email_controller->pdf_email(
-                $email_to,
-                strtoupper("reporte de asistencia"),
-                'reporte de registros de checador ',
-                $name_pdf,
-                $pdf
-            );
-            return $enviar_email;
-            /**email fin */
-        } else {
-            return $pdf->inline($name_pdf);
+
+        // --- 8️⃣ Generate PDF safely ---
+        try {
+            $pdf = PDF::loadView('checador/tarjeta/reporte', [
+                'datos' => $datos,
+                'fecha_del_reporte' => $fecha_del_reporte,
+                'empresa' => $empresa
+            ]);
+
+            $pdf->setOptions([
+                'title' => $name_pdf,
+                'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
+                'page-size' => 'Letter',
+                'margin-left' => 13.4,
+                'margin-right' => 9.4,
+                'margin-top' => 9.4,
+                'margin-bottom' => 9.4,
+            ]);
+        } catch (\RuntimeException $e) {
+            \Log::error('PDF generation failed: ' . $e->getMessage());
+            return $this->errorResponse('Error generating PDF', 500);
         }
+
+        // --- 9️⃣ Send email if requested ---
+        if ($email) {
+            $pdfContent = $pdf->output(); // raw PDF content
+            $email_controller = new EmailController();
+            return $email_controller->pdf_email(
+                $email_to,
+                strtoupper("Reporte de asistencia"),
+                'Reporte de registros de checador',
+                $name_pdf,
+                $pdfContent
+            );
+        }
+
+        // --- 10️⃣ Return PDF inline for browser ---
+        return $pdf->inline($name_pdf);
     }
 }
