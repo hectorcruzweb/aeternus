@@ -48,7 +48,7 @@ export default {
                 // Handle token expiration or unauthorized errors
                 if (
                     response &&
-                    (response.status === 401 || response.status === 500) &&
+                    response.status === 401 &&
                     originalRequest.url != "/refresh_token"
                 ) {
                     if (!isAlreadyFetchingAccessToken) {
