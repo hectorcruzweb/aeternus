@@ -5,7 +5,8 @@ import store from "../../../../store/store.js";
 let isAlreadyFetchingAccessToken = false;
 let subscribers = [];
 let allowedErrorCodes = [422, 429, 500, 403, 404, 409, 414, 413];
-/**VALIDO SI EXISTEN ESTOS DATOS PARA DEJAR PASAR LA PETICION */
+
+/** VALIDATE TOKEN EXISTENCE BEFORE ANY REQUEST */
 if (
     localStorage.getItem("accessToken") &&
     localStorage.getItem("refreshToken")
@@ -13,16 +14,25 @@ if (
     axios.defaults.headers.common["Authorization"] =
         "Bearer " + localStorage.getItem("accessToken");
 } else {
-    //forzar el logout
+    // Force logout if tokens are missing
     store.dispatch("auth/logout_force");
 }
 
+/** HELPER: Notify all subscribers once token is refreshed */
 function onAccessTokenFetched(access_token) {
     subscribers = subscribers.filter((callback) => callback(access_token));
 }
 
+/** HELPER: Add subscribers waiting for new token */
 function addSubscriber(callback) {
     subscribers.push(callback);
+}
+
+/** HELPER: Force logout and reload */
+function forceLogout() {
+    console.warn("⛔ Session expired or invalid. Forcing logout...");
+    store.dispatch("auth/logout_force");
+    location.reload();
 }
 
 export default {
@@ -32,15 +42,10 @@ export default {
                 return response;
             },
             function (error) {
-                console.log("🚀 ~ error:", error);
-                return;
-                // const { config, response: { status } } = error
                 const { config, response } = error;
                 const originalRequest = config;
-                // if (status === 401) {
-                /**AQUI VALIDO QUE LA PETICION NO APLIQUE PARA EL REFREH TOKEN
-            PUESTO QUE SI ESTE TAMBIEN FALLA EL SISTEMA DEBERIA OBLIGAR AL 
-            USUARIO A LOGUEARSE NUEVAMENTE */
+
+                // Handle token expiration or unauthorized errors
                 if (
                     response &&
                     (response.status === 401 || response.status === 500) &&
@@ -51,7 +56,7 @@ export default {
                         store
                             .dispatch("auth/fetchAccessToken")
                             .then((access_token) => {
-                                /**ACTUALIZO EL LOCAL STORAGE CON LOS NUEVO VALORES DEL TOKEN Y EL REFRSH */
+                                /** Update tokens in localStorage */
                                 localStorage.setItem(
                                     "accessToken",
                                     access_token.data.access_token
@@ -60,18 +65,23 @@ export default {
                                     "refreshToken",
                                     access_token.data.refresh_token
                                 );
+
                                 axios.defaults.headers.common["Authorization"] =
                                     "Bearer " +
                                     localStorage.getItem("accessToken");
-                                /**FIN DE ACTUALIZAR EL LOCAL STORAGE */
+
                                 isAlreadyFetchingAccessToken = false;
                                 onAccessTokenFetched(access_token);
+                            })
+                            .catch(() => {
+                                // If refresh fails, force logout
+                                forceLogout();
                             });
                     }
 
+                    // Retry the original request once new token is fetched
                     const retryOriginalRequest = new Promise((resolve) => {
                         addSubscriber((access_token) => {
-                            /**PASANDO EL NUEVO TOKEN A LA ULTIMA PETICION QUE MANDO EL 401 */
                             originalRequest.headers.Authorization =
                                 "Bearer " + localStorage.getItem("accessToken");
                             resolve(axios(originalRequest));
@@ -79,34 +89,48 @@ export default {
                     });
                     return retryOriginalRequest;
                 } else {
-                    /**VALIDO QUE EL ERROR NO SEA EL 422 DE ERROR PROCESING "CAUSADO POR EL RESET PASSWORD" */
-                    /**ERROR 429 TOO MANY REQUEST */
-                    /**ERROR 500 INTERNAL SERVER */
+                    // Handle all other types of errors
                     if (response) {
-                        //si el error tiene status
-                        if (response.status) {
-                            if (
-                                allowedErrorCodes.indexOf(response.status) ===
-                                -1
-                            ) {
-                                store.dispatch("auth/logout_force");
-                                location.reload();
-                            }
+                        const status = response.status;
+                        const data = response.data || {};
+
+                        // 🔹 Explicit API error response (backend format)
+                        if (
+                            (data.error && data.error === "No autenticado") ||
+                            (data.code && data.code === 401)
+                        ) {
+                            forceLogout();
+                            return;
+                        }
+
+                        // 🔹 Logout for unexpected status codes
+                        if (
+                            status &&
+                            allowedErrorCodes.indexOf(status) === -1
+                        ) {
+                            forceLogout();
+                            return;
                         }
                     } else {
+                        // Network or unknown error
                         return Promise.reject(error);
                     }
                 }
+
                 return Promise.reject(error);
             }
         );
     },
+
+    /** LOGIN */
     login(email, pwd) {
         return axios.post("/login_usuario", {
             username: email,
             password: pwd,
         });
     },
+
+    /** REGISTER USER */
     registerUser(name, email, pwd) {
         return axios.post("/api/auth/register", {
             displayName: name,
@@ -114,8 +138,9 @@ export default {
             password: pwd,
         });
     },
+
+    /** REFRESH TOKEN */
     refreshToken() {
-        //PASAR EL REFRESH TOKEN PARA SOLICITAR UN NUEVO TOKEN
         return axios.post("/refresh_token", {
             refresh_token: localStorage.getItem("refreshToken"),
         });
