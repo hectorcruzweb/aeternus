@@ -32,6 +32,7 @@ export default {
                 return response;
             },
             function (error) {
+                console.log("🚀 ~ error:", error);
                 // const { config, response: { status } } = error
                 const { config, response } = error;
                 const originalRequest = config;
