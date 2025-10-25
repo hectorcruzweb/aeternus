@@ -2,16 +2,14 @@
     "private": true,
     "scripts": {
         "dev": "npm run development",
-        "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
+        "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --config=node_modules/laravel-mix/setup/webpack.config.js",
         "watch": "npm run development -- --watch",
-        "watch-all": "npm-run-all --parallel blade_css watch",
         "watch-poll": "npm run watch -- --watch-poll",
-        "blade_css": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css -w",
-        "blade_css_prod": "sass --no-source-map resources/sass/blade_css.scss public/css/blade_css.css --style compressed",
+        "blade_css": "node-sass --output-style expanded --source-map false resources/sass/blade_css.scss public/css/blade_css.css -w",
+        "blade_css_prod": "node-sass --output-style compressed --source-map false resources/sass/blade_css.scss public/css/blade_css.css",
         "hot": "cross-env NODE_ENV=development node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js",
         "prod": "npm-run-all --parallel production blade_css_prod",
-        "hot-all": "npm-run-all --parallel hot blade_css",
-        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
+        "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --no-progress --config=node_modules/laravel-mix/setup/webpack.config.js"
     },
     "devDependencies": {
         "@babel/plugin-proposal-class-properties": "^7.5.5",
@@ -43,11 +41,9 @@
         "node-sass": "^4.14.1",
         "npm-run-all": "^4.1.5",
         "perfect-scrollbar": "^1.4.0",
-        "postcss-rtl": "^1.5.0",
         "prismjs": "^1.16.0",
         "purgecss": "^1.3.0",
         "resolve-url-loader": "^2.3.1",
-        "sass": "^1.32.8",
         "sass-loader": "^7.1.0",
         "script-loader": "0.7.2",
         "tailwindcss": "^1.0.1",
@@ -87,11 +83,13 @@
         "vuepress": "^1.6.0",
         "vuesax": "^3.11.0",
         "vuex": "^3.1.1",
+        "webpack-cli": "3.3.12",
         "xlsx": "^0.15.0"
     },
     "dependencies": {
         "moment": "^2.29.1",
         "numeral": "^2.0.6",
+        "postcss-rtl": "^1.7.3",
         "quill-image-drop-module": "^1.0.3",
         "quill-image-resize-vue": "^1.0.4",
         "vue-filter-number-format": "^2.0.0",
