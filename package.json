@@ -41,7 +41,6 @@
         "vue": "^2.6.10",
         "vue-acl": "4.0.7",
         "vue-awesome-swiper": "^3.1.3",
-        "vue-backtotop": "^1.6.1",
         "vue-clipboard2": "^0.3.3",
         "vue-context": "^4.0.0",
         "vue-feather-icons": "^5.0.0",
