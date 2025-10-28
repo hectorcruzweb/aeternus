@@ -12,23 +12,11 @@
 <template>
   <div class="relative">
     <div class="vx-navbar-wrapper navbar-full p-0">
-      <vs-navbar
-        class="navbar-custom navbar-skelton"
-        :class="navbarClasses"
-        :style="navbarStyle"
-        :color="navbarColor"
-      >
-        <!--<bookmarks :navbarColor="navbarColor" v-if="windowWidth >= 992" />-->
+      <vs-navbar class="navbar-custom navbar-skelton" :class="navbarClasses" :style="navbarStyle" :color="navbarColor">
 
-        <router-link
-          tag="div"
-          to="/"
-          class="vx-logo cursor-pointer mr-auto flex items-center"
-        >
+        <router-link tag="div" to="/" class="vx-logo cursor-pointer mr-auto flex items-center">
           <!-- <logo class="w-10 mr-4 fill-current text-primary" />-->
-          <span class="font-medium color-primary-900 h5"
-            >SIIGA AETERNUS FUNERALES</span
-          >
+          <span class="font-medium color-primary-900 h5">SIIGA AETERNUS FUNERALES</span>
         </router-link>
 
         <!--<i18n />-->
@@ -46,7 +34,6 @@
 </template>
 
 <script>
-import Bookmarks from "./components/Bookmarks.vue";
 import I18n from "./components/I18n.vue";
 import SearchBar from "./components/SearchBar.vue";
 import CartDropDown from "./components/CartDropDown.vue";
@@ -65,7 +52,6 @@ export default {
   },
   components: {
     Logo,
-    Bookmarks,
     I18n,
     SearchBar,
     CartDropDown,
@@ -115,4 +101,3 @@ export default {
   },
 };
 </script>
-

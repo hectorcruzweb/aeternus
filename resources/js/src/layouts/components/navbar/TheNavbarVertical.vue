@@ -12,19 +12,9 @@
 <template>
   <div class="relative">
     <div class="vx-navbar-wrapper" :class="classObj">
-      <vs-navbar
-        class="vx-navbar navbar-custom navbar-skelton"
-        :color="navbarColorLocal"
-        :class="textColor"
-      >
+      <vs-navbar class="vx-navbar navbar-custom navbar-skelton" :color="navbarColorLocal" :class="textColor">
         <!-- SM - OPEN SIDEBAR BUTTON -->
-        <feather-icon
-          class="sm:inline-flex xl:hidden cursor-pointer p-2"
-          icon="MenuIcon"
-          @click.stop="showSidebar"
-        />
-        <!--<bookmarks :navbarColor="navbarColor" v-if="windowWidth >= 992" />-->
-
+        <feather-icon class="sm:inline-flex xl:hidden cursor-pointer p-2" icon="MenuIcon" @click.stop="showSidebar" />
         <vs-spacer />
 
         <!--<i18n />-->
@@ -43,7 +33,6 @@
 
 
 <script>
-import Bookmarks from "./components/Bookmarks.vue";
 import I18n from "./components/I18n.vue";
 import SearchBar from "./components/SearchBar.vue";
 import CartDropDown from "./components/CartDropDown.vue";
@@ -59,7 +48,6 @@ export default {
     },
   },
   components: {
-    Bookmarks,
     I18n,
     SearchBar,
     CartDropDown,
@@ -101,4 +89,3 @@ export default {
   },
 };
 </script>
-

@@ -54,11 +54,6 @@ import "./filters/filters";
 import VueClipboard from "vue-clipboard2";
 Vue.use(VueClipboard);
 
-// Tour
-import VueTour from "vue-tour";
-Vue.use(VueTour);
-require("vue-tour/dist/vue-tour.css");
-
 // VeeValidate
 import VeeValidate, { Validator } from "vee-validate";
 import es from "vee-validate/dist/locale/es";
@@ -69,20 +64,6 @@ VeeValidate.Validator.extend("required-select", {
     getMessage: (field) => `El dato(${field}) es obligatorio.`,
     validate: (value) => !!value && value.value !== "",
 });
-
-// Google Maps
-import * as VueGoogleMaps from "vue2-google-maps";
-Vue.use(VueGoogleMaps, {
-    load: {
-        // Add your API key here
-        key: "AIzaSyB4DDathvvwuwlwnUu7F4Sow3oU22y5T1Y",
-        libraries: "places", // This is required if you use the Auto complete plug-in
-    },
-});
-
-// Vuejs - Vue wrapper for hammerjs
-import { VueHammer } from "vue2-hammer";
-Vue.use(VueHammer);
 
 // PrismJS
 import "prismjs";
