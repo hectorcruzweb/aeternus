@@ -16,15 +16,9 @@
         <!-- SM - OPEN SIDEBAR BUTTON -->
         <feather-icon class="sm:inline-flex xl:hidden cursor-pointer p-2" icon="MenuIcon" @click.stop="showSidebar" />
         <vs-spacer />
-
         <!--<i18n />-->
-
-        <!--<search-bar class="pr-3" />-->
-
         <!--<cart-drop-down />-->
-
         <!--<notification-drop-down />-->
-
         <profile-drop-down />
       </vs-navbar>
     </div>
@@ -34,7 +28,6 @@
 
 <script>
 import I18n from "./components/I18n.vue";
-import SearchBar from "./components/SearchBar.vue";
 import CartDropDown from "./components/CartDropDown.vue";
 import NotificationDropDown from "./components/NotificationDropDown.vue";
 import ProfileDropDown from "./components/ProfileDropDown.vue";
@@ -49,7 +42,6 @@ export default {
   },
   components: {
     I18n,
-    SearchBar,
     CartDropDown,
     NotificationDropDown,
     ProfileDropDown,

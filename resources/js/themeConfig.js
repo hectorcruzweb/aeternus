@@ -21,7 +21,7 @@ let colors = {
     warning: "#FF9F43",
     dark: "#1E1E1E",
     secondary_theme: "#b6babd",
-    textos_theme: "#1f1714"
+    textos_theme: "#1f1714",
 };
 
 // CONFIGS
@@ -39,7 +39,7 @@ const themeConfig = {
     theme: "light", // options[String]  : "light"(default), "dark", "semi-dark"
 
     // Not required yet - WIP
-    userInfoLocalStorageKey: "userInfo"
+    userInfoLocalStorageKey: "userInfo",
 
     // NOTE: themeTour will be disabled in screens < 1200. Please refer docs for more info.
 };
@@ -48,9 +48,9 @@ import Vue from "vue";
 import Vuesax from "vuesax";
 Vue.use(Vuesax, {
     theme: {
-        colors
+        colors,
     },
-    rtl: themeConfig.rtl
+    rtl: themeConfig.rtl,
 });
 
 export default themeConfig;
