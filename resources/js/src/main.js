@@ -44,9 +44,6 @@ import router from "./router";
 // Vuex Store
 import store from "./store/store";
 
-// i18n
-import i18n from "./i18n/i18n";
-
 // Vuesax Admin Filters
 import "./filters/filters";
 
@@ -110,7 +107,6 @@ Vue.prototype.$modulo = modulo;
 new Vue({
     router,
     store,
-    i18n,
     acl,
     render: (h) => h(App),
 }).$mount("#app");
