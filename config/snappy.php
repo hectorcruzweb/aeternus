@@ -34,17 +34,14 @@ return [
     */
     'pdf' => [
         'enabled' => true,
-        //'binary'  => '"C:\projects\tools\wkhtmltopdf\bin\wkhtmltopdf.exe"',
-        'binary'  => env('WKHTMLTOPDF'),
+        'binary'  => env('WKHTMLTOPDF', 'C:\wkhtmltopdf\bin\wkhtmltopdf.exe'),
         'timeout' => false,
-        'options' => ['enable-local-file-access'=>true],
+        'options' => ['enable-local-file-access' => true],
         'env'     => [],
     ],
-
     'image' => [
         'enabled' => true,
-        //'binary'  => '"C:\projects\tools\wkhtmltoimage\bin\wkhtmltoimage.exe"',
-        'binary'  => env('WKHTMLTOIMG'),
+        'binary'  => env('WKHTMLTOIMG', 'C:\wkhtmltopdf\bin\wkhtmltoimage.exe'),
         'timeout' => false,
         'options' => [],
         'env'     => [],

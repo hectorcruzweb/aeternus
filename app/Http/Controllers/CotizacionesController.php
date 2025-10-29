@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use PDF;
 use App\User;
 use Carbon\Carbon;
@@ -203,7 +204,7 @@ class CotizacionesController extends ApiController
                         ]
                     );
                     foreach ($predefinido["secciones"] as $key_seccion => $seccion) {
-                        $seccion_id = 1;//1 por defecto seccion "incluye"
+                        $seccion_id = 1; //1 por defecto seccion "incluye"
                         if ($seccion['seccion'] == 'inhumacion') {
                             $seccion_id = 2;
                         } else if ($seccion['seccion'] == 'cremacion') {
