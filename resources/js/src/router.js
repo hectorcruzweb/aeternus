@@ -554,29 +554,6 @@ const router = new Router({
                         authRequired: true,
                     },
                 },
-
-                {
-                    path: "/pages/faq",
-                    name: "page-faq",
-                    component: () => import("@/views/pages/Faq.vue"),
-                    meta: {
-                        breadcrumb: [
-                            {
-                                title: "Home",
-                                url: "/",
-                            },
-                            {
-                                title: "Pages",
-                            },
-                            {
-                                title: "FAQ",
-                                active: true,
-                            },
-                        ],
-                        pageTitle: "FAQ",
-                        rule: "editor",
-                    },
-                },
             ],
         },
         // =============================================================================
@@ -618,14 +595,6 @@ const router = new Router({
                     path: "/pages/lock-screen",
                     name: "page-lock-screen",
                     component: () => import("@/views/pages/LockScreen.vue"),
-                    meta: {
-                        rule: "editor",
-                    },
-                },
-                {
-                    path: "/pages/comingsoon",
-                    name: "page-coming-soon",
-                    component: () => import("@/views/pages/ComingSoon.vue"),
                     meta: {
                         rule: "editor",
                     },
