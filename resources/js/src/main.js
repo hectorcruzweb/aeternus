@@ -44,9 +44,6 @@ import router from "./router";
 // Vuex Store
 import store from "./store/store";
 
-// Vuesax Admin Filters
-import "./filters/filters";
-
 // Clipboard
 import VueClipboard from "vue-clipboard2";
 Vue.use(VueClipboard);
@@ -61,13 +58,6 @@ VeeValidate.Validator.extend("required-select", {
     getMessage: (field) => `El dato(${field}) es obligatorio.`,
     validate: (value) => !!value && value.value !== "",
 });
-
-// PrismJS
-import "prismjs";
-// import 'prismjs/themes/prism-tomorrow.css'
-
-// Feather font icon
-require("@assets/css/iconfont.css");
 
 Vue.config.productionTip = false;
 Vue.config.devtools = false;
