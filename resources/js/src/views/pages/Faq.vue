@@ -14,8 +14,10 @@
         <div class="faq-jumbotron">
             <div class="faq-jumbotron-content lg:p-32 md:p-24 sm:p-16 p-8 rounded-lg mb-base">
                 <h1 class="mb-1 text-white">Have Any Questions?</h1>
-                <p class="text-white">Bonbon sesame snaps lemon drops marshmallow ice cream carrot cake croissant wafer.</p>
-                <vs-input placeholder="Search" v-model="faqSearchQuery" icon-pack="feather" icon="icon-search" size="large" class="w-full mt-6" icon-no-border />
+                <p class="text-white">Bonbon sesame snaps lemon drops marshmallow ice cream carrot cake croissant wafer.
+                </p>
+                <vs-input placeholder="Search" v-model="faqSearchQuery" icon-pack="feather" icon="icon-search"
+                    size="large" class="w-full mt-6" icon-no-border />
             </div>
         </div>
         <div class="vx-row">
@@ -23,8 +25,10 @@
                 <vx-card>
                     <h4>Table of Content</h4>
                     <ul class="faq-topics mt-4">
-                        <li v-for="category in categories" :key="category.id" class="p-2 font-medium flex items-center" @click="faqFilter = category.id">
-                            <div class="h-3 w-3 rounded-full mr-2" :class="'bg-' + category.color"></div><span class="cursor-pointer">{{ category.name }}</span>
+                        <li v-for="category in categories" :key="category.id" class="p-2 font-medium flex items-center"
+                            @click="faqFilter = category.id">
+                            <div class="h-3 w-3 rounded-full mr-2" :class="'bg-' + category.color"></div><span
+                                class="cursor-pointer">{{ category.name }}</span>
                         </li>
                     </ul>
 
@@ -48,8 +52,11 @@
             <!-- FAQ COL -->
             <div class="vx-col w-full md:w-3/5 lg:w-3/4 mt-12 md:mt-0">
                 <vs-collapse accordion type="margin" class="p-0">
-                    <vs-collapse-item v-for="(que,index) in filteredFaq" class="faq-bg rounded-lg" :class="{'mt-0': !index}" :key="que.id">
-                        <div slot="header"><h5>{{ que.question }}</h5></div>
+                    <vs-collapse-item v-for="(que, index) in filteredFaq" class="faq-bg rounded-lg"
+                        :class="{ 'mt-0': !index }" :key="que.id">
+                        <div slot="header">
+                            <h5>{{ que.question }}</h5>
+                        </div>
                         <p>{{ que.ans }}</p>
                     </vs-collapse-item>
                 </vs-collapse>
@@ -61,7 +68,7 @@
 
 <script>
 
-export default{
+export default {
     data() {
         return {
             faqSearchQuery: '',
