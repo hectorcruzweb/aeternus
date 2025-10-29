@@ -27,19 +27,15 @@ let colors = {
 // CONFIGS
 const themeConfig = {
     disableCustomizer: true, // options[Boolean] : true, false(default)
-    disableThemeTour: false, // options[Boolean] : true, false(default)
     footerType: "static", // options[String]  : static(default) / sticky / hidden
-    hideScrollToTop: true, // options[Boolean] : true, false(default)
     navbarColor: "#fff", // options[String]  : HEX color / rgb / rgba / Valid HTML Color name - (default: #fff)
     navbarType: "floating", // options[String]  : floating(default) / static / sticky / hidden
-    routerTransition: "none", // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)
+    routerTransition: "slide-fade", // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)
     rtl: false, // options[Boolean] : true, false(default)
     sidebarCollapsed: true, // options[Boolean] : true, false(default)
     theme: "light", // options[String]  : "light"(default), "dark", "semi-dark"
-
     // Not required yet - WIP
     userInfoLocalStorageKey: "userInfo",
-
     // NOTE: themeTour will be disabled in screens < 1200. Please refer docs for more info.
 };
 

@@ -102,7 +102,6 @@
 </template>
 
 <script>
-import HNavMenu from "@/layouts/components/horizontal-nav-menu/HorizontalNavMenu.vue";
 import TheCustomizer from "@/layouts/components/customizer/TheCustomizer.vue";
 import TheNavbarVertical from "@/layouts/components/navbar/TheNavbarVertical.vue";
 import TheFooter from "@/layouts/components/TheFooter.vue";
@@ -111,7 +110,6 @@ import VNavMenu from "@/layouts/components/vertical-nav-menu/VerticalNavMenu.vue
 
 export default {
     components: {
-        HNavMenu,
         TheCustomizer,
         TheFooter,
         TheNavbarVertical,

@@ -28,7 +28,7 @@ const router = new Router({
     scrollBehavior() {
         return {
             x: 0,
-            y: 0
+            y: 0,
         };
     },
     routes: [
@@ -46,8 +46,8 @@ const router = new Router({
                     path: "/",
                     redirect: "/home",
                     meta: {
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/home",
@@ -55,8 +55,8 @@ const router = new Router({
                     component: () => import("./views/HomeInfo.vue"),
                     meta: {
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 /**RUTAS PARA EL MODULO DE USUARIOS */
                 {
@@ -70,20 +70,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Roles de Usuario"
+                                title: "Roles de Usuario",
                             },
                             {
                                 title: "Lista de roles registrados",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Roles de Usuario",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/configuracion/usuarios",
@@ -96,20 +96,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Usuarios"
+                                title: "Usuarios",
                             },
                             {
                                 title: "Lista de usuarios registrados",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Usuarios",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 /**FIN DE RUTAS PARA EL MODULO DE USUARIOS */
                 /**RUTAS PARA EL MODULO DE EMPRESA */
@@ -125,17 +125,17 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
                                 title: "Configuración",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Empresa",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 /**FIN DE RUTAS PARA EL MODULO DE EMPRESAS */
 
@@ -152,17 +152,17 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
                                 title: "Control de Asistencia",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Checador",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 /*fin del modulo de checador */
 
@@ -177,20 +177,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control del cementerio"
+                                title: "Control del cementerio",
                             },
                             {
                                 title: "Ventas de Terrenos",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Cementerio",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/funeraria/ventas_planes",
@@ -201,20 +201,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Planes Funerarios"
+                                title: "Control de Planes Funerarios",
                             },
                             {
                                 title: "Ventas",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Funeraria",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/cobranza/pagos",
@@ -225,20 +225,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control del pagos"
+                                title: "Control del pagos",
                             },
                             {
                                 title: "Módulo de cobranza",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Cobranza",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/cobranza/facturacion",
@@ -249,20 +249,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Facturación"
+                                title: "Control de Facturación",
                             },
                             {
                                 title: "Módulo de Facturación",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Facturación Electrónica",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 // =============================================================================
                 // Application Routes
@@ -277,20 +277,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Catálogos"
+                                title: "Catálogos",
                             },
                             {
                                 title: "Control de clientes",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Clientes",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
 
                 {
@@ -304,20 +304,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Catálogos"
+                                title: "Catálogos",
                             },
                             {
                                 title: "Control de proveedores",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Proveedores",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/inventarios/funeraria/articulos",
@@ -330,20 +330,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Catálogos"
+                                title: "Catálogos",
                             },
                             {
                                 title: "Control de artículos y servicios",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Artículos / Servicios",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/inventarios/funeraria/ajustes",
@@ -356,20 +356,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Catálogos"
+                                title: "Catálogos",
                             },
                             {
                                 title: "Ajustes de inventario",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Ajustar Inventario",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/inventarios/funeraria/compras",
@@ -382,20 +382,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Compras a Proveedores"
+                                title: "Control de Compras a Proveedores",
                             },
                             {
                                 title: "Inventario",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Compras",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
 
                 {
@@ -409,20 +409,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Servicios Funerarios"
+                                title: "Control de Servicios Funerarios",
                             },
                             {
                                 title: "Servicios Funerarios",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Funeraria",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/funeraria/ventas_generales",
@@ -435,20 +435,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Ventas en Gral."
+                                title: "Control de Ventas en Gral.",
                             },
                             {
                                 title: "Ventas en Gral.",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Ventas en Gral",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/funeraria/cotizaciones",
@@ -461,20 +461,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Control de Cotizaciones."
+                                title: "Control de Cotizaciones.",
                             },
                             {
                                 title: "Cotizaciones.",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Cotizaciones",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/clientes/control-de-seguimientos",
@@ -487,20 +487,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Clientes"
+                                title: "Clientes",
                             },
                             {
                                 title: "Control de Seguimientos",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Control de Seguimientos",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
                 {
                     path: "/reportes",
@@ -511,20 +511,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Listado de reportes disponibles"
+                                title: "Listado de reportes disponibles",
                             },
                             {
                                 title: "Generar reportes",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Reportes",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
 
                 // =============================================================================
@@ -539,20 +539,20 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Usuario"
+                                title: "Usuario",
                             },
                             {
                                 title: "Cambiar mi Perfíl",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "Perfíl",
                         rule: "editor",
-                        authRequired: true
-                    }
+                        authRequired: true,
+                    },
                 },
 
                 {
@@ -563,21 +563,21 @@ const router = new Router({
                         breadcrumb: [
                             {
                                 title: "Home",
-                                url: "/"
+                                url: "/",
                             },
                             {
-                                title: "Pages"
+                                title: "Pages",
                             },
                             {
                                 title: "FAQ",
-                                active: true
-                            }
+                                active: true,
+                            },
                         ],
                         pageTitle: "FAQ",
-                        rule: "editor"
-                    }
-                }
-            ]
+                        rule: "editor",
+                    },
+                },
+            ],
         },
         // =============================================================================
         // FULL PAGE LAYOUTS
@@ -594,8 +594,8 @@ const router = new Router({
                     name: "page-login",
                     component: () => import("@/views/pages/login/Login.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
 
                 {
@@ -603,73 +603,73 @@ const router = new Router({
                     name: "page-forgot-password",
                     component: () => import("@/views/pages/ForgotPassword.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/reset-password/:token",
                     name: "page-reset-password",
                     component: () => import("@/views/pages/ResetPassword.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/lock-screen",
                     name: "page-lock-screen",
                     component: () => import("@/views/pages/LockScreen.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/comingsoon",
                     name: "page-coming-soon",
                     component: () => import("@/views/pages/ComingSoon.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/error-404",
                     name: "page-error-404",
                     component: () => import("@/views/pages/Error404.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/error-500",
                     name: "page-error-500",
                     component: () => import("@/views/pages/Error500.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/not-authorized",
                     name: "page-not-authorized",
                     component: () => import("@/views/pages/NotAuthorized.vue"),
                     meta: {
-                        rule: "editor"
-                    }
+                        rule: "editor",
+                    },
                 },
                 {
                     path: "/pages/maintenance",
                     name: "page-maintenance",
                     component: () => import("@/views/pages/Maintenance.vue"),
                     meta: {
-                        rule: "editor"
-                    }
-                }
-            ]
+                        rule: "editor",
+                    },
+                },
+            ],
         },
         // Redirect to 404 page, if no match found
         {
             path: "*",
-            redirect: "/pages/error-404"
-        }
-    ]
+            redirect: "/pages/error-404",
+        },
+    ],
 });
 
 router.afterEach(() => {
@@ -697,7 +697,7 @@ router.beforeEach((to, from, next) => {
     // If auth required, check login. If login fails redirect to login page
     //router.push({ path: '/pages/login', query: { to: to.path } }).catch(err=>{})
     /** verificar que este logueado */
-    if (to.matched.some(record => record.meta.authRequired)) {
+    if (to.matched.some((record) => record.meta.authRequired)) {
         if (localStorage.getItem("accessToken")) {
             if (to.path === "/home" || to.path === "/pages/profile") {
                 return next();
