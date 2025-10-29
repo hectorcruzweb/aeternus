@@ -691,7 +691,6 @@ class PagosController extends ApiController
                         );
                         $commit = true;
                     }
-
                 } else if ($datos_operacion['empresa_operaciones_id'] == 4) {
                     /**venta de planes a futuro */
                     $datos_venta = $funeraria_controller->get_ventas($request, $datos_operacion['ventas_planes_id'], '')[0];
@@ -1118,14 +1117,12 @@ class PagosController extends ApiController
                         if ($request->operacion_id != null) {
                             $q->where('id', '=', $request->operacion_id);
                         }
-
                     } else
                         if (isset($request->operaciones_id)) {
-                            if ($request->operaciones_id != null) {
-                                $q->whereIn('id', $request->operaciones_id);
-                            }
-
+                        if ($request->operaciones_id != null) {
+                            $q->whereIn('id', $request->operaciones_id);
                         }
+                    }
                 })
                 ->with(['registro:id,nombre', 'sat_moneda', 'cobrador:id,nombre', 'cancelador:id,nombre', 'subpagos.referencias_cubiertas', 'forma_pago'])
                 ->whereHas('forma_pago', function ($q) {
@@ -1278,7 +1275,6 @@ class PagosController extends ApiController
 
     public function recibo_de_pago(Request $request, $id_pago = '')
     {
-
         try {
 
             /**estos valores verifican si el usuario quiere mandar el pdf por correo */
