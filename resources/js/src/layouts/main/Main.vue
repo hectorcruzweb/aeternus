@@ -7,72 +7,90 @@
     Author URL: http://www.themeforest.net/user/pixinvent
 ========================================================================================== -->
 
-
 <template>
-    <div class="layout--main" :class="[
-        layoutTypeClass,
-        navbarClasses,
-        footerClasses,
-        { 'no-scroll': isAppPage },
-    ]">
-        <the-customizer v-if="!disableCustomizer" :footerType="footerType" :hideScrollToTop="hideScrollToTop"
-            :navbarType="navbarType" :navbarColor="navbarColor" :routerTransition="routerTransition"
-            @toggleHideScrollToTop="toggleHideScrollToTop" @updateFooter="updateFooter" @updateNavbar="updateNavbar"
-            @updateNavbarColor="updateNavbarColor" @updateRouterTransition="updateRouterTransition" />
+    <div
+        class="layout--main"
+        :class="[
+            layoutTypeClass,
+            navbarClasses,
+            footerClasses,
+            { 'no-scroll': isAppPage },
+        ]"
+    >
+        <the-customizer
+            v-if="!disableCustomizer"
+            :footerType="footerType"
+            :hideScrollToTop="hideScrollToTop"
+            :navbarType="navbarType"
+            :navbarColor="navbarColor"
+            :routerTransition="routerTransition"
+            @toggleHideScrollToTop="toggleHideScrollToTop"
+            @updateFooter="updateFooter"
+            @updateNavbar="updateNavbar"
+            @updateNavbarColor="updateNavbarColor"
+            @updateRouterTransition="updateRouterTransition"
+        />
 
         <v-nav-menu :navMenuItems="navMenuItems" parent=".layout--main" />
 
-        <div id="content-area" :class="[contentAreaClass, { 'show-overlay': bodyOverlay }]">
+        <div
+            id="content-area"
+            :class="[contentAreaClass, { 'show-overlay': bodyOverlay }]"
+        >
             <div id="content-overlay" />
-
             <!-- Navbar -->
-            <template v-if="mainLayoutType === 'horizontal' && windowWidth >= 1200">
-                <the-navbar-horizontal :navbarType="navbarType" :class="[
-                    { 'text-white': isNavbarDark && !isThemeDark },
-                    { 'text-base': !isNavbarDark && isThemeDark },
-                ]" />
-
-                <div style="height: 62px" v-if="navbarType === 'static'"></div>
-
-                <h-nav-menu :class="[
-                    { 'text-white': isNavbarDark && !isThemeDark },
-                    { 'text-base': !isNavbarDark && isThemeDark },
-                ]" :navMenuItems="navMenuItems" />
-            </template>
-
-            <template v-else>
-                <the-navbar-vertical :navbarColor="navbarColor" :class="[
-                    { 'text-white': isNavbarDark && !isThemeDark },
-                    { 'text-base': !isNavbarDark && isThemeDark },
-                ]" />
+            <template>
+                <the-navbar-vertical
+                    :navbarColor="navbarColor"
+                    :class="[
+                        { 'text-white': isNavbarDark && !isThemeDark },
+                        { 'text-base': !isNavbarDark && isThemeDark },
+                    ]"
+                />
             </template>
             <!-- /Navbar -->
-
             <div class="content-wrapper">
                 <div class="router-view">
                     <div class="router-content">
                         <transition :name="routerTransition">
-                            <div v-if="$route.meta.breadcrumb || $route.meta.pageTitle"
-                                class="router-header flex flex-wrap items-center mb-6 ">
-                                <div class="content-area__heading w-full sm:w-auto sm:pr-4" :class="{
-                                    ' border-0 md:border-r border-solid border-grey-light':
-                                        $route.meta.breadcrumb,
-                                }">
-                                    <h2 class="mb-1 text-center sm:text-right"><span class="sm:hidden">Módulo de
-                                        </span>{{
-                                            routeTitle }}
+                            <div
+                                v-if="
+                                    $route.meta.breadcrumb ||
+                                    $route.meta.pageTitle
+                                "
+                                class="router-header flex flex-wrap items-center mb-6"
+                            >
+                                <div
+                                    class="content-area__heading w-full sm:w-auto sm:pr-4"
+                                    :class="{
+                                        ' border-0 md:border-r border-solid border-grey-light':
+                                            $route.meta.breadcrumb,
+                                    }"
+                                >
+                                    <h2 class="mb-1 text-center sm:text-right">
+                                        <span class="sm:hidden">Módulo de </span
+                                        >{{ routeTitle }}
                                     </h2>
                                 </div>
                                 <!-- BREADCRUMB -->
-                                <vx-breadcrumb class="ml-4 sm:block hidden" v-if="$route.meta.breadcrumb"
-                                    :route="$route" :isRTL="$vs.rtl" />
+                                <vx-breadcrumb
+                                    class="ml-4 sm:block hidden"
+                                    v-if="$route.meta.breadcrumb"
+                                    :route="$route"
+                                    :isRTL="$vs.rtl"
+                                />
                             </div>
                         </transition>
 
                         <div class="content-area__content">
                             <transition :name="routerTransition" mode="out-in">
-                                <router-view @changeRouteTitle="changeRouteTitle" @setAppClasses="(classesStr) => $emit('setAppClasses', classesStr)
-                                " />
+                                <router-view
+                                    @changeRouteTitle="changeRouteTitle"
+                                    @setAppClasses="
+                                        (classesStr) =>
+                                            $emit('setAppClasses', classesStr)
+                                    "
+                                />
                             </transition>
                         </div>
                     </div>
@@ -83,12 +101,9 @@
     </div>
 </template>
 
-
 <script>
 import HNavMenu from "@/layouts/components/horizontal-nav-menu/HorizontalNavMenu.vue";
-import navMenuItems from "@/layouts/components/vertical-nav-menu/navMenuItems.js";
 import TheCustomizer from "@/layouts/components/customizer/TheCustomizer.vue";
-import TheNavbarHorizontal from "@/layouts/components/navbar/TheNavbarHorizontal.vue";
 import TheNavbarVertical from "@/layouts/components/navbar/TheNavbarVertical.vue";
 import TheFooter from "@/layouts/components/TheFooter.vue";
 import themeConfig from "@/../themeConfig.js";
@@ -99,7 +114,6 @@ export default {
         HNavMenu,
         TheCustomizer,
         TheFooter,
-        TheNavbarHorizontal,
         TheNavbarVertical,
         VNavMenu,
     },
@@ -113,7 +127,6 @@ export default {
             isNavbarDark: false,
             navbarColor: themeConfig.navbarColor || "#fff",
             navbarType: themeConfig.navbarType || "floating",
-            navMenuItems: navMenuItems,
             routerTransition: themeConfig.routerTransition || "none",
             routeTitle: this.$route.meta.pageTitle,
         };
@@ -123,7 +136,8 @@ export default {
             this.routeTitle = this.$route.meta.pageTitle;
         },
         isThemeDark(val) {
-            const color = this.navbarColor == "#fff" && val ? "#10163a" : "#fff";
+            const color =
+                this.navbarColor == "#fff" && val ? "#10163a" : "#fff";
             this.updateNavbarColor(color);
         },
         "$store.state.mainLayoutType"(val) {
@@ -206,7 +220,10 @@ export default {
                 (layoutType === "vertical" && this.windowWidth < 1200)
             ) {
                 this.$store.commit("TOGGLE_IS_VERTICAL_NAV_MENU_ACTIVE", false);
-                this.$store.dispatch("updateVerticalNavMenuWidth", "no-nav-menu");
+                this.$store.dispatch(
+                    "updateVerticalNavMenuWidth",
+                    "no-nav-menu"
+                );
             } else {
                 this.$store.commit("TOGGLE_IS_VERTICAL_NAV_MENU_ACTIVE", true);
             }
@@ -265,7 +282,9 @@ export default {
             this.navMenuItems = JSON.parse(localStorage.getItem("AuthMenu"));
         } else {
             this.$store.dispatch("auth/crear_menu").then((res) => {
-                this.navMenuItems = JSON.parse(localStorage.getItem("AuthMenu"));
+                this.navMenuItems = JSON.parse(
+                    localStorage.getItem("AuthMenu")
+                );
             });
         }
     },
