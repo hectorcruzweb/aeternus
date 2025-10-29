@@ -24,3 +24,4 @@ npm-debug.log
 yarn-error.log
 /vuexy-shell-scripts
 package-lock.json
+composer.lock
