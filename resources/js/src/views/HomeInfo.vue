@@ -42,6 +42,9 @@
       </div>
       <!-- Add more buttons as needed -->
     </div>
+    <div class="mt-5 flex flex-col flex-1 bg-white">
+
+    </div>
     <!--
     <div class="flex flex-wrap">
       <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2">
