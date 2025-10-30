@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="bg-golden-elegant hidden lg:flex">
-      <h3 class="text-primary h5">
+      <h3 class="text-copy h5">
         Accesos Directos
       </h3>
       <div class="accesos items-center justify-start lg:justify-between">
