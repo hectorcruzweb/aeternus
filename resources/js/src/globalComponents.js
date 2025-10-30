@@ -13,6 +13,8 @@ import VxCard from "./components/vx-card/VxCard.vue";
 import VxBreadcrumb from "./layouts/components/VxBreadcrumb.vue";
 import FeatherIcon from "./components/FeatherIcon.vue";
 
+import Clock from "./layouts/components/navbar/components/Clock.vue";
+Vue.component("clock", Clock);
 Vue.component(VxTooltip.name, VxTooltip);
 Vue.component(VxCard.name, VxCard);
 Vue.component(VxBreadcrumb.name, VxBreadcrumb);

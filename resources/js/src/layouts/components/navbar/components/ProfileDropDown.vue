@@ -2,8 +2,8 @@
   <div class="the-navbar__user-meta flex items-center" v-if="activeUserInfo">
     <!-- User info -->
     <div class="text-right leading-tight hidden sm:block">
-      <p class="size-base font-bold lowercase">{{ activeUserInfo.nombre }}</p>
-      <small class="size-smaller color-copy">Disponible</small>
+      <p class="size-small font-bold capitalize"> {{ nombreCorto }}</p>
+      <small class="size-smaller color-copy"><span class="dot-success"></span> Disponible</small>
     </div>
 
     <!-- Avatar and dropdown -->
@@ -43,6 +43,17 @@
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 
 export default {
+  computed: {
+    nombreCorto() {
+      if (!this.activeUserInfo || !this.activeUserInfo.nombre) {
+        return "";
+      }
+      return this.activeUserInfo.nombre
+        .split(" ")
+        .slice(0, 1)
+        .join(" ");
+    },
+  },
   data() {
     return {
       activeUserInfo: {},
