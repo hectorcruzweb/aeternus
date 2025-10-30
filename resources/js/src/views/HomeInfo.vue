@@ -42,10 +42,33 @@
       </div>
       <!-- Add more buttons as needed -->
     </div>
-    <div class="mt-5 flex flex-col flex-1 bg-white">
-
+    <div class="mt-5 flex flex-col flex-1">
+      <vs-tabs alignment="left" position="top" v-model="activeTab">
+        <vs-tab label="FUNERARIA" class=""></vs-tab>
+        <vs-tab label="REGISTRO PÚBLICO"></vs-tab>
+        <vs-tab label="CEMENTERIO"></vs-tab>
+        <vs-tab label="FIRMA ELECTRÓNICA"></vs-tab>
+        <!--<vs-tab label="FACTURACIÓN" icon="fingerprint"></vs-tab>-->
+      </vs-tabs>
+      <div class="flex-col flex-1 bg-white" v-show="activeTab == 0">
+        fun
+      </div>
+      <div class="" v-show="activeTab == 1">
+        <vue-slick-carousel class="flex-col flex-1" v-bind="settings">
+          <div>Slide 1</div>
+          <div>Slide 2</div>
+          <div>Slide 3</div>
+        </vue-slick-carousel>
+      </div>
+      <div class=" " v-show="activeTab == 2">
+        cem
+      </div>
+      <div class=" " v-show="activeTab == 3">
+        fac
+      </div>
     </div>
-    <!--
+  </div>
+  <!--
     <div class="flex flex-wrap">
       <div class="w-full sm:w-12/12 md:w-12/12 lg:w-12/12 xl:w-12/12 px-2">
         <div class="text-center mt-32">
@@ -69,13 +92,94 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      activeTab: 0,
+      settings: {
+        arrows: true,
+        dots: true,
+        autoplay: true,
+        infinite: true,
+        slidesToShow: 1,
+        adaptiveHeight: true,
+        autoplaySpeed: 5000,
+        pauseOnDotsHover: true,
+        pauseOnFocus: true,
+        pauseOnHover: true
+      },
+    };
+  },
+  methods: {
+
   },
   components: {},
   created() { }
 };
 </script>
 <style lang="scss" scoped>
+/* Make arrows bigger, gold, and round */
+/* Common arrow styles */
+.slick-arrow {
+  width: 40px;
+  height: 40px;
+  background-color: #b18b1e;
+  /* gold */
+  border-radius: 50%;
+  /* round */
+  color: white;
+  /* arrow color */
+  font-size: 20px;
+  line-height: 40px;
+  text-align: center;
+  z-index: 10;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.slick-arrow:hover {
+  opacity: 1;
+  background-color: #d1a429;
+  /* lighter gold on hover */
+}
+
+/* Position left/right */
+.slick-prev {
+  left: -50px;
+}
+
+.slick-next {
+  right: -50px;
+}
+
+/* Replace default arrow text with a simple icon */
+.slick-prev:before,
+.slick-next:before {
+  content: "";
+  /* hide default "Previous"/"Next" text */
+}
+
+/* Add your own icons inside button */
+.slick-prev::after {
+  content: "◀";
+  /* left arrow icon */
+  color: white;
+  font-size: 20px;
+}
+
+.slick-next::after {
+  content: "▶";
+  /* right arrow icon */
+  color: white;
+  font-size: 20px;
+}
+
+
+
 @import "../../../sass/vuexy/variables";
 
 /* Center the container on the page */

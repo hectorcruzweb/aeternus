@@ -67,6 +67,7 @@
         "vue-filter-number-format": "^2.0.0",
         "vue-moment": "^4.1.0",
         "vue-signature-pad": "^2.0.2",
+        "vue-slick-carousel": "^1.0.6",
         "vue2-editor": "^2.10.3"
     }
 }
