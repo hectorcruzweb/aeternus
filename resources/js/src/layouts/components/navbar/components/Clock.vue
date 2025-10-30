@@ -1,6 +1,9 @@
 <template>
-    <div class="clock-timer">
-        {{ formattedTime }}
+    <div>
+        <div class="clock-container">
+            <p class="material-icons">schedule</p>
+            <p class="clock-timer">{{ formattedTime }}</p>
+        </div>
     </div>
 </template>
 
@@ -41,9 +44,13 @@ export default {
 <style lang="scss" scoped>
 @import "../../../../../../sass/vuexy/variables";
 
-.clock-timer {
-    text-transform: uppercase;
-    font-weight: 400;
+.clock-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+    font-weight: 500;
     color: $primary;
     border: 1px solid #e8e8e8;
     padding: 7px 14px;
@@ -52,17 +59,15 @@ export default {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     width: fit-content;
     transition: all 0.3s ease;
-}
 
-.clock-timer:hover {
-    box-shadow: 0 4px 18px rgba(177, 139, 30, 0.25);
-    transform: translateY(-2px);
-}
+    .clock-container:hover {
+        box-shadow: 0 4px 18px rgba(177, 139, 30, 0.25);
+        transform: translateY(-2px);
+    }
 
-.hora {
-    font-size: 1.4rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: capitalize;
+    .clock-timer {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 }
 </style>
