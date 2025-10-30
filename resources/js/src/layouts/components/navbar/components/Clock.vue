@@ -55,7 +55,6 @@ export default {
     border: 1px solid #e8e8e8;
     padding: 7px 14px;
     text-align: center;
-    font-family: "Poppins", "Segoe UI", sans-serif;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     width: fit-content;
     transition: all 0.3s ease;
