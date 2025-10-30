@@ -12,8 +12,15 @@ import VxTooltip from "./layouts/components/vx-tooltip/VxTooltip.vue";
 import VxCard from "./components/vx-card/VxCard.vue";
 import VxBreadcrumb from "./layouts/components/VxBreadcrumb.vue";
 import FeatherIcon from "./components/FeatherIcon.vue";
-
 import Clock from "./layouts/components/navbar/components/Clock.vue";
+
+import VueSlickCarousel from "vue-slick-carousel";
+import "vue-slick-carousel/dist/vue-slick-carousel.css";
+// optional style for arrows & dots
+import "vue-slick-carousel/dist/vue-slick-carousel-theme.css";
+
+Vue.component("VueSlickCarousel", VueSlickCarousel);
+
 Vue.component("clock", Clock);
 Vue.component(VxTooltip.name, VxTooltip);
 Vue.component(VxCard.name, VxCard);
