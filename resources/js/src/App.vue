@@ -11,11 +11,13 @@
 <template>
     <div id="app" :class="vueAppClasses">
         <PopupDebug v-if="$isDev"></PopupDebug>
+        <BreakpointTag v-if="$isDev" />
         <router-view @setAppClasses="setAppClasses" />
     </div>
 </template>
 
 <script>
+import BreakpointTag from './components/BreakpointTag.vue';
 import PopupDebug from './views/PopupDebug.vue';
 import themeConfig from '@/../themeConfig.js'
 import jwt from "@/http/requests/auth/jwt/index.js"
@@ -23,6 +25,7 @@ import jwt from "@/http/requests/auth/jwt/index.js"
 export default {
     components: {
         PopupDebug,
+        BreakpointTag
     },
     data() {
         return {
