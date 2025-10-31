@@ -15,7 +15,7 @@
                 <!-- SM - OPEN SIDEBAR BUTTON -->
                 <feather-icon class="sm:inline-flex xl:hidden cursor-pointer p-2" icon="MenuIcon"
                     @click.stop="showSidebar" />
-                <clock class="hidden xl:block"></clock>
+
                 <vs-spacer />
                 <!--<notification-drop-down />-->
                 <profile-drop-down />

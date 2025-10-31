@@ -52,17 +52,9 @@ export default {
     justify-content: space-between;
     font-weight: 500;
     color: $primary;
-    border: 1px solid #e8e8e8;
-    padding: 7px 14px;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    width: fit-content;
     transition: all 0.3s ease;
-
-    .clock-container:hover {
-        box-shadow: 0 4px 18px rgba(177, 139, 30, 0.25);
-        transform: translateY(-2px);
-    }
 
     .clock-timer {
         text-transform: uppercase;

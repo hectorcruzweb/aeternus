@@ -9,17 +9,16 @@
 ========================================================================================== -->
 
 <template functional>
-    <footer
-        class="the-footer flex-wrap justify-between size-small"
-        :class="classes"
-    >
-        <span
-            >COPYRIGHT &copy; {{ new Date().getFullYear() }} Aeternus Funerales,
-            Todos los derechos reservados.</span
-        >
-        <span class="md:flex hidden items-center">
-            <span class="hidden">Hand-crafted & Made with</span>
-        </span>
+    <footer class="the-footer xl:py-2 flex-wrap justify-between size-small" :class="classes">
+        <div class="w-full flex flex-wrap justify-between items-center">
+            <div>
+                <span>COPYRIGHT &copy; {{ new Date().getFullYear() }} Aeternus Funerales,
+                    Todos los derechos reservados.</span>
+            </div>
+            <clock class="hidden xl:block"></clock>
+        </div>
+
+
     </footer>
 </template>
 <script>
