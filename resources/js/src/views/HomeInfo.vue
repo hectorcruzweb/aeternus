@@ -44,33 +44,24 @@
   -->
 
     <div class="dashboard-data ">
-      <div class="cards  order-1">
-        <div class="card  ">
-          <div v-for="i in 1" :key="i" class="box">
-            {{ i }}. <span v-for="x in 1" :key="x">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Molestias doloribus voluptate adipisci. Ex,
-              reiciendis incidunt porro, minus fugiat animi numquam sed eveniet illo reprehenderit nemo ea beatae fuga
-              nostrum aliquam.
-            </span>
+      <div class="cards order-1">
+        <div v-for="i in 4" :key="i" class="card  servicios-funerarios bg-primary text-white">
+          <div class="flex flex-wrap justify-between">
+            <h3 class="uppercase truncate">
+              Servicio Funerario
+            </h3>
+            <img src="@assets/images/dashboard/luto.svg" alt="Imagen de luto, servicio funerario..."
+              class="hidden sm:block btn-icon" />
           </div>
-        </div>
-        <div class="card  ">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quibusdam deleniti vitae illo. Facere labore nam,
-          dolores laudantium exercitationem magnam ea ratione eveniet voluptatibus! Saepe earum corporis, ipsum qui quo
-          voluptatum!
-        </div>
-        <div class="card  ">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quibusdam deleniti vitae illo. Facere labore nam,
-          dolores laudantium exercitationem magnam ea ratione eveniet voluptatibus! Saepe earum corporis, ipsum qui quo
-          voluptatum!
-        </div>
-        <div class="card  ">
-          <div v-for="i in 1" :key="i" class="box">
-            {{ i }}. <span v-for="x in 1" :key="x">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Molestias doloribus voluptate adipisci. Ex,
-              reiciendis incidunt porro, minus fugiat animi numquam sed eveniet illo reprehenderit nemo ea beatae fuga
-              nostrum aliquam.
-            </span>
+          <div class="descripcion flex flex-col flex-1 justify-between bg-info">
+            <h5 class="truncate">
+              SR. ALEJANDRO AUSBERTO RAMIREZ ARREDONDO
+            </h5>
+            <div class="w-full flex flex-col bg-success flex-wrap justify-end datos">
+              <button class="expediente bg-white text-primary flex-1 w-full border-0 cursor-pointer">
+                Ver Expediente
+              </button>
+            </div>
           </div>
         </div>
         <div class="card   hidden md:flex lg:hidden xl:flex">
@@ -138,6 +129,8 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+@import "../../../sass/vuexy/variables";
+
 .scroll-styles {
   overflow-y: auto;
   /* 👈 enables vertical scrolling */
@@ -145,7 +138,7 @@ export default {
   /* avoid horizontal scrollbars */
   scrollbar-width: thin;
   /* for Firefox */
-  scrollbar-color: #c9a63a #f1f1f1;
+  scrollbar-color: $primary #f1f1f1;
   /* gold thumb on light background */
 }
 
@@ -182,6 +175,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   max-height: calc(100vh - 190px);
   /* subtract header height */
   @extend .scroll-styles;
+  background-color: red;
 }
 
 .dashboard-data {
@@ -208,14 +202,33 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   max-height: 100%;
   /* 👈 prevents overflowing when scrolling */
   @extend .scroll-styles;
+  background-color: yellow;
 }
 
 .card {
-  display: flex;
-  flex-direction: column;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 30% 1fr;
+  justify-content: space-between;
   flex: 1 1 0%;
   min-height: 200px;
   @extend .scroll-styles, .effects;
+  background-color: green;
+  /*
+  .datos {}
+
+  
+    */
+
+  .expediente {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    max-height: 28px !important;
+  }
 }
 
 .tables {
@@ -226,6 +239,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   flex: 1 1 0%;
   max-height: 100%;
   @extend .scroll-styles;
+  background-color: blue;
 }
 
 .table-contenido {
@@ -234,6 +248,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   flex: 1 1 0%;
   min-height: 200px;
   @extend .scroll-styles, .effects;
+  background-color: purple;
 }
 
 /* Small (sm) — min-width: 576px */
@@ -282,7 +297,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   /* Huge screens */
 }
 
-@import "../../../sass/vuexy/variables";
+
 
 /* Center the container on the page */
 /* Golden container */
