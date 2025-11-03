@@ -49,16 +49,16 @@ mix.copy(
 mix.copyDirectory("resources/assets/images", "public/images");
 
 // BrowserSync (optional, uncomment to use)
-mix.browserSync({
-    proxy: "http://app.aeternus:80", // Change to your local dev URL
-    files: [
-        "public/css/**/*.css",
-        "public/js/**/*.js",
-        "resources/views/**/*.php",
-        "resources/js/**/*.vue",
-    ],
-    open: false,
-});
+//mix.browserSync({
+//  proxy: "http://app.aeternus:80", // Change to your local dev URL
+//files: [
+//  "public/css/**/*.css",
+//"public/js/**/*.js",
+// "resources/views/**/*.php",
+//"resources/js/**/*.vue",
+//],
+// open: false,
+//});
 
 // Production vs Development
 if (mix.inProduction()) {
