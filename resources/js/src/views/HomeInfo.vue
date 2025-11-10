@@ -42,53 +42,59 @@
       </div>
     </div>
   -->
-
-    <div class="dashboard-data ">
-      <div class="cards order-1">
-        <div v-for="i in 4" :key="i" class="card  servicios-funerarios bg-primary text-white">
-          <div class="flex flex-wrap justify-between">
-            <h3 class="uppercase truncate">
-              Servicio Funerario
-            </h3>
-            <img src="@assets/images/dashboard/luto.svg" alt="Imagen de luto, servicio funerario..."
-              class="hidden sm:block btn-icon" />
-          </div>
-          <div class="descripcion flex flex-col flex-1 justify-between bg-info">
-            <h5 class="truncate">
-              SR. ALEJANDRO AUSBERTO RAMIREZ ARREDONDO
-            </h5>
-            <div class="w-full flex flex-col bg-success flex-wrap justify-end datos">
-              <button class="expediente bg-white text-primary flex-1 w-full border-0 cursor-pointer">
-                Ver Expediente
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="card   hidden md:flex lg:hidden xl:flex">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quibusdam deleniti vitae illo. Facere labore nam,
-          dolores laudantium exercitationem magnam ea ratione eveniet voluptatibus! Saepe earum corporis, ipsum qui quo
-          voluptatum!
-        </div>
-        <div class="card   hidden md:flex lg:hidden xl:flex">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quibusdam deleniti vitae illo. Facere labore nam,
-          dolores laudantium exercitationem magnam ea ratione eveniet voluptatibus! Saepe earum corporis, ipsum qui quo
-          voluptatum!
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Enim, autem sed alias expedita eaque fugit dolorum
-          modi in quis quod. Ex qui, dolorum voluptate blanditiis reiciendis ab explicabo facilis perferendis!
-        </div>
-
+    <div class="parte-1">
+      <div class="servicios-funerarios">
+        Servicios Funerarios
       </div>
-      <div class="tables order-2 hidden lg:grid">
-        <div v-for="i in 2" :key="i" class="table-contenido">
-          {{ i }}. <span v-for="x in 1" :key="x">
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Molestias doloribus voluptate adipisci. Ex,
-            reiciendis incidunt porro, minus fugiat animi numquam sed eveniet illo reprehenderit nemo ea beatae fuga
-            nostrum aliquam.
-          </span>
-        </div>
+      <div class="inventario">
+        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Dolores sequi dolore quae ipsam laborum aliquid unde quia
+        fuga, dolorum voluptatibus consectetur necessitatibus illum
+        nobis possimus nesciunt quis eaque aut. Non
       </div>
     </div>
-
+    <div class="hidden">
+      <div>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Dolores sequi dolore quae ipsam laborum aliquid unde quia
+        fuga, dolorum voluptatibus consectetur necessitatibus illum
+        nobis possimus nesciunt quis eaque aut. Non?
+      </div>
+      <div>
+        Eveniet est placeat nihil. Molestiae eius officia corrupti?
+        Quia quos est qui aliquam atque eveniet, sed consectetur
+        nihil iusto accusamus provident expedita voluptate fugit
+        recusandae labore eum quis placeat repudiandae!
+      </div>
+    </div>
+    <div class="hidden">
+      <div>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Dolores sequi dolore quae ipsam laborum aliquid unde quia
+        fuga, dolorum voluptatibus consectetur necessitatibus illum
+        nobis possimus nesciunt quis eaque aut. Non?
+      </div>
+      <div>
+        Eveniet est placeat nihil. Molestiae eius officia corrupti?
+        Quia quos est qui aliquam atque eveniet, sed consectetur
+        nihil iusto accusamus provident expedita voluptate fugit
+        recusandae labore eum quis placeat repudiandae!
+      </div>
+    </div>
+    <div class="hidden">
+      <div>
+        Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Dolores sequi dolore quae ipsam laborum aliquid unde quia
+        fuga, dolorum voluptatibus consectetur necessitatibus illum
+        nobis possimus nesciunt quis eaque aut. Non?
+      </div>
+      <div>
+        Eveniet est placeat nihil. Molestiae eius officia corrupti?
+        Quia quos est qui aliquam atque eveniet, sed consectetur
+        nihil iusto accusamus provident expedita voluptate fugit
+        recusandae labore eum quis placeat repudiandae!
+      </div>
+    </div>
     <!--
       <vue-slick-carousel class="flex flex-col flex-1 bg-danger" v-bind="settings">
         <div class="bg-success flex-1">
@@ -110,12 +116,12 @@ export default {
       settings: {
         draggable: true, // Make the slider draggable
         swipe: true, // Enable swipe on touch devices
-        arrows: true,
+        arrows: false,
         dots: false,
         autoplay: true,
         infinite: true,
         slidesToShow: 1,
-        adaptiveHeight: true,
+        adaptiveHeight: false,
         autoplaySpeed: 5000,
         //pauseOnDotsHover: true,
         //pauseOnFocus: true,
@@ -157,8 +163,6 @@ export default {
   }
 }
 
-
-
 /**
 flex: 1 1 0% is shorthand for: 
 flex-grow: 1; → the item grows to fill available space.
@@ -166,138 +170,69 @@ flex-shrink: 1; → it shrinks when necessary.
 flex-basis: 0%; → its initial size before growing/shrinking is 0.
 */
 /* Extra small (xs): default — no media query needed */
-
 .dashboard {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0%;
-  gap: 0.5rem;
-  max-height: calc(100vh - 190px);
-  /* subtract header height */
-  @extend .scroll-styles;
-  background-color: red;
-}
-
-.dashboard-data {
   display: grid;
-  gap: 0.5rem;
-  flex: 1 1 0%;
-  min-height: 0;
-  max-height: 100% !important;
+  grid-template-rows: repeat(auto, auto);
+  gap: 1rem;
   @extend .scroll-styles;
-}
+  //background-color: red;
 
-.cards {
-  display: grid;
-  //align-items: center;
-  //justify-content: center;
-  /* centers vertically */
-  //align-items: center;
-  /* centers horizontally */
-  gap: 0.5rem;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-  /**height */
-  flex: 1 1 0%;
-  max-height: 100%;
-  /* 👈 prevents overflowing when scrolling */
-  @extend .scroll-styles;
-  background-color: yellow;
-}
+  >div {
+    //background-color: yellow;
+    display: grid;
+    gap: 1rem;
 
-.card {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 30% 1fr;
-  justify-content: space-between;
-  flex: 1 1 0%;
-  min-height: 200px;
-  @extend .scroll-styles, .effects;
-  background-color: green;
-  /*
-  .datos {}
+    >div {
+      @extend .scroll-styles, .effects;
+      padding: 7px;
+    }
+  }
 
-  
-    */
+  .parte-1 {
+    grid-template-rows: 1fr 1fr;
 
-  .expediente {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    min-height: 28px;
-    max-height: 28px !important;
+    div {
+      min-height: 218.625px;
+      max-height: 218.625px;
+      // background-color: green;
+
+      ///color: white;
+      display: flex;
+      justify-content: center;
+      /* centers horizontally */
+      align-items: center;
+      /* centers vertically */
+    }
   }
 }
 
-.tables {
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: 1fr 1fr;
-  flex: 1 1 0%;
-  max-height: 100%;
-  @extend .scroll-styles;
-  background-color: blue;
-}
 
-.table-contenido {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 0%;
-  min-height: 200px;
-  @extend .scroll-styles, .effects;
-  background-color: purple;
-}
 
 /* Small (sm) — min-width: 576px */
 @media (min-width: 576px) {}
 
 /* Medium (md) — min-width: 768px */
-@media (min-width: 768px) {
-  .dashboard-data {
-    grid-template-rows: 1fr;
-  }
-
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 1fr;
-  }
-}
+@media (min-width: 768px) {}
 
 /* Large (lg) — min-width: 992px */
 @media (min-width: 992px) {
-  .dashboard-data {
-    grid-template-rows: 60% 1fr;
+  .dashboard {
+    grid-template-rows: 218.625px repeat(2, auto);
+
+    .parte-1 {
+      grid-template-rows: auto;
+      grid-template-columns: 1fr 1fr;
+    }
   }
 }
 
 /* Extra large (xl) — min-width: 1200px */
-@media (min-width: 1200px) {
-  .dashboard-data {
-    grid-template-columns: 60% 1fr;
-    grid-template-rows: 1fr;
-  }
-
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 1fr;
-    min-height: 0;
-    max-height: 100%;
-  }
-
-  .tables {
-    grid-template-columns: 1fr;
-  }
-}
+@media (min-width: 1200px) {}
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
 @media (min-width: 1536px) {
   /* Huge screens */
 }
-
-
 
 /* Center the container on the page */
 /* Golden container */
