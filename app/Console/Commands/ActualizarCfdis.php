@@ -42,6 +42,7 @@ class ActualizarCfdis extends Command
     {
         $limit    = $this->option('limit');
         $facturas = Cfdis::select('id', 'uuid')->where('status', '<>', 0)
+        //->where('id', 21)
         //->limit($limit)
             ->get();
         if ($facturas->isEmpty()) {
@@ -52,10 +53,14 @@ class ActualizarCfdis extends Command
             try {
                 $this->info("Verificando factura ID#{$factura->id} / UUID: {$factura->uuid}");
                 $cfdi = $FacturacionController->get_cfdi_status_sat($factura->id, Request::create('/'));
-                if ($cfdi['estado'] === 'Vigente') {
-                    $this->info("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                if (is_array($cfdi) && isset($cfdi['estado'])) {
+                    if ($cfdi['estado'] === 'Vigente') {
+                        $this->info("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                    } else {
+                        $this->warn("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                    }
                 } else {
-                    $this->warn("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                    $this->warn(json_encode($cfdi));
                 }
                             // Evitar saturar el servicio
                 sleep(1.5); // 1.5 segundos de pausa entre peticiones

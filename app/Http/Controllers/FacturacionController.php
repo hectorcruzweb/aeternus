@@ -2123,9 +2123,10 @@ class FacturacionController extends ApiController
         //dd($cfdi);
         $comprobante->rfcEmisor   = $cfdi->rfc_emisor;
         $comprobante->rfcReceptor = $cfdi->rfc_receptor;
-        $comprobante->uuid        = $cfdi['uuid'];
-        $comprobante->totalCFDI   = $cfdi['sat_tipo_comprobante_id'] != 5 ? (string) sprintf('%g', floatval($cfdi->total)) : "0";
-        $comprobante->selloCFDI   = $xml['Complemento']['TimbreFiscalDigital']['SelloCFD'];
+        $comprobante->uuid        = trim($cfdi['uuid']);
+        $amount                   = number_format((float) $cfdi->total, 2, '.', '');
+        $comprobante->totalCFDI   = $cfdi['sat_tipo_comprobante_id'] != 5 ? $amount : "0";
+        $comprobante->selloCFDI   = trim($xml['Complemento']['TimbreFiscalDigital']['SelloCFD']);
         $url_cancelar             = '';
         if (ENV('APP_ENV') == 'local') {
             $usuario      = ENV('USER_PAC_DEV');
