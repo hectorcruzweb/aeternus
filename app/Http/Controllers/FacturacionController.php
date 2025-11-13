@@ -2185,7 +2185,7 @@ class FacturacionController extends ApiController
                 DB::table('cfdis')->where('id', '=', $folio)->update(
                     [
                         'status' => 0,
-                        'cancelo_id' => (int) $request->user()->id,
+                        'cancelo_id' => (int) ($request->user()->id ?? 1),
                         'fecha_cancelacion' => $fecha_cancelacion,
                     ]
                 );
