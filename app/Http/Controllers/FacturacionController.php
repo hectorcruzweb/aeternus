@@ -353,7 +353,6 @@ class FacturacionController extends ApiController
             unset($operacion['movimiento_operacion_inventario']);
             unset($operacion['venta_plan']);
             unset($operacion['venta_terreno']);
-
         }
 
         return $resultado_query;
@@ -463,21 +462,21 @@ class FacturacionController extends ApiController
                     $conceptos['cfdi:Concepto'],
                     [
                         '_attributes' =>
-                            [
-                                'Cantidad' => $concepto['cantidad'],
-                                'ClaveProdServ' => trim($clave_sat),
-                                'ClaveUnidad' => $clave_unidad,
-                                'Descripcion' => trim(($concepto['descripcion'])),
-                                'Importe' => number_format((float) round($concepto['cantidad'] * $ValorUnitarioPrecioNeto, 2), 2, '.', ''),
-                                'ValorUnitario' => number_format((float) round($ValorUnitarioPrecioNeto, 2), 2, '.', ''),
-                                'Descuento' => number_format((float) round($descuento_concepto * $concepto['cantidad'], 2), 2, '.', ''),
-                                'ObjetoImp' => '02',
-                                /*
+                        [
+                            'Cantidad' => $concepto['cantidad'],
+                            'ClaveProdServ' => trim($clave_sat),
+                            'ClaveUnidad' => $clave_unidad,
+                            'Descripcion' => trim(($concepto['descripcion'])),
+                            'Importe' => number_format((float) round($concepto['cantidad'] * $ValorUnitarioPrecioNeto, 2), 2, '.', ''),
+                            'ValorUnitario' => number_format((float) round($ValorUnitarioPrecioNeto, 2), 2, '.', ''),
+                            'Descuento' => number_format((float) round($descuento_concepto * $concepto['cantidad'], 2), 2, '.', ''),
+                            'ObjetoImp' => '02',
+                            /*
                                     01	No objeto de impuesto.	19/10/2021
                                     02	Sí objeto de impuesto.	19/10/2021
                                     03	Sí objeto del impuesto y no obligado al desglose.
                                 */
-                            ],
+                        ],
                         'cfdi:Impuestos' => [
                             'cfdi:Traslados' => [
                                 'cfdi:Traslado' => [
@@ -510,15 +509,15 @@ class FacturacionController extends ApiController
                 $conceptos['cfdi:Concepto'],
                 [
                     '_attributes' =>
-                        [
-                            'Cantidad' => 1,
-                            'ClaveProdServ' => '84111506',
-                            'ClaveUnidad' => 'ACT',
-                            'Descripcion' => 'Pago',
-                            'Importe' => 0.0,
-                            'ObjetoImp' => '01',
-                            'ValorUnitario' => 0.0,
-                        ],
+                    [
+                        'Cantidad' => 1,
+                        'ClaveProdServ' => '84111506',
+                        'ClaveUnidad' => 'ACT',
+                        'Descripcion' => 'Pago',
+                        'Importe' => 0.0,
+                        'ObjetoImp' => '01',
+                        'ValorUnitario' => 0.0,
+                    ],
                 ]
             );
             /**agregago los pagos relacionados */
@@ -1368,7 +1367,7 @@ class FacturacionController extends ApiController
                 }
             } catch (SoapFault $e) {
                 $this->regresar_bd_folio();
-                print ("Auth Error:::: $e");
+                print("Auth Error:::: $e");
             }
             /**SE MANDA REGISTRAR LA TRANSACCIOEN LA BASE DE DATOS */
         } catch (\Throwable $th) {
