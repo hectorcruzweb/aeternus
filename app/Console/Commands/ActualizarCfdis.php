@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Console\Commands;
 
 use App\Cfdis;
-use Illuminate\Http\Request;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\FacturacionController;
+use Illuminate\Console\Command;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ActualizarCfdis extends Command
 {
@@ -41,9 +40,9 @@ class ActualizarCfdis extends Command
      */
     public function handle()
     {
-        $limit = $this->option('limit');
+        $limit    = $this->option('limit');
         $facturas = Cfdis::select('id', 'uuid')->where('status', '<>', 0)
-            //->limit($limit)
+        //->limit($limit)
             ->get();
         if ($facturas->isEmpty()) {
             return $this->info('No hay facturas pendientes por verificar.');
@@ -53,8 +52,12 @@ class ActualizarCfdis extends Command
             try {
                 $this->info("Verificando factura ID#{$factura->id} / UUID: {$factura->uuid}");
                 $cfdi = $FacturacionController->get_cfdi_status_sat($factura->id, Request::create('/'));
-                $this->info('CFDI: ' . json_encode($cfdi));
-                // Evitar saturar el servicio
+                if ($cfdi['estado'] === 'Vigente') {
+                    $this->info("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                } else {
+                    $this->warn("✅ Estado de {$factura->uuid}: " . ($cfdi['estado']));
+                }
+                            // Evitar saturar el servicio
                 sleep(1.5); // 1.5 segundos de pausa entre peticiones
             } catch (\Throwable $e) {
                 Log::error("Error verificando {$factura->uuid}: " . $e->getMessage());
