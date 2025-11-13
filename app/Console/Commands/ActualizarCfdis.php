@@ -61,7 +61,7 @@ class ActualizarCfdis extends Command
                 sleep(1.5); // 1.5 segundos de pausa entre peticiones
             } catch (\Throwable $e) {
                 Log::error("Error verificando {$factura->uuid}: " . $e->getMessage());
-                $this->error("❌ Excepción con factura {$factura->uuid}");
+                $this->error("❌ Excepción con factura {$factura->uuid}: " . $e->getMessage());
                 sleep(3); // pequeña pausa antes de continuar
             }
         }
