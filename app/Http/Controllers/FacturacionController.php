@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Cfdis;
@@ -521,9 +522,9 @@ class FacturacionController extends ApiController
             return 'No se encontró tipo de comprobante que se está utilizando.';
         }
 
-                                            //Determino el atributo DomicilioFiscalReceptor
-                                            //aqui trabajo
-                                            //pub en general local o extranjero
+        //Determino el atributo DomicilioFiscalReceptor
+        //aqui trabajo
+        //pub en general local o extranjero
         $DomicilioFiscalReceptor = '82140'; //pongo el rfc de la empresa
         $RegimenFiscalReceptor   = '616';
         if ($request->tipo_rfc['value'] == 1) {
@@ -1404,6 +1405,7 @@ class FacturacionController extends ApiController
         /**se trae la informacion del cfdi de la bd */
 
         if (File::exists($folio_xml)) {
+            libxml_use_internal_errors(true);
             $xml = simplexml_load_file($folio_xml);
         } else {
             return $this->errorResponse('El xml que indicó no existe en la base de datos.', 409);
@@ -1658,7 +1660,8 @@ class FacturacionController extends ApiController
             unset($comprobante_cfdi['Comprobante']['xmlns:pago20']);
             unset($comprobante_cfdi['Complemento']['Pago']);
         }
-
+        libxml_clear_errors();
+        unset($xml);
         return $comprobante_cfdi;
     }
 
@@ -1760,9 +1763,9 @@ class FacturacionController extends ApiController
                     }
                 }
             })
-        /**en caso de que sea filtrado por operacion */
-        //->with('cfdis_operaciones.operaciones.cliente')
-        //->with('cfdis_operaciones.operaciones.venta_terreno')
+            /**en caso de que sea filtrado por operacion */
+            //->with('cfdis_operaciones.operaciones.cliente')
+            //->with('cfdis_operaciones.operaciones.venta_terreno')
             ->where(function ($q) use ($numero_control) {
                 if (((float) (trim($numero_control))) > 0) {
                     /**filtro por numero de folio */
@@ -2128,7 +2131,7 @@ class FacturacionController extends ApiController
         $comprobante->totalCFDI   = $cfdi['sat_tipo_comprobante_id'] != 5 ? $amount : "0";
         $comprobante->selloCFDI   = trim($xml['Complemento']['TimbreFiscalDigital']['SelloCFD']);
         $url_cancelar             = '';
-        if (ENV('APP_ENV') == 'local') {
+        if (ENV('APP_ENV') === 'local') {
             $usuario      = ENV('USER_PAC_DEV');
             $password     = ENV('PASSWORD_PAC_DEV');
             $url_cancelar = ENV('WEB_SERVICE_CONSULTA_DEVELOP');

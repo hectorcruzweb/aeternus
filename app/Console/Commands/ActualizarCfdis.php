@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Console\Commands;
 
 use App\Cfdis;
@@ -14,7 +15,7 @@ class ActualizarCfdis extends Command
      *
      * @var string
      */
-    protected $signature = 'facturas:verificar {--limit=100}';
+    protected $signature = 'facturas:verificar {--limit=} {--id=} {--from=} {--to=}';
 
     /**
      * The console command description.
@@ -41,10 +42,21 @@ class ActualizarCfdis extends Command
     public function handle()
     {
         $limit    = $this->option('limit');
-        $facturas = Cfdis::select('id', 'uuid')->where('status', '<>', 0)
-        //->where('id', 21)
-        //->limit($limit)
-            ->get();
+        $id    = $this->option('id');
+        $from    = $this->option('from');
+        $to    = $this->option('to');
+        $facturas = Cfdis::select('id', 'uuid');
+        if (!empty($id)) {
+            $facturas = $facturas->where('id', $id);
+        } else {
+            if (!empty($to) && !empty($from)) {
+                $facturas = $facturas->where('id', '>=', $from)->where('id', '<=', $to);
+            }
+        }
+        if (!empty($limit)) {
+            $facturas = $facturas->limit($limit);
+        }
+        $facturas = $facturas->get();
         if ($facturas->isEmpty()) {
             return $this->info('No hay facturas pendientes por verificar.');
         }
@@ -62,7 +74,7 @@ class ActualizarCfdis extends Command
                 } else {
                     $this->warn(json_encode($cfdi));
                 }
-                            // Evitar saturar el servicio
+                // Evitar saturar el servicio
                 sleep(1.5); // 1.5 segundos de pausa entre peticiones
             } catch (\Throwable $e) {
                 Log::error("Error verificando {$factura->uuid}: " . $e->getMessage());
