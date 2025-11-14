@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Cfdis;
-use App\Http\Controllers\FacturacionController;
-use Illuminate\Console\Command;
 use Illuminate\Http\Request;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\FacturacionController;
 
 class ActualizarCfdis extends Command
 {
@@ -15,7 +17,7 @@ class ActualizarCfdis extends Command
      *
      * @var string
      */
-    protected $signature = 'facturas:verificar {--limit=} {--id=} {--from=} {--to=}';
+    protected $signature = 'facturas:verificar {--limit=} {--id=} {--from=} {--to=} {--clean=} ';
 
     /**
      * The console command description.
@@ -45,6 +47,7 @@ class ActualizarCfdis extends Command
         $id    = $this->option('id');
         $from    = $this->option('from');
         $to    = $this->option('to');
+        $clean    = $this->option('clean');
         $facturas = Cfdis::select('id', 'uuid');
         if (!empty($id)) {
             $facturas = $facturas->where('id', $id);
@@ -83,6 +86,14 @@ class ActualizarCfdis extends Command
                 $this->error("❌ Excepción con factura {$factura->uuid}: " . $e->getMessage());
                 sleep(1.5); // pequeña pausa antes de continuar
             }
+        }
+
+        if (!empty($clean) && $clean == '1') {
+            $storage_disk_xmls = env('STORAGE_DISK_XML');
+            $xmlDir = Storage::disk($storage_disk_xmls)->path('');
+            // Elimina TODOS los XML en un solo comando
+            File::delete(glob($xmlDir . '*.xml'));
+            $this->line("\e[34m ✔ Todos los XML eliminados de: $xmlDir \e[0m");
         }
         $this->info('Verificación completada.');
     }
