@@ -77,11 +77,11 @@ class ActualizarCfdis extends Command
                 $cfdi = json_encode($cfdi);
                 $this->line("\e[35m CFDI: '{$cfdi}' \e[0m");
                 // Evitar saturar el servicio
-                sleep(.5); // 1.5 segundos de pausa entre peticiones
+                //sleep(1.5); // 1.5 segundos de pausa entre peticiones
             } catch (\Throwable $e) {
                 Log::error("Error verificando {$factura->uuid}: " . $e->getMessage());
                 $this->error("❌ Excepción con factura {$factura->uuid}: " . $e->getMessage());
-                sleep(3); // pequeña pausa antes de continuar
+                sleep(1.5); // pequeña pausa antes de continuar
             }
         }
         $this->info('Verificación completada.');
