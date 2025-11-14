@@ -1405,8 +1405,7 @@ class FacturacionController extends ApiController
         /**se trae la informacion del cfdi de la bd */
 
         if (File::exists($folio_xml)) {
-            libxml_use_internal_errors(true);
-            $xml = simplexml_load_file($folio_xml);
+            $xml = simplexml_load_string(file_get_contents($folio_xml));
         } else {
             return $this->errorResponse('El xml que indicó no existe en la base de datos.', 409);
         }
@@ -1660,8 +1659,6 @@ class FacturacionController extends ApiController
             unset($comprobante_cfdi['Comprobante']['xmlns:pago20']);
             unset($comprobante_cfdi['Complemento']['Pago']);
         }
-        libxml_clear_errors();
-        unset($xml);
         return $comprobante_cfdi;
     }
 
