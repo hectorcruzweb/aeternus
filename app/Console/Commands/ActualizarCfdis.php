@@ -17,7 +17,7 @@ class ActualizarCfdis extends Command
      *
      * @var string
      */
-    protected $signature = 'facturas:verificar {--limit=} {--id=} {--from=} {--to=} {--clean=} ';
+    protected $signature = 'facturas:verificar {--limit=} {--id=} {--from=} {--to=}';
 
     /**
      * The console command description.
@@ -47,7 +47,6 @@ class ActualizarCfdis extends Command
         $id    = $this->option('id');
         $from    = $this->option('from');
         $to    = $this->option('to');
-        $clean    = $this->option('clean');
         $facturas = Cfdis::select('id', 'uuid');
         if (!empty($id)) {
             $facturas = $facturas->where('id', $id);
@@ -63,6 +62,13 @@ class ActualizarCfdis extends Command
         if ($facturas->isEmpty()) {
             return $this->info('No hay facturas pendientes por verificar.');
         }
+        //limpiamos el directorio para evitar problemas de permisos
+        $storage_disk_xmls = env('STORAGE_DISK_XML');
+        $xmlDir = Storage::disk($storage_disk_xmls)->path('');
+        // Elimina TODOS los XML en un solo comando
+        File::delete(glob($xmlDir . '*.xml'));
+        $this->line("\e[34m ✔ INICIO -> Todos los XML eliminados de: $xmlDir \e[0m");
+
         $FacturacionController = new FacturacionController();
         foreach ($facturas as $factura) {
             try {
@@ -88,13 +94,9 @@ class ActualizarCfdis extends Command
             }
         }
 
-        if (!empty($clean) && $clean == '1') {
-            $storage_disk_xmls = env('STORAGE_DISK_XML');
-            $xmlDir = Storage::disk($storage_disk_xmls)->path('');
-            // Elimina TODOS los XML en un solo comando
-            File::delete(glob($xmlDir . '*.xml'));
-            $this->line("\e[34m ✔ Todos los XML eliminados de: $xmlDir \e[0m");
-        }
+        File::delete(glob($xmlDir . '*.xml'));
+        $this->line("\e[34m ✔ FIN -> Todos los XML eliminados de: $xmlDir \e[0m");
+
         $this->info('Verificación completada.');
     }
 }
