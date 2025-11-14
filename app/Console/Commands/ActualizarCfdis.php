@@ -74,6 +74,8 @@ class ActualizarCfdis extends Command
                 } else {
                     $this->warn(json_encode($cfdi));
                 }
+                $cfdi = json_encode($cfdi);
+                $this->line("\e[35m CFDI: '{$cfdi}' \e[0m");
                 // Evitar saturar el servicio
                 sleep(1.5); // 1.5 segundos de pausa entre peticiones
             } catch (\Throwable $e) {
