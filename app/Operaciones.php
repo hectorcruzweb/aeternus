@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Cfdis;
 use App\Cuotas;
 use App\VentasGral;
 use Illuminate\Support\Facades\DB;
@@ -351,17 +352,9 @@ class Operaciones extends Model
     {
         return $this->belongsTo(VentasGral::class, 'ventas_generales_id');
     }
+
+    public function cfdis()
+    {
+        return $this->belongsToMany(Cfdis::class, 'cfdis_operaciones', 'operaciones_id', 'cfdis_id');
+    }
 }
-/*
-array_push($conceptos, [
-    'clave_sat' => ['value' => $concepto['sat_producto_servicio_id'], 'label' => $concepto['sat_producto_servicio_descripcion'] . ' (' . $concepto['sat_producto_servicio_clave'] . ')'],
-    'unidad_sat' => ['value' => $concepto['sat_unidad_id'], 'label' => $concepto['sat_unidad'] . ' (' . $concepto['sat_unidad_clave'] . ')'],
-    "cantidad" => $concepto['cantidad'],
-    "descripcion" => $concepto['descripcion'],
-    'descuento_b' => $concepto['descuento_b'] == 1 ? ['value' => 1, 'label' => 'SI'] : ['value' => 0, 'label' => 'NO'],
-    'modifica_b' => 0,
-    'concepto_operacion_id' => $operacion['operacion_id'],
-    'precio_neto' => $concepto['costo_neto_normal'],
-    'precio_descuento' => $concepto['costo_neto_descuento'],
-]);
-*/

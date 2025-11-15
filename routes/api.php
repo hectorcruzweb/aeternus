@@ -12,7 +12,7 @@
  */
 
 /**en pruebas */
-
+Route::get('reporte_especial', 'ReportesController@reporte_especial');
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
 /**rutas de modulo en proceso */

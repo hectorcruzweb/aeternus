@@ -7,12 +7,12 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaController;
+use App\Operaciones;
 
 class ReportesController extends ApiController
 {
     public function get_reportes(Request $request)
     {
-
         $email             = $request->email_send === 'true' ? true : false;
         $email_to          = $request->email_address;
         $datosRequest = [];
@@ -161,5 +161,23 @@ class ReportesController extends ApiController
         }
 
         return $this->errorResponse($datos_reporte, 409);
+    }
+
+
+    public function reporte_especial()
+    {
+
+        $operaciones = Operaciones::query()
+            ->select('id', 'empresa_operaciones_id')
+            ->with([
+                'cfdis' => function ($q) {
+                    $q->where('status', '<>', 0)
+                        ->select('id', 'uuid');
+                }
+            ])
+            ->where('status', '<>', 0)
+            ->limit(10)
+            ->get();
+        return $operaciones;
     }
 }
