@@ -1,7 +1,8 @@
 <?php
-
 namespace App;
 
+use App\SatMetodosPagoModel;
+use App\TipoComprobantes;
 use Illuminate\Database\Eloquent\Model;
 
 class Cfdis extends Model
@@ -71,11 +72,33 @@ class Cfdis extends Model
         /**solo de tipo egreso */
     }
 
-
     public function servicios_funerarios()
     {
         /**relacion de cfdis que egresó este comprobante*/
         return $this->hasMany('App\CfdisOperaciones', 'cfdis_id', 'id');
         /**solo de tipo egreso */
     }
+
+    public function operaciones()
+    {
+        return $this->belongsToMany(
+            Operaciones::class,
+            'cfdis_operaciones',
+            'cfdis_id',
+            'operaciones_id'
+        );
+    }
+
+    public function metodoPago()
+    {
+        return $this->belongsTo(SatMetodosPagoModel::class, 'sat_metodos_pago_id', 'id')
+            ->select('id', 'clave');
+    }
+
+    public function tipoComprobante()
+    {
+        return $this->belongsTo(TipoComprobantes::class, 'sat_tipo_comprobante_id', 'id')
+            ->select('id', 'clave', 'tipo');
+    }
+
 }

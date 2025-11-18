@@ -1,12 +1,11 @@
 <?php
-
 namespace App;
 
 use App\Cfdis;
 use App\Cuotas;
 use App\VentasGral;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Operaciones extends Model
 {
@@ -290,7 +289,6 @@ class Operaciones extends Model
         return $this->hasOne('App\MovimientosInventario', 'operaciones_id', 'id')->select('operaciones_id', 'id');
     }
 
-
     public function venta_general()
     {
         return $this->belongsTo('App\VentasGral', 'ventas_generales_id', 'id')
@@ -355,6 +353,13 @@ class Operaciones extends Model
 
     public function cfdis()
     {
-        return $this->belongsToMany(Cfdis::class, 'cfdis_operaciones', 'operaciones_id', 'cfdis_id');
+        return $this->belongsToMany(Cfdis::class, 'cfdis_operaciones', 'operaciones_id', 'cfdis_id')
+            ->where('cfdis.status', '>', 0) // optional filter
+            ->select('cfdis.id', 'cfdis.status',
+                'cfdis.uuid', 'cfdis.sat_tipo_relacion_id', 'cfdis.sat_tipo_comprobante_id',
+                'cfdis.sat_metodos_pago_id', 'sat_formas_pago_id', 'total'
+            ) // Solo los campos necesarios;
+            ->with('metodoPago')
+            ->with('tipoComprobante');
     }
 }
