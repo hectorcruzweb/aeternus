@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\ApiController;
@@ -172,11 +173,23 @@ class ReportesController extends ApiController
             WHEN 4 THEN 'VENTA DE PLANES FUNERARIOS A FUTURO'
             WHEN 5 THEN 'VENTAS EN GENERAL'
             ELSE NULL
-        END as tipo_operacion
+        END as tipo_operacion,
+        (
+            SELECT SUM(cfdis_importes.importe)
+            FROM cfdis_operaciones
+            JOIN cfdis ON cfdis_operaciones.cfdis_id = cfdis.id
+            JOIN cfdis_importes ON cfdis_importes.cfdi_id = cfdis.id
+            WHERE cfdis_operaciones.operaciones_id = operaciones.id
+              AND cfdis.sat_metodo_pago_id = 1
+              AND cfdis.status = 1
+        ) AS total_facturado
     ")
             ->where('status', '>', 0)
-            ->with('cfdis') // ya viene sin pivot
-            ->limit(1500)
+            ->with('cfdis')
+            ->whereHas('cfdis', function ($q) {
+                //$q->where('cfdis.status', 1);
+            })
+            ->limit(100)
             ->orderby('id', 'desc')
             ->get();
 
