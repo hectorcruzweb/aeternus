@@ -207,8 +207,8 @@ class ReportesController extends ApiController
         /* return [
             'total'       => count($operaciones),
             'operaciones' => $operaciones,
-        ];
-*/
+        ];*/
+
         return Excel::download(new ReporteEspecialExport($operaciones), 'reporte_especial.xlsx');
     }
 }

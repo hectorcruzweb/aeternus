@@ -7,7 +7,6 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ReporteEspecialExport implements
@@ -42,9 +41,9 @@ WithStyles
     public function columnFormats(): array
     {
         return [
-            'G' => NumberFormat::FORMAT_CURRENCY_USD,
-            'H' => NumberFormat::FORMAT_CURRENCY_USD,
-            'I' => NumberFormat::FORMAT_CURRENCY_USD,
+            'G' => '$#,#0.00',
+            'H' => '$#,#0.00',
+            'I' => '$#,#0.00',
         ];
     }
 
@@ -116,16 +115,21 @@ WithStyles
                         break;
                 }
 
-                $rows[] = [
+                $total = (float) $cfdi->total ?? '0.00';
+
+                $monto_relacionado_total = (float) $cfdi->monto_relacionado_total > 0 ? (float) $cfdi->monto_relacionado_total : '0.00';
+
+                $saldo_pendiente_facturacion = (float) $cfdi->saldo_pendiente_facturacion ?? '0.00';
+                $rows[]                      = [
                     $id,
                     $cfdi->cliente_nombre,
                     $cfdi->rfc_receptor,
                     $op->tipo_operacion,
                     $cfdi->id,
                     $cfdi->uuid,
-                    (float) $cfdi->total,
-                    (float) $cfdi->monto_relacionado_total,
-                    (float) $cfdi->saldo_pendiente_facturacion,
+                    $total,
+                    $monto_relacionado_total,
+                    $saldo_pendiente_facturacion,
                 ];
             }
         }
