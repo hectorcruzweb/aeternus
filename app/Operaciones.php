@@ -383,8 +383,8 @@ class Operaciones extends Model
         WHERE r.cfdis_id_relacionado = cfdis.id
             AND r.tipo_relacion_id IN (2,3)
             AND c2.status > 0
-    ), 0) AS saldo_pendiente_facturacion')
-                  //'cfdis.status'
+    ), 0) AS saldo_pendiente_facturacion'),
+                'cfdis.status'
             ) // Solo los campos necesarios;
             ->with('cfdis_relacionados_pagos_egresos');
     }

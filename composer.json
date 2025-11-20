@@ -18,6 +18,7 @@
         "laravel/passport": "^8.2",
         "laravel/tinker": "^1.0",
         "lcobucci/jwt": "3.3.3",
+        "maatwebsite/excel": "^3.1",
         "milon/barcode": "^6.0",
         "nesbot/carbon": "^2.32",
         "spatie/array-to-xml": "^2.14",

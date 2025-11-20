@@ -1,11 +1,13 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Exports\ReporteEspecialExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaController;
 use App\Operaciones;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 
 class ReportesController extends ApiController
@@ -158,7 +160,7 @@ class ReportesController extends ApiController
         return $this->errorResponse($datos_reporte, 409);
     }
 
-    public function reporte_especial()
+    public function adeudos_cfdis()
     {
         $operaciones = Operaciones::join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
             ->selectRaw("
@@ -184,6 +186,7 @@ class ReportesController extends ApiController
             ->where('operaciones.status', '>', 0) //Solo activas
             ->with('cfdis')
             ->whereHas('cfdis')
+            ->withCount('cfdis')
             ->whereHas('cfdis', function ($q) {
                 $q->whereRaw("
         (
@@ -198,11 +201,14 @@ class ReportesController extends ApiController
             })
         // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
         //->limit(500)
+            ->orderby('empresa_operaciones_id', 'asc')
             ->orderby('operaciones.id', 'desc')
             ->get();
-        return [
+        /* return [
             'total'       => count($operaciones),
             'operaciones' => $operaciones,
         ];
+*/
+        return Excel::download(new ReporteEspecialExport($operaciones), 'reporte_especial.xlsx');
     }
 }
