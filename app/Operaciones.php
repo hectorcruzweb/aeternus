@@ -354,12 +354,39 @@ class Operaciones extends Model
     public function cfdis()
     {
         return $this->belongsToMany(Cfdis::class, 'cfdis_operaciones', 'operaciones_id', 'cfdis_id')
-            ->where('cfdis.status', '>', 0) // optional filter
-            ->select('cfdis.id', 'cfdis.status',
-                'cfdis.uuid', 'cfdis.sat_tipo_relacion_id', 'cfdis.sat_tipo_comprobante_id',
-                'cfdis.sat_metodos_pago_id', 'sat_formas_pago_id', 'total'
+            ->where('cfdis.status', '>', 0)             // Solo Activos
+            ->where('cfdis.sat_tipo_comprobante_id', 1) //Tipo Ingreso
+                                                    // ->where('cfdis.id', 3083)                   //id especifico
+            ->where('cfdis.sat_metodos_pago_id', 2)     //metodo de pago especifico 1 PUE 2 PPD
+            ->join('sat_tipo_comprobante', 'sat_tipo_comprobante.id', '=', 'cfdis.sat_tipo_comprobante_id')
+            ->join('sat_metodos_pago', 'sat_metodos_pago.id', '=', 'cfdis.sat_metodos_pago_id')
+            ->join('sat_formas_pago', 'sat_formas_pago.id', '=', 'cfdis.sat_formas_pago_id')
+            ->join('clientes', 'clientes.id', '=', 'cfdis.clientes_id')
+            ->select(
+                'sat_tipo_comprobante.tipo as tipo_comprobante',
+                'sat_metodos_pago.clave as metodo_pago',
+                'sat_formas_pago.forma as forma_pago',
+                'cfdis.id',
+                'cfdis.uuid',
+                'cfdis.rfc_receptor',
+                'clientes.nombre as cliente_nombre',
+                //'cfdis.sat_tipo_relacion_id',
+                'cfdis.sat_tipo_comprobante_id',
+                'cfdis.sat_metodos_pago_id',
+                'sat_formas_pago_id',
+                'total',
+                // --- NEW FIELD ---
+                DB::raw('cfdis.total - COALESCE((
+        SELECT SUM(r.monto_relacion)
+        FROM cfdis_tipo_relacion r
+        JOIN cfdis c2 ON c2.id = r.cfdis_id
+        WHERE r.cfdis_id_relacionado = cfdis.id
+            AND r.tipo_relacion_id IN (2,3)
+            AND c2.status > 0
+    ), 0) AS saldo_pendiente_facturacion')
+                  //'cfdis.status'
             ) // Solo los campos necesarios;
-            ->with('metodoPago')
-            ->with('tipoComprobante');
+            ->with('cfdis_relacionados_pagos_egresos');
     }
+
 }

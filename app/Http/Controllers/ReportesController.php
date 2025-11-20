@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\ApiController;
@@ -161,38 +160,49 @@ class ReportesController extends ApiController
 
     public function reporte_especial()
     {
-        $operaciones = Operaciones::selectRaw("
-        id,
-        empresa_operaciones_id,
-        saldo,
-        status,
-        CASE empresa_operaciones_id
-            WHEN 1 THEN 'VENTA DE TERRENOS'
-            WHEN 2 THEN 'SERVICIO DE MANTENIMIENTO ANUAL EN CEMENTERIO'
-            WHEN 3 THEN 'SERVICIOS FUNERARIOS'
-            WHEN 4 THEN 'VENTA DE PLANES FUNERARIOS A FUTURO'
-            WHEN 5 THEN 'VENTAS EN GENERAL'
-            ELSE NULL
-        END as tipo_operacion,
-        (
-            SELECT SUM(cfdis_importes.importe)
-            FROM cfdis_operaciones
-            JOIN cfdis ON cfdis_operaciones.cfdis_id = cfdis.id
-            JOIN cfdis_importes ON cfdis_importes.cfdi_id = cfdis.id
-            WHERE cfdis_operaciones.operaciones_id = operaciones.id
-              AND cfdis.sat_metodo_pago_id = 1
-              AND cfdis.status = 1
-        ) AS total_facturado
+        $operaciones = Operaciones::join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
+            ->selectRaw("
+        operaciones.id,
+         clientes.nombre as cliente_nombre,
+    operaciones.empresa_operaciones_id,
+    ventas_terrenos_id,
+    servicios_funerarios_id,
+    ventas_planes_id,
+    ventas_generales_id,
+    operaciones.saldo,
+    operaciones.total,
+    operaciones.status,
+    CASE empresa_operaciones_id
+        WHEN 1 THEN 'VENTA DE TERRENOS'
+        WHEN 2 THEN 'SERVICIO DE MANTENIMIENTO ANUAL EN CEMENTERIO'
+        WHEN 3 THEN 'SERVICIOS FUNERARIOS'
+        WHEN 4 THEN 'VENTA DE PLANES FUNERARIOS A FUTURO'
+        WHEN 5 THEN 'VENTAS EN GENERAL'
+        ELSE NULL
+    END AS tipo_operacion
     ")
-            ->where('status', '>', 0)
+            ->where('operaciones.status', '>', 0) //Solo activas
             ->with('cfdis')
+            ->whereHas('cfdis')
             ->whereHas('cfdis', function ($q) {
-                //$q->where('cfdis.status', 1);
+                $q->whereRaw("
+        (
+            SELECT COALESCE(SUM(r.monto_relacion), 0)
+            FROM cfdis_tipo_relacion r
+            JOIN cfdis c2 ON c2.id = r.cfdis_id
+            WHERE r.cfdis_id_relacionado = cfdis.id
+            AND r.tipo_relacion_id IN (2,3)
+            AND c2.status > 0
+        ) < cfdis.total
+    ");
             })
-            ->limit(100)
-            ->orderby('id', 'desc')
+        // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
+        //->limit(500)
+            ->orderby('operaciones.id', 'desc')
             ->get();
-
-        return $this->showAll($operaciones);
+        return [
+            'total'       => count($operaciones),
+            'operaciones' => $operaciones,
+        ];
     }
 }
