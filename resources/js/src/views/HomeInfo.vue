@@ -42,36 +42,57 @@
       </div>
     </div>
   -->
-
-        <div class="dashboard-data">
-            <div class="cards order-1">
-                <div v-for="i in 4" :key="i" class="card">
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                    Officia sequi, nesciunt, quo in eius blanditiis vero
-                    reiciendis suscipit, sapiente dolor minima quos laboriosam
-                    labore! Quam deleniti nihil mollitia ea dolorem!
-                </div>
-                <div class="tabla-below">
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit.
-                    Itaque qui accusamus vel. Eius consectetur earum autem totam
-                    provident? Recusandae aliquam placeat amet, saepe eaque
-                    cupiditate deserunt repudiandae corporis vitae architecto.
-                </div>
-            </div>
-            <div class="tables order-2">
-                <div v-for="i in 2" :key="i" class="table-contenido">
-                    {{ i }}.
-                    <span v-for="x in 1" :key="x">
-                        Lorem ipsum dolor sit, amet consectetur adipisicing
-                        elit. Molestias doloribus voluptate adipisci. Ex,
-                        reiciendis incidunt porro, minus fugiat animi numquam
-                        sed eveniet illo reprehenderit nemo ea beatae fuga
-                        nostrum aliquam.
-                    </span>
-                </div>
+        <div class="parte-1">
+            <div class="servicios-funerarios">Servicios Funerarios</div>
+            <div class="inventario">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
+                sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
+                voluptatibus consectetur necessitatibus illum nobis possimus
+                nesciunt quis eaque aut. Non
             </div>
         </div>
-
+        <div class="hidden">
+            <div>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
+                sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
+                voluptatibus consectetur necessitatibus illum nobis possimus
+                nesciunt quis eaque aut. Non?
+            </div>
+            <div>
+                Eveniet est placeat nihil. Molestiae eius officia corrupti? Quia
+                quos est qui aliquam atque eveniet, sed consectetur nihil iusto
+                accusamus provident expedita voluptate fugit recusandae labore
+                eum quis placeat repudiandae!
+            </div>
+        </div>
+        <div class="hidden">
+            <div>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
+                sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
+                voluptatibus consectetur necessitatibus illum nobis possimus
+                nesciunt quis eaque aut. Non?
+            </div>
+            <div>
+                Eveniet est placeat nihil. Molestiae eius officia corrupti? Quia
+                quos est qui aliquam atque eveniet, sed consectetur nihil iusto
+                accusamus provident expedita voluptate fugit recusandae labore
+                eum quis placeat repudiandae!
+            </div>
+        </div>
+        <div class="hidden">
+            <div>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
+                sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
+                voluptatibus consectetur necessitatibus illum nobis possimus
+                nesciunt quis eaque aut. Non?
+            </div>
+            <div>
+                Eveniet est placeat nihil. Molestiae eius officia corrupti? Quia
+                quos est qui aliquam atque eveniet, sed consectetur nihil iusto
+                accusamus provident expedita voluptate fugit recusandae labore
+                eum quis placeat repudiandae!
+            </div>
+        </div>
         <!--
       <vue-slick-carousel class="flex flex-col flex-1 bg-danger" v-bind="settings">
         <div class="bg-success flex-1">
@@ -92,12 +113,12 @@ export default {
             settings: {
                 draggable: true, // Make the slider draggable
                 swipe: true, // Enable swipe on touch devices
-                arrows: true,
+                arrows: false,
                 dots: false,
                 autoplay: true,
                 infinite: true,
                 slidesToShow: 1,
-                adaptiveHeight: true,
+                adaptiveHeight: false,
                 autoplaySpeed: 5000,
                 //pauseOnDotsHover: true,
                 //pauseOnFocus: true,
@@ -139,10 +160,6 @@ export default {
     }
 }
 
-.border-bottom {
-    border-bottom: 2px solid $primary;
-}
-
 /**
 flex: 1 1 0% is shorthand for: 
 flex-grow: 1; → the item grows to fill available space.
@@ -150,73 +167,41 @@ flex-shrink: 1; → it shrinks when necessary.
 flex-basis: 0%; → its initial size before growing/shrinking is 0.
 */
 /* Extra small (xs): default — no media query needed */
-
 .dashboard {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0%;
-    //max-height: calc(100vh - 190px);
-    /* subtract header height */
-    //@extend .scroll-styles;
-
-    height: 100%; /* or h-full */
-    min-height: 0; /* critical for nested grids */
-}
-
-.dashboard-data {
     display: grid;
+    grid-template-rows: repeat(auto, auto);
     gap: 1rem;
-    flex: 1 1 0%;
-    //min-height: 0;
-    //max-height: 100% !important;
-    @extend .scroll-styles;
-    background-color: gray;
-    height: 100%; /* or h-full */
-    min-height: 0; /* critical for nested grids */
-}
-
-.cards {
-    display: grid;
-    //align-items: center;
-    //justify-content: center;
-    /* centers vertically */
-    //align-items: center;
-    /* centers horizontally */
-    gap: 1rem;
-    grid-template-columns: 1fr;
-    grid-template-rows: 200px 1fr; /* top fixed, bottom flexible */
-    flex: 1 1 0%;
-    /* 👈 prevents overflowing when scrolling */
+    align-items: start;
+    /* 🔥 items inside each cell stick to the TOP */
     @extend .scroll-styles;
     background-color: red;
-    min-height: 0;
-}
 
-.card {
-    @extend .scroll-styles, .effects, .border-bottom;
-}
+    > div {
+        background-color: yellow;
+        display: grid;
+        gap: 1rem;
 
-.tabla-below {
-    background-color: white;
-    flex: 1 1 0%;
-    @extend .scroll-styles, .effects, .border-bottom;
-}
+        > div {
+            @extend .scroll-styles, .effects;
+            padding: 7px;
+        }
+    }
 
-.tables {
-    display: grid;
-    gap: 0.5rem;
-    grid-template-columns: 1fr;
-    grid-auto-rows: 1fr 1fr;
-    flex: 1 1 0%;
-    //max-height: 100%;
-    @extend .scroll-styles;
-}
+    .parte-1 {
+        grid-template-rows: 1fr 1fr;
 
-.table-contenido {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 0%;
-    @extend .scroll-styles, .effects, .border-bottom;
+        div {
+            min-height: 218.625px;
+            max-height: 218.625px;
+            background-color: green;
+            color: white;
+            display: flex;
+            justify-content: center;
+            /* centers horizontally */
+            align-items: center;
+            /* centers vertically */
+        }
+    }
 }
 
 /* Small (sm) — min-width: 576px */
@@ -225,35 +210,22 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
 /* Medium (md) — min-width: 768px */
 @media (min-width: 768px) {
-    .dashboard-data {
-        grid-template-rows: 1fr 1fr;
-    }
-
-    .cards {
-        grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: 1fr;
-    }
-
-    .tabla-below {
-        grid-column: span 2;
-    }
 }
 
 /* Large (lg) — min-width: 992px */
 @media (min-width: 992px) {
+    .dashboard {
+        grid-template-rows: 218.625px repeat(2, auto);
+
+        .parte-1 {
+            grid-template-rows: auto;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
 }
 
 /* Extra large (xl) — min-width: 1200px */
 @media (min-width: 1200px) {
-    .dashboard-data {
-        grid-template-columns: 60% 1fr;
-        grid-template-rows: 1fr;
-    }
-
-    .cards {
-        grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: auto 1fr;
-    }
 }
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
