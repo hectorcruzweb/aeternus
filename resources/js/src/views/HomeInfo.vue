@@ -174,11 +174,13 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
   display: grid;
   grid-template-rows: repeat(auto, auto);
   gap: 1rem;
+  align-items: start;
+  /* 🔥 items inside each cell stick to the TOP */
   @extend .scroll-styles;
-  //background-color: red;
+  background-color: red;
 
   >div {
-    //background-color: yellow;
+    background-color: yellow;
     display: grid;
     gap: 1rem;
 
@@ -194,9 +196,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     div {
       min-height: 218.625px;
       max-height: 218.625px;
-      // background-color: green;
-
-      ///color: white;
+      background-color: green;
+      color: white;
       display: flex;
       justify-content: center;
       /* centers horizontally */
