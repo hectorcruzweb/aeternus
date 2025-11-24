@@ -35,37 +35,42 @@ export default {
     },
     get_operaciones(param) {
         return axios.get("/facturacion/get_operaciones/all/paginated", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 this.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
-      timbrar_cfdi(datos) {
+    timbrar_cfdi(datos) {
         let call = "/facturacion/timbrar_cfdi";
         return axios.post(call, datos);
     },
 
-        get_cfdis_timbrados(param) {
+    get_cfdis_timbrados(param) {
         return axios.get("/facturacion/get_cfdis_timbrados/all/paginated", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 this.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
-      get_cfdi_id(folio) {
-        return axios.get("/facturacion/get_cfdis_timbrados/"+folio);
+    get_cfdi_id(folio) {
+        return axios.get("/facturacion/get_cfdis_timbrados/" + folio);
     },
     get_cfdi_download(folio) {
-        return axios.get("/facturacion/get_cfdi_download/"+folio,{
-            responseType: "blob"
+        return axios.get("/facturacion/get_cfdi_download/" + folio, {
+            responseType: "blob",
         });
     },
-      cancelar_cfdi_folio(datos) {
+    cancelar_cfdi_folio(datos) {
         let call = "/facturacion/cancelar_cfdi_folio";
         return axios.post(call, datos);
+    },
+    downloadExcelCfdisAdeudos() {
+        return axios.get("/adeudos_cfdis", {
+            responseType: "blob",
+        });
     },
 };

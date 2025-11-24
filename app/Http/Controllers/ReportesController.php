@@ -1,57 +1,55 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use PDF;
-use Illuminate\Http\Request;
+use App\Exports\ReporteEspecialExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaController;
+use App\Operaciones;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use PDF;
 
 class ReportesController extends ApiController
 {
     public function get_reportes(Request $request)
     {
-
-        $email             = $request->email_send === 'true' ? true : false;
-        $email_to          = $request->email_address;
+        $email        = $request->email_send === 'true' ? true : false;
+        $email_to     = $request->email_address;
         $datosRequest = [];
-        $modulo = '';
-        $reporte = '';
-        $fecha = '';
+        $modulo       = '';
+        $reporte      = '';
+        $fecha        = '';
         $fecha_inicio = '';
-        $fecha_fin = '';
-
+        $fecha_fin    = '';
 
         if (isset($request->request_parent[0])) {
             $datosRequest = json_decode($request->request_parent[0], true);
         }
         if (isset($datosRequest['modulo']['value'])) {
-            $modulo = $datosRequest['modulo']['value'];
-            $reporte = $datosRequest['reporte']['value'];
-            $fecha = $datosRequest['fecha'];
+            $modulo       = $datosRequest['modulo']['value'];
+            $reporte      = $datosRequest['reporte']['value'];
+            $fecha        = $datosRequest['fecha'];
             $fecha_inicio = $datosRequest['fecha_inicio'];
-            $fecha_fin = $datosRequest['fecha_fin'];
+            $fecha_fin    = $datosRequest['fecha_fin'];
         } else {
             //return $this->errorResponse('Error al generar el reporte',409);
-            $modulo = 1;
-            $reporte = 2;
-            $fecha = now();
+            $modulo       = 1;
+            $reporte      = 2;
+            $fecha        = now();
             $fecha_inicio = '1990-01-01';
-            $fecha_fin = now();
+            $fecha_fin    = now();
         }
 
         $inventario = new InventarioController();
         /**obteniendo datos para los reportes segun la peticion del usuario */
 
-
         /**guardo los datos a mostrar en el reporte */
         $datos_reporte = [];
-        $name_pdf = '';
-        $header = '';
-        $footer = '';
-        $pdf_template = '';
-
+        $name_pdf      = '';
+        $header        = '';
+        $footer        = '';
+        $pdf_template  = '';
 
         if ($modulo == 1) {
             $header = 'reportes.inventario.header';
@@ -64,8 +62,8 @@ class ReportesController extends ApiController
                 }
                 /**Existencias y Costos*/
                 $datos_reporte = $inventario->get_reporte_existencias_costos($fecha);
-                $name_pdf = 'Existencias y Costos';
-                $pdf_template = 'reportes/inventario/existencias_costos/reporte';
+                $name_pdf      = 'Existencias y Costos';
+                $pdf_template  = 'reportes/inventario/existencias_costos/reporte';
             } elseif ($reporte == 2) {
                 /**valido que ingresó las fechas */
                 if (trim($fecha_inicio) == null || trim($fecha_fin) == null) {
@@ -73,8 +71,8 @@ class ReportesController extends ApiController
                 }
                 /**Movimientos del inventario*/
                 $datos_reporte = $inventario->get_reporte_movimientos_inventario($fecha_inicio, $fecha_fin);
-                $name_pdf = 'Movimientos del Inventario';
-                $pdf_template = 'reportes/inventario/movimientos_inventario/reporte';
+                $name_pdf      = 'Movimientos del Inventario';
+                $pdf_template  = 'reportes/inventario/movimientos_inventario/reporte';
             } elseif ($reporte == 3) {
                 /**valido que ingresó las fechas */
                 if (trim($fecha_inicio) == null || trim($fecha_fin) == null) {
@@ -82,13 +80,13 @@ class ReportesController extends ApiController
                 }
                 /**Movimientos del inventario*/
                 $datos_reporte = $inventario->get_reporte_inventario_con_rotacion($fecha_inicio, $fecha_fin);
-                $name_pdf = 'Inventario Actual Global en Importes (Costo Definido por el Prodcuto)';
-                $pdf_template = 'reportes/inventario/inventario_global/reporte';
+                $name_pdf      = 'Inventario Actual Global en Importes (Costo Definido por el Prodcuto)';
+                $pdf_template  = 'reportes/inventario/inventario_global/reporte';
             }
-        } else   if ($modulo == 2) {
+        } else if ($modulo == 2) {
             /**cementerio */
             $cementerio = new CementerioController();
-            $funeraria = new FunerariaController();
+            $funeraria  = new FunerariaController();
             if (trim($datosRequest['tipo_reporte']) != '') {
                 if ($datosRequest['tipo_reporte'] == 'cuota_cementerio') {
                     return $cementerio->get_cuota_pdf('es', $request);
@@ -102,7 +100,7 @@ class ReportesController extends ApiController
                     $funeraria->get_abonos_vencidos_planes_funerarios('es', $request);
                 }
             }
-        } else   if ($modulo == 3) {
+        } else if ($modulo == 3) {
             /**funeraria */
             $funeraria = new FunerariaController();
             if ($reporte == 'reporte_planes') {
@@ -117,7 +115,6 @@ class ReportesController extends ApiController
         $get_funeraria = new EmpresaController();
         $empresa       = $get_funeraria->get_empresa_data();
         $pdf           = PDF::loadView($pdf_template, ['datos' => $datos_reporte, 'empresa' => $empresa]);
-
 
         $name_pdf = $name_pdf . '.pdf';
 
@@ -161,5 +158,57 @@ class ReportesController extends ApiController
         }
 
         return $this->errorResponse($datos_reporte, 409);
+    }
+
+    public function adeudos_cfdis()
+    {
+        $operaciones = Operaciones::join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
+            ->selectRaw("
+        operaciones.id,
+         clientes.nombre as cliente_nombre,
+    operaciones.empresa_operaciones_id,
+    ventas_terrenos_id,
+    servicios_funerarios_id,
+    ventas_planes_id,
+    ventas_generales_id,
+    operaciones.saldo,
+    operaciones.total,
+    operaciones.status,
+    CASE empresa_operaciones_id
+        WHEN 1 THEN 'VENTA DE TERRENOS'
+        WHEN 2 THEN 'SERVICIO DE MANTENIMIENTO ANUAL EN CEMENTERIO'
+        WHEN 3 THEN 'SERVICIOS FUNERARIOS'
+        WHEN 4 THEN 'VENTA DE PLANES FUNERARIOS A FUTURO'
+        WHEN 5 THEN 'VENTAS EN GENERAL'
+        ELSE NULL
+    END AS tipo_operacion
+    ")
+            ->where('operaciones.status', '>', 0) //Solo activas
+            ->with('cfdis')
+            ->whereHas('cfdis')
+            ->withCount('cfdis')
+            ->whereHas('cfdis', function ($q) {
+                $q->whereRaw("
+        (
+            SELECT COALESCE(SUM(r.monto_relacion), 0)
+            FROM cfdis_tipo_relacion r
+            JOIN cfdis c2 ON c2.id = r.cfdis_id
+            WHERE r.cfdis_id_relacionado = cfdis.id
+            AND r.tipo_relacion_id IN (2,3)
+            AND c2.status > 0
+        ) < cfdis.total
+    ");
+            })
+        // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
+        //->limit(500)
+            ->orderby('empresa_operaciones_id', 'asc')
+            ->orderby('operaciones.id', 'desc')
+            ->get();
+        /* return [
+            'total'       => count($operaciones),
+            'operaciones' => $operaciones,
+        ];*/
+
+        return Excel::download(new ReporteEspecialExport($operaciones), 'reporte_especial.xlsx');
     }
 }
