@@ -43,7 +43,16 @@
     </div>
   -->
         <div class="parte-1">
-            <div class="servicios-funerarios">Servicios Funerarios</div>
+            <div class="servicios-funerarios">
+                <vue-slick-carousel class="" v-bind="settings">
+                    <div v-for="n in 3">
+                        <div class="slide-servicio">
+                            <div>slide {{ n }}</div>
+                            <div>contenido</div>
+                        </div>
+                    </div>
+                </vue-slick-carousel>
+            </div>
             <div class="inventario">
                 Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
                 sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
@@ -93,6 +102,7 @@
                 eum quis placeat repudiandae!
             </div>
         </div>
+
         <!--
       <vue-slick-carousel class="flex flex-col flex-1 bg-danger" v-bind="settings">
         <div class="bg-success flex-1">
@@ -114,7 +124,7 @@ export default {
                 draggable: true, // Make the slider draggable
                 swipe: true, // Enable swipe on touch devices
                 arrows: false,
-                dots: false,
+                dots: true,
                 autoplay: true,
                 infinite: true,
                 slidesToShow: 1,
@@ -174,13 +184,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     align-items: start;
     /* 🔥 items inside each cell stick to the TOP */
     @extend .scroll-styles;
-    background-color: red;
+    //background-color: red;
 
     > div {
-        background-color: yellow;
+        //background-color: yellow;
         display: grid;
         gap: 1rem;
-
         > div {
             @extend .scroll-styles, .effects;
             padding: 7px;
@@ -189,19 +198,74 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
     .parte-1 {
         grid-template-rows: 1fr 1fr;
-
         div {
-            min-height: 218.625px;
-            max-height: 218.625px;
-            background-color: green;
-            color: white;
-            display: flex;
-            justify-content: center;
-            /* centers horizontally */
-            align-items: center;
-            /* centers vertically */
+            min-height: 258.625px;
+            max-height: 258.625px;
+        }
+
+        .servicios-funerarios {
+            @extend .bg-primary-700;
+            padding: 0;
+            display: block;
+            //overflow-y: hidden;
+            overflow-x: hidden;
+            position: relative;
+        }
+        .slide-servicio {
+            display: block;
+            background-color: yellow;
+            color: rgb(7, 6, 6);
         }
     }
+}
+
+/* make the slider a positioning context */
+::v-deep .slick-slider {
+    position: relative; /* important: so absolute children are positioned relative to the slider */
+}
+
+/* move the dots to top-right */
+::v-deep .slick-dots {
+    position: absolute !important;
+    top: 8px; /* distance from top of slider */
+    right: 12px; /* distance from right of slider */
+    margin: 0;
+    transform: none !important; /* remove any translate Slick might apply */
+    z-index: 30; /* above slides */
+    width: auto;
+    height: 0;
+}
+
+/* inline the li items and remove margins */
+::v-deep .slick-dots li {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilos de los DOTS */
+:deep(.slick-dots li button) {
+    width: 8px; /* dot size */
+    height: 8px;
+    padding: 0;
+    border-radius: 50%; /* make it round */
+    background: rgba(255, 255, 255, 0.3); /* Not selected */
+    border: none;
+    &::before {
+        content: "";
+    }
+}
+
+/* Punto ACTIVO */
+:deep(.slick-dots li.slick-active button) {
+    background: white;
+    opacity: 1;
+    transform: scale(1.3); /* opcional: más grande */
+}
+
+/* (optional) make dots larger on hover */
+.slick-dots li button:hover {
+    transform: scale(1.1);
 }
 
 /* Small (sm) — min-width: 576px */
@@ -216,7 +280,6 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 @media (min-width: 992px) {
     .dashboard {
         grid-template-rows: 218.625px repeat(2, auto);
-
         .parte-1 {
             grid-template-rows: auto;
             grid-template-columns: 1fr 1fr;
