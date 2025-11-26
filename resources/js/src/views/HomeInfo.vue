@@ -45,22 +45,26 @@
     <div class="parte-1">
       <div class="servicios-funerarios">
         <vue-slick-carousel class="" v-bind="settings">
-          <div v-for="n in 3" class="slide-servicio">
+          <div v-for="n in 4" :class="['slide-servicio', n % 2 > 0 ? 'servicio-no-contratado' : 'servicio-contratado']"
+            :key="n">
             <div class="slide-header">
               <div class="fallecido">
-                SUSANA DEL ROCIO GOMEZ
-                NEGRETE
+                SUSANA DEL ROCIO GOMEZ NEGRETE
               </div>
               <div class="velacion">
-                <p><strong>Velación: </strong> <span class="">Sala la piedad</span></p>
-                <div>
+                <p v-if="n % 2 == 0"><strong>Servicio por definir.</strong></p>
+                <p v-else><strong>Velación: </strong> <span class="">Sala La Piedad.</span></p>
+                <div class="hidden">
                   <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg" title="Ver Expediente" />
                   <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg" title="Compartir Enlace" />
+                </div>
+                <div class="">
+                  <span class="">Ver Expediente</span>
                 </div>
               </div>
             </div>
             <div class="slide-content">
-              <div class="contenido">
+              <div class="contenido" v-if="n % 2 > 0">
                 <p>Datos del Servicio</p>
                 <div class="datos-contenido">
                   <div class="row-dato">
@@ -91,8 +95,11 @@
                   </div>
                 </div>
               </div>
+              <div class="contenido-null" v-else>
+                <p>En proceso de contratación...</p>
+              </div>
               <div class="imagen">
-                <img src="@assets/images/luto-black.svg" />
+                <img src="@assets/images/luto.svg" />
               </div>
             </div>
           </div>
@@ -230,6 +237,14 @@ export default {
   /* adds the … */
 }
 
+.servicio-contratado {
+  background: linear-gradient(200deg, #CB9F22, #1f1f1f);
+}
+
+.servicio-no-contratado {
+  background: linear-gradient(200deg, #1f1f1f, #6b7280);
+}
+
 /**
 flex: 1 1 0% is shorthand for: 
 flex-grow: 1; → the item grows to fill available space.
@@ -266,14 +281,14 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     }
 
     .servicios-funerarios {
-      background: linear-gradient(200deg, #CB9F22, #1f1f1f);
-      //padding: 0;
+      padding: 0;
       display: block;
       overflow-y: hidden;
       overflow-x: hidden;
       position: relative;
 
       .slide-servicio {
+        padding: 21px;
         display: grid !important;
         height: 100%;
         /* required for "1fr" to work */
@@ -327,6 +342,17 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
           display: flex;
           flex-direction: column;
           height: 100%;
+        }
+
+        .contenido-null {
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+
+          p {
+            @extend .h4, .font-bold;
+            color: white;
+          }
         }
 
         .contenido {
@@ -409,9 +435,9 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 /* move the dots to top-right */
 ::v-deep .slick-dots {
   position: absolute !important;
-  top: -20px;
+  top: 4px;
   /* distance from top of slider */
-  right: -12px;
+  right: 7px;
   /* distance from right of slider */
   margin: 0;
   transform: none !important;
