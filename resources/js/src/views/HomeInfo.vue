@@ -49,7 +49,9 @@
             :key="n">
             <div class="slide-header">
               <div class="fallecido">
-                SUSANA DEL ROCIO GOMEZ NEGRETE
+                <h2>
+                  SUSANA DEL ROCIO GOMEZ NEGRETE
+                </h2>
               </div>
               <div class="velacion">
                 <p v-if="n % 2 == 0"><strong>Servicio por definir.</strong></p>
@@ -106,10 +108,57 @@
         </vue-slick-carousel>
       </div>
       <div class="inventario">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
-        sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
-        voluptatibus consectetur necessitatibus illum nobis possimus
-        nesciunt quis eaque aut. Non
+        <div class="seccion-title">
+          <h2>
+            Estado del Inventario
+          </h2>
+          <div class="">
+            <span class="text-primary">Reporte General</span>
+          </div>
+        </div>
+        <div class="reportes">
+          <div class="lista">
+            <div class="reporte">
+              <div class="imagen bg-primary-400">
+                <img class="" src="@assets/images/coffin.svg" />
+              </div>
+              <div>
+                <p class="cantidad">150</p>
+                <p class="descripcion">Conceptos</p>
+              </div>
+            </div>
+            <div class="reporte">
+              <div class="imagen bg-danger-400">
+                <img class="" src="@assets/images/low.svg" />
+              </div>
+              <div>
+                <p class="cantidad">150</p>
+                <p class="descripcion">Desabastecido</p>
+              </div>
+            </div>
+            <div class="reporte">
+              <div class="imagen bg-warning-400">
+                <img class="" src="@assets/images/alto.svg" />
+              </div>
+              <div>
+                <p class="cantidad">150</p>
+                <p class="descripcion">Sobrestock</p>
+              </div>
+            </div>
+            <div class="reporte">
+              <div class="imagen bg-success-400">
+                <img class="" src="@assets/images/dollar_bill.svg" />
+              </div>
+              <div>
+                <p class="cantidad">$150</p>
+                <p class="descripcion">$Costo Total</p>
+              </div>
+            </div>
+          </div>
+          <div class="imagen">
+            <img class="" src="@assets/images/ataud.svg" />
+          </div>
+        </div>
       </div>
     </div>
     <div class="hidden">
@@ -209,6 +258,11 @@ export default {
   /* gold thumb on light background */
 }
 
+.no-scrollbar {
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
 .effects {
   background-color: white;
   border: 1px solid #e5e7eb;
@@ -283,8 +337,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .servicios-funerarios {
       padding: 0;
       display: block;
-      overflow-y: hidden;
-      overflow-x: hidden;
+      @extend .no-scrollbar;
       position: relative;
 
       .slide-servicio {
@@ -308,11 +361,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         color: white;
 
         .fallecido {
-          @extend .h4, .font-medium, .one-line-text;
+          h2 {
+            @extend .h4, .font-medium, .one-line-text;
+          }
+
           width: 100%;
-
         }
-
 
         .velacion {
           width: 100%;
@@ -410,6 +464,75 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         }
       }
     }
+
+    .inventario {
+      @extend .no-scrollbar;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      justify-content: space-between;
+
+      .seccion-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h2 {
+          @extend .h4, .font-medium, .one-line-text;
+        }
+      }
+
+      .reportes {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+
+        .lista {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+
+          .reporte {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+
+            .imagen {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              border-radius: 4px;
+              padding: 7px;
+
+              img {
+                width: 36px;
+              }
+            }
+
+            .cantidad {
+              @extend .h4, .font-medium;
+            }
+
+            .descripcion {
+              @extend .size-small;
+            }
+          }
+        }
+
+        >.imagen {
+          height: 100%;
+          display: flex;
+          justify-content: flex-end;
+
+          img {
+            width: 130px;
+            display: none;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -489,7 +612,20 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 @media (min-width: 576px) {}
 
 /* Medium (md) — min-width: 768px */
-@media (min-width: 768px) {}
+@media (min-width: 768px) {
+
+  .inventario {
+    .reportes {
+      grid-template-columns: 1fr 130px !important;
+
+      >.imagen {
+        img {
+          display: block !important;
+        }
+      }
+    }
+  }
+}
 
 /* Large (lg) — min-width: 992px */
 @media (min-width: 992px) {
