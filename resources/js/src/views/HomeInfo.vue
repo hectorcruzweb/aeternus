@@ -109,11 +109,11 @@
       </div>
       <div class="inventario">
         <div class="seccion-title">
-          <h2>
+          <h2 class="">
             Estado del Inventario
           </h2>
           <div class="">
-            <span class="text-primary">Reporte General</span>
+            <span class="">Reporte General</span>
           </div>
         </div>
         <div class="reportes">
@@ -466,6 +466,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     }
 
     .inventario {
+      background: linear-gradient(90deg, #fff, #4DA3FF);
       @extend .no-scrollbar;
       display: flex;
       flex-direction: column;
