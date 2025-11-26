@@ -45,10 +45,52 @@
         <div class="parte-1">
             <div class="servicios-funerarios">
                 <vue-slick-carousel class="" v-bind="settings">
-                    <div v-for="n in 3">
-                        <div class="slide-servicio">
-                            <div>slide {{ n }}</div>
-                            <div>contenido</div>
+                    <div v-for="n in 3" class="slide-servicio">
+                        <div class="slide-header">
+                            <div class="fallecido">
+                                SUSANA DEL ROCIO GOMEZ NEGRETE
+                            </div>
+                            <div class="velacion">
+                                <p>Total 28.5% Conversion Rate</p>
+                                <div>Consultar</div>
+                            </div>
+                        </div>
+                        <div class="slide-content">
+                            <div class="contenido">
+                                <p>Datos del Servicio</p>
+                                <div class="datos-contenido">
+                                    <div class="row-dato">
+                                        <div>
+                                            <p class="dato bg-primary">Misa</p>
+                                            <p class="texto-dato">No</p>
+                                        </div>
+                                        <div>
+                                            <p class="dato bg-primary">
+                                                Inhumación
+                                            </p>
+                                            <p class="texto-dato">
+                                                Aeternus Area 4 Lote 13 Seccion
+                                                12
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row-dato">
+                                        <div>
+                                            <p class="dato bg-primary">123</p>
+                                            <p class="texto-dato">Order</p>
+                                        </div>
+                                        <div>
+                                            <p class="dato bg-primary">Saldo</p>
+                                            <p class="texto-dato">
+                                                $ 1,500.00 MXN.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="imagen">
+                                <img src="@assets/images/luto.svg" />
+                            </div>
                         </div>
                     </div>
                 </vue-slick-carousel>
@@ -125,10 +167,10 @@ export default {
                 swipe: true, // Enable swipe on touch devices
                 arrows: false,
                 dots: true,
-                autoplay: true,
+                //autoplay: true,
                 infinite: true,
                 slidesToShow: 1,
-                adaptiveHeight: false,
+                adaptiveHeight: true,
                 autoplaySpeed: 5000,
                 //pauseOnDotsHover: true,
                 //pauseOnFocus: true,
@@ -143,7 +185,7 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import "../../../sass/vuexy/variables";
-
+@import "../../../sass/vuexy/typography";
 .scroll-styles {
     overflow-y: auto;
     /* 👈 enables vertical scrolling */
@@ -170,6 +212,10 @@ export default {
     }
 }
 
+.border {
+    border: 0.3px solid black;
+}
+
 /**
 flex: 1 1 0% is shorthand for: 
 flex-grow: 1; → the item grows to fill available space.
@@ -192,31 +238,123 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         gap: 1rem;
         > div {
             @extend .scroll-styles, .effects;
-            padding: 7px;
+            padding: 21px;
         }
     }
 
     .parte-1 {
         grid-template-rows: 1fr 1fr;
-        div {
-            min-height: 258.625px;
-            max-height: 258.625px;
+        > div {
+            min-height: 238.625px;
+            max-height: 238.625px;
         }
 
         .servicios-funerarios {
             @extend .bg-primary-700;
-            padding: 0;
+            //padding: 0;
             display: block;
-            //overflow-y: hidden;
+            overflow-y: hidden;
             overflow-x: hidden;
             position: relative;
-        }
-        .slide-servicio {
-            display: block;
-            background-color: yellow;
-            color: rgb(7, 6, 6);
+
+            .slide-servicio {
+                display: grid !important;
+                height: 100%; /* required for "1fr" to work */
+                grid-template-rows: 48px 135px; /* first row fixed, second row fills the rest */
+                align-content: space-between;
+            }
+
+            .slide-header {
+                /* optional styles */
+                display: flex;
+                flex-direction: column;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                justify-content: space-between;
+                color: white;
+                .fallecido {
+                    @extend .h4, .font-medium;
+                }
+                .velacion {
+                    width: 100%;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+            }
+
+            .slide-content {
+                display: grid;
+                grid-template-columns: 1fr 80px;
+                height: 100%; /* 🔥 REQUIRED */
+                gap: 1rem;
+                > div {
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                }
+                .contenido {
+                    display: grid;
+                    grid-template-rows: 21px 1fr;
+                    gap: 1rem;
+                    background: red;
+                    p {
+                        @extend .h5, .font-medium;
+                        color: white;
+                    }
+                    .datos-contenido {
+                        display: grid;
+                        grid-template-rows: 1fr 1fr;
+                        @extend .scroll-styles;
+                        .row-dato {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 1rem;
+                            > div {
+                                display: grid;
+                                grid-template-columns: 95px 1fr;
+                                gap: 0.5rem;
+                                align-items: center;
+                                .dato {
+                                    padding: 0.3rem 0.5rem;
+                                    border-radius: 4px;
+                                    text-align: center;
+                                }
+                                .texto-dato {
+                                    @extend .font-normal;
+                                    white-space: nowrap; /* forces one single line */
+                                    overflow: hidden; /* hides the extra text */
+                                    text-overflow: ellipsis; /* adds the … */
+                                }
+                            }
+                        }
+                    }
+                }
+                .imagen {
+                    display: flex;
+                    align-items: flex-end;
+                    justify-content: center;
+                    img {
+                        height: 70%;
+                        width: auto;
+                        object-fit: contain;
+                    }
+                }
+            }
         }
     }
+}
+
+::v-deep .slick-slider,
+::v-deep .slick-list,
+::v-deep .slick-track,
+::v-deep .slick-slide {
+    height: 100% !important; /* required for "1fr" to work */
+}
+
+::v-deep .slick-slide > div {
+    height: 100% !important; /* required for "1fr" to work */
 }
 
 /* make the slider a positioning context */
@@ -227,8 +365,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 /* move the dots to top-right */
 ::v-deep .slick-dots {
     position: absolute !important;
-    top: 8px; /* distance from top of slider */
-    right: 12px; /* distance from right of slider */
+    top: -20px; /* distance from top of slider */
+    right: -12px; /* distance from right of slider */
     margin: 0;
     transform: none !important; /* remove any translate Slick might apply */
     z-index: 30; /* above slides */
