@@ -45,16 +45,12 @@
         <div class="parte-1">
             <div class="servicios-funerarios">
                 <vue-slick-carousel class="" v-bind="settings">
-                    <div
-                        v-for="n in 4"
-                        :class="[
-                            'slide-servicio',
-                            n % 2 > 0
-                                ? 'servicio-contratado'
-                                : 'servicio-contratado',
-                        ]"
-                        :key="n"
-                    >
+                    <div v-for="n in 4" :class="[
+                        'slide-servicio',
+                        n % 2 > 0
+                            ? 'servicio-contratado'
+                            : 'servicio-contratado',
+                    ]" :key="n">
                         <div class="slide-header">
                             <div class="fallecido">
                                 <h2>SUSANA DEL ROCIO GOMEZ NEGRETE</h2>
@@ -68,16 +64,10 @@
                                     <span class="">Sala La Piedad.</span>
                                 </p>
                                 <div class="hidden">
-                                    <img
-                                        class="cursor-pointer img-btn-19"
-                                        src="@assets/images/folder.svg"
-                                        title="Ver Expediente"
-                                    />
-                                    <img
-                                        class="cursor-pointer img-btn-21"
-                                        src="@assets/images/whatsapp.svg"
-                                        title="Compartir Enlace"
-                                    />
+                                    <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg"
+                                        title="Ver Expediente" />
+                                    <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg"
+                                        title="Compartir Enlace" />
                                 </div>
                                 <div class="">
                                     <span class="">Ver Expediente</span>
@@ -162,10 +152,7 @@
                         </div>
                         <div class="reporte">
                             <div class="imagen bg-success-400">
-                                <img
-                                    class=""
-                                    src="@assets/images/dollar_bill.svg"
-                                />
+                                <img class="" src="@assets/images/dollar_bill.svg" />
                             </div>
                             <div>
                                 <p class="cantidad">$150</p>
@@ -181,29 +168,55 @@
         </div>
         <div class="parte-2">
             <div class="reporte-venta reporte-select">
-                <div class="seccion-title">
-                    <h2 class="">Desgloce de Ventas por Año</h2>
-                    <div class="">
-                        <span class="">Descargar Reporte</span>
+                <div class="seccion-title w-full flex flex-col gap-2">
+                    <div class="w-full flex flex-wrap items-center justify-between">
+                        <h2 class="h4 font-medium one-line-text">Desgloce de Ventas por Año</h2>
+                        <div class="">
+                            <span class="">Descargar Reporte</span>
+                        </div>
+                    </div>
+                    <div class="year">
+                        <p class="">Seleccione el año de interés</p>
+                        <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
+                            class="" name="year_reporte_venta" data-vv-as=" ">
+                            <div slot="no-options">Seleccione una opción</div>
+                        </v-select>
                     </div>
                 </div>
-                <div class="year">
-                    <p class="">Seleccione el año de interés</p>
-                    <v-select
-                        :options="years"
-                        :clearable="false"
-                        :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                        v-model="year"
-                        class=""
-                        name="year_reporte_venta"
-                        data-vv-as=" "
-                    >
-                        <div slot="no-options">Seleccione una opción</div>
-                    </v-select>
-                </div>
-                <div class="graficas mt-4">
-                    <div class="bg-danger">Cantidad</div>
-                    <div class="bg-success">Gráficas</div>
+                <div class="graficas">
+                    <div class="tipo_operacion">
+                        <div class="operacion ">
+                            <div class="bg-primary-400">
+                                <img class="" src="@assets/images/coffin.svg" />
+                            </div>
+                            <span>Cementerio</span>
+                        </div>
+                        <div class="operacion ">
+                            <div class="bg-danger-400">
+                                <img class="" src="@assets/images/coffin.svg" />
+                            </div>
+                            <span>Cuotas</span>
+                        </div>
+                        <div class="operacion ">
+                            <div class="bg-success-400">
+                                <img class="" src="@assets/images/coffin.svg" />
+                            </div>
+                            <span>Planes Funerarios</span>
+                        </div>
+                        <div class="operacion ">
+                            <div class="bg-secondary-400">
+                                <img class="" src="@assets/images/coffin.svg" />
+                            </div>
+                            <span>Servicios Funerarios</span>
+                        </div>
+                        <div class="operacion ">
+                            <div class="bg-warning-400">
+                                <img class="" src="@assets/images/coffin.svg" />
+                            </div>
+                            <span>Ventas en Gral.</span>
+                        </div>
+                    </div>
+                    <div class="grafica">Gráficas</div>
                 </div>
             </div>
             <div>
@@ -237,7 +250,8 @@
         <div class="bg-success flex flex-col flex-1">Slide 2</div>
         <div class="bg-success flex flex-col flex-1">Slide 3</div>
       </vue-slick-carousel>
-    --></div>
+    -->
+    </div>
 </template>
 <script>
 import vSelect from "vue-select";
@@ -283,7 +297,7 @@ export default {
     components: {
         "v-select": vSelect,
     },
-    created() {},
+    created() { },
 };
 </script>
 <style lang="scss" scoped>
@@ -358,7 +372,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     /* required for "1fr" to work */
 }
 
-::v-deep .slick-slide > div {
+::v-deep .slick-slide>div {
     height: 100% !important;
     /* required for "1fr" to work */
 }
@@ -431,11 +445,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     @extend .scroll-styles;
     //background-color: red;
 
-    > div {
+    >div {
         //background-color: yellow;
         display: grid;
         gap: 1rem;
-        > div {
+
+        >div {
             @extend .scroll-styles, .effects;
             padding: 21px;
         }
@@ -444,7 +459,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-1 {
         grid-template-rows: 1fr 1fr;
 
-        > div {
+        >div {
             min-height: 238.625px;
             max-height: 238.625px;
         }
@@ -490,7 +505,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     align-items: center;
                     justify-content: space-between;
 
-                    > div {
+                    >div {
                         display: flex;
                         flex-wrap: wrap;
                         align-items: center;
@@ -507,7 +522,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 /* 🔥 REQUIRED */
                 gap: 1rem;
 
-                > div {
+                >div {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
@@ -544,7 +559,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                             grid-template-columns: 1fr 1fr;
                             gap: 1rem;
 
-                            > div {
+                            >div {
                                 display: grid;
                                 grid-template-columns: 36px 1fr;
                                 gap: 0.5rem;
@@ -636,7 +651,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     }
                 }
 
-                > .imagen {
+                >.imagen {
                     height: 100%;
                     display: flex;
                     justify-content: flex-end;
@@ -652,20 +667,18 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
     .parte-2 {
         grid-template-rows: 1fr 1fr;
-        > div {
+
+        >div {
             min-height: 403.625px;
             //max-height: 403.625px;
         }
 
         .reporte-select {
-            .seccion-title {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                h2 {
-                    @extend .h4, .font-medium, .one-line-text;
-                }
-            }
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: space-between;
+
             .year {
                 display: grid;
                 align-items: center;
@@ -675,18 +688,48 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
             .graficas {
                 display: grid;
-                align-items: center;
-                //grid-template-columns: 1.5fr 2fr;
-                grid-template-rows: auto;
+                height: 100%;
+                grid-template-rows: 100px 1fr;
                 gap: 1rem;
+
+                .tipo_operacion {
+                    display: grid;
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 1rem;
+
+                    .operacion {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 0.5rem;
+                        border: 1px dotted #ccc;
+                        border-radius: 8px;
+
+                        >div {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            border-radius: 4px;
+                            padding: 7px;
+
+                            img {
+                                width: 36px;
+                            }
+                        }
+
+                        span {
+                            @extend .size-small, .font-medium, .one-line-text;
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 /* Small (sm) — min-width: 576px */
-@media (min-width: 576px) {
-}
+@media (min-width: 576px) {}
 
 /* Medium (md) — min-width: 768px */
 @media (min-width: 768px) {
@@ -694,7 +737,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         .reportes {
             grid-template-columns: 1fr 130px !important;
 
-            > .imagen {
+            >.imagen {
                 img {
                     display: block !important;
                 }
@@ -708,10 +751,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .dashboard {
         grid-template-rows: 218.625px repeat(auto, auto);
         gap: 1rem;
+
         .parte-1 {
             grid-template-rows: auto;
             grid-template-columns: 1fr 1fr;
         }
+
         .parte-2 {
             grid-template-rows: auto;
             grid-template-columns: 1fr 1fr;
@@ -720,8 +765,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 /* Extra large (xl) — min-width: 1200px */
-@media (min-width: 1200px) {
-}
+@media (min-width: 1200px) {}
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
 @media (min-width: 1536px) {
