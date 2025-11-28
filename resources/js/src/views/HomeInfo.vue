@@ -3,12 +3,16 @@
         <div class="parte-1">
             <div class="servicios-funerarios">
                 <vue-slick-carousel class="" v-bind="settings">
-                    <div v-for="n in 4" :class="[
-                        'slide-servicio',
-                        n % 2 > 0
-                            ? 'servicio-contratado'
-                            : 'servicio-contratado',
-                    ]" :key="n">
+                    <div
+                        v-for="n in 4"
+                        :class="[
+                            'slide-servicio',
+                            n % 2 > 0
+                                ? 'servicio-contratado'
+                                : 'servicio-contratado',
+                        ]"
+                        :key="n"
+                    >
                         <div class="slide-header">
                             <div class="fallecido">
                                 <h2>SUSANA DEL ROCIO GOMEZ NEGRETE</h2>
@@ -22,10 +26,16 @@
                                     <span class="">Sala La Piedad.</span>
                                 </p>
                                 <div class="hidden">
-                                    <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg"
-                                        title="Ver Expediente" />
-                                    <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg"
-                                        title="Compartir Enlace" />
+                                    <img
+                                        class="cursor-pointer img-btn-19"
+                                        src="@assets/images/folder.svg"
+                                        title="Ver Expediente"
+                                    />
+                                    <img
+                                        class="cursor-pointer img-btn-21"
+                                        src="@assets/images/whatsapp.svg"
+                                        title="Compartir Enlace"
+                                    />
                                 </div>
                                 <div class="">
                                     <span class="">Ver Expediente</span>
@@ -110,7 +120,10 @@
                         </div>
                         <div class="reporte">
                             <div class="imagen bg-success-400">
-                                <img class="" src="@assets/images/dollar_bill.svg" />
+                                <img
+                                    class=""
+                                    src="@assets/images/dollar_bill.svg"
+                                />
                             </div>
                             <div>
                                 <p class="cantidad">$150</p>
@@ -119,7 +132,10 @@
                         </div>
                     </div>
                     <div class="imagen">
-                        <img class="" src="@assets/images/conserviciosfunerarios.svg" />
+                        <img
+                            class=""
+                            src="@assets/images/conserviciosfunerarios.svg"
+                        />
                     </div>
                 </div>
             </div>
@@ -127,7 +143,9 @@
         <div class="parte-2">
             <div class="reporte-venta reporte-select">
                 <div class="seccion-title w-full flex flex-col gap-2">
-                    <div class="w-full flex flex-wrap items-center justify-between">
+                    <div
+                        class="w-full flex flex-wrap items-center justify-between"
+                    >
                         <h2 class="h4 font-medium one-line-text">
                             Desgloce de Ventas por Año
                         </h2>
@@ -137,38 +155,88 @@
                     </div>
                     <div class="selectores">
                         <div class="tipo_operacion">
-                            <button class="operacion">
+                            <button
+                                class="operacion"
+                                :class="{
+                                    'is-active':
+                                        filtro_ventas_operaciones ===
+                                        'cementerio',
+                                }"
+                                @click="cambiarGraficaVentas('cementerio')"
+                            >
                                 <span>Cementerio</span>
                             </button>
-                            <button class="operacion">
+                            <button
+                                class="operacion"
+                                :class="{
+                                    'is-active':
+                                        filtro_ventas_operaciones === 'cuotas',
+                                }"
+                                @click="cambiarGraficaVentas('cuotas')"
+                            >
                                 <span>Cuotas</span>
                             </button>
-                            <button class="operacion">
+                            <button
+                                class="operacion"
+                                :class="{
+                                    'is-active':
+                                        filtro_ventas_operaciones === 'planes',
+                                }"
+                                @click="cambiarGraficaVentas('planes')"
+                            >
                                 <span>Planes</span>
                             </button>
-                            <button class="operacion">
+                            <button
+                                class="operacion"
+                                :class="{
+                                    'is-active':
+                                        filtro_ventas_operaciones ===
+                                        'servicios',
+                                }"
+                                @click="cambiarGraficaVentas('servicios')"
+                            >
                                 <span>Servicios</span>
                             </button>
-                            <button class="operacion">
+                            <button
+                                class="operacion"
+                                :class="{
+                                    'is-active':
+                                        filtro_ventas_operaciones ===
+                                        'ventas_gral',
+                                }"
+                                @click="cambiarGraficaVentas('ventas_gral')"
+                            >
                                 <span>Ventas en Gral.</span>
                             </button>
                         </div>
                         <div class="flex justify-end w-full">
-                            <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
-                                class="ajustar-width">
+                            <v-select
+                                :options="years"
+                                :clearable="false"
+                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="year"
+                                class="ajustar-width"
+                            >
                             </v-select>
                         </div>
                     </div>
                 </div>
                 <div class="graficas">
                     <div class="grafica">
-                        <apexchart type="bar" height="400" :options="chartOptions" :series="series"></apexchart>
+                        <apexchart
+                            type="bar"
+                            height="400"
+                            :options="chartOptions"
+                            :series="series"
+                        ></apexchart>
                     </div>
                 </div>
             </div>
             <div class="reporte-venta reporte-select">
                 <div class="seccion-title w-full flex flex-col gap-2">
-                    <div class="w-full flex flex-wrap items-center justify-between">
+                    <div
+                        class="w-full flex flex-wrap items-center justify-between"
+                    >
                         <h2 class="h4 font-medium one-line-text">
                             Desgloce de Adeudos
                         </h2>
@@ -195,15 +263,25 @@
                             </button>
                         </div>
                         <div class="flex justify-end w-full">
-                            <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
-                                class="ajustar-width">
+                            <v-select
+                                :options="years"
+                                :clearable="false"
+                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="year"
+                                class="ajustar-width"
+                            >
                             </v-select>
                         </div>
                     </div>
                 </div>
                 <div class="graficas">
                     <div class="grafica">
-                        <apexchart type="bar" height="400" :options="chartOptions" :series="series"></apexchart>
+                        <apexchart
+                            type="bar"
+                            height="400"
+                            :options="chartOptions"
+                            :series="series"
+                        ></apexchart>
                     </div>
                 </div>
             </div>
@@ -232,7 +310,9 @@ export default {
             },
             years: [],
             year: null,
-            series: [
+
+            filtro_ventas_operaciones: "",
+            seriesOri: [
                 {
                     name: "Ventas",
                     data: [15, 22, 28, 35, 40, 38, 45, 50, 48, 42, 39, 55],
@@ -245,6 +325,7 @@ export default {
                     ],
                 },
             ],
+            series: [],
             chartOptions: {
                 title: {
                     text: "Ventas e Ingresos Anuales",
@@ -320,7 +401,21 @@ export default {
             },
         };
     },
-    methods: {},
+    methods: {
+        cambiarGraficaVentas(tipo) {
+            this.series = this.seriesOri;
+            this.filtro_ventas_operaciones = tipo;
+            this.series = [];
+            if (tipo === "cementerio") {
+                this.series.push(this.seriesOri[0]);
+            } else if (tipo === "cuotas") {
+                this.series.push(this.seriesOri[1]);
+            } else {
+                // Show all
+                this.series = this.seriesOri;
+            }
+        },
+    },
     components: {
         "v-select": vSelect,
     },
@@ -331,7 +426,7 @@ export default {
         }
         this.year = currentYear;
     },
-    mounted() { },
+    mounted() {},
 };
 </script>
 <style lang="scss" scoped>
@@ -406,7 +501,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     /* required for "1fr" to work */
 }
 
-::v-deep .slick-slide>div {
+::v-deep .slick-slide > div {
     height: 100% !important;
     /* required for "1fr" to work */
 }
@@ -478,12 +573,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     @extend .scroll-styles;
     //background-color: red;
 
-    >div {
+    > div {
         //background-color: yellow;
         display: grid;
         gap: 1rem;
 
-        >div {
+        > div {
             @extend .scroll-styles, .effects;
             padding: 21px;
         }
@@ -492,7 +587,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-1 {
         grid-template-rows: 1fr 1fr;
 
-        >div {
+        > div {
             min-height: 238.625px;
             max-height: 238.625px;
         }
@@ -538,7 +633,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     align-items: center;
                     justify-content: space-between;
 
-                    >div {
+                    > div {
                         display: flex;
                         flex-wrap: wrap;
                         align-items: center;
@@ -555,7 +650,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 /* 🔥 REQUIRED */
                 gap: 1rem;
 
-                >div {
+                > div {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
@@ -592,7 +687,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                             grid-template-columns: 1fr 1fr;
                             gap: 1rem;
 
-                            >div {
+                            > div {
                                 display: grid;
                                 grid-template-columns: 36px 1fr;
                                 gap: 0.5rem;
@@ -684,7 +779,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     }
                 }
 
-                >.imagen {
+                > .imagen {
                     height: 100%;
                     display: flex;
                     justify-content: flex-end;
@@ -701,7 +796,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-2 {
         grid-template-rows: 1fr 1fr;
 
-        >div {
+        > div {
             min-height: 403.625px;
             //max-height: 403.625px;
         }
@@ -731,14 +826,29 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                         color: white;
                         border: none;
                         cursor: pointer;
+                        transition: background-color 0.2s ease,
+                            box-shadow 0.2s ease;
 
                         &:hover {
                             background-color: darken($primary, 10%);
                         }
 
-
                         span {
                             @extend .size-small, .font-medium, .one-line-text;
+                        }
+
+                        // ✔ Estado activo / datos filtrados
+                        &.is-active {
+                            background-color: $primary !important;
+                            color: white !important;
+                            box-shadow: 0 0 6px rgba($primary, 0.55);
+
+                            &:hover {
+                                background-color: darken(
+                                    $primary,
+                                    8%
+                                ) !important;
+                            }
                         }
                     }
                 }
@@ -758,7 +868,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 /* Small (sm) — min-width: 576px */
-@media (min-width: 576px) {}
+@media (min-width: 576px) {
+}
 
 /* Medium (md) — min-width: 768px */
 @media (min-width: 768px) {
@@ -766,7 +877,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         .reportes {
             grid-template-columns: 1fr 130px !important;
 
-            >.imagen {
+            > .imagen {
                 img {
                     display: block !important;
                 }
