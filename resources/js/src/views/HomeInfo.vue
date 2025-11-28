@@ -45,12 +45,16 @@
         <div class="parte-1">
             <div class="servicios-funerarios">
                 <vue-slick-carousel class="" v-bind="settings">
-                    <div v-for="n in 4" :class="[
-                        'slide-servicio',
-                        n % 2 > 0
-                            ? 'servicio-contratado'
-                            : 'servicio-contratado',
-                    ]" :key="n">
+                    <div
+                        v-for="n in 4"
+                        :class="[
+                            'slide-servicio',
+                            n % 2 > 0
+                                ? 'servicio-contratado'
+                                : 'servicio-contratado',
+                        ]"
+                        :key="n"
+                    >
                         <div class="slide-header">
                             <div class="fallecido">
                                 <h2>SUSANA DEL ROCIO GOMEZ NEGRETE</h2>
@@ -64,10 +68,16 @@
                                     <span class="">Sala La Piedad.</span>
                                 </p>
                                 <div class="hidden">
-                                    <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg"
-                                        title="Ver Expediente" />
-                                    <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg"
-                                        title="Compartir Enlace" />
+                                    <img
+                                        class="cursor-pointer img-btn-19"
+                                        src="@assets/images/folder.svg"
+                                        title="Ver Expediente"
+                                    />
+                                    <img
+                                        class="cursor-pointer img-btn-21"
+                                        src="@assets/images/whatsapp.svg"
+                                        title="Compartir Enlace"
+                                    />
                                 </div>
                                 <div class="">
                                     <span class="">Ver Expediente</span>
@@ -152,7 +162,10 @@
                         </div>
                         <div class="reporte">
                             <div class="imagen bg-success-400">
-                                <img class="" src="@assets/images/dollar_bill.svg" />
+                                <img
+                                    class=""
+                                    src="@assets/images/dollar_bill.svg"
+                                />
                             </div>
                             <div>
                                 <p class="cantidad">$150</p>
@@ -169,54 +182,55 @@
         <div class="parte-2">
             <div class="reporte-venta reporte-select">
                 <div class="seccion-title w-full flex flex-col gap-2">
-                    <div class="w-full flex flex-wrap items-center justify-between">
-                        <h2 class="h4 font-medium one-line-text">Desgloce de Ventas por Año</h2>
+                    <div
+                        class="w-full flex flex-wrap items-center justify-between"
+                    >
+                        <h2 class="h4 font-medium one-line-text">
+                            Desgloce de Ventas por Año
+                        </h2>
                         <div class="">
                             <span class="">Descargar Reporte</span>
                         </div>
                     </div>
-                    <div class="year">
-                        <p class="">Seleccione el año de interés</p>
-                        <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
-                            class="" name="year_reporte_venta" data-vv-as=" ">
-                            <div slot="no-options">Seleccione una opción</div>
-                        </v-select>
+                    <div class="selectores">
+                        <div class="tipo_operacion">
+                            <button class="operacion">
+                                <span>Cementerio</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Cuotas</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Planes</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Servicios</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Ventas en Gral.</span>
+                            </button>
+                        </div>
+                        <div class="flex justify-end w-full">
+                            <v-select
+                                :options="years"
+                                :clearable="false"
+                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
+                                v-model="year"
+                                class=""
+                            >
+                            </v-select>
+                        </div>
                     </div>
                 </div>
                 <div class="graficas">
-                    <div class="tipo_operacion">
-                        <div class="operacion ">
-                            <div class="bg-primary-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <span>Cementerio</span>
-                        </div>
-                        <div class="operacion ">
-                            <div class="bg-danger-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <span>Cuotas</span>
-                        </div>
-                        <div class="operacion ">
-                            <div class="bg-success-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <span>Planes Funerarios</span>
-                        </div>
-                        <div class="operacion ">
-                            <div class="bg-secondary-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <span>Servicios Funerarios</span>
-                        </div>
-                        <div class="operacion ">
-                            <div class="bg-warning-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <span>Ventas en Gral.</span>
-                        </div>
+                    <div class="grafica">
+                        <apexchart
+                            type="bar"
+                            height="400"
+                            :options="chartOptions"
+                            :series="series"
+                        ></apexchart>
                     </div>
-                    <div class="grafica">Gráficas</div>
                 </div>
             </div>
             <div>
@@ -250,8 +264,7 @@
         <div class="bg-success flex flex-col flex-1">Slide 2</div>
         <div class="bg-success flex flex-col flex-1">Slide 3</div>
       </vue-slick-carousel>
-    -->
-    </div>
+    --></div>
 </template>
 <script>
 import vSelect from "vue-select";
@@ -273,23 +286,93 @@ export default {
                 //pauseOnFocus: true,
                 //pauseOnHover: true
             },
-            years: [
+            years: [],
+            year: null,
+            series: [
                 {
-                    value: "2021",
-                    label: "2021",
+                    name: "Ventas",
+                    data: [15, 22, 28, 35, 40, 38, 45, 50, 48, 42, 39, 55],
                 },
                 {
-                    value: "2022",
-                    label: "2022",
-                },
-                {
-                    value: "2023",
-                    label: "2023",
+                    name: "Ingresos",
+                    data: [
+                        12000, 15000, 18000, 20000, 22000, 21000, 24000, 26000,
+                        25000, 23000, 22500, 28000,
+                    ],
                 },
             ],
-            year: {
-                value: "2021",
-                label: "2021",
+            chartOptions: {
+                title: {
+                    text: "Ventas e Ingresos Anuales",
+                    align: "center",
+                    floating: false,
+                    offsetY: 10, // mueve el título hacia abajo
+                    style: {
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                        color: "#222",
+                    },
+                },
+                chart: {
+                    toolbar: { show: false },
+                },
+                colors: ["#B18B1E", "#222"],
+                dataLabels: {
+                    enabled: false,
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ["#fff"],
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 0,
+                        columnWidth: "50%",
+                    },
+                },
+                xaxis: {
+                    categories: [
+                        "Ene",
+                        "Feb",
+                        "Mar",
+                        "Abr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Ago",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dic",
+                    ],
+                },
+                yaxis: [
+                    {
+                        title: { text: "Ventas" },
+                    },
+                    {
+                        opposite: true,
+                        title: { text: "Ingresos ($) MXN" },
+                        labels: {
+                            formatter: (value) => "$" + value.toLocaleString(),
+                        },
+                    },
+                ],
+                tooltip: {
+                    //shared: true,
+                    y: {
+                        formatter: (value) => {
+                            // Si es Venta (número pequeño) solo devuélvelo
+                            if (value < 1000) return value;
+                            // Si es Ingreso formatear como dinero
+                            return "$" + value.toLocaleString() + " MXN";
+                        },
+                    },
+                },
+                legend: {
+                    position: "bottom",
+                },
             },
         };
     },
@@ -297,7 +380,14 @@ export default {
     components: {
         "v-select": vSelect,
     },
-    created() { },
+    created() {
+        const currentYear = new Date().getFullYear();
+        for (let i = 0; i <= 10; i++) {
+            this.years.push(currentYear - i);
+        }
+        this.year = currentYear;
+    },
+    mounted() {},
 };
 </script>
 <style lang="scss" scoped>
@@ -372,7 +462,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     /* required for "1fr" to work */
 }
 
-::v-deep .slick-slide>div {
+::v-deep .slick-slide > div {
     height: 100% !important;
     /* required for "1fr" to work */
 }
@@ -445,12 +535,12 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     @extend .scroll-styles;
     //background-color: red;
 
-    >div {
+    > div {
         //background-color: yellow;
         display: grid;
         gap: 1rem;
 
-        >div {
+        > div {
             @extend .scroll-styles, .effects;
             padding: 21px;
         }
@@ -459,7 +549,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-1 {
         grid-template-rows: 1fr 1fr;
 
-        >div {
+        > div {
             min-height: 238.625px;
             max-height: 238.625px;
         }
@@ -505,7 +595,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     align-items: center;
                     justify-content: space-between;
 
-                    >div {
+                    > div {
                         display: flex;
                         flex-wrap: wrap;
                         align-items: center;
@@ -522,7 +612,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 /* 🔥 REQUIRED */
                 gap: 1rem;
 
-                >div {
+                > div {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
@@ -559,7 +649,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                             grid-template-columns: 1fr 1fr;
                             gap: 1rem;
 
-                            >div {
+                            > div {
                                 display: grid;
                                 grid-template-columns: 36px 1fr;
                                 gap: 0.5rem;
@@ -651,7 +741,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     }
                 }
 
-                >.imagen {
+                > .imagen {
                     height: 100%;
                     display: flex;
                     justify-content: flex-end;
@@ -668,7 +758,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-2 {
         grid-template-rows: 1fr 1fr;
 
-        >div {
+        > div {
             min-height: 403.625px;
             //max-height: 403.625px;
         }
@@ -679,57 +769,35 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
             gap: 1rem;
             justify-content: space-between;
 
-            .year {
+            .selectores {
                 display: grid;
-                align-items: center;
-                grid-template-columns: 180px 85px;
+                grid-template-columns: 5fr 1fr;
                 gap: 1rem;
-            }
-
-            .graficas {
-                display: grid;
-                height: 100%;
-                grid-template-rows: 100px 1fr;
-                gap: 1rem;
-
                 .tipo_operacion {
                     display: grid;
                     grid-template-columns: repeat(5, 1fr);
                     gap: 1rem;
-
                     .operacion {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 0.5rem;
-                        border: 1px dotted #ccc;
-                        border-radius: 8px;
-
-                        >div {
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            border-radius: 4px;
-                            padding: 7px;
-
-                            img {
-                                width: 36px;
-                            }
-                        }
-
                         span {
                             @extend .size-small, .font-medium, .one-line-text;
                         }
                     }
                 }
             }
+
+            .graficas {
+                display: grid;
+                height: 100%;
+                //grid-template-rows: 100px 1fr;
+                gap: 1rem;
+            }
         }
     }
 }
 
 /* Small (sm) — min-width: 576px */
-@media (min-width: 576px) {}
+@media (min-width: 576px) {
+}
 
 /* Medium (md) — min-width: 768px */
 @media (min-width: 768px) {
@@ -737,7 +805,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         .reportes {
             grid-template-columns: 1fr 130px !important;
 
-            >.imagen {
+            > .imagen {
                 img {
                     display: block !important;
                 }
@@ -765,7 +833,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 /* Extra large (xl) — min-width: 1200px */
-@media (min-width: 1200px) {}
+@media (min-width: 1200px) {
+}
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
 @media (min-width: 1536px) {

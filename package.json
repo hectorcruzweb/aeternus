@@ -59,11 +59,13 @@
         "webpack-cli": "3.3.12"
     },
     "dependencies": {
+        "apexcharts": "^3.37.1",
         "moment": "^2.29.1",
         "numeral": "^2.0.6",
         "postcss-rtl": "^1.7.3",
         "quill-image-drop-module": "^1.0.3",
         "quill-image-resize-vue": "^1.0.4",
+        "vue-apexcharts": "^1.6.0",
         "vue-filter-number-format": "^2.0.0",
         "vue-moment": "^4.1.0",
         "vue-signature-pad": "^2.0.2",

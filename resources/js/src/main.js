@@ -17,6 +17,10 @@ Vue.use(Logger);
 import popupManager from "./plugins/popupManager.js";
 Vue.use(popupManager);
 
+import VueApexCharts from "vue-apexcharts";
+
+Vue.component("apexchart", VueApexCharts);
+
 // Vuesax Component Framework
 import Vuesax from "vuesax";
 

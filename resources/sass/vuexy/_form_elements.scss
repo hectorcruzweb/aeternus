@@ -173,6 +173,24 @@
     }
 }
 
+.vs__dropdown-menu,
+.vs2__dropdown-menu,
+.vs__listbox,
+.vs2__listbox {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    max-height: 240px; // scroll solo si la lista es larga
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin;
+    scrollbar-color: $primary #f1f1f1;
+    border: 1px solid #d5d5d5 !important;
+    border-radius: 0 !important;
+    box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.12) !important;
+    background: white !important;
+}
+
 .v-select,
 .vs__dropdown-toggle,
 .vs__selected-options,
