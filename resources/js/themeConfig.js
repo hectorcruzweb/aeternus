@@ -27,7 +27,7 @@ let colors = {
 // CONFIGS
 const themeConfig = {
     disableCustomizer: true, // options[Boolean] : true, false(default)
-    footerType: "static", // options[String]  : static(default) / sticky / hidden
+    footerType: "sticky", // options[String]  : static(default) / sticky / hidden
     navbarColor: "#fff", // options[String]  : HEX color / rgb / rgba / Valid HTML Color name - (default: #fff)
     navbarType: "floating", // options[String]  : floating(default) / static / sticky / hidden
     routerTransition: "slide-fade", // options[String]  : zoom-fade / slide-fade / fade-bottom / fade / zoom-out / none(default)

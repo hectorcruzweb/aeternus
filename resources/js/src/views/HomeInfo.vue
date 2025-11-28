@@ -1,60 +1,14 @@
 <template>
     <div class="dashboard">
-        <!--<div class="bg-golden-elegant hidden lg:flex hidden">
-      <h3 class="text-copy h5">
-        Accesos Directos
-      </h3>
-      <div class="accesos items-center justify-start lg:justify-between">
-        <a class="quick-access-btn" href="/clientes/control-de-seguimientos">
-          <img src="@assets/images/dashboard/accesos/seguimientos.svg" alt="Control de Seguimientos" class="btn-icon" />
-          <span class="btn-label">Control de Seguimientos</span>
-        </a>
-        <a class="quick-access-btn" href="/funeraria/cotizaciones">
-          <img src="@assets/images/dashboard/accesos/cotizaciones.svg" alt="Cotizaciones" class="btn-icon" />
-          <span class="btn-label">Hacer Cotizaciones</span>
-        </a>
-        <a class="quick-access-btn" href="/cementerio/ventas">
-          <img src="@assets/images/dashboard/accesos/ventas_cementerio.svg" alt="Ventas en Cementerio"
-            class="btn-icon" />
-          <span class="btn-label">Ventas en Cementerio</span>
-        </a>
-        <a class="quick-access-btn" href="/funeraria/ventas_planes">
-          <img src="@assets/images/dashboard/accesos/ventas_planes.svg" alt="Venta a Futuro" class="btn-icon" />
-          <span class="btn-label">Venta a Futuro</span>
-        </a>
-        <a class="quick-access-btn" href="/funeraria/servicios">
-          <img src="@assets/images/dashboard/accesos/servicios_funerarios.svg" alt="Servicio Funerario"
-            class="btn-icon" />
-          <span class="btn-label">Servicio Funerario</span>
-        </a>
-        <a class="quick-access-btn" href="/funeraria/ventas_generales">
-          <img src="@assets/images/dashboard/accesos/ventas_gral.svg" alt="Ventas en General" class="btn-icon" />
-          <span class="btn-label">Ventas en General</span>
-        </a>
-        <a class="quick-access-btn" href="/cobranza/facturacion">
-          <img src="@assets/images/dashboard/accesos/facturacion.svg" alt="Portal de Facturación" class="btn-icon" />
-          <span class="btn-label">Portal de Facturación</span>
-        </a>
-        <a class="quick-access-btn" href="/control-de-asistencia">
-          <img src="@assets/images/dashboard/accesos/checador.svg" alt="Reloj Checador" class="btn-icon" />
-          <span class="btn-label">Reloj Checador</span>
-        </a>
-      </div>
-    </div>
-  -->
         <div class="parte-1">
             <div class="servicios-funerarios">
                 <vue-slick-carousel class="" v-bind="settings">
-                    <div
-                        v-for="n in 4"
-                        :class="[
-                            'slide-servicio',
-                            n % 2 > 0
-                                ? 'servicio-contratado'
-                                : 'servicio-contratado',
-                        ]"
-                        :key="n"
-                    >
+                    <div v-for="n in 4" :class="[
+                        'slide-servicio',
+                        n % 2 > 0
+                            ? 'servicio-contratado'
+                            : 'servicio-contratado',
+                    ]" :key="n">
                         <div class="slide-header">
                             <div class="fallecido">
                                 <h2>SUSANA DEL ROCIO GOMEZ NEGRETE</h2>
@@ -68,16 +22,10 @@
                                     <span class="">Sala La Piedad.</span>
                                 </p>
                                 <div class="hidden">
-                                    <img
-                                        class="cursor-pointer img-btn-19"
-                                        src="@assets/images/folder.svg"
-                                        title="Ver Expediente"
-                                    />
-                                    <img
-                                        class="cursor-pointer img-btn-21"
-                                        src="@assets/images/whatsapp.svg"
-                                        title="Compartir Enlace"
-                                    />
+                                    <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg"
+                                        title="Ver Expediente" />
+                                    <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg"
+                                        title="Compartir Enlace" />
                                 </div>
                                 <div class="">
                                     <span class="">Ver Expediente</span>
@@ -162,10 +110,7 @@
                         </div>
                         <div class="reporte">
                             <div class="imagen bg-success-400">
-                                <img
-                                    class=""
-                                    src="@assets/images/dollar_bill.svg"
-                                />
+                                <img class="" src="@assets/images/dollar_bill.svg" />
                             </div>
                             <div>
                                 <p class="cantidad">$150</p>
@@ -174,7 +119,7 @@
                         </div>
                     </div>
                     <div class="imagen">
-                        <img class="" src="@assets/images/ataud.svg" />
+                        <img class="" src="@assets/images/conserviciosfunerarios.svg" />
                     </div>
                 </div>
             </div>
@@ -182,9 +127,7 @@
         <div class="parte-2">
             <div class="reporte-venta reporte-select">
                 <div class="seccion-title w-full flex flex-col gap-2">
-                    <div
-                        class="w-full flex flex-wrap items-center justify-between"
-                    >
+                    <div class="w-full flex flex-wrap items-center justify-between">
                         <h2 class="h4 font-medium one-line-text">
                             Desgloce de Ventas por Año
                         </h2>
@@ -211,60 +154,37 @@
                             </button>
                         </div>
                         <div class="flex justify-end w-full">
-                            <v-select
-                                :options="years"
-                                :clearable="false"
-                                :dir="$vs.rtl ? 'rtl' : 'ltr'"
-                                v-model="year"
-                                class=""
-                            >
+                            <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
+                                class="ajustar-width">
                             </v-select>
                         </div>
                     </div>
                 </div>
                 <div class="graficas">
                     <div class="grafica">
-                        <apexchart
-                            type="bar"
-                            height="400"
-                            :options="chartOptions"
-                            :series="series"
-                        ></apexchart>
+                        <apexchart type="bar" height="400" :options="chartOptions" :series="series"></apexchart>
                     </div>
                 </div>
             </div>
-            <div>
-                Eveniet est placeat nihil. Molestiae eius officia corrupti? Quia
-                quos est qui aliquam atque eveniet, sed consectetur nihil iusto
-                accusamus provident expedita voluptate fugit recusandae labore
-                eum quis placeat repudiandae!
+            <div class="reporte-venta reporte-select">
+                <div class="seccion-title w-full flex flex-col gap-2">
+                    <div class="w-full flex flex-wrap items-center justify-between">
+                        <h2 class="h4 font-medium one-line-text">
+                            Desgloce de Adeudos
+                        </h2>
+                        <div class="">
+                            <span class="">Descargar Reporte</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="graficas">
+                    <div class="grafica">
+                        <apexchart type="bar" height="400" :options="chartOptions" :series="series"></apexchart>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="hidden">
-            <div>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolores
-                sequi dolore quae ipsam laborum aliquid unde quia fuga, dolorum
-                voluptatibus consectetur necessitatibus illum nobis possimus
-                nesciunt quis eaque aut. Non?
-            </div>
-            <div>
-                Eveniet est placeat nihil. Molestiae eius officia corrupti? Quia
-                quos est qui aliquam atque eveniet, sed consectetur nihil iusto
-                accusamus provident expedita voluptate fugit recusandae labore
-                eum quis placeat repudiandae!
-            </div>
-        </div>
-        <!--
-      <vue-slick-carousel class="flex flex-col flex-1 bg-danger" v-bind="settings">
-        <div class="bg-success flex-1">
-          <div class="bg-success flex-1">
-            Slide 1
-          </div>
-        </div>
-        <div class="bg-success flex flex-col flex-1">Slide 2</div>
-        <div class="bg-success flex flex-col flex-1">Slide 3</div>
-      </vue-slick-carousel>
-    --></div>
+    </div>
 </template>
 <script>
 import vSelect from "vue-select";
@@ -387,7 +307,7 @@ export default {
         }
         this.year = currentYear;
     },
-    mounted() {},
+    mounted() { },
 };
 </script>
 <style lang="scss" scoped>
@@ -462,7 +382,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     /* required for "1fr" to work */
 }
 
-::v-deep .slick-slide > div {
+::v-deep .slick-slide>div {
     height: 100% !important;
     /* required for "1fr" to work */
 }
@@ -528,19 +448,18 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
 .dashboard {
     display: grid;
-    grid-template-rows: auto;
-    align-content: start;
+    grid-template-rows: 1fr;
     gap: 1rem;
     /* 🔥 items inside each cell stick to the TOP */
     @extend .scroll-styles;
     //background-color: red;
 
-    > div {
+    >div {
         //background-color: yellow;
         display: grid;
         gap: 1rem;
 
-        > div {
+        >div {
             @extend .scroll-styles, .effects;
             padding: 21px;
         }
@@ -549,7 +468,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-1 {
         grid-template-rows: 1fr 1fr;
 
-        > div {
+        >div {
             min-height: 238.625px;
             max-height: 238.625px;
         }
@@ -595,7 +514,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     align-items: center;
                     justify-content: space-between;
 
-                    > div {
+                    >div {
                         display: flex;
                         flex-wrap: wrap;
                         align-items: center;
@@ -612,7 +531,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 /* 🔥 REQUIRED */
                 gap: 1rem;
 
-                > div {
+                >div {
                     display: flex;
                     flex-direction: column;
                     height: 100%;
@@ -649,7 +568,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                             grid-template-columns: 1fr 1fr;
                             gap: 1rem;
 
-                            > div {
+                            >div {
                                 display: grid;
                                 grid-template-columns: 36px 1fr;
                                 gap: 0.5rem;
@@ -741,7 +660,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     }
                 }
 
-                > .imagen {
+                >.imagen {
                     height: 100%;
                     display: flex;
                     justify-content: flex-end;
@@ -758,7 +677,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .parte-2 {
         grid-template-rows: 1fr 1fr;
 
-        > div {
+        >div {
             min-height: 403.625px;
             //max-height: 403.625px;
         }
@@ -773,22 +692,41 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 display: grid;
                 grid-template-columns: 5fr 1fr;
                 gap: 1rem;
+
                 .tipo_operacion {
-                    display: grid;
-                    grid-template-columns: repeat(5, 1fr);
+                    display: flex;
+                    flex-wrap: wrap;
                     gap: 1rem;
-                    .operacion {
+                    align-items: center;
+
+                    button.operacion {
+                        @extend .size-small, .font-medium;
+                        padding: 0.4rem 0.8rem;
+                        border-radius: 4px;
+                        background-color: $secondary;
+                        color: white;
+                        border: none;
+                        cursor: pointer;
+
+                        &:hover {
+                            background-color: darken($primary, 10%);
+                        }
+
+
                         span {
                             @extend .size-small, .font-medium, .one-line-text;
                         }
                     }
                 }
+
+                .v-select {
+                    min-width: 90px;
+                    max-width: 90px;
+                }
             }
 
             .graficas {
                 display: grid;
-                height: 100%;
-                //grid-template-rows: 100px 1fr;
                 gap: 1rem;
             }
         }
@@ -796,8 +734,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 /* Small (sm) — min-width: 576px */
-@media (min-width: 576px) {
-}
+@media (min-width: 576px) {}
 
 /* Medium (md) — min-width: 768px */
 @media (min-width: 768px) {
@@ -805,7 +742,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         .reportes {
             grid-template-columns: 1fr 130px !important;
 
-            > .imagen {
+            >.imagen {
                 img {
                     display: block !important;
                 }
@@ -817,15 +754,9 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 /* Large (lg) — min-width: 992px */
 @media (min-width: 992px) {
     .dashboard {
-        grid-template-rows: 218.625px repeat(auto, auto);
-        gap: 1rem;
+        grid-template-rows: 238.625px 1fr !important;
 
         .parte-1 {
-            grid-template-rows: auto;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .parte-2 {
             grid-template-rows: auto;
             grid-template-columns: 1fr 1fr;
         }
@@ -834,96 +765,14 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
 /* Extra large (xl) — min-width: 1200px */
 @media (min-width: 1200px) {
+    .parte-2 {
+        grid-template-rows: 1fr !important;
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
 @media (min-width: 1536px) {
     /* Huge screens */
-}
-
-/* Center the container on the page */
-/* Golden container */
-.bg-golden-elegant {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem 1rem 1rem;
-    background: #ffffff;
-    /* clean white background */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 8px 18px rgba(0, 0, 0, 0.08);
-    /* elegant, subtle shadow */
-    gap: 0.75rem;
-}
-
-.accesos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.quick-access-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
-}
-
-/* Individual button styling */
-.quick-access-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    /* centers image inside the button */
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    /* slightly translucent */
-    padding: 0.5rem;
-    border-radius: 0.75rem;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: 86px;
-    height: 86px;
-    max-width: 86px;
-    max-height: 86px;
-    text-align: center;
-    box-sizing: content-box;
-}
-
-/* Button image */
-.btn-icon {
-    width: 32px;
-    height: 36px;
-    object-fit: contain;
-    margin-bottom: 0.25rem;
-    /* leave space for label */
-    flex-shrink: 0;
-}
-
-/* Button label */
-.btn-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: $content-color;
-    /* readable over golden background */
-    line-height: 1.25rem;
-    white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-/* Hover effect */
-.quick-access-btn:hover {
-    background: #fef3c7;
-    /* soft golden highlight */
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-/* Active / click effect */
-.quick-access-btn:active {
-    background: #fde68a;
-    /* slightly darker golden */
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 </style>
