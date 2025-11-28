@@ -176,6 +176,30 @@
                             <span class="">Descargar Reporte</span>
                         </div>
                     </div>
+                    <div class="selectores">
+                        <div class="tipo_operacion">
+                            <button class="operacion">
+                                <span>Cementerio</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Cuotas</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Planes</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Servicios</span>
+                            </button>
+                            <button class="operacion">
+                                <span>Ventas en Gral.</span>
+                            </button>
+                        </div>
+                        <div class="flex justify-end w-full">
+                            <v-select :options="years" :clearable="false" :dir="$vs.rtl ? 'rtl' : 'ltr'" v-model="year"
+                                class="ajustar-width">
+                            </v-select>
+                        </div>
+                    </div>
                 </div>
                 <div class="graficas">
                     <div class="grafica">
