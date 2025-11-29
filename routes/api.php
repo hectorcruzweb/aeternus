@@ -10,6 +10,7 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
  */
+Route::get('/dashboard/servicios-funerarios', 'DashboardController@serviciosFunerarios');
 
 /**en pruebas */
 

@@ -106,6 +106,11 @@ class ServiciosFunerarios extends Model
         );
     }
 
+    public function datosoperacion()
+    {
+        return $this->hasOne(Operaciones::class, 'servicios_funerarios_id', 'id');
+    }
+
     public function nacionalidad()
     {
         return $this->hasOne('App\Nacionalidades', 'id', 'nacionalidades_id');
