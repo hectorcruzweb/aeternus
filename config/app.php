@@ -68,6 +68,8 @@ return [
      */
 
     'timezone'        => 'America/Los_Angeles',
+    'faker_timezone' => 'America/Los_Angeles',
+
 
     /*
     |--------------------------------------------------------------------------

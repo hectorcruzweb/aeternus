@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\LugaresServicio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
@@ -167,5 +168,10 @@ class ServiciosFunerarios extends Model
     public function servicio_exhumado()
     {
         return $this->hasMany('App\ServiciosFunerarios', 'servicios_funerarios_exhumado_id', 'id');
+    }
+
+    public function lugarvelacion()
+    {
+        return $this->belongsTo(LugaresServicio::class, 'lugares_servicios_id');
     }
 }
