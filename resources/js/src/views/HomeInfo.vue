@@ -2,59 +2,8 @@
     <div class="dashboard">
         <div class="parte-1">
             <ServiciosFunerarios :data="serviciosFunerarios" />
-            <div class="inventario">
-                <div class="seccion-title">
-                    <h2 class="">Estado del Inventario</h2>
-                    <div class="">
-                        <span class="text-white">Reporte General</span>
-                    </div>
-                </div>
-                <div class="reportes">
-                    <div class="lista">
-                        <div class="reporte">
-                            <div class="imagen bg-primary-400">
-                                <img class="" src="@assets/images/coffin.svg" />
-                            </div>
-                            <div>
-                                <p class="cantidad">150</p>
-                                <p class="descripcion">Conceptos</p>
-                            </div>
-                        </div>
-                        <div class="reporte">
-                            <div class="imagen bg-danger-400">
-                                <img class="" src="@assets/images/low.svg" />
-                            </div>
-                            <div>
-                                <p class="cantidad">150</p>
-                                <p class="descripcion">Desabastecido</p>
-                            </div>
-                        </div>
-                        <div class="reporte">
-                            <div class="imagen bg-warning-400">
-                                <img class="" src="@assets/images/alto.svg" />
-                            </div>
-                            <div>
-                                <p class="cantidad">150</p>
-                                <p class="descripcion">Sobrestock</p>
-                            </div>
-                        </div>
-                        <div class="reporte">
-                            <div class="imagen bg-success-400">
-                                <img class="" src="@assets/images/dollar_bill.svg" />
-                            </div>
-                            <div>
-                                <p class="cantidad">$150</p>
-                                <p class="descripcion">$Costo Total</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="imagen">
-                        <img class="" src="@assets/images/conserviciosfunerarios.svg" />
-                    </div>
-                </div>
-            </div>
+            <Inventario :data="inventario" />
         </div>
-
         <div class="parte-2">
             <div class="reporte-venta reporte-select">
                 <div class="seccion-title w-full flex flex-col gap-2">
@@ -162,15 +111,18 @@
 <script>
 import vSelect from "vue-select";
 import ServiciosFunerarios from "./dashboard/ServiciosFunerarios.vue";
+import Inventario from "./dashboard/Inventario.vue";
 import dashboard from "../services/dashboard";
 export default {
     name: "Dashboard",
     components: {
         "v-select": vSelect,
         ServiciosFunerarios,
+        Inventario
     },
     data() {
         return {
+            inventario: [],
             serviciosFunerarios: [],
             isLoading: false,
             years: [],
@@ -303,6 +255,7 @@ export default {
             try {
                 const response = await dashboard._fetchDashboard();
                 this.serviciosFunerarios = response.data.servicios_funerarios;
+                this.inventario = response.data.servicios_funerarios;
                 console.log("🚀 ~ this.serviciosFunerarios:", this.serviciosFunerarios)
             } catch (error) {
                 this.$error("🚀 ~ error:", error);

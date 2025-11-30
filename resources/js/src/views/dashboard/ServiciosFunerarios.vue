@@ -55,9 +55,10 @@
                                     </p>
                                 </div>
                                 <div>
-                                    <p class="dato" :class="[item.datosoperacion.saldo > 0 ? 'bg-danger' : '']"><span
+                                    <p class="dato"
+                                        :class="[item.datosoperacion.saldo > 0 ? 'bg-danger' : 'bg-primary']"><span
                                             v-if="item.datosoperacion.saldo > 0">Si</span><span v-else>No</span></p>
-                                    <p class="texto-dato">{{ item.datosoperacion.saldo_pesos }}</p>
+                                    <p class="texto-dato">Saldo Pendiente</p>
                                 </div>
                             </div>
                         </div>
