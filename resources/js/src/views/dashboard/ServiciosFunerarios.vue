@@ -1,67 +1,63 @@
 <template>
     <div class="servicios-funerarios">
-        <vue-slick-carousel class="" v-bind="settings">
-            <div
-                v-for="n in 4"
-                :class="[
-                    'slide-servicio',
-                    n % 2 > 0 ? 'servicio-contratado' : 'servicio-contratado',
-                ]"
-                :key="n"
-            >
+        <vue-slick-carousel ref="carousel" class="" v-bind="settings" v-if="data.length > 0">
+            <div v-for="item in data" :key="item.id" :class="[
+                'slide-servicio',
+                item.datosoperacion !== null ? 'servicio-contratado' : 'servicio-contratado',
+            ]">
                 <div class="slide-header">
                     <div class="fallecido">
-                        <h2>SUSANA DEL ROCIO GOMEZ NEGRETE</h2>
+                        <h2>{{ item.nombre_afectado }}</h2>
                     </div>
                     <div class="velacion">
-                        <p v-if="n % 2 == 0">
+                        <p v-if="item.datosoperacion === null">
                             <strong>Servicio por definir.</strong>
                         </p>
                         <p v-else>
                             <strong>Velación: </strong>
-                            <span class="">Sala La Piedad.</span>
+                            <span class="" v-if="item.velacion_b === 1">{{ item.lugarvelacion.lugar }}</span>
+                            <span class="" v-else>Sin velación</span>
                         </p>
                         <div class="hidden">
-                            <img
-                                class="cursor-pointer img-btn-19"
-                                src="@assets/images/folder.svg"
-                                title="Ver Expediente"
-                            />
-                            <img
-                                class="cursor-pointer img-btn-21"
-                                src="@assets/images/whatsapp.svg"
-                                title="Compartir Enlace"
-                            />
+                            <img class="cursor-pointer img-btn-19" src="@assets/images/folder.svg"
+                                title="Ver Expediente" />
+                            <img class="cursor-pointer img-btn-21" src="@assets/images/whatsapp.svg"
+                                title="Compartir Enlace" />
                         </div>
                         <div class="">
-                            <span class="">Ver Expediente</span>
+                            <span class="" @click="
+                                ConsultarVenta(
+                                    item.id
+                                )
+                                ">Ver Expediente</span>
                         </div>
                     </div>
                 </div>
                 <div class="slide-content">
-                    <div class="contenido" v-if="n % 2 > 0">
+                    <div class="contenido" v-if="item.datosoperacion !== null">
                         <p>Datos del Servicio</p>
                         <div class="datos-contenido">
                             <div class="row-dato">
                                 <div>
-                                    <p class="dato bg-primary">si</p>
+                                    <p class="dato bg-primary">{{ item.cremacion }}</p>
                                     <p class="texto-dato">Cremación</p>
                                 </div>
                                 <div>
-                                    <p class="dato bg-primary">si</p>
+                                    <p class="dato bg-primary">{{ item.inhumacion }}</p>
                                     <p class="texto-dato">Inhumación</p>
                                 </div>
                             </div>
                             <div class="row-dato">
                                 <div>
-                                    <p class="dato bg-primary">no</p>
+                                    <p class="dato bg-primary">{{ item.misa }}</p>
                                     <p class="texto-dato">
                                         Ceremonía Religiosa
                                     </p>
                                 </div>
                                 <div>
-                                    <p class="dato bg-danger">si</p>
-                                    <p class="texto-dato">$ Saldo Pendiente</p>
+                                    <p class="dato" :class="[item.datosoperacion.saldo > 0 ? 'bg-danger' : '']"><span
+                                            v-if="item.datosoperacion.saldo > 0">Si</span><span v-else>No</span></p>
+                                    <p class="texto-dato">{{ item.datosoperacion.saldo_pesos }}</p>
                                 </div>
                             </div>
                         </div>
@@ -75,20 +71,27 @@
                 </div>
             </div>
         </vue-slick-carousel>
+        <div v-else class="skeleton">
+            <p>No hay servicios funerarios en proceso.</p>
+        </div>
+        <ReportesServicio v-if="openReportes" :show="openReportes" @closeListaReportes="closeListaReportes"
+            :id_solicitud="id_solicitud"></ReportesServicio>
     </div>
 </template>
 <script>
+import ReportesServicio from '../pages/funeraria/servicios_funerarios/ReportesServicio.vue';
 export default {
     // Name of the component (optional)
     name: "ServiciosFunerarios(dashboard)",
-    components: {},
+    components: {
+        ReportesServicio
+    },
     // Props: data passed from parent
     props: {
-        servicios: {
-            type: Object,
-            required: true,
-            default: {},
-        },
+        data: {
+            type: Array,
+            required: true
+        }
     },
     watch: {},
     // Computed properties: derived reactive data
@@ -96,6 +99,8 @@ export default {
     // Data function returns the component's reactive state
     data() {
         return {
+            id_solicitud: 0 /**para consultar los reportes */,
+            openReportes: false,
             settings: {
                 draggable: true, // Make the slider draggable
                 swipe: true, // Enable swipe on touch devices
@@ -105,15 +110,25 @@ export default {
                 infinite: true,
                 slidesToShow: 1,
                 adaptiveHeight: true,
-                autoplaySpeed: 8000,
+                autoplaySpeed: 10000,
                 pauseOnDotsHover: true,
                 pauseOnFocus: true,
-                pauseOnHover: true,
+                pauseOnHover: true
             },
         };
     },
     // Methods: functions you can call in template or other hooks
-    methods: {},
+    methods: {
+        ConsultarVenta(id_solicitud) {
+            this.$refs.carousel.pause(); //pauso el carrusel
+            this.id_solicitud = id_solicitud;
+            this.openReportes = true;
+        },
+        closeListaReportes() {
+            this.openReportes = false;
+            this.$refs.carousel.play(); //reanudamos el carrusel
+        },
+    },
     // Lifecycle hooks
     created() {
         this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet

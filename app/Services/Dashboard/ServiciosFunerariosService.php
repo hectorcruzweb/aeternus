@@ -4,8 +4,9 @@ namespace App\Services\Dashboard;
 
 use Carbon\Carbon;
 use App\ServiciosFunerarios;
+use Illuminate\Support\Facades\DB;
 
-class ServiciosFuneariosService
+class ServiciosFunerariosService
 {
     public function getServicios()
     {
@@ -18,6 +19,7 @@ class ServiciosFuneariosService
                 'cremacion_b',
                 'inhumacion_b',
                 'traslado_b',
+                'misa_b',
                 'velacion_b',
                 'lugares_servicios_id',
                 'direccion_velacion',
@@ -26,6 +28,11 @@ class ServiciosFuneariosService
                 'fechahora_traslado',
                 'fechahora_misa',
                 'fechahora_solicitud',
+                DB::raw("CASE WHEN velacion_b = 1 THEN 'si' ELSE 'no' END AS velacion"),
+                DB::raw("CASE WHEN misa_b = 1 THEN 'si' ELSE 'no' END AS misa"),
+                DB::raw("CASE WHEN cremacion_b = 1 THEN 'si' ELSE 'no' END AS cremacion"),
+                DB::raw("CASE WHEN inhumacion_b = 1 THEN 'si' ELSE 'no' END AS inhumacion"),
+                DB::raw("CASE WHEN traslado_b = 1 THEN 'si' ELSE 'no' END AS traslado"),
             ])
             ->where('status', '>', 0)
             ->where(function ($q) use ($now, $rango_dias) {
@@ -50,7 +57,7 @@ class ServiciosFuneariosService
                     });
             })
             ->with(['datosoperacion' => function ($q) {
-                $q->select(['id', 'empresa_operaciones_id', 'servicios_funerarios_id', 'saldo'])
+                $q->select(['id', 'empresa_operaciones_id', 'servicios_funerarios_id', 'saldo', DB::raw("CONCAT('$ ', FORMAT(saldo, 2, 'es_MX')) AS saldo_pesos")])
                     ->where('empresa_operaciones_id', 3)
                     ->where('status', '>', 0);
             }])

@@ -330,6 +330,11 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                         height: 60%;
                         width: auto;
                         object-fit: contain;
+                        user-drag: none;
+                        -webkit-user-drag: none;
+                        user-select: none;
+                        -webkit-user-select: none;
+                        pointer-events: none; // optional
                     }
                 }
             }
