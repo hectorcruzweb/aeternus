@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exports;
 
 use App\Operaciones;
@@ -10,11 +11,11 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ReporteEspecialExport implements
-FromArray,
-WithHeadings,
-WithColumnFormatting,
-ShouldAutoSize,
-WithStyles
+    FromArray,
+    WithHeadings,
+    WithColumnFormatting,
+    ShouldAutoSize,
+    WithStyles
 {
     protected $operaciones;
 
@@ -101,17 +102,23 @@ WithStyles
             foreach ($op->cfdis as $cfdi) {
 
                 switch ($op->empresa_operaciones_id) {
-                    case 1:$id = $op->ventas_terrenos_id;
+                    case 1:
+                        $id = $op->ventas_terrenos_id;
                         break;
-                    case 2:$id = $op->id;
+                    case 2:
+                        $id = $op->id;
                         break;
-                    case 3:$id = $op->servicios_funerarios_id;
+                    case 3:
+                        $id = $op->servicios_funerarios_id;
                         break;
-                    case 4:$id = $op->ventas_planes_id;
+                    case 4:
+                        $id = $op->ventas_planes_id;
                         break;
-                    case 5:$id = $op->ventas_generales_id;
+                    case 5:
+                        $id = $op->ventas_generales_id;
                         break;
-                    default: $id = 'N/A';
+                    default:
+                        $id = 'N/A';
                         break;
                 }
 

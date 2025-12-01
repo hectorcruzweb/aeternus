@@ -1,5 +1,5 @@
 <template>
-    <div class="inventario" v-if="data.length > 0">
+    <div class="inventario" v-if="data.total_articulos !== undefined">
         <div class="seccion-title">
             <h2 class="">Estado del Inventario</h2>
             <div class="">
@@ -13,8 +13,10 @@
                         <img class="" src="@assets/images/coffin.svg" />
                     </div>
                     <div>
-                        <p class="cantidad">150</p>
-                        <p class="descripcion">Conceptos</p>
+                        <p class="cantidad"><count-to :start-val="0" :end-val="data.total_articulos" :duration="2000" />
+                        </p>
+                        <p class="descripcion">Conceptos
+                        </p>
                     </div>
                 </div>
                 <div class="reporte">
@@ -22,8 +24,9 @@
                         <img class="" src="@assets/images/low.svg" />
                     </div>
                     <div>
-                        <p class="cantidad">150</p>
-                        <p class="descripcion">Desabastecido</p>
+                        <p class="cantidad"><count-to :start-val="0" :end-val="data.articulos_bajo_minimo"
+                                :duration="2000" /></p>
+                        <p class="descripcion">Desabastecidos</p>
                     </div>
                 </div>
                 <div class="reporte">
@@ -31,7 +34,8 @@
                         <img class="" src="@assets/images/alto.svg" />
                     </div>
                     <div>
-                        <p class="cantidad">150</p>
+                        <p class="cantidad"><count-to :start-val="0" :end-val="data.articulos_sobre_maximo"
+                                :duration="2000" /></p>
                         <p class="descripcion">Sobrestock</p>
                     </div>
                 </div>
@@ -40,7 +44,8 @@
                         <img class="" src="@assets/images/dollar_bill.svg" />
                     </div>
                     <div>
-                        <p class="cantidad">$150</p>
+                        <p class="cantidad">$ <count-to :start-val="0" :end-val="data.costo_total_invetario"
+                                :duration="2000" /> MXN</p>
                         <p class="descripcion">$Costo Total</p>
                     </div>
                 </div>

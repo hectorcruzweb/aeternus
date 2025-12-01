@@ -36,6 +36,71 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+
+
+    public function getServiciosFunerariosDashboard()
+    {
+        $now = Carbon::now('America/Mazatlan');
+        $rango_dias = $now->copy()->subDays(3); // LAST 3 DAYS
+        $servicios = ServiciosFunerarios::query()
+            ->select([
+                'id',
+                'nombre_afectado',
+                'cremacion_b',
+                'inhumacion_b',
+                'traslado_b',
+                'misa_b',
+                'velacion_b',
+                'lugares_servicios_id',
+                'direccion_velacion',
+                'fechahora_cremacion',
+                'fechahora_inhumacion',
+                'fechahora_traslado',
+                'fechahora_misa',
+                'fechahora_solicitud',
+                DB::raw("CASE WHEN velacion_b = 1 THEN 'si' ELSE 'no' END AS velacion"),
+                DB::raw("CASE WHEN misa_b = 1 THEN 'si' ELSE 'no' END AS misa"),
+                DB::raw("CASE WHEN cremacion_b = 1 THEN 'si' ELSE 'no' END AS cremacion"),
+                DB::raw("CASE WHEN inhumacion_b = 1 THEN 'si' ELSE 'no' END AS inhumacion"),
+                DB::raw("CASE WHEN traslado_b = 1 THEN 'si' ELSE 'no' END AS traslado"),
+            ])
+            ->where('status', '>', 0)
+            ->where(function ($q) use ($now, $rango_dias) {
+                // A) CASE 1 — At least one FINAL event exists and is FUTURE
+                $q->where(function ($x) use ($now) {
+                    $x->whereNotNull('fechahora_cremacion')
+                        ->where('fechahora_cremacion', '>', $now)
+                        ->orWhereNotNull('fechahora_inhumacion')
+                        ->where('fechahora_inhumacion', '>', $now)
+                        ->orWhereNotNull('fechahora_misa')
+                        ->where('fechahora_misa', '>', $now)
+                        ->orWhereNotNull('fechahora_traslado')
+                        ->where('fechahora_traslado', '>', $now);
+                })
+                    // B) CASE 2 — NONE of the final events exist → fallback to solicitud
+                    ->orWhere(function ($x) use ($rango_dias) {
+                        $x->whereNull('fechahora_cremacion')
+                            ->whereNull('fechahora_inhumacion')
+                            ->whereNull('fechahora_misa')
+                            ->whereNull('fechahora_traslado')
+                            ->where('fechahora_solicitud', '>', $rango_dias);
+                    });
+            })
+            ->with(['datosoperacion' => function ($q) {
+                $q->select(['id', 'empresa_operaciones_id', 'servicios_funerarios_id', 'saldo', DB::raw("CONCAT('$ ', FORMAT(saldo, 2, 'es_MX')) AS saldo_pesos")])
+                    ->where('empresa_operaciones_id', 3)
+                    ->where('status', '>', 0);
+            }])
+            // Lugar de velación (only if velación_b = 1 will return non-null)
+            ->with(['lugarvelacion' => function ($q) {
+                $q->select(['*']);
+            }])
+            ->orderBy('fechahora_solicitud', 'desc')
+            ->limit(10)
+            ->get();
+        return $servicios;
+    }
+
     public function upload(Request $req)
     {
         if ($req->hasFile('image')) {
@@ -50,7 +115,6 @@ class FunerariaController extends ApiController
         } else {
             return $this->errorResponse("Error", 409);
         }
-
     }
     /**REGISTRAR PLAN FUNERARIO*/
     public function control_planes(Request $request, $tipo_servicio = '')
@@ -1151,7 +1215,8 @@ class FunerariaController extends ApiController
                 /**captura de pagos */
                 /**fin de captura de pagos */
             }
-            /**fin if servicio tipo agregar */ else {
+            /**fin if servicio tipo agregar */
+            else {
                 /**es modificar */
                 DB::table('ventas_planes')->where('id', '=', $request->id_venta)->update(
                     [
@@ -1830,8 +1895,6 @@ class FunerariaController extends ApiController
             } else {
                 $venta['venta_plan']['tipo_financiamiento_texto'] = 'A Futuro';
             }
-
-
         } //fin foreach venta
 
         return $resultado_query;
@@ -3825,7 +3888,7 @@ class FunerariaController extends ApiController
                     'impuestos' => $impuestos,
                     'total' => $total,
                     'tasa_iva' => $request->tasa_iva,
-                    'saldo' => $total - (isset($datos_solicitud['operacion']) ? $datos_solicitud['operacion']['total_cubierto'] : 0)//el nuevo total menos lo que ya esta pagado hasta la fecha
+                    'saldo' => $total - (isset($datos_solicitud['operacion']) ? $datos_solicitud['operacion']['total_cubierto'] : 0) //el nuevo total menos lo que ya esta pagado hasta la fecha
                 ]
             );
 
@@ -4768,8 +4831,6 @@ class FunerariaController extends ApiController
                     $solicitud['status_texto'] = 'Activa';
                 }
             }
-
-
         } //fin foreach venta
 
         return $resultado_query;
@@ -4887,10 +4948,10 @@ class FunerariaController extends ApiController
                     'articulos_id',
                     $detalle['articulos_id']
                 )->update(
-                        [
-                            'existencia' => $suma,
-                        ]
-                    );
+                    [
+                        'existencia' => $suma,
+                    ]
+                );
             }
             // return $this->errorResponse($detalle_inventario,409);
             DB::commit();
@@ -5593,7 +5654,6 @@ class FunerariaController extends ApiController
         } else {
             return $pdf->inline($name_pdf);
         }
-
     }
 
     public function material_velacion_rentado(Request $request)
@@ -6861,7 +6921,7 @@ class FunerariaController extends ApiController
 
             /**tipo de financiamiento texto */
             if ($venta['financiamiento'] == 1) {
-                $venta['tipo_financimiento_texto'] = 'Pago único';//'Uso inmediato/Pago único'
+                $venta['tipo_financimiento_texto'] = 'Pago único'; //'Uso inmediato/Pago único'
             } else {
                 $venta['tipo_financimiento_texto'] = 'A futuro/'
                     . $venta['financiamiento'] . ' Mes(s)';
@@ -7141,7 +7201,6 @@ class FunerariaController extends ApiController
                 }
             }
             $venta["total_letras"] = numeros_a_letras($venta["total"]);
-
         } //fin foreach venta
 
         return $resultado_query;
@@ -7305,7 +7364,6 @@ class FunerariaController extends ApiController
                                     );
                             }
                         }
-
                     }
                 }
                 //actualizo la tabla de ventas en gral como entregado
@@ -7405,10 +7463,10 @@ class FunerariaController extends ApiController
                                 'articulos_id',
                                 $detalle['articulos_id']
                             )->update(
-                                    [
-                                        'existencia' => $suma,
-                                    ]
-                                );
+                                [
+                                    'existencia' => $suma,
+                                ]
+                            );
                         }
                     } //fin if isset articulos en el contrato
                 }
@@ -7574,5 +7632,4 @@ class FunerariaController extends ApiController
             return $this->errorResponse('Error al solicitar los datos.', 409);
         }
     }
-
 }

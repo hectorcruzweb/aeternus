@@ -66,6 +66,7 @@
         "quill-image-drop-module": "^1.0.3",
         "quill-image-resize-vue": "^1.0.4",
         "vue-apexcharts": "^1.6.0",
+        "vue-count-to": "^1.0.13",
         "vue-filter-number-format": "^2.0.0",
         "vue-moment": "^4.1.0",
         "vue-signature-pad": "^2.0.2",

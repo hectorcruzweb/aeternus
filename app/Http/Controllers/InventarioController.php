@@ -2,21 +2,189 @@
 
 namespace App\Http\Controllers;
 
-use App\AjusteInventarioDetalle;
+use PDF;
 use App\Articulos;
-use App\Departamentos;
 use App\Inventario;
+use App\SatUnidades;
+use App\VentaDetalle;
+use App\Departamentos;
+use App\TipoArticulos;
+use Illuminate\Http\Request;
 use App\MovimientosInventario;
 use App\SATProductosServicios;
-use App\SatUnidades;
-use App\TipoArticulos;
-use App\VentaDetalle;
-use Illuminate\Http\Request;
+use App\AjusteInventarioDetalle;
+use App\Exports\InventarioExport;
 use Illuminate\Support\Facades\DB;
-use PDF;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InventarioController extends ApiController
 {
+
+    public function getInventarioDashboard()
+    {
+        $articulos = Articulos::select([
+            'id',
+            'minimo',
+            'maximo',
+            'precio_venta',
+            'tipo_articulos_id',
+        ])
+            ->with(['inventario' => function ($q) {
+                $q->select([
+                    'articulos_id',
+                    'precio_compra_neto',
+                    'existencia'
+                ]);
+            }])
+            ->where('status', 1)
+            ->get();
+
+        // Procesar resumen
+        $totalArticulos = $articulos->count();
+        $totalBajoMinimo = 0;
+        $totalSobreMaximo = 0;
+        $costoTotalGlobal = 0;
+
+        foreach ($articulos as $art) {
+            // Total existencia del artículo
+            $existTotal = $art->inventario
+                ? $art->inventario->sum('existencia')
+                : 0;
+            // Clasificación mínimo / máximo
+            if ($existTotal < $art->minimo && $art->tipo_articulos_id != 2) {
+                $totalBajoMinimo++;
+            }
+            if ($existTotal > $art->maximo && $art->tipo_articulos_id != 2) {
+                $totalSobreMaximo++;
+            }
+            // Costo total global basado en precio_venta de tabla articulos (tipo_articulos_id != 2)
+            if (!is_null($art->precio_venta) && $art->tipo_articulos_id != 2) {
+                $costoTotalGlobal += $existTotal * $art->precio_venta;
+            }
+        }
+        return [
+            'total_articulos' => $totalArticulos,
+            'articulos_bajo_minimo' => $totalBajoMinimo,
+            'articulos_sobre_maximo' => $totalSobreMaximo,
+            'costo_total_inventario' => $costoTotalGlobal,
+            'costo_total_inventario_texto' => '$ ' . number_format($costoTotalGlobal, 2) . " MXN",
+        ];
+    }
+
+
+
+
+    /**
+     * Listar artículos con opciones de filtrado:
+     *  - low: inventario bajo el mínimo
+     *  - over: inventario sobre el máximo
+     *  - all: todos
+     */
+    public function listarDashboard($filtro = 'all', $export_excel = false)
+    {
+        $query = Articulos::select([
+            'articulos.id',
+            'articulos.codigo_barras',
+            'articulos.descripcion',
+            'articulos.precio_compra',
+            'articulos.precio_venta',
+            'articulos.minimo',
+            'articulos.maximo',
+            'articulos.tipo_articulos_id',
+            // existencia total
+            DB::raw('COALESCE(SUM(inventario.existencia), 0) AS existencia'),
+            // bajo mínimo (excluye tipo 2)
+            DB::raw('(
+            articulos.tipo_articulos_id <> 2
+            AND COALESCE(SUM(inventario.existencia), 0) < articulos.minimo
+        ) AS desabastecido'),
+            // sobre máximo
+            DB::raw('(
+            COALESCE(SUM(inventario.existencia), 0) > articulos.maximo
+        ) AS sobreabastecido'),
+
+            // en orden (excluye tipo 2)
+            DB::raw('(
+            articulos.tipo_articulos_id <> 2
+            AND COALESCE(SUM(inventario.existencia), 0) >= articulos.minimo
+            AND COALESCE(SUM(inventario.existencia), 0) <= articulos.maximo
+        ) AS en_orden'),
+        ])
+            ->leftJoin('inventario', 'inventario.articulos_id', '=', 'articulos.id')
+            ->where('articulos.status', 1)
+            ->groupBy(
+                'articulos.id',
+                'articulos.codigo_barras',
+                'articulos.descripcion',
+                'articulos.precio_compra',
+                'articulos.precio_venta',
+                'articulos.minimo',
+                'articulos.maximo',
+                'articulos.tipo_articulos_id'
+            );
+
+        // 🔍 filtros
+        $reporte = '';
+        switch ($filtro) {
+            case 'low':
+                $query->havingRaw('
+                articulos.tipo_articulos_id <> 2
+                AND COALESCE(SUM(inventario.existencia), 0) < articulos.minimo
+            ');
+                $reporte = 'Reporte de Inventario Desabastecido';
+                break;
+            case 'over':
+                $query->havingRaw('
+                COALESCE(SUM(inventario.existencia), 0) > articulos.maximo
+            ');
+                $reporte = 'Reporte de Inventario Sobreabastecido';
+                break;
+            case 'all':
+            default:
+                $reporte = 'Reporte de Inventario General';
+                break;
+        }
+
+        $data = $query->get();
+
+        // 📊 Resumen (calculado del result set)
+        $costoTotalInventario = $data
+            ->where('tipo_articulos_id', '!=', 2)   // solo artículos
+            ->sum(function ($item) {
+                return $item->existencia * $item->precio_venta;
+            });
+
+        // 📊 Resumen (calculado del result set)
+        $resumen = [
+            'reporte' => $reporte,
+            'total_articulos'   => $data->count(),
+            'bajo_minimo'       => $data->where('desabastecido', 1)->count(),
+            'sobre_maximo'      => $data->where('sobreabastecido', 1)->count(),
+            'en_orden'          => $data->where('en_orden', 1)->count(),
+            'tipo_servicio'       => $data->where('tipo_articulos_id', 2)->count(),
+            'tipo_articulo'       => $data->where('tipo_articulos_id', '!=', 2)->count(),
+            // 🆕 agregado:
+            'costo_total_inventario' => $costoTotalInventario,
+        ];
+
+        if ($export_excel) {
+            $fecha = now()->format('d-m-Y H-i-s');   // dd-mm-yyyy HH-MM-SS
+            $filename = "{$reporte} {$fecha}.xlsx";
+            return Excel::download(
+                new InventarioExport($data, $resumen),
+                $filename
+            );
+        } else {
+            return [
+                'resumen' => $resumen,
+                'articulos'    => $data,
+            ];
+        }
+    }
+
+
+
+
     public function get_tipo_articulo()
     {
         return TipoArticulos::get();

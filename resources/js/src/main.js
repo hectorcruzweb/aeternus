@@ -21,6 +21,10 @@ import VueApexCharts from "vue-apexcharts";
 
 Vue.component("apexchart", VueApexCharts);
 
+import CountTo from "vue-count-to";
+
+Vue.component("CountTo", CountTo);
+
 // Vuesax Component Framework
 import Vuesax from "vuesax";
 

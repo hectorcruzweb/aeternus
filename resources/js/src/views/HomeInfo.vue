@@ -255,8 +255,9 @@ export default {
             try {
                 const response = await dashboard._fetchDashboard();
                 this.serviciosFunerarios = response.data.servicios_funerarios;
-                this.inventario = response.data.servicios_funerarios;
-                console.log("🚀 ~ this.serviciosFunerarios:", this.serviciosFunerarios)
+                this.inventario = response.data.inventario;
+                this.$log("🚀 ~ this.inventario:", this.inventario)
+                this.$log("🚀 ~ this.serviciosFunerarios:", this.serviciosFunerarios)
             } catch (error) {
                 this.$error("🚀 ~ error:", error);
             } finally {

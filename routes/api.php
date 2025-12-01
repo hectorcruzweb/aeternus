@@ -11,6 +11,7 @@
 |
  */
 Route::get('/dashboard/build', 'DashboardController@buildDashboard');
+Route::get('/listar/{filtro?}/{export_excel?}', 'InventarioController@listarDashboard');
 
 /**en pruebas */
 
