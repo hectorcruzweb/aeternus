@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithDrawings;
@@ -21,7 +22,8 @@ class InventarioExport implements
     WithDrawings,
     ShouldAutoSize,
     WithEvents,
-    WithCustomStartCell
+    WithCustomStartCell,
+    WithTitle
 {
     protected $items;
     protected $summary;
@@ -31,6 +33,11 @@ class InventarioExport implements
     {
         $this->items = $items;
         $this->summary = $summary;
+    }
+
+    public function title(): string
+    {
+        return 'Inventario';
     }
 
     // ======================================================
