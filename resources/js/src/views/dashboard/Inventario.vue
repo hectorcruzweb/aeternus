@@ -3,7 +3,7 @@
         <div class="seccion-title">
             <h2 class="">Estado del Inventario</h2>
             <div class="">
-                <span class="text-white">Reporte General</span>
+                <p class="text-white btn-text" @click="downloadExcel">Reporte General</p>
             </div>
         </div>
         <div class="reportes">
@@ -26,7 +26,7 @@
                     <div>
                         <p class="cantidad"><count-to :start-val="0" :end-val="data.articulos_bajo_minimo"
                                 :duration="2000" /></p>
-                        <p class="descripcion">Desabastecidos</p>
+                        <p class="descripcion btn-text info" @click="downloadExcel('low')">Desabastecidos</p>
                     </div>
                 </div>
                 <div class="reporte">
@@ -36,7 +36,7 @@
                     <div>
                         <p class="cantidad"><count-to :start-val="0" :end-val="data.articulos_sobre_maximo"
                                 :duration="2000" /></p>
-                        <p class="descripcion">Sobrestock</p>
+                        <p class="descripcion btn-text info" @click="downloadExcel('over')">Sobreabastecido</p>
                     </div>
                 </div>
                 <div class="reporte">
@@ -44,7 +44,7 @@
                         <img class="" src="@assets/images/dollar_bill.svg" />
                     </div>
                     <div>
-                        <p class="cantidad">$ <count-to :start-val="0" :end-val="data.costo_total_invetario"
+                        <p class="cantidad">$ <count-to :start-val="0" :end-val="data.costo_total_inventario"
                                 :duration="2000" /> MXN</p>
                         <p class="descripcion">$Costo Total</p>
                     </div>
@@ -60,6 +60,8 @@
     </div>
 </template>
 <script>
+import inventario from '../../services/inventario';
+
 export default {
     // Name of the component (optional)
     name: "Inventario(dashboard)",
@@ -82,7 +84,31 @@ export default {
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        async downloadExcel(filtro = "all") {
+            this.$vs.loading();
 
+            try {
+                const res = await inventario.descargarExcel(filtro);
+
+                let filename = "";
+
+                switch (filtro) {
+                    case "low":
+                        filename = "inventario_desabastecidos";
+                        break;
+                    case "over":
+                        filename = "inventario_sobreabastecido";
+                        break;
+                    default:
+                        filename = "inventario_general";
+                }
+                this.$downloadFileExcel(res.data, `${filename} ${this.$fechaHora()}`);
+            } catch (err) {
+                this.$error("🚀 ~ err:", err)
+            } finally {
+                this.$vs.loading.close();
+            }
+        }
     },
     // Lifecycle hooks
     created() {

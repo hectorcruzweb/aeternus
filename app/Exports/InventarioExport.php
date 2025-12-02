@@ -125,7 +125,6 @@ class InventarioExport implements
         }
         return [];
     }
-
     // ======================================================
     //  CONTENIDO
     // ======================================================
@@ -148,7 +147,6 @@ class InventarioExport implements
                 $costo > 0 ? (float)$costo : '0.00',
             ];
         }
-
         return $rows;
     }
 
@@ -188,7 +186,7 @@ class InventarioExport implements
                 // =========================
                 // TITULOS (centrados)
                 // =========================
-                $sheet->mergeCells('A2:F2')->getStyle('A2')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('b18b1e');
+                $sheet->mergeCells('A2:F2')->getStyle('A2')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('b18b1e');
                 $sheet->setCellValue('A2', $this->summary['reporte']);
                 $sheet->getStyle('H1')->getAlignment()->setHorizontal('left');
                 $sheet->getStyle('H1')->getAlignment()->setVertical('center');

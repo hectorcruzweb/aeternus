@@ -258,10 +258,10 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                 .velacion {
                     width: 100%;
                     display: grid;
-                    grid-template-columns: 1fr auto;
+                    grid-template-columns: 1fr 100px;
                     align-items: center;
                     justify-content: space-between;
-
+                    @extend .no-scrollbar;
                     > div {
                         display: flex;
                         flex-wrap: wrap;
@@ -358,7 +358,6 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
             flex-direction: column;
             gap: 1rem;
             justify-content: space-between;
-
             .seccion-title {
                 display: flex;
                 align-items: center;
@@ -414,9 +413,31 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     justify-content: flex-end;
 
                     img {
-                        width: 130px;
+                        width: 110px;
                         display: none;
                     }
+                }
+            }
+        }
+        .btn-text {
+            &:hover {
+                cursor: pointer;
+                font-weight: 500 !important;
+                transform: scale(1.05) !important;
+            }
+            &.primary {
+                &:hover {
+                    color: darken($primary, 10%) !important;
+                }
+            }
+            &.info {
+                &:hover {
+                    color: darken($secondary-optional, 10%) !important;
+                }
+            }
+            &.success {
+                &:hover {
+                    color: darken($success, 10%) !important;
                 }
             }
         }

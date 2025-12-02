@@ -28,13 +28,13 @@ export default {
         return axios.post(call, param);
     },
 
-     control_compras(param) {
+    control_compras(param) {
         let call = "/inventario/control_compras/agregar";
         return axios.post(call, param);
     },
-     cancelar_compra(param) {
+    cancelar_compra(param) {
         let call = "/inventario/cancelar_compra";
-        return axios.post(call,param);
+        return axios.post(call, param);
     },
 
     modificar_articulo(param) {
@@ -42,48 +42,48 @@ export default {
         return axios.post(call, param);
     },
 
-     get_compras(param) {
-          return axios.get("/inventario/get_compras/all/paginated", {
-            cancelToken: new CancelToken(c => {
+    get_compras(param) {
+        return axios.get("/inventario/get_compras/all/paginated", {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
     get_inventario(param) {
         return axios.get("/inventario/get_inventario/all/paginated", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
     get_ajustes(param) {
         return axios.get("/inventario/get_ajustes/all/paginated", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
     get_inventariable(param) {
         return axios.get("/inventario/get_inventario/all/paginated/0/0/0/1", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
     get_articulo_by_id(param) {
         return axios.get("/inventario/get_inventario/" + param, {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
             }),
-            params: param
+            params: param,
         });
     },
 
@@ -101,11 +101,16 @@ export default {
         return axios.post(call, param);
     },
 
-       get_inventariable_etiquetado() {
+    get_inventariable_etiquetado() {
         return axios.get("/inventario/get_inventario/all/false/0/0/0/1", {
-            cancelToken: new CancelToken(c => {
+            cancelToken: new CancelToken((c) => {
                 self.cancel = c;
-            })
+            }),
+        });
+    },
+    descargarExcel(filtro = "all") {
+        return axios.get("/listar_inventario/" + filtro + "/1", {
+            responseType: "blob",
         });
     },
 };

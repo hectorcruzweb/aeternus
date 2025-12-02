@@ -25,11 +25,11 @@
                                 title="Compartir Enlace" />
                         </div>
                         <div class="">
-                            <span class="" @click="
+                            <p class="btn-text" @click="
                                 ConsultarVenta(
                                     item.id
                                 )
-                                ">Ver Expediente</span>
+                                ">Ver Expediente</p>
                         </div>
                     </div>
                 </div>

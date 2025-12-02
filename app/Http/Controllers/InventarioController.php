@@ -80,7 +80,7 @@ class InventarioController extends ApiController
      *  - over: inventario sobre el máximo
      *  - all: todos
      */
-    public function listarDashboard($filtro = 'all', $export_excel = false)
+    public function listar_inventario($filtro = 'all', $export_excel = false)
     {
         $query = Articulos::select([
             'articulos.id',

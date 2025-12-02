@@ -1,5 +1,4 @@
 import { Spanish } from "flatpickr/dist/l10n/es.js";
-import { range } from "lodash";
 export const configdateTimePickerWithTime = {
     altInput: true,
     altFormat: "j M Y h:i K", // 👈 "K" adds AM/PM
@@ -192,3 +191,33 @@ export const alfabeto = [
 export const PermisosModulo = localStorage.getItem("AccessPermissions")
     ? JSON.parse(localStorage.getItem("AccessPermissions"))
     : null;
+
+import Vue from "vue";
+
+// Global date helper (from before)
+Vue.prototype.$fechaHora = () => {
+    const months = [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+    ];
+    const now = new Date();
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    return `${month} ${day} ${year} ${hours}-${minutes} ${ampm}`;
+};

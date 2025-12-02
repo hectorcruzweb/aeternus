@@ -176,7 +176,6 @@ import VerNotas from "@pages/VerNotas";
 import FormularioCFDI from "../facturacion/FormularioCFDI";
 import ActionsForm from "../facturacion/ActionsForm";
 /**VARIABLES GLOBALES */
-import { mostrarOptions } from "@/VariablesGlobales";
 import { configdateTimePickerRange } from "@/VariablesGlobales";
 const moment = require("moment");
 import vSelect from "vue-select";
@@ -255,48 +254,7 @@ export default {
             try {
                 this.$vs.loading();
                 let res = await facturacion.downloadExcelCfdisAdeudos();
-                const downloadUrl = window.URL.createObjectURL(
-                    new Blob([res.data])
-                );
-                // Convert blob to downloadable file
-                const blob = new Blob([res.data], {
-                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                });
-                const fileURL = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = fileURL;
-                const now = new Date();
-
-                // Spanish-style month abbreviations
-                const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-                const day = now.getDate();
-                const month = months[now.getMonth()];
-                const year = now.getFullYear();
-                let hours = now.getHours();
-                const minutes = now.getMinutes().toString().padStart(2, "0");
-                // AM/PM
-                const ampm = hours >= 12 ? "PM" : "AM";
-                // convert 24h → 12h format
-                hours = hours % 12;
-                hours = hours ? hours : 12; // midnight → 12
-                const formatted = `${month} ${day} ${year} ${hours} ${minutes} ${ampm}`;
-                const filename = `adeudos_cfdis_${formatted}.xlsx`;
-                link.setAttribute("download", filename);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(fileURL);
-            } catch (error) {
-                /**error al cargar vendedores */
-                this.$vs.notify({
-                    title: "Error",
-                    text: "Ha ocurrido un error al tratar de descargar el archivo.",
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "danger",
-                    position: "bottom-right",
-                    time: "9000",
-                });
+                this.$downloadFileExcel(res.data, "adeudos_cfdis");
             } finally {
                 this.$vs.loading.close();
             }
