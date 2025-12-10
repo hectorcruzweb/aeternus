@@ -115,7 +115,7 @@
     </header>
     <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1 texto-sm">
-            estado de cuenta a la fecha {{fechahora_completa()}}
+            estado de cuenta a la fecha {{ fechahora_completa() }}
         </div>
         <table class="w-100 center">
             <tr>
@@ -204,11 +204,11 @@
                         </tr>
                         <tr>
                             <td class="w-50 py-1 left bg-nada">
-                                <span class="bold"> sub-total propiedad:</span>
+                                <span class="bold"> sub-total:</span>
 
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['subtotal'],2)}}
+                                $ {{ number_format($datos['subtotal'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -217,7 +217,7 @@
                                 <span class="bold">iva ({{ $datos['tasa_iva'] }}%):</span>
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['impuestos'],2)}}
+                                $ {{ number_format($datos['impuestos'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -226,16 +226,16 @@
 
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['descuento'],2)}}
+                                $ {{ number_format($datos['descuento'], 2) }}
                             </td>
                         </tr>
                         <tr>
                             <td class="w-50 py-1 left bg-nada">
 
-                                <span class="bold">costo neto propiedad:</span>
+                                <span class="bold">costo neto:</span>
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['total'],2)}}
+                                $ {{ number_format($datos['total'], 2) }}
                             </td>
                         </tr>
 
@@ -246,15 +246,15 @@
                             </td>
                             <td class="w-50 py-1 right bg-gray">
                                 <!--se hace una condicion para determinar que estatus mandar segun si la cuenta va al corriente o no-->
-                                @if ($datos['pagos_vencidos']>0)
-                                @if ($datos['dias_vencidos']>$datos['ajustes_politicas']['maximo_dias_retraso'])
-                                <span class="text-danger bold">adeudo crítico</span>
+                                @if ($datos['pagos_vencidos'] > 0)
+                                    @if ($datos['dias_vencidos'] > $datos['ajustes_politicas']['maximo_dias_retraso'])
+                                        <span class="text-danger bold">adeudo crítico</span>
+                                    @else
+                                        <span class="text-danger bold">falta de pago</span>
+                                    @endif
                                 @else
-                                <span class="text-danger bold">falta de pago</span>
-                                @endif
-                                @else
-                                <!--se esta al corriente-->
-                                <span class="bold">al corriente</span>
+                                    <!--se esta al corriente-->
+                                    <span class="bold">al corriente</span>
                                 @endif
                             </td>
                         </tr>
@@ -271,7 +271,7 @@
                                 <span class="bold">intereses generados:</span>
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['intereses']+$datos['abonado_intereses'],2)}}
+                                $ {{ number_format($datos['intereses'] + $datos['abonado_intereses'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -280,7 +280,7 @@
                                 <span class="bold">intereses abonados:</span>
                             </td>
                             <td class="w-50 py-1 right bg-gray">
-                                $ {{ number_format( $datos['abonado_intereses'],2)}}
+                                $ {{ number_format($datos['abonado_intereses'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -290,7 +290,7 @@
                             </td>
                             <td class="w-50 py-1 right bg-gray">
                                 $
-                                {{ number_format( $datos['descontado_pronto_pago']+$datos['descontado_capital']+$datos['complementado_cancelacion'],2)}}
+                                {{ number_format($datos['descontado_pronto_pago'] + $datos['descontado_capital'] + $datos['complementado_cancelacion'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -299,10 +299,10 @@
                             </td>
 
                             <td class="w-50 py-1 right bg-gray">
-                                @if ($datos['pagos_vencidos']>0)
-                                {{ $datos['pagos_vencidos']}} Pagos ({{ $datos['dias_vencidos']}} días.)
+                                @if ($datos['pagos_vencidos'] > 0)
+                                    {{ $datos['pagos_vencidos'] }} Pagos ({{ $datos['dias_vencidos'] }} días.)
                                 @else
-                                0
+                                    0
                                 @endif
 
                             </td>
@@ -315,7 +315,7 @@
                             </td>
                             <td class="w-50 py-1 right bg-gray">
                                 $
-                                {{ number_format($datos['total_cubierto'],2)}}
+                                {{ number_format($datos['total_cubierto'], 2) }}
                             </td>
                         </tr>
                         <tr>
@@ -325,7 +325,7 @@
                             </td>
                             <td class="w-50 py-1 right bg-gray">
                                 $
-                                {{ number_format( $datos['saldo_neto'],2)}}
+                                {{ number_format($datos['saldo_neto'], 2) }}
                             </td>
                         </tr>
                     </table>
@@ -338,170 +338,177 @@
             detalle de movimientos realizados
         </div>
         @foreach ($datos['pagos_programados'] as $programado)
-        <div class="pt-4">
-            <table class="w-100 w3-table w3-table-all">
-                <thead>
-                    <tr>
-                        <th class=" center py-1 bg-header text-white"><span class="bold px-2">#</th>
-                        <th class=" center py-1 bg-header text-white"><span class="bold px-2">Estatus</th>
-                        <th class=" center py-1 bg-header text-white"><span class="bold px-2">Ref. Pago</th>
-                        <th class=" center py-1 bg-header text-white"><span class="bold px-2">Concepto</th>
-                        <th class=" right py-1 bg-header text-white"><span class="bold">Monto</th>
-                        <th class=" right py-1 bg-header text-white"><span class="bold">intereses</th>
-                        <th class=" right py-1 bg-header text-white"><span class="bold">Saldo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="center capitalize">
-                            <span class="bold texto-sm">{{$programado['num_pago']}}</span>
-                        </td>
-                        <td class="center py-2 capitalize">
-                            {{ $programado['status_pago_texto'] }}
-                        </td>
-                        <td class="center py-2">{{$programado['referencia_pago']}}</td>
-                        <td class="center py-2 capitalize">{{$programado['concepto_texto']}}</td>
-                        <td class="right py-2 px-2">
-                            $ {{number_format($programado['monto_programado'],2)}}
-                        </td>
-                        <td class="right py-2 px-2">
-                            $ {{number_format($programado['intereses']+$programado['abonado_intereses'],2)}}
-                        </td>
-                        <td class="right py-2 px-2">
-                            $ {{number_format($programado['saldo_neto'],2)}}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!--checando que tenga movimientos que mostrar-->
-        @php
-        $mostrar=false;
-        @endphp
-
-        @foreach ($pagos_operacion as $pago)
-        @foreach ($pago['referencias_cubiertas'] as $cubierta)
-        @if ($cubierta['referencia_pago']==$programado['referencia_pago'])
-        @php
-        $mostrar=true;
-        @endphp
-        @break
-        @endif
-        @endforeach
-        @endforeach
-
-        @if ($mostrar==true)
-        <div class="w-100">
-            <div class="bold uppercase py-2">
-                movimientos sobre esta referencia
+            <div class="pt-4">
+                <table class="w-100 w3-table w3-table-all">
+                    <thead>
+                        <tr>
+                            <th class=" center py-1 bg-header text-white"><span class="bold px-2">#</th>
+                            <th class=" center py-1 bg-header text-white"><span class="bold px-2">Estatus</th>
+                            <th class=" center py-1 bg-header text-white"><span class="bold px-2">Ref. Pago</th>
+                            <th class=" center py-1 bg-header text-white"><span class="bold px-2">Concepto</th>
+                            <th class=" right py-1 bg-header text-white"><span class="bold">Monto</th>
+                            <th class=" right py-1 bg-header text-white"><span class="bold">intereses</th>
+                            <th class=" right py-1 bg-header text-white"><span class="bold">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="center capitalize">
+                                <span class="bold texto-sm">{{ $programado['num_pago'] }}</span>
+                            </td>
+                            <td class="center py-2 capitalize">
+                                {{ $programado['status_pago_texto'] }}
+                            </td>
+                            <td class="center py-2">{{ $programado['referencia_pago'] }}</td>
+                            <td class="center py-2 capitalize">{{ $programado['concepto_texto'] }}</td>
+                            <td class="right py-2 px-2">
+                                $ {{ number_format($programado['monto_programado'], 2) }}
+                            </td>
+                            <td class="right py-2 px-2">
+                                $ {{ number_format($programado['intereses'] + $programado['abonado_intereses'], 2) }}
+                            </td>
+                            <td class="right py-2 px-2">
+                                $ {{ number_format($programado['saldo_neto'], 2) }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <table class="w3-table w3-striped w3-small">
-                <thead>
-                    <tr>
-                        <td class="center">
-                            <span class="px-2 bold">Clave del movimiento</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 bold">Fecha</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 bold">Concepto</span>
-                        </td>
-                        <td class="right">
-                            <span class="px-2 bold">Monto</span>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($pagos_operacion as $pago)
-                    @foreach ($pago['referencias_cubiertas'] as $cubierta)
-                    @if ($cubierta['referencia_pago']==$programado['referencia_pago'])
-                    <tr>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $pago['id'] }}</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $pago['fecha_pago_texto'] }}</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $pago['movimientos_pagos_texto'] }}</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$
-                                {{number_format($cubierta['pagos_cubiertos']['monto'],2)}}
-                            </span>
-                        </td>
-                    </tr>
-                    <!--mostrando subpagos-->
-                    @if (count($pago['subpagos'])>0)
-                    @foreach ($pago['subpagos'] as $subpago)
-                    @foreach ($subpago['referencias_cubiertas'] as $sub_cubierto)
-                    @if ($sub_cubierto['referencia_pago']==$cubierta['referencia_pago'])
-                    <tr>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $subpago['parent_pago_id'] }} >
-                                {{ $subpago['id'] }}</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $subpago['fecha_pago_texto'] }}</span>
-                        </td>
-                        <td class="center">
-                            <span class="px-2 capitalize">{{ $subpago['movimientos_pagos_texto'] }}</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$
-                                {{number_format($sub_cubierto['pagos_cubiertos']['monto'],2)}}
-                            </span>
-                        </td>
-                    </tr>
+
+            <!--checando que tenga movimientos que mostrar-->
+            @php
+                $mostrar = false;
+            @endphp
+
+            @foreach ($pagos_operacion as $pago)
+                @foreach ($pago['referencias_cubiertas'] as $cubierta)
+                    @if ($cubierta['referencia_pago'] == $programado['referencia_pago'])
+                        @php
+                            $mostrar = true;
+                        @endphp
+                        @break
                     @endif
-                    @endforeach
-                    @endforeach
-                    <!--end foreach subpagos-->
-                    @endif
-                    <!--end if count subpagos-->
-                    @endif
-                    @endforeach
-                    @endforeach
-                    <tr>
-                        <td class="right" colspan="3">
-                            <span class="px-2 capitalize bold">Total abonado a capital</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$ {{number_format($programado['abonado_capital'],2)}}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="right" colspan="3">
-                            <span class="px-2 capitalize bold">Total descontado x pronto pago</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$
-                                {{number_format($programado['descontado_pronto_pago'],2)}}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="right" colspan="3">
-                            <span class="px-2 capitalize bold">Total abonado a intereses</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$ {{number_format($programado['abonado_intereses'],2)}}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="right" colspan="3">
-                            <span class="px-2 capitalize bold">Total descontado a capital</span>
-                        </td>
-                        <td class="center right">
-                            <span class="px-2 capitalize">$
-                                {{number_format($programado['descontado_capital'],2)}}</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        @endif
+                @endforeach
+            @endforeach
+
+            @if ($mostrar == true)
+                <div class="w-100">
+                    <div class="bold uppercase py-2">
+                        movimientos sobre esta referencia
+                    </div>
+                    <table class="w3-table w3-striped w3-small">
+                        <thead>
+                            <tr>
+                                <td class="center">
+                                    <span class="px-2 bold">Clave del movimiento</span>
+                                </td>
+                                <td class="center">
+                                    <span class="px-2 bold">Fecha</span>
+                                </td>
+                                <td class="center">
+                                    <span class="px-2 bold">Concepto</span>
+                                </td>
+                                <td class="right">
+                                    <span class="px-2 bold">Monto</span>
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($pagos_operacion as $pago)
+                                @foreach ($pago['referencias_cubiertas'] as $cubierta)
+                                    @if ($cubierta['referencia_pago'] == $programado['referencia_pago'])
+                                        <tr>
+                                            <td class="center">
+                                                <span class="px-2 capitalize">{{ $pago['id'] }}</span>
+                                            </td>
+                                            <td class="center">
+                                                <span class="px-2 capitalize">{{ $pago['fecha_pago_texto'] }}</span>
+                                            </td>
+                                            <td class="center">
+                                                <span
+                                                    class="px-2 capitalize">{{ $pago['movimientos_pagos_texto'] }}</span>
+                                            </td>
+                                            <td class="center right">
+                                                <span class="px-2 capitalize">$
+                                                    {{ number_format($cubierta['pagos_cubiertos']['monto'], 2) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <!--mostrando subpagos-->
+                                        @if (count($pago['subpagos']) > 0)
+                                            @foreach ($pago['subpagos'] as $subpago)
+                                                @foreach ($subpago['referencias_cubiertas'] as $sub_cubierto)
+                                                    @if ($sub_cubierto['referencia_pago'] == $cubierta['referencia_pago'])
+                                                        <tr>
+                                                            <td class="center">
+                                                                <span
+                                                                    class="px-2 capitalize">{{ $subpago['parent_pago_id'] }}
+                                                                    >
+                                                                    {{ $subpago['id'] }}</span>
+                                                            </td>
+                                                            <td class="center">
+                                                                <span
+                                                                    class="px-2 capitalize">{{ $subpago['fecha_pago_texto'] }}</span>
+                                                            </td>
+                                                            <td class="center">
+                                                                <span
+                                                                    class="px-2 capitalize">{{ $subpago['movimientos_pagos_texto'] }}</span>
+                                                            </td>
+                                                            <td class="center right">
+                                                                <span class="px-2 capitalize">$
+                                                                    {{ number_format($sub_cubierto['pagos_cubiertos']['monto'], 2) }}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                @endforeach
+                                            @endforeach
+                                            <!--end foreach subpagos-->
+                                        @endif
+                                        <!--end if count subpagos-->
+                                    @endif
+                                @endforeach
+                            @endforeach
+                            <tr>
+                                <td class="right" colspan="3">
+                                    <span class="px-2 capitalize bold">Total abonado a capital</span>
+                                </td>
+                                <td class="center right">
+                                    <span class="px-2 capitalize">$
+                                        {{ number_format($programado['abonado_capital'], 2) }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="right" colspan="3">
+                                    <span class="px-2 capitalize bold">Total descontado x pronto pago</span>
+                                </td>
+                                <td class="center right">
+                                    <span class="px-2 capitalize">$
+                                        {{ number_format($programado['descontado_pronto_pago'], 2) }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="right" colspan="3">
+                                    <span class="px-2 capitalize bold">Total abonado a intereses</span>
+                                </td>
+                                <td class="center right">
+                                    <span class="px-2 capitalize">$
+                                        {{ number_format($programado['abonado_intereses'], 2) }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="right" colspan="3">
+                                    <span class="px-2 capitalize bold">Total descontado a capital</span>
+                                </td>
+                                <td class="center right">
+                                    <span class="px-2 capitalize">$
+                                        {{ number_format($programado['descontado_capital'], 2) }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         @endforeach
     </div>
 </body>
