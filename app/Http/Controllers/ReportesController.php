@@ -7,6 +7,7 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaController;
 use App\Operaciones;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 
@@ -202,7 +203,7 @@ class ReportesController extends ApiController
         // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
         //->limit(500)
             ->orderby('empresa_operaciones_id', 'asc')
-            ->orderby('operaciones.id', 'desc')
+            ->orderby('fecha_timbrado', 'desc')
             ->get();
         /* return [
             'total'       => count($operaciones),
@@ -210,5 +211,154 @@ class ReportesController extends ApiController
         ];*/
 
         return Excel::download(new ReporteEspecialExport($operaciones), 'reporte_especial.xlsx');
+    }
+
+    public function ventas_x_mes_x_cfdis($year = null, $mes = null)
+    {
+
+        // ---------------------------------------------------------
+        // VALIDATION
+        // ---------------------------------------------------------
+        if (! is_numeric($year) || ! is_numeric($mes)) {
+            return $this->errorResponse('Año o mes inválido. Debe ser un número correcto.', 409);
+        }
+
+        $year = (int) $year;
+        $mes  = (int) $mes;
+
+        $currentYear  = (int) date('Y');
+        $currentMonth = (int) date('m');
+
+        // Year cannot be in the future or less than 2000 (arbitrary lower limit)
+        if ($year < 2020 || $year > $currentYear) {
+            return $this->errorResponse('Año no válido.', 409);
+        }
+
+        // Month must be 1–12
+        if ($mes < 1 || $mes > 12) {
+            return $this->errorResponse('Mes no válido.', 409);
+        }
+
+        // If same year, month cannot be in the future
+        if ($year === $currentYear && $mes > $currentMonth) {
+            return $this->errorResponse('Este mes está fuera de rango.', 409);
+        }
+
+        $rows = DB::table('cfdis')
+            ->selectRaw("
+    cfdis.id,
+    cfdis.uuid,
+    cfdis.clientes_id,
+    cfdis.sat_formas_pago_id,
+    cfdis.subtotal,
+    cfdis.descuento,
+    cfdis.total,
+    cfdis.sat_metodos_pago_id,
+    cfdis.rfc_receptor,
+    cfdis.nombre_receptor,
+    cfdis.fecha_timbrado,
+    cfdis.status,
+
+    operaciones.id as operacion_id,
+    operaciones.clientes_id as operacion_cliente_id,
+    operaciones.empresa_operaciones_id,
+    operaciones.subtotal as operacion_subtotal,
+    operaciones.descuento as operacion_descuento,
+    operaciones.total as operacion_total,
+    operaciones.saldo as operacion_saldo,
+    CASE operaciones.empresa_operaciones_id
+        WHEN 1 THEN 'VENTA EN CEMENTERIO'
+        WHEN 2 THEN 'CUOTA DE MANTENIMIENTO'
+        WHEN 3 THEN 'SERVICIO FUNERARIO'
+        WHEN 4 THEN 'VENTA DE PLAN A FUTURO'
+        WHEN 5 THEN 'VENTA EN GENERAL'
+        ELSE NULL
+    END AS tipo_operacion,
+
+    CASE operaciones.empresa_operaciones_id
+        WHEN 1 THEN operaciones.ventas_terrenos_id
+        WHEN 2 THEN operaciones.cuotas_cementerio_id
+        WHEN 3 THEN operaciones.servicios_funerarios_id
+        WHEN 4 THEN operaciones.ventas_planes_id
+        WHEN 5 THEN operaciones.ventas_generales_id
+        ELSE NULL
+    END AS operacion_venta_id,
+
+    clientes.nombre
+")
+
+            ->join('cfdis_operaciones', 'cfdis_operaciones.cfdis_id', '=', 'cfdis.id')
+            ->join('operaciones', 'operaciones.id', '=', 'cfdis_operaciones.operaciones_id')
+             ->join('clientes', 'operaciones.clientes_id', '=', 'clientes.id')
+
+            ->whereYear('cfdis.fecha_timbrado', $year)
+            ->whereMonth('cfdis.fecha_timbrado', $mes)
+
+            ->where('cfdis.status', '>', 0)
+            ->where('operaciones.status', '>', 0)
+
+            ->where('cfdis.sat_tipo_comprobante_id', 1) // solo ingresos
+            ->orderBy('cfdis.fecha_timbrado', 'desc')
+            ->get();
+
+        // -----------------------------
+        // GROUPED CFDIS (DATA)
+        // -----------------------------
+        $data = $rows->groupBy('id')->map(function ($items) {
+            $cfdi = $items->first();
+
+            return [
+                'id'             => $cfdi->id,
+                'uuid'           => $cfdi->uuid,
+                 'rfc_receptor'           => $cfdi->rfc_receptor,
+                 'nombre_receptor'           => $cfdi->nombre_receptor,
+                'clientes_id'    => $cfdi->clientes_id,
+                'total'          => $cfdi->total,
+                'fecha_timbrado' => fecha_abr($cfdi->fecha_timbrado),
+                'operaciones'    => $items->map(function ($op) {
+                    return [
+                        'operacion_id'   => $op->operacion_id,
+                        'total'          => round($op->total, 2),
+                        'tipo_operacion' => $op->tipo_operacion,
+                        'id_referencia'  => $op->operacion_venta_id,
+                        'cliente'=> $op->nombre,
+                    ];
+                }),
+            ];
+        })->values(); // important to remove keys
+
+        // -----------------------------
+        // FORZAR LOS 5 TIPOS EN SUMMARY
+        // -----------------------------
+        $tipos = [
+            'VENTA EN CEMENTERIO',
+            'CUOTA DE MANTENIMIENTO',
+            'SERVICIO FUNERARIO',
+            'VENTA DE PLAN A FUTURO',
+            'VENTA EN GENERAL',
+        ];
+        $tipos_operacion = collect($tipos)->mapWithKeys(function ($tipo) use ($rows) {
+            $group = $rows->where('tipo_operacion', $tipo);
+
+            return [
+                $tipo => [
+                    'count' => $group->count(),
+                    'total' => round($group->sum('operacion_total'), 2),
+                ],
+            ];
+        });
+        // -----------------------------
+        // GLOBAL SUMMARY
+        // -----------------------------
+        $summary = [
+            'total_cfdis'       => $data->count(),
+            'total_operaciones' => $rows->count(),
+            'monto_facturado'   => round($data->sum('total'), 2),
+            'operaciones'       => $tipos_operacion,
+        ];
+        return [
+            'summary' => $summary,
+            'data'    => $data,
+        ];
     }
 }

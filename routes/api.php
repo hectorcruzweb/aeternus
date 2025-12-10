@@ -12,7 +12,7 @@
  */
 
 /**en pruebas */
-
+Route::get('ventas_x_mes_x_cfdis/{year}/{mes}', 'ReportesController@ventas_x_mes_x_cfdis');
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
 /**rutas de modulo en proceso */
