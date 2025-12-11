@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Exports\ReporteEspecialExport;
+use App\Exports\VentasPorCfdisExport;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaController;
@@ -200,8 +202,8 @@ class ReportesController extends ApiController
         ) < cfdis.total
     ");
             })
-        // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
-        //->limit(500)
+            // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
+            //->limit(500)
             ->orderby('empresa_operaciones_id', 'asc')
             ->orderby('fecha_timbrado', 'desc')
             ->get();
@@ -289,7 +291,7 @@ class ReportesController extends ApiController
 
             ->join('cfdis_operaciones', 'cfdis_operaciones.cfdis_id', '=', 'cfdis.id')
             ->join('operaciones', 'operaciones.id', '=', 'cfdis_operaciones.operaciones_id')
-             ->join('clientes', 'operaciones.clientes_id', '=', 'clientes.id')
+            ->join('clientes', 'operaciones.clientes_id', '=', 'clientes.id')
 
             ->whereYear('cfdis.fecha_timbrado', $year)
             ->whereMonth('cfdis.fecha_timbrado', $mes)
@@ -310,8 +312,8 @@ class ReportesController extends ApiController
             return [
                 'id'             => $cfdi->id,
                 'uuid'           => $cfdi->uuid,
-                 'rfc_receptor'           => $cfdi->rfc_receptor,
-                 'nombre_receptor'           => $cfdi->nombre_receptor,
+                'rfc_receptor'           => $cfdi->rfc_receptor,
+                'nombre_receptor'           => $cfdi->nombre_receptor,
                 'clientes_id'    => $cfdi->clientes_id,
                 'total'          => $cfdi->total,
                 'fecha_timbrado' => fecha_abr($cfdi->fecha_timbrado),
@@ -321,7 +323,7 @@ class ReportesController extends ApiController
                         'total'          => round($op->total, 2),
                         'tipo_operacion' => $op->tipo_operacion,
                         'id_referencia'  => $op->operacion_venta_id,
-                        'cliente'=> $op->nombre,
+                        'cliente' => $op->nombre,
                     ];
                 }),
             ];
@@ -356,6 +358,13 @@ class ReportesController extends ApiController
             'monto_facturado'   => round($data->sum('total'), 2),
             'operaciones'       => $tipos_operacion,
         ];
+
+        $fecha = now()
+            ->locale('es')
+            ->translatedFormat('D d M H-i-s') . ' hrs';
+
+        $filename = "reporte_especial_{$fecha}.xlsx";
+        return Excel::download(new VentasPorCfdisExport($data, $summary), $filename);
         return [
             'summary' => $summary,
             'data'    => $data,
