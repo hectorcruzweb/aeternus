@@ -47,7 +47,12 @@
                 </div>
             </vx-card>
         </div>
-        <div class="w-full flex flex-wrap justify-end items-center mt-4">
+        <div class="w-full flex flex-wrap justify-end items-center mt-4 gap-4">
+            <span @click="downloadExcel"
+                class="flex flex-wrap justify-end items-center bg-primary text-white font-bold py-1 px-2 rounded cursor-pointer">
+                <img class="cursor-pointer img-btn-20 mr-2" src="@assets/images/excel.svg" title="Notas" /> Ventas
+                Facturadas
+            </span>
             <span @click="downloadExcel"
                 class="flex flex-wrap justify-end items-center bg-danger text-white font-bold py-1 px-2 rounded cursor-pointer">
                 <img class="cursor-pointer img-btn-20 mr-2" src="@assets/images/excel.svg" title="Notas" /> CFDIS con
@@ -88,7 +93,7 @@
                                     <vs-td :data="data[indextr].id">
                                         <span class="font-semibold">{{
                                             data[indextr].id
-                                            }}</span>
+                                        }}</span>
                                     </vs-td>
                                     <vs-td :data="data[indextr].uuid">
                                         {{ data[indextr].uuid }}
@@ -103,10 +108,10 @@
                                         }}</vs-td>
                                     <vs-td :data="data[indextr].cliente_nombre">{{
                                         data[indextr].cliente_nombre
-                                    }}</vs-td>
+                                        }}</vs-td>
                                     <vs-td :data="data[indextr].rfc_receptor">{{
                                         data[indextr].rfc_receptor
-                                        }}</vs-td>
+                                    }}</vs-td>
                                     <vs-td :data="data[indextr].tipo_comprobante_texto
                                         ">{{
                                             data[indextr].tipo_comprobante_texto
