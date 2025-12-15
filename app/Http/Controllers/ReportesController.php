@@ -367,10 +367,12 @@ class ReportesController extends ApiController
             ->translatedFormat('D d M H-i-s') . ' hrs';
 
         $filename = "reporte_especial_{$fecha}.xlsx";
-        return Excel::download(new VentasPorCfdisExport($data, $summary), $filename);
+        $reporte = 'Ventas Facturadas del mes de ' . mes($mes) . ' ' . $year;
+        return Excel::download(new VentasPorCfdisExport($data, $summary, $reporte), $filename);
         return [
             'summary' => $summary,
             'data'    => $data,
+            'reporte' => $reporte
         ];
     }
 }

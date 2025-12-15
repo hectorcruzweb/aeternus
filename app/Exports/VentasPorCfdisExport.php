@@ -27,12 +27,14 @@ class VentasPorCfdisExport implements
 {
     protected $items;
     protected $summary;
-    protected $row_inicio_headings = 10;
+    protected $reporte;
+    protected $row_inicio_headings = 11;
 
-    public function __construct($items, $summary)
+    public function __construct($items, $summary, $reporte)
     {
         $this->items = $items;
         $this->summary = $summary;
+        $this->reporte = $reporte;
     }
 
     public function title(): string
@@ -97,53 +99,83 @@ class VentasPorCfdisExport implements
                 // =========================
                 // RESUMEN Y TITULOS DEL HEADER(centrados)
                 // =========================
-                $sheet->mergeCells('A6:D6')->getStyle('A6')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('b18b1e');
-                $sheet->setCellValue('A6', "Nombre del formato");
+                $sheet->mergeCells('A6:C6')->getStyle('A6')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('b18b1e');
+                $sheet->setCellValue('A6', $this->reporte);
 
-                $sheet->mergeCells('A8:D8');
+                $sheet->mergeCells('A8:C8');
                 $sheet->setCellValue('A8', 'Fecha de impresión: ' . fechahora_completa());
 
 
                 // =========================
                 // RESUMEN (LEFT EN COLUMNA H)
                 // =========================
-                $sheet->setCellValue('E1', 'RESUMEN GRAL.');
-                $sheet->setCellValue('E2', 'Total de Artículos');
-                $sheet->setCellValue('E3', 'Total de Servicios');
-                $sheet->setCellValue('E4', 'Artículos Desabastecidos');
-                $sheet->setCellValue('E5', 'Artículos Sobreabastecidos');
-                $sheet->setCellValue('E6', 'Artículos Sobreabastecidos');
-                $sheet->setCellValue('E7', 'Artículos Sobreabastecidos');
-                $sheet->setCellValue('E8', 'Artículos Sobreabastecidos');
-                // Alinear izquierda todos los textos de resumen
-                $sheet->getStyle("E1")->applyFromArray(
-                    [
-                        'font' => [
-                            'bold' => true,
-                            'color' => ['rgb' => 'FFFFFF']
-                        ],
-                        'fill' => [
-                            'fillType' => 'solid',
-                            'startColor' => ['rgb' => '2C3E50']
-                        ],
-                        'alignment' => [
-                            'horizontal' => 'center',
-                            'vertical' => 'center'
-                        ]
-                    ]
-                );
-                $sheet->getStyle("E2:E8")->applyFromArray(
-                    [
-                        'font' => [
-                            'bold' => true,
-                        ],
-                        'alignment' => [
-                            'horizontal' => 'center',
-                            'vertical' => 'center'
-                        ]
-                    ]
-                );
+                $sheet->mergeCells('E1:F1');
+                $sheet->setCellValue('E1', 'RESUMEN DEL REPORTE');
 
+                $sheet->setCellValue('E2', 'Total de CFDIs');
+                $sheet->setCellValue('F2', '$ Total Facturado');
+
+                $sheet->setCellValue('E4', 'Operaciones Facturadas');
+                $sheet->setCellValue('F4', 'Ventas en Cementerio');
+                $sheet->setCellValue('E6', 'Cuotas de Mantenimiento');
+                $sheet->setCellValue('F6', 'Servicios Funerarios');
+                $sheet->setCellValue('E8', 'Venta de Planes a Futuro');
+                $sheet->setCellValue('F8', 'Ventas en General');
+
+                $centerAlign = [
+                    'alignment' => [
+                        'horizontal' => 'center',
+                        'vertical'   => 'center',
+                    ],
+                ];
+                $textBold = [
+                    'font' => [
+                        'bold' => true
+                    ],
+                ];
+
+                $color_header_black = [
+                    'fill' => [
+                        'fillType' => 'solid',
+                        'startColor' => ['rgb' => '2C3E50']
+                    ],
+                    'font' => [
+                        'color' => ['rgb' =>  'ffffff']
+                    ]
+                ];
+
+                $bg_primary = [
+                    'fill' => [
+                        'fillType' => 'solid',
+                        'startColor' => ['rgb' => 'C9B36A']
+                    ],
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' =>  'ffffff']
+                    ]
+                ];
+                /**DATOS DEL RESUMEN */
+                $sheet->getStyle('E1')->applyFromArray($textBold)->applyFromArray($bg_primary);
+                $sheet->getStyle('E2:F2')->applyFromArray($color_header_black)->applyFromArray($textBold);
+                $sheet->getStyle('E4:F4')->applyFromArray($color_header_black)->applyFromArray($textBold);
+                $sheet->getStyle('E6:F6')->applyFromArray($color_header_black)->applyFromArray($textBold);
+                $sheet->getStyle('E8:F8')->applyFromArray($color_header_black)->applyFromArray($textBold);
+                $sheet->getStyle('E1:F9')->applyFromArray($centerAlign);
+                $sheet->getStyle("F1:F9")->applyFromArray($centerAlign);
+                $sheet->getStyle("E1:E9")->applyFromArray($centerAlign);
+                $sheet->getStyle("F2:F8")->applyFromArray($centerAlign);
+
+                $sheet->getCell("E3")->setValue($this->summary['total_cfdis']);
+                $sheet->getCell("F3")->setValue($this->summary['monto_facturado']);
+                $sheet->getStyle("F3")->getNumberFormat()
+                    ->setFormatCode('"$ "#,##0.00');
+                $sheet->getCell("E5")->setValue($this->summary['total_operaciones']);
+                $sheet->getCell("F5")->setValue($this->summary['operaciones']['VENTA EN CEMENTERIO']['count']);
+                $sheet->getCell("E7")->setValue($this->summary['operaciones']['CUOTA DE MANTENIMIENTO']['count']);
+                $sheet->getCell("F7")->setValue($this->summary['operaciones']['SERVICIO FUNERARIO']['count']);
+                $sheet->getCell("E9")->setValue($this->summary['operaciones']['VENTA DE PLAN A FUTURO']['count']);
+                $sheet->getCell("F9")->setValue($this->summary['operaciones']['VENTA EN GENERAL']['count']);
+                /**DATOS DEL RESUMEN */
 
                 $heading_cfdi = $this->row_inicio_headings;
                 // ===== HEADINGS =====
@@ -188,7 +220,7 @@ class VentasPorCfdisExport implements
                             'fillType' => 'solid',
                             'startColor' => ['rgb' => 'EFF3F8']
                         ],
-                    ]);
+                    ])->applyFromArray($textBold);
                     $sheet->getStyle("F{$row_cfdi}")->getNumberFormat()
                         ->setFormatCode('"$ "#,##0.00');
                     $sheet->getRowDimension($row_cfdi)->setRowHeight(20);
