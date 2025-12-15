@@ -205,7 +205,7 @@ class ReportesController extends ApiController
             // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
             //->limit(500)
             ->orderby('empresa_operaciones_id', 'asc')
-            ->orderby('fecha_timbrado', 'desc')
+            ->orderby('fecha_operacion', 'desc')
             ->get();
         /* return [
             'total'       => count($operaciones),
