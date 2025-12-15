@@ -260,6 +260,7 @@ class ReportesController extends ApiController
     cfdis.nombre_receptor,
     cfdis.fecha_timbrado,
     cfdis.status,
+    sat_metodos_pago.clave,
 
     operaciones.id as operacion_id,
     operaciones.clientes_id as operacion_cliente_id,
@@ -291,6 +292,7 @@ class ReportesController extends ApiController
 
             ->join('cfdis_operaciones', 'cfdis_operaciones.cfdis_id', '=', 'cfdis.id')
             ->join('operaciones', 'operaciones.id', '=', 'cfdis_operaciones.operaciones_id')
+            ->join('sat_metodos_pago', 'sat_metodos_pago.id', '=', 'cfdis.sat_metodos_pago_id')
             ->join('clientes', 'operaciones.clientes_id', '=', 'clientes.id')
 
             ->whereYear('cfdis.fecha_timbrado', $year)
@@ -317,6 +319,7 @@ class ReportesController extends ApiController
                 'clientes_id'    => $cfdi->clientes_id,
                 'total'          => $cfdi->total,
                 'fecha_timbrado' => fecha_abr($cfdi->fecha_timbrado),
+                'metodo_clave' => $cfdi->clave,
                 'operaciones'    => $items->map(function ($op) {
                     return [
                         'operacion_id'   => $op->operacion_id,

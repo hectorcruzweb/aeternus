@@ -27,7 +27,7 @@ class VentasPorCfdisExport implements
 {
     protected $items;
     protected $summary;
-    protected $row_inicio_headings = 7;
+    protected $row_inicio_headings = 10;
 
     public function __construct($items, $summary)
     {
@@ -92,33 +92,87 @@ class VentasPorCfdisExport implements
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                $row_heading = $this->row_inicio_headings - 1;
+
+
+                // =========================
+                // RESUMEN Y TITULOS DEL HEADER(centrados)
+                // =========================
+                $sheet->mergeCells('A6:D6')->getStyle('A6')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('b18b1e');
+                $sheet->setCellValue('A6', "Nombre del formato");
+
+                $sheet->mergeCells('A8:D8');
+                $sheet->setCellValue('A8', 'Fecha de impresión: ' . fechahora_completa());
+
+
+                // =========================
+                // RESUMEN (LEFT EN COLUMNA H)
+                // =========================
+                $sheet->setCellValue('E1', 'RESUMEN GRAL.');
+                $sheet->setCellValue('E2', 'Total de Artículos');
+                $sheet->setCellValue('E3', 'Total de Servicios');
+                $sheet->setCellValue('E4', 'Artículos Desabastecidos');
+                $sheet->setCellValue('E5', 'Artículos Sobreabastecidos');
+                $sheet->setCellValue('E6', 'Artículos Sobreabastecidos');
+                $sheet->setCellValue('E7', 'Artículos Sobreabastecidos');
+                $sheet->setCellValue('E8', 'Artículos Sobreabastecidos');
+                // Alinear izquierda todos los textos de resumen
+                $sheet->getStyle("E1")->applyFromArray(
+                    [
+                        'font' => [
+                            'bold' => true,
+                            'color' => ['rgb' => 'FFFFFF']
+                        ],
+                        'fill' => [
+                            'fillType' => 'solid',
+                            'startColor' => ['rgb' => '2C3E50']
+                        ],
+                        'alignment' => [
+                            'horizontal' => 'center',
+                            'vertical' => 'center'
+                        ]
+                    ]
+                );
+                $sheet->getStyle("E2:E8")->applyFromArray(
+                    [
+                        'font' => [
+                            'bold' => true,
+                        ],
+                        'alignment' => [
+                            'horizontal' => 'center',
+                            'vertical' => 'center'
+                        ]
+                    ]
+                );
+
+
+                $heading_cfdi = $this->row_inicio_headings;
                 // ===== HEADINGS =====
-                $sheet->getCell("A{$row_heading}")->setValue("ID Sistema"); // Columna donde está el texto
-                $sheet->getCell("B{$row_heading}")->setValue("UUID"); // Columna donde está el texto
-                $sheet->getCell("C{$row_heading}")->setValue("Rfc Receptor"); // Columna donde está el texto
-                $sheet->getCell("D{$row_heading}")->setValue("Receptor"); // Columna donde está el texto
-                $sheet->getCell("E{$row_heading}")->setValue("Fecha Timbrado"); // Columna donde está el texto
-                $sheet->getCell("F{$row_heading}")->setValue("$ Total"); // Columna donde está el texto
-                $sheet->getStyle("A{$row_heading}:f{$row_heading}")->applyFromArray([
+                $sheet->getCell("A{$heading_cfdi}")->setValue("ID Sistema / Tipo"); // Columna donde está el texto
+                $sheet->getCell("B{$heading_cfdi}")->setValue("UUID"); // Columna donde está el texto
+                $sheet->getCell("C{$heading_cfdi}")->setValue("Rfc Receptor"); // Columna donde está el texto
+                $sheet->getCell("D{$heading_cfdi}")->setValue("Receptor"); // Columna donde está el texto
+                $sheet->getCell("E{$heading_cfdi}")->setValue("Fecha Timbrado"); // Columna donde está el texto
+                $sheet->getCell("F{$heading_cfdi}")->setValue("$ Total"); // Columna donde está el texto
+                $sheet->getStyle("A{$heading_cfdi}:f{$heading_cfdi}")->applyFromArray([
                     'font' => [
                         'bold' => true,
                         'color' => ['rgb' => 'FFFFFF']
                     ],
                     'fill' => [
                         'fillType' => 'solid',
-                        'startColor' => ['rgb' => '22292f']
+                        'startColor' => ['rgb' => '2C3E50']
                     ],
                     'alignment' => [
                         'horizontal' => 'center'
                     ]
                 ]);
-                $sheet->getStyle("A{$row_heading}:F{$row_heading}")->getAlignment()->setHorizontal('center');
+
                 //Data
-                $desface = 0;
+                $row_cfdi = $this->row_inicio_headings + 1;
+
+                $event->sheet->getDelegate()->freezePane('A' .   $row_cfdi);
                 for ($row = 0; $row < $this->summary['total_cfdis']; $row++) {
-                    $row_cfdi = $this->row_inicio_headings + $row + $desface;
-                    $sheet->getCell("A{$row_cfdi}")->setValue($this->items[$row]['id']);
+                    $sheet->getCell("A{$row_cfdi}")->setValue($this->items[$row]['id'] . " / " . $this->items[$row]['metodo_clave']);
                     $sheet->getCell("B{$row_cfdi}")->setValue($this->items[$row]['uuid']);
                     $sheet->getCell("C{$row_cfdi}")->setValue($this->items[$row]['rfc_receptor']);
                     $sheet->getCell("D{$row_cfdi}")->setValue($this->items[$row]['nombre_receptor']);
@@ -127,42 +181,148 @@ class VentasPorCfdisExport implements
                     //center
                     $sheet->getStyle("A{$row_cfdi}:f{$row_cfdi}")->applyFromArray([
                         'alignment' => [
-                            'horizontal' => 'center'
-                        ]
+                            'horizontal' => 'center',
+                            'vertical' => 'center'
+                        ],
+                        'fill' => [
+                            'fillType' => 'solid',
+                            'startColor' => ['rgb' => 'EFF3F8']
+                        ],
                     ]);
                     $sheet->getStyle("F{$row_cfdi}")->getNumberFormat()
                         ->setFormatCode('"$ "#,##0.00');
-                    //listado de Operaciones ligadas el CFDI
+                    $sheet->getRowDimension($row_cfdi)->setRowHeight(20);
+                    //Operaciones
+                    $row_cfdi++;
+                    $tiene_operaciones = count($this->items[$row]['operaciones']) > 0 ? true : false;
+                    $heading_operacion = $row_cfdi;
+                    $sheet->mergeCells('C' . $heading_operacion . ':F' . $heading_operacion);
+                    $sheet->setCellValue('C' . $heading_operacion,  $tiene_operaciones ? "Operaciones Facturadas" : "Sin operaciones facturadas");
+                    $sheet->getStyle("C{$heading_operacion}")->applyFromArray(
+                        [
+                            'font' => [
+                                'bold' => true,
+                                'color' => ['rgb' => $tiene_operaciones ? '111827' : '111827']
+                            ],
+                            'fill' => [
+                                'fillType' => 'solid',
+                                'startColor' => ['rgb' => $tiene_operaciones ? 'C9B36A' : 'E2CFCF']
+                            ],
+                            'alignment' => [
+                                'horizontal' => 'center'
+                            ]
+                        ]
+                    );
 
+                    if ($tiene_operaciones) {
+                        //Hay operaciones
+                        $heading_operacion++;
+                        $sheet->getCell("C{$heading_operacion}")->setValue("Tipo de Operación"); // Columna donde está el texto
+                        $sheet->getCell("D{$heading_operacion}")->setValue("Clave Sistema"); // Columna donde está el texto
+                        $sheet->getCell("E{$heading_operacion}")->setValue("Cliente"); // Columna donde está el texto
+                        $sheet->getCell("F{$heading_operacion}")->setValue("$ Total"); // Columna donde está el texto
+                        $sheet->getStyle("C{$heading_operacion}:F{$heading_operacion}")->applyFromArray(
+                            [
+                                'font' => [
+                                    'bold' => true,
+                                    'color' => ['rgb' => '111827']
+                                ],
+                                'fill' => [
+                                    'fillType' => 'solid',
+                                    'startColor' => ['rgb' => 'EFE5C6']
+                                ],
+                                'alignment' => [
+                                    'horizontal' => 'center'
+                                ]
+                            ]
+                        );
+                        $row_cfdi++;
+                        for ($operacion = 0; $operacion < count($this->items[$row]['operaciones']); $operacion++) {
+                            $row_cfdi++;
+                            $sheet->getCell("C{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['tipo_operacion']);
+                            $sheet->getCell("D{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['id_referencia']);
+                            $sheet->getCell("E{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['cliente']);
+                            $sheet->getCell("F{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['total']);
+                            $sheet->getStyle("F{$row_cfdi}")->getNumberFormat()
+                                ->setFormatCode('"$ "#,##0.00');
+                            $sheet->getStyle("C{$row_cfdi}:F{$row_cfdi}")->applyFromArray(
+                                [
+                                    'alignment' => [
+                                        'horizontal' => 'center'
+                                    ]
+                                ]
+                            );
+                            if ($operacion % 2 !== 0) {
+                                $sheet->getStyle("C{$row_cfdi}:F{$row_cfdi}")->applyFromArray([
+                                    'fill' => [
+                                        'fillType'   => 'solid',
+                                        'startColor' => ['rgb' => 'F2F2F2'],
+                                    ],
+                                ]);
+                            }
+                        }
+                        $row_cfdi++;
+                    }
+
+                    $row_cfdi++;
+
+                    /*
+                    //listado de Operaciones ligadas el CFDI
                     if (count($this->items[$row]['operaciones']) > 0) {
                         //tiene operaciones
-                        $row_heading_operacion = $row_cfdi + 1;
-
-                        $sheet->mergeCells('C' . $row_heading_operacion . ':F' . $row_heading_operacion);
-                        $sheet->setCellValue('C' . $row_heading_operacion, "Operaciones Facturadas");
-
-                        $sheet->getStyle("C{$row_heading_operacion}")->applyFromArray([
-                            'alignment' => [
-                                'horizontal' => 'center'
+                       
+                        $heading_operacion++;
+                        $sheet->getCell("C{$heading_operacion}")->setValue("Tipo de Operación"); // Columna donde está el texto
+                        $sheet->getCell("D{$heading_operacion}")->setValue("Clave Sistema"); // Columna donde está el texto
+                        $sheet->getCell("E{$heading_operacion}")->setValue("Cliente"); // Columna donde está el texto
+                        $sheet->getCell("F{$heading_operacion}")->setValue("$ Total"); // Columna donde está el texto
+                        $sheet->getStyle("C{$heading_operacion}:F{$heading_operacion}")->applyFromArray(
+                            [
+                                'font' => [
+                                    'bold' => true,
+                                    'color' => ['rgb' => 'FFFFFF']
+                                ],
+                                'fill' => [
+                                    'fillType' => 'solid',
+                                    'startColor' => ['rgb' => '22292f']
+                                ],
+                                'alignment' => [
+                                    'horizontal' => 'center'
+                                ]
                             ]
-                        ]);
-
-
-                        $row_heading_operacion++;
-                        $sheet->getCell("C{$row_heading_operacion}")->setValue("Tipo de Operación"); // Columna donde está el texto
-                        $sheet->getCell("D{$row_heading_operacion}")->setValue("Clave Sistema"); // Columna donde está el texto
-                        $sheet->getCell("E{$row_heading_operacion}")->setValue("Cliente"); // Columna donde está el texto
-                        $sheet->getCell("F{$row_heading_operacion}")->setValue("$ Total"); // Columna donde está el texto
-                        $sheet->getStyle("C{$row_heading_operacion}:F{$row_heading_operacion}")->applyFromArray([
-                            'alignment' => [
-                                'horizontal' => 'center'
-                            ]
-                        ]);
-                        $desface++;
+                        );
+                        $desface += 2; //para comenzar con rows
+                        $row_cfdi = $row_cfdi + $desface;
                         for ($operacion = 0; $operacion < count($this->items[$row]['operaciones']); $operacion++) {
+                            $sheet->getCell("C{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['tipo_operacion']);
+                            $sheet->getCell("D{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['id_referencia']);
+                            $sheet->getCell("E{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['cliente']);
+                            $sheet->getCell("F{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['total']);
+                            $sheet->getStyle("F{$row_cfdi}")->getNumberFormat()
+                                ->setFormatCode('"$ "#,##0.00');
                             $desface++;
                         }
-                    }
+                    }                    
+*/
+
+                    // Fit ALL columns on one page
+                    $sheet->getPageSetup()
+                        ->setFitToWidth(1)
+                        ->setFitToHeight(0); // 0 = unlimited pages vertically
+
+                    // Optional: set page orientation to landscape
+                    $sheet->getPageSetup()
+                        ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
+
+                    // Optional: adjust paper size
+                    $sheet->getPageSetup()
+                        ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+
+                    // ---- MARGINS (1 cm = 0.39 inch) ----
+                    $sheet->getPageMargins()->setTop(0.15);
+                    $sheet->getPageMargins()->setBottom(0.39);
+                    $sheet->getPageMargins()->setLeft(0.39);
+                    $sheet->getPageMargins()->setRight(0.39);
                 }
                 // ==== AUTO SIZE DE TODAS LAS COLUMNAS ====
                 foreach (range('A', 'F') as $col) {
