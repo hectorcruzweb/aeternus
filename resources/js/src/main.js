@@ -94,6 +94,9 @@ Vue.use(VueSignaturePad);
 import { modulo } from "@/ModuloPermisos";
 Vue.prototype.$modulo = modulo;
 
+import "./FuncionesGlobales";
+import "./VariablesGlobales";
+
 new Vue({
     router,
     store,
