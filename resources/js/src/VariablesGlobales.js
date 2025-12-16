@@ -192,3 +192,57 @@ export const alfabeto = [
 export const PermisosModulo = localStorage.getItem("AccessPermissions")
     ? JSON.parse(localStorage.getItem("AccessPermissions"))
     : null;
+
+import Vue from "vue";
+
+// Global date helper (from before)
+Vue.prototype.$meses_array = [
+    {
+        value: "1",
+        label: "Enero",
+    },
+    {
+        value: "2",
+        label: "Febrero",
+    },
+    {
+        value: "3",
+        label: "Marzo",
+    },
+    {
+        value: "4",
+        label: "Abril",
+    },
+    {
+        value: "5",
+        label: "Mayo",
+    },
+    {
+        value: "6",
+        label: "Junio",
+    },
+    {
+        value: "7",
+        label: "Julio",
+    },
+    {
+        value: "8",
+        label: "Agosto",
+    },
+    {
+        value: "9",
+        label: "Septiembre",
+    },
+    {
+        value: "10",
+        label: "Octubre",
+    },
+    {
+        value: "11",
+        label: "noviembre",
+    },
+    {
+        value: "12",
+        label: "Diciembre",
+    },
+];
