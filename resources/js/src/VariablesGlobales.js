@@ -196,6 +196,34 @@ export const PermisosModulo = localStorage.getItem("AccessPermissions")
 import Vue from "vue";
 
 // Global date helper (from before)
+Vue.prototype.$fechaHora = () => {
+    const months = [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+    ];
+    const now = new Date();
+    const day = now.getDate();
+    const month = months[now.getMonth()];
+    const year = now.getFullYear();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    return `${month} ${day} ${year} ${hours}-${minutes} ${ampm}`;
+};
+
+// Global date helper (from before)
 Vue.prototype.$meses_array = [
     {
         value: "1",
