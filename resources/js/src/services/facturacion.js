@@ -73,4 +73,10 @@ export default {
             responseType: "blob",
         });
     },
+
+    reporteVentasFacturadas(year = "", mes = "") {
+        return axios.get(`/ventas_x_mes_x_cfdis/${year}/${mes}`, {
+            responseType: "blob",
+        });
+    },
 };

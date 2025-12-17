@@ -21,14 +21,12 @@
 </template>
 <script>
 //componente de password
-import vSelect from "vue-select";
+import facturacion from "../../../services/facturacion";
 /**VARIABLES GLOBALES */
 
 export default {
   name: "FormularioReporteVentasFacturadas",
   components: {
-    "v-select": vSelect,
-
   },
   props: {
     show: {
@@ -91,10 +89,19 @@ export default {
     };
   },
   methods: {
-    reporteVentasFacturadas(year = "", mes = "") {
-      console.log("🚀 ~ mes:", mes)
-      console.log("🚀 ~ year:", year)
+    async reporteVentasFacturadas(year = "", mes = "") {
+      this.$vs.loading();
+      try {
 
+        const res = await facturacion.reporteVentasFacturadas(year, mes);
+        let filename = `Reporte de ventas facturadas ${this.$meses_array[mes - 1].label} ${year}, ${this.$hora_completa()}`;
+        this.$downloadFileExcel(res.data, `${filename}`);
+        this.cancelar();
+      } catch (err) {
+        this.$error("🚀 ~ err:", err)
+      } finally {
+        this.$vs.loading.close();
+      }
     },
     cancelar() {
       this.$emit("closeVentana");

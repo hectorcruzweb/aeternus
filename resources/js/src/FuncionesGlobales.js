@@ -11,7 +11,7 @@ Vue.prototype.$downloadFileExcel = function (blobData, baseName = "archivo") {
 
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
-        const filename = `${baseName} ${this.$fechaHora()}.xlsx`;
+        const filename = `${baseName}.xlsx`;
         link.href = url;
         link.download = filename;
         document.body.appendChild(link);
