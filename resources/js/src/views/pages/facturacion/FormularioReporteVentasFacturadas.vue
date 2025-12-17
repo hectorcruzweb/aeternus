@@ -1,14 +1,14 @@
 <template>
   <div class="centerx">
     <vs-popup :class="['forms-popup', 'popup-70', z_index]" :fullscreen="false" close="cancelar"
-      title="Seleccione el periodo de ventas facturadas" :active="localShow" :ref="this.$options.name">
+      title="Historial de ventas facturadas" :active="localShow" :ref="this.$options.name">
       <!--Listado de meses-->
       <div class="contenido">
         <div v-for="year in years" :key="year" class="flex flex-wrap justify-between gap-2">
           <div class="w-full bg-dark-500 text-white font-medium p-2">
             {{ year }}
           </div>
-          <div class="w-full flex flex-wrap justify-between gap-2 py-4">
+          <div class="w-full flex flex-wrap justify-between gap-2 py-4 pb-8">
             <span v-for="mes in mesesReversos" :key="year" @click="reporteVentasFacturadas(year, mes.value)"
               :class="['btn-span rounded cursor-pointer', (mesActual == mes.value && yearActual == year) ? 'primary-btn' : '']">
               {{ mes.label }}
