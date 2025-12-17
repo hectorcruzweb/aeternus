@@ -114,14 +114,21 @@ class VentasPorCfdisExport implements
 
                 $sheet->setCellValue('E2', 'Total de CFDIs');
                 $sheet->setCellValue('F2', '$ Total Facturado');
-
                 $sheet->setCellValue('E4', 'Operaciones Facturadas');
-                $sheet->setCellValue('F4', 'Ventas en Cementerio');
-                $sheet->setCellValue('E6', 'Cuotas de Mantenimiento');
-                $sheet->setCellValue('F6', 'Servicios Funerarios');
-                $sheet->setCellValue('E8', 'Venta de Planes a Futuro');
-                $sheet->setCellValue('F8', 'Ventas en General');
 
+                $ventas_cementerio = $this->summary['operaciones']['VENTA EN CEMENTERIO'];
+                $cuotas_cementerio = $this->summary['operaciones']['CUOTA DE MANTENIMIENTO'];
+                $servicios_funerarios = $this->summary['operaciones']['SERVICIO FUNERARIO'];
+                $ventas_planes_a_futuro = $this->summary['operaciones']['VENTA DE PLAN A FUTURO'];
+                $ventas_en_gral = $this->summary['operaciones']['VENTA EN GENERAL'];
+                $sheet->setCellValue(
+                    'F4',
+                    "Ventas en Cementerio: {$ventas_cementerio['count']}"
+                );
+                $sheet->setCellValue('E6', "Cuotas de Mantenimiento: {$cuotas_cementerio['count']}");
+                $sheet->setCellValue('F6', "Servicios Funerarios: {$servicios_funerarios['count']}");
+                $sheet->setCellValue('E8', "Venta de Planes a Futuro: {$ventas_planes_a_futuro['count']}");
+                $sheet->setCellValue('F8', "Ventas en General: {$ventas_en_gral['count']}");
                 $centerAlign = [
                     'alignment' => [
                         'horizontal' => 'center',
@@ -133,7 +140,6 @@ class VentasPorCfdisExport implements
                         'bold' => true
                     ],
                 ];
-
                 $color_header_black = [
                     'fill' => [
                         'fillType' => 'solid',
@@ -143,11 +149,10 @@ class VentasPorCfdisExport implements
                         'color' => ['rgb' =>  'ffffff']
                     ]
                 ];
-
                 $bg_primary = [
                     'fill' => [
                         'fillType' => 'solid',
-                        'startColor' => ['rgb' => 'C9B36A']
+                        'startColor' => ['rgb' => 'b18b1e']
                     ],
                     'font' => [
                         'bold' => true,
@@ -170,11 +175,17 @@ class VentasPorCfdisExport implements
                 $sheet->getStyle("F3")->getNumberFormat()
                     ->setFormatCode('"$ "#,##0.00');
                 $sheet->getCell("E5")->setValue($this->summary['total_operaciones']);
-                $sheet->getCell("F5")->setValue($this->summary['operaciones']['VENTA EN CEMENTERIO']['count']);
-                $sheet->getCell("E7")->setValue($this->summary['operaciones']['CUOTA DE MANTENIMIENTO']['count']);
-                $sheet->getCell("F7")->setValue($this->summary['operaciones']['SERVICIO FUNERARIO']['count']);
-                $sheet->getCell("E9")->setValue($this->summary['operaciones']['VENTA DE PLAN A FUTURO']['count']);
-                $sheet->getCell("F9")->setValue($this->summary['operaciones']['VENTA EN GENERAL']['count']);
+
+                $sheet->getCell("F5")->setValue($ventas_cementerio['total']);
+                $sheet->getCell("E7")->setValue($cuotas_cementerio['total']);
+                $sheet->getCell("F7")->setValue($servicios_funerarios['total']);
+                $sheet->getCell("E9")->setValue($ventas_planes_a_futuro['total']);
+                $sheet->getCell("F9")->setValue($ventas_en_gral['total']);
+                $sheet->getStyle("F5")->getNumberFormat()->setFormatCode('"$ "#,##0.00');
+                $sheet->getStyle("E7")->getNumberFormat()->setFormatCode('"$ "#,##0.00');
+                $sheet->getStyle("F7")->getNumberFormat()->setFormatCode('"$ "#,##0.00');
+                $sheet->getStyle("E9")->getNumberFormat()->setFormatCode('"$ "#,##0.00');
+                $sheet->getStyle("F9")->getNumberFormat()->setFormatCode('"$ "#,##0.00');
                 /**DATOS DEL RESUMEN */
 
                 $heading_cfdi = $this->row_inicio_headings;
@@ -295,47 +306,7 @@ class VentasPorCfdisExport implements
                         }
                         $row_cfdi++;
                     }
-
                     $row_cfdi++;
-
-                    /*
-                    //listado de Operaciones ligadas el CFDI
-                    if (count($this->items[$row]['operaciones']) > 0) {
-                        //tiene operaciones
-                       
-                        $heading_operacion++;
-                        $sheet->getCell("C{$heading_operacion}")->setValue("Tipo de Operación"); // Columna donde está el texto
-                        $sheet->getCell("D{$heading_operacion}")->setValue("Clave Sistema"); // Columna donde está el texto
-                        $sheet->getCell("E{$heading_operacion}")->setValue("Cliente"); // Columna donde está el texto
-                        $sheet->getCell("F{$heading_operacion}")->setValue("$ Total"); // Columna donde está el texto
-                        $sheet->getStyle("C{$heading_operacion}:F{$heading_operacion}")->applyFromArray(
-                            [
-                                'font' => [
-                                    'bold' => true,
-                                    'color' => ['rgb' => 'FFFFFF']
-                                ],
-                                'fill' => [
-                                    'fillType' => 'solid',
-                                    'startColor' => ['rgb' => '22292f']
-                                ],
-                                'alignment' => [
-                                    'horizontal' => 'center'
-                                ]
-                            ]
-                        );
-                        $desface += 2; //para comenzar con rows
-                        $row_cfdi = $row_cfdi + $desface;
-                        for ($operacion = 0; $operacion < count($this->items[$row]['operaciones']); $operacion++) {
-                            $sheet->getCell("C{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['tipo_operacion']);
-                            $sheet->getCell("D{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['id_referencia']);
-                            $sheet->getCell("E{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['cliente']);
-                            $sheet->getCell("F{$row_cfdi}")->setValue($this->items[$row]['operaciones'][$operacion]['total']);
-                            $sheet->getStyle("F{$row_cfdi}")->getNumberFormat()
-                                ->setFormatCode('"$ "#,##0.00');
-                            $desface++;
-                        }
-                    }                    
-*/
 
                     // Fit ALL columns on one page
                     $sheet->getPageSetup()

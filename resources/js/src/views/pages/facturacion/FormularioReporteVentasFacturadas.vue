@@ -92,7 +92,6 @@ export default {
     async reporteVentasFacturadas(year = "", mes = "") {
       this.$vs.loading();
       try {
-
         const res = await facturacion.reporteVentasFacturadas(year, mes);
         let filename = `Reporte de ventas facturadas ${this.$meses_array[mes - 1].label} ${year}, ${this.$hora_completa()}`;
         this.$downloadFileExcel(res.data, `${filename}`);
