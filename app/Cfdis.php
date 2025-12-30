@@ -1,4 +1,5 @@
 <?php
+
 namespace App;
 
 use App\SatMetodosPagoModel;
@@ -19,7 +20,7 @@ class Cfdis extends Model
 
         return round(
             $this->cfdis_relacionados_pagos_egresos->sum('monto_relacion'),
-            2// número de decimales
+            2 // número de decimales
         );
     }
 

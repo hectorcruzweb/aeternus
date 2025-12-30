@@ -292,6 +292,7 @@ Route::middleware(['auth:api'])->group(function () {
     /**rutas de reportes */
     Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
     Route::get('adeudos_cfdis', 'ReportesController@adeudos_cfdis');
+    Route::get('ventas_x_mes_x_cfdis/{year}/{mes}', 'ReportesController@ventas_x_mes_x_cfdis');
     /**rutas de checador via web */
     Route::post('/checador/modificar_registro_administrativo', 'ChecadorController@modificar_registro_administrativo')->middleware(['permiso:23,66']);
     Route::post('/checador/guardar_registro_administrativo', 'ChecadorController@guardar_registro_administrativo')->middleware(['permiso:23,65']);

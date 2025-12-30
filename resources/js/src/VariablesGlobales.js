@@ -221,3 +221,66 @@ Vue.prototype.$fechaHora = () => {
 
     return `${month} ${day} ${year} ${hours}-${minutes} ${ampm}`;
 };
+
+Vue.prototype.$hora_completa = () => {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    return `${hours}-${minutes}-${seconds} ${ampm}`;
+};
+
+// Global date helper (from before)
+Vue.prototype.$meses_array = [
+    {
+        value: "1",
+        label: "Enero",
+    },
+    {
+        value: "2",
+        label: "Febrero",
+    },
+    {
+        value: "3",
+        label: "Marzo",
+    },
+    {
+        value: "4",
+        label: "Abril",
+    },
+    {
+        value: "5",
+        label: "Mayo",
+    },
+    {
+        value: "6",
+        label: "Junio",
+    },
+    {
+        value: "7",
+        label: "Julio",
+    },
+    {
+        value: "8",
+        label: "Agosto",
+    },
+    {
+        value: "9",
+        label: "Septiembre",
+    },
+    {
+        value: "10",
+        label: "Octubre",
+    },
+    {
+        value: "11",
+        label: "noviembre",
+    },
+    {
+        value: "12",
+        label: "Diciembre",
+    },
+];

@@ -47,7 +47,12 @@
                 </div>
             </vx-card>
         </div>
-        <div class="w-full flex flex-wrap justify-end items-center mt-4">
+        <div class="w-full flex flex-wrap justify-end items-center mt-4 gap-4">
+            <span @click="reporteVentasFacturadas()"
+                class="flex flex-wrap justify-end items-center bg-primary text-white font-bold py-1 px-2 rounded cursor-pointer">
+                <img class="cursor-pointer img-btn-20 mr-2" src="@assets/images/excel.svg" title="Notas" /> Ventas
+                Facturadas
+            </span>
             <span @click="downloadExcel"
                 class="flex flex-wrap justify-end items-center bg-danger text-white font-bold py-1 px-2 rounded cursor-pointer">
                 <img class="cursor-pointer img-btn-20 mr-2" src="@assets/images/excel.svg" title="Notas" /> CFDIS con
@@ -88,7 +93,7 @@
                                     <vs-td :data="data[indextr].id">
                                         <span class="font-semibold">{{
                                             data[indextr].id
-                                            }}</span>
+                                        }}</span>
                                     </vs-td>
                                     <vs-td :data="data[indextr].uuid">
                                         {{ data[indextr].uuid }}
@@ -103,10 +108,10 @@
                                         }}</vs-td>
                                     <vs-td :data="data[indextr].cliente_nombre">{{
                                         data[indextr].cliente_nombre
-                                    }}</vs-td>
+                                        }}</vs-td>
                                     <vs-td :data="data[indextr].rfc_receptor">{{
                                         data[indextr].rfc_receptor
-                                        }}</vs-td>
+                                    }}</vs-td>
                                     <vs-td :data="data[indextr].tipo_comprobante_texto
                                         ">{{
                                             data[indextr].tipo_comprobante_texto
@@ -163,6 +168,10 @@
         <ActionsForm v-if="verConsultarCfdi" :id_cfdi="id_cfdi" :tipo="TipodeFormulario" :show="verConsultarCfdi"
             :uuid_a_sustituir="uuid_a_sustituir" @closeVentana="closeVentanaActions"
             @reset_uuid_a_sustituir="reset_uuid_a_sustituir"></ActionsForm>
+
+        <FormularioReporteVentasFacturadas v-if="openVerReporteVentasFacturadas" :show="openVerReporteVentasFacturadas"
+            @closeVentana="openVerReporteVentasFacturadas = false">
+        </FormularioReporteVentasFacturadas>
     </div>
 </template>
 
@@ -177,6 +186,7 @@ import FormularioCFDI from "../facturacion/FormularioCFDI";
 import ActionsForm from "../facturacion/ActionsForm";
 /**VARIABLES GLOBALES */
 import { configdateTimePickerRange } from "@/VariablesGlobales";
+import FormularioReporteVentasFacturadas from "./FormularioReporteVentasFacturadas.vue";
 const moment = require("moment");
 import vSelect from "vue-select";
 export default {
@@ -187,6 +197,7 @@ export default {
         flatPickr,
         ActionsForm,
         VerNotas,
+        FormularioReporteVentasFacturadas
     },
     watch: {
         "serverOptions.tipo_comprobante": function (newVal, previousVal) {
@@ -211,6 +222,7 @@ export default {
     data() {
         return {
             openVerNotas: false,
+            openVerReporteVentasFacturadas: false,
             nota_contenido: "",
             titulo_nota: "",
             /**consultar cfdi */
@@ -250,6 +262,9 @@ export default {
         };
     },
     methods: {
+        reporteVentasFacturadas() {
+            this.openVerReporteVentasFacturadas = true;
+        },
         async downloadExcel() {
             try {
                 this.$vs.loading();

@@ -31,6 +31,28 @@
     }
 }
 
+.btn-span {
+    padding: 3px 7px !important;
+    transition: transform 0.2s; /* Animation */
+    background-color: #{map-get($dark_map, "50")};
+    border: 1px solid #{map-get($dark_map, "200")};
+    &:hover {
+        cursor: pointer;
+        background-color: #{map-get($dark_map, "100")};
+        @extend .font-bold;
+        transform: scale(1.003);
+    }
+
+    &.primary-btn {
+        color: #ffffff;
+        background-color: #{map-get($primary_map, "800")};
+        border: 1px solid #{map-get($primary_map, "900")};
+        &:hover {
+            background-color: #{map-get($primary_map, "900")};
+        }
+    }
+}
+
 .btn-icon-50 {
     height: 36px;
     transition: transform 0.2s; /* Animation */
