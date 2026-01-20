@@ -103,7 +103,7 @@
                 <span class="ml-2">
                     Las cuotas por liquidación, enganche o abono de la venta se pagarán en la modalidad que haya elegido
                     el titular al
-                    momento de la compra de la propiedad en <span
+                    momento de la compra de espacio en cementerio en <span
                         class="bold uppercase">{{ $empresa->cementerio['cementerio'] }}</span> y deberán ser
                     cubiertas a
                     más tardar en la fecha programada
