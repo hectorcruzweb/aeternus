@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "bmewburn.vscode-intelephense-client",
+    "onecentlin.laravel-blade",
+    "amiralizadeh9480.laravel-extra-intellisense",
+    "onecentlin.laravel-extension-pack",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "octref.vetur",
+    "bradlc.vscode-tailwindcss",
+    "eamodio.gitlens",
+    "christian-kohler.path-intellisense",
+    "mikestead.dotenv",
+    "rangav.vscode-thunder-client",
+    "pkief.material-icon-theme",
+    "zhuangtongfa.material-theme"
+  ]
+}
