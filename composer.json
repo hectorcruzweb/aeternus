@@ -48,7 +48,8 @@
             "app/helpers/facturacion.php",
             "app/helpers/telefonos.php",
             "app/helpers/alfabeto.php",
-            "app/cfdi/ClienteFormasDigitales.php"
+            "app/cfdi/ClienteFormasDigitales.php",
+            "app/helpers/funciones_textos.php"
         ],
         "psr-4": {
             "App\\": "app/"
