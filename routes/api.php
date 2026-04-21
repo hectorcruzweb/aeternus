@@ -12,6 +12,7 @@
  */
 
 /**en pruebas */
+Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
 
 /**ruta para obtener tokens */
 Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
@@ -288,7 +289,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('facturacion/timbrar_cfdi', 'FacturacionController@timbrar_cfdi')->middleware(['permiso:21,60']);
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
     /**rutas de reportes */
-    Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
+
     Route::get('adeudos_cfdis', 'ReportesController@adeudos_cfdis');
     Route::get('ventas_x_mes_x_cfdis/{year}/{mes}', 'ReportesController@ventas_x_mes_x_cfdis');
     /**rutas de checador via web */

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Exports\ReporteEspecialExport;
@@ -36,12 +35,13 @@ class ReportesController extends ApiController
             $fecha_inicio = $datosRequest['fecha_inicio'];
             $fecha_fin    = $datosRequest['fecha_fin'];
         } else {
-            //return $this->errorResponse('Error al generar el reporte',409);
-            $modulo       = 1;
-            $reporte      = 2;
-            $fecha        = now();
-            $fecha_inicio = '1990-01-01';
-            $fecha_fin    = now();
+            //return $this->errorResponse('Mensaje de debug',409);
+            $modulo                       = 2;
+            $reporte                      = 2;
+            $fecha                        = now();
+            $fecha_inicio                 = '1990-01-01';
+            $fecha_fin                    = now();
+            $datosRequest['tipo_reporte'] = 'reporte_mapa';
         }
 
         $inventario = new InventarioController();
@@ -202,8 +202,8 @@ class ReportesController extends ApiController
         ) < cfdis.total
     ");
             })
-            // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
-            //->limit(500)
+        // ->where('operaciones.empresa_operaciones_id', 4) //Filtro por tipo operacion
+        //->limit(500)
             ->orderby('empresa_operaciones_id', 'asc')
             ->orderby('fecha_operacion', 'desc')
             ->get();
@@ -312,21 +312,21 @@ class ReportesController extends ApiController
             $cfdi = $items->first();
 
             return [
-                'id'             => $cfdi->id,
-                'uuid'           => $cfdi->uuid,
-                'rfc_receptor'           => $cfdi->rfc_receptor,
-                'nombre_receptor'           => $cfdi->nombre_receptor,
-                'clientes_id'    => $cfdi->clientes_id,
-                'total'          => $cfdi->total,
-                'fecha_timbrado' => fecha_abr($cfdi->fecha_timbrado),
-                'metodo_clave' => $cfdi->clave,
-                'operaciones'    => $items->map(function ($op) {
+                'id'              => $cfdi->id,
+                'uuid'            => $cfdi->uuid,
+                'rfc_receptor'    => $cfdi->rfc_receptor,
+                'nombre_receptor' => $cfdi->nombre_receptor,
+                'clientes_id'     => $cfdi->clientes_id,
+                'total'           => $cfdi->total,
+                'fecha_timbrado'  => fecha_abr($cfdi->fecha_timbrado),
+                'metodo_clave'    => $cfdi->clave,
+                'operaciones'     => $items->map(function ($op) {
                     return [
                         'operacion_id'   => $op->operacion_id,
                         'total'          => round($op->total, 2),
                         'tipo_operacion' => $op->tipo_operacion,
                         'id_referencia'  => $op->operacion_venta_id,
-                        'cliente' => $op->nombre,
+                        'cliente'        => $op->nombre,
                     ];
                 }),
             ];
@@ -367,12 +367,12 @@ class ReportesController extends ApiController
             ->translatedFormat('D d M H-i-s') . ' hrs';
 
         $filename = "reporte_especial_{$fecha}.xlsx";
-        $reporte = 'Ventas Facturadas del mes de ' . mes($mes) . ' ' . $year;
+        $reporte  = 'Ventas Facturadas del mes de ' . mes($mes) . ' ' . $year;
         return Excel::download(new VentasPorCfdisExport($data, $summary, $reporte), $filename);
         return [
             'summary' => $summary,
             'data'    => $data,
-            'reporte' => $reporte
+            'reporte' => $reporte,
         ];
     }
 }
