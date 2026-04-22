@@ -14,6 +14,7 @@
 /storage/cfdis_develop/**
 /storage/cfdis_production/**
 /storage/signatures/*
+/.vscode
 /vendor
 .env
 .env.backup

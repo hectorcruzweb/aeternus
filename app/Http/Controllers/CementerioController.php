@@ -1013,6 +1013,7 @@ class CementerioController extends ApiController
         }
 
         //aqui ando
+        //return $cementerio;
 
         /**limpiando array areas seleccionadas del cementerio */
         foreach ($cementerio as $key => &$area) {
@@ -1055,9 +1056,11 @@ class CementerioController extends ApiController
                 }
             }
             $area['propiedades'] = $propiedades;
+            $area['propiedades_vendidas']=count($propiedades);
+            $area['propieades_disponibles']=$area['propiedades_por_area']-$area['propiedades_vendidas'];
         }
 
-        return $propiedades;
+        //return $cementerio;
 
         /**agregando al array los parametros de filtracion */
         $nombre_reporte = '';
@@ -1097,7 +1100,7 @@ class CementerioController extends ApiController
         $empresa       = $get_funeraria->get_empresa_data();
         $pdf           = PDF::loadView('cementerios/cementerio_mapa/reporte', ['empresa' => $empresa, 'cementerio' => $cementerio, 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf = 'Pagos vencidos en propiedades.pdf';
+        $name_pdf = $nombre_reporte.'.pdf';
         $pdf->setOptions([
             'title'       => $name_pdf,
             'footer-html' => view('cementerios.cementerio_mapa.footer', ['empresa' => $empresa]),
@@ -1221,7 +1224,7 @@ class CementerioController extends ApiController
     public function get_cementerio()
     {
 
-        $datos = Propiedades::select(
+         $datos = Propiedades::select(
             '*',
             DB::raw(
                 '(NULL) AS nombre_area'
@@ -1230,7 +1233,8 @@ class CementerioController extends ApiController
                 '(NULL) AS mapa'
             )
         )
-            ->with('filas_columnas')->with('tipoPropiedad')->with('tipoPropiedad.precios')->with('filas_columnas')->orderBy('id', 'asc')->get()->toArray();
+            ->with('filas_columnas')->with('tipoPropiedad')->with('tipoPropiedad.precios')->with('filas_columnas')/*->where('tipo_propiedades_id',7)*/->orderBy('id', 'asc')->get()->toArray();
+
         foreach ($datos as $key => &$dato) {
             if ($dato['tipo_propiedades_id'] == 1) {
                 /**uniplex */
@@ -1254,6 +1258,21 @@ class CementerioController extends ApiController
                 /**cuadriplez dsin terraza */
                 $dato['nombre_area'] = 'mausoleo ' . $dato['propiedad_indicador'];
             }
+
+            if ($dato['tipo_propiedades_id']!=4 && $dato['tipo_propiedades_id']<7) {
+                //Agregando cantidad de propiades por area del cementerio
+                //Todas estas son de una sola columna
+                $dato['propiedades_por_area']=$dato['filas']*$dato['columnas'];
+            }else if ($dato['tipo_propiedades_id']==4){
+                //cuadriples(hay filas y columnas)
+                $total_propiedades_por_area=0;
+                foreach ($dato['filas_columnas'] as $index_fila_columna => $fila_columna) {
+                    $total_propiedades_por_area+=$fila_columna['fin_columna']-$fila_columna['empieza_columna']+1;
+                }
+                $dato['propiedades_por_area']=$total_propiedades_por_area;
+            }
+
+
 
             foreach ($dato['tipo_propiedad']['precios'] as $precio_key => &$precio) {
 

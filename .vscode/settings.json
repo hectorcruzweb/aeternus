@@ -31,6 +31,9 @@
 
     "emmet.includeLanguages": {
         "blade": "html"
+    },
+    "[blade]": {
+        "editor.defaultFormatter": "shufo.vscode-blade-formatter"
     }
     //"workbench.colorTheme": "One Dark Pro",
     //"workbench.iconTheme": "material-icon-theme"
