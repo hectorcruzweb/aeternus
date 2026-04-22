@@ -1259,7 +1259,7 @@ class CementerioController extends ApiController
                 $dato['nombre_area'] = 'mausoleo ' . $dato['propiedad_indicador'];
             }
 
-            if ($dato['tipo_propiedades_id']!=4 && $dato['tipo_propiedades_id']<7) {
+            if ($dato['tipo_propiedades_id']!=4 && $dato['tipo_propiedades_id']<8) {
                 //Agregando cantidad de propiades por area del cementerio
                 //Todas estas son de una sola columna
                 $dato['propiedades_por_area']=$dato['filas']*$dato['columnas'];

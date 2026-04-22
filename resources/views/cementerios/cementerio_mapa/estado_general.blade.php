@@ -5,6 +5,45 @@
         <div class="py-1 px-2 bg-header">
             {{ $area['nombre_area'] }}
         </div>
+
+
+        @if ($filtracion['filtro_seleccion'] == '' || $filtracion['filtro_seleccion'] == '1')
+            <!--Muestro la informacion del area-->
+            <div class="page-break">
+                <h4 class="uppercase">
+                    Resumen de ocupación y disponibilidad de venta
+                </h4>
+                <table class="w-100 titular pagos_tabla">
+                    <thead>
+                        <tr>
+                            <td class="center"><span class="bold uppercase px-2">Cantidad de espacios del
+                                    área</span>
+                            </td>
+                            <td class="center"><span class="bold uppercase px-2">Espacios vendidos</span></td>
+                            <td class="center"><span class="bold uppercase px-2">
+                                    Espacios disponibles</span></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class=" bold center">
+                                {{ $area['propiedades_por_area'] }}
+                            </td>
+                            <td class="center">
+                                {{ $area['propiedades_vendidas'] }}
+                            </td>
+                            <td class="center">
+                                {{ $area['propieades_disponibles'] }}
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        @endif
+
+
+
         @if ($area['tipo_propiedades_id'] != 4)
             <div class="w-100 keep-together">
                 <table class="w-100 size-14px table-modulo keep-together">
@@ -179,45 +218,6 @@
         }
         ?>
             </table>
-
-
-
-            @if ($filtracion['filtro_seleccion'] == '' || $filtracion['filtro_seleccion'] == '1')
-                <!--Muestro la informacion del area-->
-                <div class="">
-                    <h4 class="uppercase">
-                        Resumen de ocupación y disponibilidad de venta
-                    </h4>
-                    <table class="w-100 titular pagos_tabla">
-                        <thead>
-                            <tr>
-                                <td class="center"><span class="bold uppercase px-2">Cantidad de espacios del
-                                        área</span>
-                                </td>
-                                <td class="center"><span class="bold uppercase px-2">Espacios vendidos</span></td>
-                                <td class="center"><span class="bold uppercase px-2">
-                                        Espacios disponibles</span></td>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                            <tr>
-                                <td class=" bold center">
-                                    {{ $area['propiedades_por_area'] }}
-                                </td>
-                                <td class="center">
-                                    {{ $area['propiedades_vendidas'] }}
-                                </td>
-                                <td class="center">
-                                    {{ $area['propieades_disponibles'] }}
-                                </td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-
             <!--Muestro la info de ventas y servicios funerarios en dicha propiedad-->
             @foreach ($area['propiedades'] as $venta)
                 <?php
@@ -301,8 +301,5 @@
         ?>
             @endforeach
         @endif
-
-
-
     </div>
 @endforeach
