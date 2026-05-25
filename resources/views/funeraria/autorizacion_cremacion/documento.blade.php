@@ -144,6 +144,7 @@
                     </td>
                 </tr>
             </table>
+            <!--
             <table class="w-100 texto-base datos_tabla uppercase">
                 <thead>
                     <tr class="center">
@@ -160,6 +161,7 @@
                     </td>
                 </tr>
             </table>
+-->
 
             <table class="w-100 texto-base datos_tabla uppercase">
                 <thead>

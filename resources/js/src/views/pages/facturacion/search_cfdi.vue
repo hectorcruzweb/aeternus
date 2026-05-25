@@ -522,7 +522,7 @@ export default {
                     } else if (this.getTipo == "relacionar") {
                         this.$emit("CfdiRelacionarSeleccionado", datos);
                     }
-                    this.$emit("closeBuscador");
+                    //this.$emit("closeBuscador");
                 }, 50);
             });
         },

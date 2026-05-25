@@ -101,7 +101,6 @@
             border: 1px solid #000;
             margin-top: 7px;
         }
-
     </style>
 </head>
 
@@ -112,7 +111,7 @@
         <table class="w-100">
             <thead>
                 <tr>
-                    <th class="w-25">
+                    <th class="w-15">
                         <img class="logo logos -mt-6" src="{{ public_path(env('LOGOJPG')) }}" alt="">
                     </th>
                     <th class="w-40">
@@ -150,9 +149,12 @@
             </table>
         </div>
         <div class="py-3 ">
-            <span class="uppercase bold size-15px">Desglose del cementerio:</span>
+            <span class="uppercase semibold size-15px">Desglose del cementerio:</span>
         </div>
-        @include('cementerios.cementerio_mapa.estado_general',['datos'=>$cementerio['cementerio'],'filtracion'=>$cementerio['filtracion']])
+        @include('cementerios.cementerio_mapa.estado_general', [
+            'datos' => $cementerio['cementerio'],
+            'filtracion' => $cementerio['filtracion'],
+        ])
     </div>
 </body>
 
