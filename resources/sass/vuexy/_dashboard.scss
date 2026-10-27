@@ -172,7 +172,7 @@
 }
 
 /**
-flex: 1 1 0% is shorthand for: 
+flex: 1 1 0% is shorthand for:
 flex-grow: 1; → the item grows to fill available space.
 flex-shrink: 1; → it shrinks when necessary.
 flex-basis: 0%; → its initial size before growing/shrinking is 0.
@@ -196,11 +196,17 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         -ms-user-select: none;
     }
 
+    /* Cada fila crece según su contenido. */
     display: grid;
-    grid-template-rows: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
     gap: 1rem;
+    min-width: 0;
     /* 🔥 items inside each cell stick to the TOP */
-    @extend .scroll-styles;
+    // El desplazamiento vertical pertenece al layout de la página, no al dashboard.
+    overflow: visible;
+    height: auto;
+    max-height: none;
     //background-color: red;
 
     > div {
@@ -209,17 +215,22 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         gap: 1rem;
 
         > div {
-            @extend .scroll-styles, .effects;
+            @extend .effects;
+            overflow: visible;
             padding: 21px;
         }
     }
 
-    .parte-1 {
-        grid-template-rows: 1fr 1fr;
+    .dashboard__operacion {
+        /* En pantallas pequeñas, las cards se apilan. */
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+        min-width: 0;
 
         > div {
+            min-width: 0;
             min-height: 238.625px;
-            max-height: 238.625px;
+            max-height: none;
         }
 
         .servicios-funerarios {
@@ -230,16 +241,17 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
             .slide-servicio {
                 padding: 21px;
                 display: grid !important;
-                height: 100%;
-                /* required for "1fr" to work */
-                grid-template-rows: 48px 135px;
+                height: auto;
+                min-height: 238.625px;
+                /* El contenido puede crecer sin crear un scroll dentro de la card. */
+                grid-template-rows: minmax(48px, auto) minmax(135px, auto);
                 /* first row fixed, second row fills the rest */
                 align-content: space-between;
             }
 
             .slide-header {
-                overflow-x: hidden;
-                /* optional styles */
+                overflow: hidden;
+                /* Conserva el recorte horizontal sin crear scroll vertical. */
                 display: flex;
                 flex-direction: column;
                 flex-wrap: wrap;
@@ -309,7 +321,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                     .datos-contenido {
                         display: grid;
                         grid-template-rows: 1fr 1fr;
-                        @extend .scroll-styles;
+                        overflow: visible;
 
                         .row-dato {
                             display: grid;
@@ -353,7 +365,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
         .inventario {
             background: linear-gradient(90deg, #fff, #75797e);
-            @extend .no-scrollbar;
+            overflow: visible;
             display: flex;
             flex-direction: column;
             gap: 1rem;
@@ -398,7 +410,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
                         }
 
                         .cantidad {
-                            @extend .h4, .font-medium;
+                            // No heredar h4: el tamaño se comparte con los nuevos indicadores.
+                            @extend .font-medium;
                         }
 
                         .descripcion {
@@ -443,78 +456,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         }
     }
 
-    .parte-2 {
-        grid-template-rows: 1fr 1fr;
 
-        > div {
-            min-height: 403.625px;
-            //max-height: 403.625px;
-        }
-
-        .reporte-select {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            justify-content: space-between;
-
-            .selectores {
-                display: grid;
-                grid-template-columns: 5fr 1fr;
-                gap: 1rem;
-
-                .tipo_operacion {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 1rem;
-                    align-items: center;
-
-                    button.operacion {
-                        @extend .size-small, .font-medium;
-                        padding: 0.4rem 0.8rem;
-                        border-radius: 4px;
-                        background-color: $secondary;
-                        color: white;
-                        border: none;
-                        cursor: pointer;
-                        transition: background-color 0.2s ease,
-                            box-shadow 0.2s ease;
-
-                        &:hover {
-                            background-color: darken($primary, 10%);
-                        }
-
-                        span {
-                            @extend .size-small, .font-medium, .one-line-text;
-                        }
-
-                        // ✔ Estado activo / datos filtrados
-                        &.is-active {
-                            background-color: $primary !important;
-                            color: white !important;
-                            box-shadow: 0 0 6px rgba($primary, 0.55);
-
-                            &:hover {
-                                background-color: darken(
-                                    $primary,
-                                    8%
-                                ) !important;
-                            }
-                        }
-                    }
-                }
-
-                .v-select {
-                    min-width: 90px;
-                    max-width: 90px;
-                }
-            }
-
-            .graficas {
-                display: grid;
-                gap: 1rem;
-            }
-        }
-    }
 }
 
 /* Small (sm) — min-width: 576px */
@@ -537,26 +479,757 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 /* Large (lg) — min-width: 992px */
+/* En escritorio, ambas cards comparten la fila. */
 @media (min-width: 992px) {
     .dashboard {
-        grid-template-rows: 238.625px 1fr !important;
-
-        .parte-1 {
+        .dashboard__operacion {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             grid-template-rows: auto;
-            grid-template-columns: 1fr 1fr;
         }
-    }
-}
-
-/* Extra large (xl) — min-width: 1200px */
-@media (min-width: 1200px) {
-    .parte-2 {
-        grid-template-rows: 1fr !important;
-        grid-template-columns: 1fr 1fr;
     }
 }
 
 /* Optional: 2XL — Tailwind’s modern default (min-width: 1536px) */
 @media (min-width: 1536px) {
     /* Huge screens */
+}
+
+/* =========================================================
+   Fila 2: ventas/saldos y facturación.
+   Solo clases propias; no afectan servicios ni inventario.
+   ========================================================= */
+.dashboard {
+    .dashboard__resumen {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .dashboard-resumen-card {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.35rem;
+        background: #fff;
+        color: #666;
+    }
+
+    .dashboard-resumen-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-bottom: 0.9rem;
+
+        h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 500;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    .dashboard-resumen-card__acciones,
+    .dashboard-carrusel__controles {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .dashboard-resumen-card__acciones {
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    .dashboard-boton-icono {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.3rem;
+        border: 0;
+        background: transparent;
+        color: #777;
+        cursor: pointer;
+    }
+
+    .dashboard-enlace {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0;
+        border: 0;
+        background: transparent;
+        color: #8d7528;
+        font: inherit;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .dashboard-resumen-card button:focus-visible {
+        outline: 2px solid #a58722;
+        outline-offset: 3px;
+    }
+
+    .dashboard-resumen-card__indicadores {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.7rem;
+    }
+
+    .dashboard-indicador {
+        min-width: 0;
+        font-size: 0.85rem;
+
+        + .dashboard-indicador {
+            padding-left: 0.7rem;
+            border-left: 1px solid #eee;
+        }
+
+        small {
+            display: block;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #777;
+        }
+
+        > .dashboard-enlace { margin-top: 0.5rem; }
+    }
+
+    .dashboard-indicador__etiqueta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        min-height: 2.5em;
+    }
+
+    .dashboard-indicador__valor {
+        display: block;
+        margin: 0.4rem 0;
+        font-size: 1.4rem;
+        font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+        line-height: 1.3;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        overflow-wrap: anywhere;
+
+        &--ventas { color: #93751d; }
+        &--vencido { color: #a55c43; }
+        &--cobrado { color: #34785d; }
+    }
+
+    /* Acotar los ajustes de Slick a este carrusel. */
+    .dashboard-ventas {
+        .slick-slider, .slick-list, .slick-track, .slick-slide { min-width: 0; }
+        .slick-slide > div { padding: 0.15rem 0; }
+    }
+
+    // Permitir copiar datos nuevos sin cambiar la interacción de las cards originales.
+    .dashboard__resumen * { user-select: text; -webkit-user-select: text; }
+}
+
+@media (min-width: 1200px) {
+    .dashboard .dashboard__resumen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 420px) {
+    .dashboard {
+        .dashboard-resumen-card__indicadores { grid-template-columns: minmax(0, 1fr); gap: 0.65rem; }
+        .dashboard-indicador {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 0.2rem 0.7rem;
+            + .dashboard-indicador { padding: 0.65rem 0 0; border-left: 0; border-top: 1px solid #eee; }
+            small, > .dashboard-enlace { grid-column: 1 / -1; }
+        }
+        .dashboard-indicador__etiqueta { min-height: 0; }
+        .dashboard-indicador__valor { margin: 0; text-align: right; }
+    }
+}
+
+@media (pointer: coarse) {
+    .dashboard {
+        .dashboard-boton-icono { min-width: 44px; min-height: 44px; }
+        .dashboard-enlace { min-height: 44px; }
+    }
+}
+
+/* =========================================================
+   Tipografía de servicios e inventario.
+   Solo tamaños de texto: conserva distribución y funcionamiento.
+   !important neutraliza los h4/h5 globales que ya lo utilizan.
+   ========================================================= */
+.dashboard .dashboard__operacion {
+    .servicios-funerarios {
+        // Nombre: misma jerarquía que los encabezados del resumen.
+        .slide-header .fallecido h2 {
+            font-size: 1rem !important;
+        }
+
+        // Ubicación y datos del servicio: lectura compacta y consistente.
+        .slide-header .velacion > p,
+        .slide-content .contenido > p,
+        .slide-content .contenido .datos-contenido .row-dato .dato,
+        .slide-content .contenido .datos-contenido .row-dato .texto-dato {
+            font-size: 0.85rem !important;
+        }
+
+        .slide-header .velacion .btn-text {
+            font-size: 0.8rem;
+        }
+
+        // Mensajes sin contrato y sin servicios, sin afectar los pop-ups.
+        .slide-content .contenido-null > p {
+            font-size: 0.95rem !important;
+        }
+
+        > .skeleton p {
+            font-size: 0.85rem;
+        }
+    }
+
+    .inventario {
+        .seccion-title h2 {
+            font-size: 1rem !important;
+        }
+
+        .seccion-title .btn-text {
+            font-size: 0.8rem;
+        }
+
+        .reportes .lista .reporte {
+            // Igual escala que dashboard-indicador__valor; conserva count-to.
+            .cantidad {
+
+
+            }
+
+            .descripcion {
+                font-size: 0.8rem;
+            }
+        }
+    }
+}
+
+/* Inventario: superficie blanca y escala igual a los nuevos indicadores. */
+.dashboard .dashboard__operacion .inventario {
+    background: #fff;
+    color: #666;
+    border-color: #e5e7eb;
+
+    .seccion-title h2 {
+        font-size: 1rem !important;
+        font-weight: 500;
+    }
+
+    // El enlace original usa text-white: cambiar su color para el fondo blanco.
+    .seccion-title .btn-text {
+        color: #8d7528 !important;
+        font-size: 0.8rem;
+    }
+
+    .reportes .lista .reporte {
+        .cantidad {
+            color: #666;
+
+
+            font-weight: 500;
+            line-height: 1.3;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .descripcion {
+            color: #777;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+    }
+}
+
+/* Encabezados uniformes: el tema global aplica tamaños h2/h4 con !important. */
+.dashboard {
+    .dashboard-resumen-card__header h2,
+    .dashboard__operacion .inventario .seccion-title h2 {
+        font-size: 1rem !important;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+}
+
+/* Una sola escala para importes, timbres y cantidades del inventario. */
+.dashboard {
+    .dashboard-indicador__valor,
+    .dashboard__operacion .inventario .reportes .lista .reporte .cantidad {
+        font-size: 1.4rem !important;
+        font-size: clamp(1.1rem, 1.7vw, 1.6rem) !important;
+        font-weight: 500;
+        line-height: 1.3;
+        font-variant-numeric: tabular-nums;
+
+        // CountTo renderiza un span: debe conservar exactamente el tamaño del padre.
+        span {
+            font-size: inherit !important;
+            font-weight: inherit;
+            line-height: inherit;
+        }
+    }
+}
+
+/* Hover original de las cards: discreto y sin aumento de tamaño. */
+.dashboard {
+    .dashboard__operacion > div,
+    .dashboard-resumen-card,
+    .dashboard-card {
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+        &:hover {
+            box-shadow: 1px 2px 2px 1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+    }
+}
+
+/* Iconos de identificación: mismo tamaño y sin comprimirse con el texto. */
+.dashboard .dashboard-indicador__etiqueta > .dashboard-indicador__icono {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: #8d7528;
+}
+
+/* Inventario remodelado: cuatro indicadores, iconos discretos y superficie blanca. */
+.dashboard .dashboard__operacion .inventario.inventario--resumen {
+    max-height: none;
+    height: auto;
+    background: #fff;
+    color: #666;
+    gap: 1rem;
+
+    .seccion-title { flex-wrap: wrap; gap: 0.6rem; }
+    .seccion-title h2 { margin: 0; }
+    .reportes { grid-template-columns: minmax(0, 1fr) !important; gap: 0; }
+    .reportes .lista {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem 1.2rem;
+    }
+    .reportes .lista .reporte { min-width: 0; gap: 0.7rem; align-items: center; }
+    .inventario-indicador__contenido { min-width: 0; }
+    .cantidad { margin: 0 0 0.2rem; overflow-wrap: anywhere; }
+    .descripcion { margin: 0; }
+    .inventario-indicador__moneda { font-size: 0.8rem; font-weight: 400; color: #777; }
+
+    .inventario-icono {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        border-radius: 5px;
+
+        &--conceptos { color: #8d7528; background: #f6f0db; }
+        &--bajo { color: #a55c43; background: #f9eae3; }
+        &--sobre { color: #4f718e; background: #eaf1f7; }
+        &--costo { color: #34785d; background: #e7f3ed; }
+    }
+
+    .inventario-indicador__enlace {
+        display: inline-block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover { color: #8d7528; text-decoration: underline; }
+        &:focus-visible { outline: 2px solid #a58722; outline-offset: 3px; }
+    }
+}
+
+@media (max-width: 420px) {
+    .dashboard .dashboard__operacion .inventario.inventario--resumen .reportes .lista {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.8rem;
+    }
+}
+
+@media (pointer: coarse) {
+    .dashboard .inventario--resumen .inventario-indicador__enlace { min-height: 44px; }
+}
+
+/* Inventario: conservar ilustración original y distinguir enlaces de descarga. */
+.dashboard .dashboard__operacion .inventario.inventario--resumen {
+    .inventario-indicador__enlace {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        color: #8d7528 !important;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+
+        svg { flex-shrink: 0; }
+        &:hover { color: #705c1f !important; }
+    }
+
+    .inventario__ilustracion {
+        display: none;
+        align-items: center;
+        justify-content: flex-end;
+
+        img { display: block; width: 100%; max-width: 110px; height: auto; }
+    }
+}
+
+/* Ilustración opcional: los indicadores conservan prioridad sobre la imagen. */
+// Sin container queries: en anchos intermedios la imagen queda oculta.
+// Antes de 992px hay una sola columna; desde 1600px las medias cards tienen más espacio.
+@media (min-width: 768px) and (max-width: 991px), (min-width: 1600px) {
+    .dashboard .dashboard__operacion .inventario.inventario--resumen {
+        .reportes {
+            grid-template-columns: minmax(0, 1fr) 80px !important;
+            gap: 0.75rem;
+        }
+        .inventario__ilustracion { display: flex; }
+        .inventario__ilustracion img { width: 80px; max-width: 100%; height: auto; }
+    }
+}
+
+/* Pendientes: tres cards independientes con el mismo patrón de seguimientos. */
+.dashboard .dashboard-pendientes {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; min-width: 0; color: #666;
+    .dashboard-pendientes__indicador {
+        min-width: 0; padding: 1rem 1.2rem; background: #fff;
+        border: 1px solid #e5e7eb; border-radius: 4px;
+    }
+    .dashboard-pendientes__cabecera { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .7rem; }
+    .dashboard-pendientes__icono { flex-shrink: 0; color: #8d7528; }
+    .dashboard-pendientes__indicador--hoy .dashboard-pendientes__icono { color: #ae5748; }
+    .dashboard-pendientes__indicador--solicitudes .dashboard-pendientes__icono { color: #728d9a; }
+    .dashboard-pendientes__contenido { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: .8rem; }
+    h2 { margin: 0; font-size: .85rem !important; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+    .dashboard-indicador__valor { grid-column: 2; grid-row: 1 / 3; margin: 0; text-align: right; }
+    small { display: block; margin-top: .2rem; font-size: .75rem; line-height: 1.4; color: #888; }
+    .dashboard-enlace:focus-visible { outline: 2px solid #a58722; outline-offset: 3px; }
+    * { user-select: text; -webkit-user-select: text; }
+}
+@media (max-width: 767px) {
+    .dashboard .dashboard-pendientes { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Último ajuste: metadato compacto debajo de los cuatro indicadores. */
+.dashboard .dashboard__operacion .inventario.inventario--resumen .inventario-ultimo-ajuste {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding-top: 0.65rem;
+    border-top: 1px solid #eee;
+    color: #777;
+    font-size: 0.8rem;
+    line-height: 1.5;
+
+    svg { flex-shrink: 0; color: #8d7528; }
+    strong { color: #666; font-weight: 500; }
+}
+
+/* Fila 4: gráfica de ventas y cobros. */
+.dashboard {
+    .dashboard-grafica {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.35rem;
+        background: #fff;
+        color: #666;
+    }
+
+    .dashboard-grafica__encabezado {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+
+        h2 {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin: 0;
+            font-size: 1rem !important;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        h2 svg { flex-shrink: 0; color: #8d7528; }
+    }
+
+    .dashboard-grafica__controles {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+
+        label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+        select {
+            max-width: 100%;
+            padding: 0.45rem 0.6rem;
+            border: 1px solid #d5d5d5;
+            border-radius: 4px;
+            background: #fff;
+            color: #666;
+            font: inherit;
+        }
+        select:focus-visible, button:focus-visible { outline: 2px solid #a58722; outline-offset: 3px; }
+        select:disabled, button:disabled { opacity: 0.6; cursor: default; }
+    }
+
+    .dashboard-grafica__totales {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem 2rem;
+        margin-bottom: 0.7rem;
+
+        > .dashboard-indicador { padding: 0; border: 0; }
+        .dashboard-indicador__etiqueta { min-height: 0; }
+    }
+
+    .dashboard-grafica__periodo { margin: 0 0 0.5rem; font-size: 0.8rem; color: #777; }
+    .dashboard-grafica__lienzo { min-width: 0; width: 100%; }
+    .dashboard-grafica .apexcharts-canvas { max-width: 100%; }
+    .dashboard-grafica__estado { margin: 0; padding: 2rem 0; text-align: center; font-size: 0.9rem; }
+    .dashboard-grafica * { user-select: text; -webkit-user-select: text; }
+}
+
+@media (max-width: 650px) {
+    .dashboard .dashboard-grafica__controles { width: 100%; }
+}
+
+@media (pointer: coarse) {
+    .dashboard .dashboard-grafica__controles select { min-height: 44px; font-size: 16px; }
+}
+
+/* Modal de temporada: amplio, con decoración propia de cada fecha. */
+.dashboard-aviso-temporada-capa {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    background: rgba(36, 34, 26, 0.3);
+}
+.dashboard-aviso-temporada {
+    position: relative;
+    width: 760px;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 370px;
+    padding: 3rem 9rem 4rem;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid #e1cc93;
+    border-radius: 0;
+    border-top: 4px solid #b69435;
+    background: #fffdf7;
+    box-shadow: 0 18px 54px rgba(0, 0, 0, 0.22);
+    color: #666;
+    text-align: center;
+
+    .dashboard-aviso-temporada__logotipo {
+        position: relative;
+        z-index: 1;
+        display: block;
+        width: 231px;
+        max-width: 75%;
+        height: auto;
+        margin: 0 auto 1.7rem;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        mix-blend-mode: multiply;
+    }
+    .dashboard-aviso-temporada__titulo { position: relative; z-index: 1; display: flex; justify-content: center; align-items: center; gap: 0.6rem; }
+    .dashboard-aviso-temporada__icono { display: inline-flex; flex-shrink: 0; color: #ad892b; }
+    h2 { margin: 0; color: #806823; font-size: 1.55rem !important; font-weight: 500; line-height: 1.4; }
+    .dashboard-aviso-temporada__mensaje { position: relative; z-index: 1; margin: 1rem 0 1.2rem; font-size: 1.1rem; line-height: 1.6; }
+    .dashboard-aviso-temporada__nota { position: relative; z-index: 1; display: block; color: #888; font-size: 0.8rem; line-height: 1.4; }
+    .dashboard-aviso-temporada__cerrar {
+        position: absolute;
+        top: 0.7rem;
+        right: 0.7rem;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.4rem;
+        border: 0;
+        background: transparent;
+        color: #887344;
+        cursor: pointer;
+        &:focus-visible { outline: 2px solid #a58722; outline-offset: 2px; }
+    }
+
+    &--flores { background: linear-gradient(135deg, #fffefb, #fff5df); border-color: #dfbf78; }
+    &--nieve { background: linear-gradient(135deg, #fff, #eef7f2); border-color: #bdcfbf; h2, .dashboard-aviso-temporada__icono { color: #3f7157; } }
+    &--estrellas { background: linear-gradient(135deg, #fff, #faf4df); border-color: #dfd09c; }
+}
+
+/* La decoración queda al borde inferior y no cubre el logo, mensaje ni cierre. */
+.dashboard-aviso-temporada__decoracion { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.dashboard-aviso-temporada__particula {
+    position: absolute;
+    bottom: 10px;
+    display: block;
+    width: 26px;
+    height: 26px;
+    margin-left: -13px;
+    color: #c6a84e;
+    animation: dashboard-temporada-salto 2.3s ease-in-out infinite;
+}
+.dashboard-aviso-temporada__flor {
+    position: relative;
+    display: block;
+    width: 26px;
+    height: 26px;
+    i { position: absolute; left: 9px; top: 5px; width: 8px; height: 13px; border-radius: 50%; background: linear-gradient(#efb745, #cd8a24); transform-origin: 4px 8px; }
+    b { position: absolute; left: 9px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: #a96f20; }
+}
+.dashboard-aviso-temporada__particula:nth-child(even) .dashboard-aviso-temporada__flor { transform: scale(0.8); }
+.dashboard-aviso-temporada--nieve .dashboard-aviso-temporada__particula { color: #86ad9e; animation-name: dashboard-temporada-flotar; }
+.dashboard-aviso-temporada--estrellas .dashboard-aviso-temporada__particula { animation-name: dashboard-temporada-brillar; }
+.dashboard-aviso-temporada__copo {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+    i { position: absolute; top: 11px; left: 2px; width: 20px; height: 2px; border-radius: 2px; background: currentColor; }
+    i:nth-child(2) { transform: rotate(60deg); }
+    i:nth-child(3) { transform: rotate(120deg); }
+}
+@keyframes dashboard-temporada-salto {
+    0%, 100% { transform: translateY(0) rotate(-7deg); }
+    40% { transform: translateY(-18px) rotate(8deg); }
+    65% { transform: translateY(-4px) rotate(-3deg); }
+}
+@keyframes dashboard-temporada-flotar {
+    0%, 100% { transform: translateY(0) rotate(0); opacity: 0.5; }
+    50% { transform: translateY(-18px) rotate(30deg); opacity: 0.85; }
+}
+@keyframes dashboard-temporada-brillar {
+    0%, 100% { transform: translateY(0) scale(0.85); opacity: 0.4; }
+    50% { transform: translateY(-12px) scale(1.1); opacity: 0.9; }
+}
+.dashboard-aviso-temporada-enter-active, .dashboard-aviso-temporada-leave-active { transition: opacity 0.2s ease; }
+.dashboard-aviso-temporada-enter, .dashboard-aviso-temporada-leave-to { opacity: 0; }
+.dashboard-aviso-temporada-enter-active .dashboard-aviso-temporada { animation: dashboard-temporada-entrada 0.25s ease-out; }
+@keyframes dashboard-temporada-entrada { from { transform: translateY(8px) scale(0.97); } to { transform: translateY(0) scale(1); } }
+@media (max-width: 480px) {
+    .dashboard-aviso-temporada { min-height: 300px; padding: 2.2rem 1.2rem 3.5rem; h2 { font-size: 1.25rem !important; } }
+    .dashboard-aviso-temporada__particula:nth-child(n + 5) { display: none; }
+}
+@media (max-height: 480px) {
+    .dashboard-aviso-temporada { min-height: 0; padding: 1.1rem 1.3rem 2.7rem; }
+    .dashboard-aviso-temporada .dashboard-aviso-temporada__logotipo { width: 160px; margin-bottom: 0.65rem; }
+    .dashboard-aviso-temporada .dashboard-aviso-temporada__mensaje { margin: 0.5rem 0; font-size: 0.95rem; }
+}
+@media (pointer: coarse) { .dashboard-aviso-temporada .dashboard-aviso-temporada__cerrar { min-width: 44px; min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-aviso-temporada-enter-active, .dashboard-aviso-temporada-leave-active { transition: none; }
+    .dashboard-aviso-temporada__particula, .dashboard-aviso-temporada-enter-active .dashboard-aviso-temporada { animation: none; }
+}
+@media print { .dashboard-aviso-temporada-capa { display: none !important; } }
+
+/* Ilustraciones laterales; centro libre para la marca y el mensaje. */
+.dashboard-aviso-temporada__ilustraciones { position: absolute; inset: 0; pointer-events: none; }
+.dashboard-aviso-temporada__ilustraciones svg { position: absolute; bottom: 40px; width: 120px; height: 180px; opacity: .85; }
+.dashboard-aviso-temporada__escena--1 { left: 12px; }
+.dashboard-aviso-temporada__escena--2 { right: 12px; transform: scaleX(-1); }
+@media screen and (max-width: 1023px) { .dashboard-aviso-temporada-capa { display: none !important; } }
+
+/* Variantes del calendario cultural: tonos suaves e ilustraciones temáticas. */
+.dashboard-aviso-temporada--corazones, .dashboard-aviso-temporada--ramo { background: linear-gradient(135deg, #fffdfa, #f8eeee); }
+.dashboard-aviso-temporada--corazones .dashboard-aviso-temporada__particula { color: #b77e87; }
+.dashboard-aviso-temporada--hojas { background: linear-gradient(135deg, #fffef9, #edf2e8); }
+.dashboard-aviso-temporada--papalotes { background: linear-gradient(135deg, #fffdf6, #edf5f4); }
+.dashboard-aviso-temporada--patria { background: linear-gradient(110deg, #edf3ee, #fffdf6 50%, #f7eeec); }
+.dashboard-aviso-temporada__hoja { display: block; width: 14px; height: 24px; background: #8a9b73; border-radius: 0 85% 0 85%; transform: rotate(25deg); }
+.dashboard-aviso-temporada__banderin { display: block; width: 21px; height: 25px; background: #d2ad54; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 77%, 0 100%); }
+.dashboard-aviso-temporada__banderin--patrio { background: linear-gradient(90deg, #77947d 33%, #f4eedc 33%, #f4eedc 66%, #ba7d76 66%); }
+
+/* Panel de previsualización: fuera del flujo, exclusivo de desarrollo. */
+.dashboard-temporada-contenedor { display: contents; }
+.dashboard-temporada-dev {
+    position: fixed; right: 18px; bottom: 18px; z-index: 1390;
+    display: grid; gap: .5rem; width: 290px; padding: 1rem;
+    border: 1px solid #d6c593; background: #fffdf6;
+    box-shadow: 0 5px 22px rgba(0, 0, 0, .12); color: #666;
+    label { font-size: .85rem; font-weight: 600; }
+    select, button { padding: .5rem; border: 1px solid #cdbd8d; background: #fff; color: #66572f; font: inherit; }
+    button { cursor: pointer; background: #f4eddc; }
+    button:disabled, select:disabled { opacity: .5; cursor: default; }
+    small { font-size: .75rem; line-height: 1.4; }
+}
+@media print { .dashboard-temporada-dev { display: none !important; } }
+
+/* Mascotas: huellas suaves, sin atribuir servicios veterinarios o funerarios. */
+.dashboard-aviso-temporada--huellas { background: linear-gradient(135deg, #fffdf8, #f2eee4); }
+.dashboard-aviso-temporada--huellas .dashboard-aviso-temporada__particula { color: #a88a56; }
+
+/* Fecha de la celebración, independiente del intervalo de exhibición. */
+.dashboard-aviso-temporada .dashboard-aviso-temporada__fecha {
+    position: relative; z-index: 1; margin: .45rem 0 0;
+    color: #887344; font-size: .9rem; font-weight: 500; line-height: 1.4;
+}
+
+/* Vigencia FIEL: encabezado compacto y alerta de renovación. */
+.dashboard .dashboard-facturacion__fiel {
+    display: inline-flex; align-items: center; gap: .35rem; margin-left: auto;
+    max-width: 100%; color: #6b765f; font-size: .75rem; line-height: 1.5;
+    svg { flex-shrink: 0; }
+    strong { font-weight: 600; white-space: nowrap; }
+}
+.dashboard .dashboard-facturacion .dashboard-resumen-card__header { flex-wrap: wrap; gap: .5rem 1rem; }
+.dashboard .dashboard-facturacion__fiel--proxima { color: #9b621d; animation: dashboard-fiel-shake 5s ease-in-out infinite; }
+.dashboard .dashboard-facturacion__fiel--vencida { color: #ae5748; font-weight: 600; }
+@keyframes dashboard-fiel-shake {
+    0%, 4%, 8%, 12%, 100% { transform: translateX(0); }
+    2%, 10% { transform: translateX(-2px); }
+    6% { transform: translateX(2px); }
+}
+@media (prefers-reduced-motion: reduce) { .dashboard .dashboard-facturacion__fiel--proxima { animation: none; } }
+@media print { .dashboard .dashboard-facturacion__fiel--proxima { animation: none; } }
+
+/* Seguimientos: cuatro cards independientes, con el hover compartido. */
+.dashboard .dashboard-seguimientos {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; min-width: 0;
+    .dashboard-seguimientos__indicador {
+        min-width: 0; padding: 1rem 1.2rem; background: #fff;
+        border: 1px solid #e5e7eb; border-radius: 4px;
+    }
+    .dashboard-seguimientos__cabecera { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .7rem; }
+    .dashboard-seguimientos__icono { flex-shrink: 0; color: #789273; }
+    .dashboard-seguimientos__indicador--hoy .dashboard-seguimientos__icono { color: #a68b3b; }
+    .dashboard-seguimientos__indicador--vencidos .dashboard-seguimientos__icono,
+    .dashboard-seguimientos__indicador--vencidos .dashboard-indicador__valor { color: #ae5748; }
+    .dashboard-seguimientos__indicador--sugeridos .dashboard-seguimientos__icono { color: #728d9a; }
+    .dashboard-seguimientos__contenido { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: .8rem; }
+    h2 { margin: 0; font-size: .85rem !important; font-weight: 500; color: #666; line-height: 1.4; }
+    .dashboard-indicador__valor { grid-column: 2; grid-row: 1 / 3; margin: 0; text-align: right; }
+    small { display: block; margin-top: .2rem; font-size: .75rem; color: #888; }
+}
+@media (min-width: 768px) and (max-width: 1399px) {
+    .dashboard .dashboard-seguimientos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+    .dashboard .dashboard-seguimientos { grid-template-columns: minmax(0, 1fr); }
 }
