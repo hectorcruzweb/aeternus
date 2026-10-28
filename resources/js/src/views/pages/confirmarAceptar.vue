@@ -1,7 +1,7 @@
 <template>
   <div class="centerx">
     <vs-prompt :class="['confirm-form confirmarAceptar', z_index]" type="confirm" title="¿Desea continuar?"
-      :active="show" buttons-hidden :ref="$options.name">
+      :active="show" @click.native.capture="bloquearCierreExterior" buttons-hidden :ref="$options.name">
       <div class="text-center icono"></div>
 
       <div class="w-full text-center mt-3 h2 color-copy font-medium capitalize px-2">
@@ -26,6 +26,8 @@
 export default {
   name: "confirmarAceptar",
   props: {
+    // Optativo para los flujos nuevos; no cambia confirmaciones de otros módulos.
+    persistente: { type: Boolean, default: false },
     show: {
       type: Boolean,
       required: true,
@@ -88,6 +90,11 @@ export default {
     },
   },
   methods: {
+    bloquearCierreExterior(evento) {
+      if (this.persistente && evento.target.classList && evento.target.classList.contains("vs-dialog-dark")) {
+        evento.preventDefault(); evento.stopImmediatePropagation();
+      }
+    },
     aceptar() {
       this.callbackOnSuccess();
       this.cancel();

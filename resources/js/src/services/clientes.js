@@ -7,6 +7,10 @@ let cancel;
 export default {
     cancel: null,
 
+    // Autocompletado limitado para destinatarios de reportes.
+    buscarCorreosReportes(q, campo = "email") {
+        return axios.get("/clientes/reportes/correos", { params: { q, campo } });
+    },
     /**obitne la infomacion del paginado */
     get_clientes(param) {
         let self = this;

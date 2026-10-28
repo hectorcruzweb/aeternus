@@ -40,7 +40,6 @@
       <div
         v-if="visible && esEscritorio && temporadaActual"
         class="dashboard-aviso-temporada-capa"
-        @click.self="cerrar"
         @keydown.esc.stop.prevent="cerrar"
         @keydown.tab.prevent="enfocarCierre"
       >

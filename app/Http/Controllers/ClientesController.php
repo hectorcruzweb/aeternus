@@ -14,6 +14,29 @@ use App\Http\Controllers\CementerioController;
 
 class ClientesController extends ApiController
 {
+    /** Sugerencias acotadas de clientes para el correo del visor; no carga expedientes. */
+    public function buscarCorreosReportes(Request $request)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario && in_array((int) $usuario->roles_id, [1, 4], true), 403);
+        $request->validate(['q' => 'required|string|min:3|max:75', 'campo' => 'sometimes|required|in:email,nombre']);
+        $campo = $request->input('campo', 'email') === 'nombre' ? 'nombre' : 'email';
+        $texto = trim($request->input('q'));
+        if (mb_strlen($texto, 'UTF-8') < 3) return response()->json([]);
+        // Escapar comodines para que % o _ se busquen como caracteres, no como filtros abiertos.
+        $prefijo = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $texto);
+        $clientes = Clientes::query()->select(['id', 'nombre', 'email'])
+            ->where('status', 1)->whereNotNull('email')->where('email', '<>', '')
+            ->whereRaw('LENGTH(email) <= 75')
+            ->whereRaw($campo . " LIKE ? ESCAPE '!'", [$campo === 'nombre' ? '%' . $prefijo . '%' : $prefijo . '%'])
+            ->orderBy($campo)->orderBy('id')->limit(10)->get()
+            ->filter(function ($cliente) { return filter_var(trim($cliente->email), FILTER_VALIDATE_EMAIL); })
+            ->map(function ($cliente) {
+                return ['id' => $cliente->id, 'nombre' => $cliente->nombre, 'email' => trim($cliente->email)];
+            })->values();
+        return response()->json($clientes)->header('Cache-Control', 'no-store, private');
+    }
+
     public function get_nacionalidades()
     {
         /**todas las nacionalidades */

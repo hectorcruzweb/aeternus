@@ -108,6 +108,19 @@ export default {
             }),
         });
     },
+    // Vista HTML directa y token privado para descargar la misma selección.
+    visualizarExcel(filtro = "all") {
+        return axios.get("/inventario/dashboard/reporte-preview", { params: { filtro } });
+    },
+    enviarExcelPreview(token, datos) {
+        return axios.post("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/correo", datos);
+    },
+    descargarPdfPreview(token) {
+        return axios.get("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/pdf", { responseType: "blob" });
+    },
+    descargarExcelPreview(token) {
+        return axios.get("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/excel", { responseType: "blob" });
+    },
     descargarExcel(filtro = "all") {
         return axios.get("/listar_inventario/" + filtro + "/1", {
             responseType: "blob",

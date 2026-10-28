@@ -13,6 +13,13 @@
 
 Route::get('/listar_inventario/{filtro?}/{export_excel?}', 'InventarioController@listar_inventario');
 
+// Vista previa privada: el controlador valida además Admin/Gerencia.
+Route::get('/inventario/dashboard/reporte-preview', 'InventarioController@previewInventarioDashboard')->middleware('auth:api');
+Route::get('/clientes/reportes/correos', 'ClientesController@buscarCorreosReportes')->middleware('auth:api');
+Route::get('/inventario/dashboard/reporte-preview/{token}/excel', 'InventarioController@descargarInventarioPreview')->middleware('auth:api');
+Route::get('/inventario/dashboard/reporte-preview/{token}/pdf', 'InventarioController@descargarInventarioPreviewPdf')->middleware('auth:api');
+Route::post('/inventario/dashboard/reporte-preview/{token}/correo', 'InventarioController@enviarInventarioPreviewCorreo')->middleware(['auth:api', 'throttle:5,1,dashboard-correo:']);
+
 /**en pruebas */
 
 

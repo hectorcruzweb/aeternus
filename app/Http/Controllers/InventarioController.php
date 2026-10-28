@@ -113,6 +113,196 @@ class InventarioController extends ApiController
 
 
     /**
+     * Vista HTML directa: consulta una vez, sin generar ni leer un Excel.
+     * Conserva una instantánea privada por 15 minutos; en reportes grandes guarda solo filtros.
+     */
+    public function previewInventarioDashboard(Request $request)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario && in_array((int) $usuario->roles_id, [1, 4], true), 403);
+        $request->validate(['filtro' => 'required|in:all,low,over,articles,services']);
+        $limite = 2000; // Límite de filas para visualizar, no para descargar.
+        $filtro = $request->input('filtro');
+        list($consultaConteo, $nombreReporte) = $this->consultaReporteInventario($filtro);
+        // SQL cuenta los grupos filtrados sin cargar todos los artículos en PHP.
+        $total = DB::query()->fromSub($consultaConteo->toBase(), 'reporte_inventario')->count();
+        $visualizable = $total <= $limite;
+        $resultado = $visualizable ? $this->listar_inventario($filtro, false) : null;
+        if ($resultado && $resultado['articulos']->count() > $limite) {
+            $visualizable = false; // Si cambió el tamaño entre conteo y consulta, no renderizarlo.
+            $total = $resultado['articulos']->count();
+            $resultado = null;
+        }
+
+        $fecha = now('America/Mazatlan');
+        $html = null;
+        if ($visualizable) {
+            $export = new InventarioExport($resultado['articulos'], $resultado['resumen']);
+            // Se reutiliza el mapeo de columnas y estados del exportador, sin crear un libro.
+            $logo = public_path(env('LOGOJPG'));
+            $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($logo);
+            abort_unless(in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true), 422, 'Formato de logotipo no compatible.');
+            $html = view('reportes.temporales_visor_excel.inventario.reporte', [
+                'resumen' => $resultado['resumen'],
+                'columnas' => $export->headings(),
+                'filas' => $export->array(),
+                'fecha' => $fecha->format('d/m/Y H:i'),
+                'logo' => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logo)),
+            ])->render();
+    
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $vence = $fecha->copy()->addMinutes(15);
+        // Los reportes pequeños conservan datos. Los grandes conservan solo filtros validados.
+        $instantanea = [
+            'usuario_id' => (int) $usuario->id,
+            'modo' => $visualizable ? 'instantanea' : 'filtro',
+            'fecha_consulta' => $fecha->format('d/m/Y H:i'),
+            'filtro' => $filtro,
+            'nombre' => $nombreReporte . ' ' . $fecha->format('Y-m-d H-i-s') . '.xlsx',
+        ];
+        if ($visualizable) {
+            $instantanea['articulos'] = $resultado['articulos']->map(function ($item) { return $item->getAttributes(); })->all();
+            $instantanea['resumen'] = $resultado['resumen'];
+        }
+        \Illuminate\Support\Facades\Cache::put('inventario_reporte_' . $token, $instantanea, $vence);
+
+        // El visor y el documento comparten el título completo del reporte seleccionado.
+        return response()->json([
+            'titulo' => $nombreReporte,
+            'nombreArchivo' => $instantanea['nombre'],
+            'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(),
+            'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => $limite,
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargar el Excel completo. Se generará con los datos disponibles al momento de descargar.',
+            'hojas' => $visualizable ? [['nombre' => 'Inventario', 'html' => $html]] : [],
+            'totalRegistros' => (int) $total,
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Excel bajo demanda: instantánea pequeña o consulta completa del filtro masivo. */
+    public function descargarInventarioPreview(Request $request, $token)
+    {
+        list($articulos, $resumen, $nombre) = $this->datosReporteInventarioPreview($request, $token);
+        $respuesta = Excel::download(new InventarioExport($articulos, $resumen), $nombre);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** PDF bajo demanda desde los mismos datos autorizados que la descarga Excel. */
+    public function descargarInventarioPreviewPdf(Request $request, $token)
+    {
+        list($articulos, $resumen, $nombre, $fechaConsulta) = $this->datosReporteInventarioPreview($request, $token);
+        $pdf = $this->construirPdfReporteInventario($articulos, $resumen, $fechaConsulta);
+        $respuesta = $pdf->download(preg_replace('/\.xlsx$/i', '.pdf', $nombre));
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** Diseño PDF compartido entre descarga y correo. */
+    private function construirPdfReporteInventario($articulos, $resumen, $fechaConsulta)
+    {
+        $export = new InventarioExport($articulos, $resumen);
+        $logo = public_path(env('LOGOJPG'));
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($logo);
+        abort_unless(in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true), 422, 'Formato de logotipo no compatible.');
+        $pdf = PDF::loadView('reportes.temporales_visor_excel.inventario.reporte', [
+            'resumen' => $resumen, 'columnas' => $export->headings(), 'filas' => $export->array(),
+            'fecha' => $fechaConsulta ?: now('America/Mazatlan')->format('d/m/Y H:i'),
+            'logo' => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logo)),
+            'modoPdf' => true,
+        ]);
+        // Pie compartido del visor: fecha de generación, dominio configurado y paginación tenue.
+        $dominio = parse_url(config('app.url'), PHP_URL_HOST) ?: config('app.url');
+        $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
+            'fechaImpresion' => now('America/Mazatlan')->format('d/m/Y H:i'),
+            'dominio' => $dominio,
+        ])->render();
+        $pdf->setOptions([
+            'orientation' => 'landscape', 'page-size' => 'A4',
+            'margin-top' => 10, 'margin-bottom' => 10, 'margin-left' => 10, 'margin-right' => 10,
+            'encoding' => 'UTF-8', 'print-media-type' => true, 'disable-javascript' => false,
+            'enable-local-file-access' => false, 'disable-local-file-access' => true,
+            'footer-html' => $footer, 'footer-spacing' => 3,
+        ]);
+        return $pdf;
+    }
+
+    /**
+     * Envía Excel o PDF con mensaje opcional mediante la plantilla y configuración existentes.
+     * reporte_email mantiene separado el flujo de reportes sin alterar pdf_email.
+     * Solo se invoca mediante POST autenticado y confirmación explícita del usuario.
+     */
+    public function enviarInventarioPreviewCorreo(Request $request, $token)
+    {
+        $request->validate([
+            'destinatario' => 'required_without:destinatarios|nullable|string|max:75',
+            'email_address' => 'required_without:destinatarios|nullable|email|max:75',
+            'destinatarios' => 'sometimes|required|array|min:1|max:20',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'formato' => 'sometimes|required|in:excel,pdf',
+            'mensaje' => 'nullable|string|max:30000', // HTML acotado; texto visible hasta 5000 caracteres.
+            'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
+        ]);
+        $destinatarios = $request->input('destinatarios', [[
+            'nombre' => $request->input('destinatario'), 'email' => $request->input('email_address'),
+        ]]);
+        $vistos = [];
+        foreach ($destinatarios as &$persona) {
+            $persona['email'] = trim($persona['email']);
+            $persona['nombre'] = trim($persona['nombre'] ?? '');
+            $clave = strtolower($persona['email']);
+            if (isset($vistos[$clave])) throw \Illuminate\Validation\ValidationException::withMessages(['destinatarios' => 'Hay correos duplicados en la lista.']);
+            $vistos[$clave] = true;
+        }
+        unset($persona);
+        $textoMensaje = html_entity_decode(strip_tags($request->input('mensaje', '') ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (mb_strlen(trim($textoMensaje), 'UTF-8') > 5000) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['mensaje' => 'El mensaje no debe superar 5000 caracteres.']);
+        }
+        list($articulos, $resumen, $nombre, $fechaConsulta) = $this->datosReporteInventarioPreview($request, $token);
+        if ($request->input('formato', 'excel') === 'pdf') {
+            $contenido = $this->construirPdfReporteInventario($articulos, $resumen, $fechaConsulta)->output();
+            $nombre = preg_replace('/\.xlsx$/i', '.pdf', $nombre);
+        } else {
+            $contenido = Excel::raw(new InventarioExport($articulos, $resumen), \Maatwebsite\Excel\Excel::XLSX);
+        }
+        // Texto del usuario y adjunto se entregan al envío compartido de reportes.
+        return app(EmailController::class)->reporte_email([
+            'email_address' => $destinatarios[0]['email'],
+            'destinatario' => $destinatarios[0]['nombre'],
+            'destinatarios' => $destinatarios,
+            'asunto' => $request->input('asunto') ?: $resumen['reporte'],
+            'mensaje' => $request->input('mensaje', ''),
+        ], $contenido, $nombre, $request->input('formato', 'excel') === 'pdf'
+            ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    /** Validación común de rol, propietario y vigencia para descargar o enviar. */
+    private function datosReporteInventarioPreview(Request $request, $token)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario && in_array((int) $usuario->roles_id, [1, 4], true), 403);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $datos = \Illuminate\Support\Facades\Cache::get('inventario_reporte_' . $token);
+        abort_unless($datos, 410, 'La consulta venció. Actualice el reporte antes de descargarlo.');
+        abort_unless((int) $datos['usuario_id'] === (int) $usuario->id, 403);
+        if (($datos['modo'] ?? 'instantanea') === 'filtro') {
+            // Solo al descargar se carga el detalle masivo; nunca se envía al visor.
+            $resultado = $this->listar_inventario($datos['filtro'], false);
+            $articulos = $resultado['articulos'];
+            $datos['resumen'] = $resultado['resumen'];
+            $datos['fecha_consulta'] = now('America/Mazatlan')->format('d/m/Y H:i');
+        } else {
+            $articulos = collect($datos['articulos'])->map(function ($item) { return (object) $item; });
+        }
+        return [$articulos, $datos['resumen'], $datos['nombre'], $datos['fecha_consulta'] ?? null];
+    }
+
+    /**
      * Listar artículos con opciones de filtrado:
      *  - low: inventario bajo el mínimo
      *  - over: inventario sobre el máximo
@@ -120,7 +310,7 @@ class InventarioController extends ApiController
      *  - articles: conceptos inventariables (excluye servicios)
      *  - services: conceptos de tipo servicio
      */
-    public function listar_inventario($filtro = 'all', $export_excel = false)
+    private function consultaReporteInventario($filtro)
     {
         $query = Articulos::select([
             'articulos.id',
@@ -193,6 +383,13 @@ class InventarioController extends ApiController
                 $reporte = 'Reporte de Inventario General';
                 break;
         }
+
+        return [$query, $reporte];
+    }
+
+    public function listar_inventario($filtro = 'all', $export_excel = false)
+    {
+        list($query, $reporte) = $this->consultaReporteInventario($filtro);
 
         $data = $query->get();
 

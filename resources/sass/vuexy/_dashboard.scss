@@ -1375,3 +1375,211 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .dashboard .dashboard-skeleton__barra, .dashboard .dashboard-skeleton__icono { animation: none; }
 }
 @media print { .dashboard .dashboard-skeleton { display: none !important; } }
+
+/* Visor de reportes: alcance exclusivo a este popup; un área desplazable para el documento. */
+.visor-reportes {
+    // Pantalla completa del navegador; el documento ocupa el espacio restante.
+    &.fullscreen .vs-popup {
+        width: 100%; max-width: none; height: 100vh; max-height: none;
+        margin: 0; border-radius: 0; display: flex; flex-direction: column;
+    }
+    .vs-popup--header { flex: 0 0 auto; }
+    .vs-popup--content {
+        box-sizing: border-box; width: 100%; max-height: none; min-height: 0;
+        flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; padding: 1rem;
+    }
+    .visor-reportes__barra, .visor-reportes__hojas, .visor-reportes__nota { flex: 0 0 auto; }
+    .visor-reportes__barra { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 0.8rem; }
+    .visor-reportes__titulo { min-width: 0; flex: 1 1 280px; overflow-wrap: anywhere; }
+    .visor-reportes__titulo strong { display: block; color: #555; font-size: 0.95rem; }
+    .visor-reportes__titulo span, .visor-reportes__nota { color: #777; font-size: 0.8rem; }
+    .visor-reportes__acciones, .visor-reportes__hojas { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .visor-reportes__boton { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border: 1px solid #ddd; padding: 0.55rem 0.8rem; color: #666; background: #fff; cursor: pointer; font: inherit; font-size: 0.85rem; }
+    .visor-reportes__boton--principal { color: #fff; background: #a98a2e; border-color: #a98a2e; }
+    .visor-reportes__boton:disabled { opacity: 0.5; cursor: default; }
+    .visor-reportes__boton:focus-visible { outline: 2px solid #a98a2e; outline-offset: 2px; }
+    .visor-reportes__hojas { margin-bottom: 0.5rem; }
+    .visor-reportes__hojas [aria-pressed="true"] { border-color: #a98a2e; color: #8d7528; }
+    .visor-reportes__documento { display: block; flex: 1 1 auto; min-height: 0; width: 100%; height: 100%; border: 1px solid #e5e7eb; background: white; }
+    .visor-reportes__carga { position: relative; min-height: 260px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2rem; color: #777; }
+    .visor-reportes__error { padding: 2rem 1rem; color: #89565b; }
+    .visor-reportes__nota { margin: 0.65rem 0 0; }
+}
+
+/* Estado sin vista previa: siempre mantiene accesible la descarga del reporte completo. */
+.visor-reportes .visor-reportes__limite {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
+    gap: 0.8rem; padding: 2rem; color: #666;
+    strong { color: #8d7528; font-size: 1.1rem; }
+    p { margin: 0; max-width: 650px; line-height: 1.6; }
+}
+
+/* Descarga Excel: verde reconocible y distintivo XLSX, sin depender solo del color. */
+.visor-reportes {
+    .visor-reportes__boton--excel { background: #217346; border-color: #217346; color: #fff; }
+    .visor-reportes__boton--excel:hover:not(:disabled) { background: #185c37; border-color: #185c37; }
+    .visor-reportes__boton--excel:focus-visible { outline-color: #217346; }
+    .visor-reportes__formato { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.1rem 0.25rem; border: 1px solid rgba(255,255,255,0.65); line-height: 1.2; }
+}
+
+
+
+/* Redacción de correo: filas limpias inspiradas en un compositor, con identidad Aeternus. */
+.reporte-correo {
+    .vs-popup { width: 650px; max-width: 95vw; }
+    .vs-popup--content { box-sizing: border-box; width: 100%; }
+    .reporte-correo__campo { display: flex; align-items: baseline; gap: 0.5rem; border-bottom: 1px solid #e7e7e7; padding: 0.35rem 0; }
+    .reporte-correo__campo > label { width: 65px; flex-shrink: 0; color: #777; font-size: 0.9rem; }
+    .reporte-correo__entrada { flex: 1; min-width: 0; }
+    .vs-con-input, .vs-input--input, .vs-input--placeholder { border-radius: 0 !important; }
+    .reporte-correo__campo .vs-input--input { border-color: transparent !important; box-shadow: none; }
+    .reporte-correo__campo .vs-input--input:focus { border-bottom-color: #b18b1e !important; }
+    .reporte-correo__contenido { padding: 1.2rem 0; }
+    .reporte-correo__contenido > p { color: #666; font-size: 0.9rem; line-height: 1.6; margin: 0 0 1rem; }
+    .reporte-correo__formatos { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.65rem; }
+    .reporte-correo__formatos legend { font-size: 0.8rem; color: #777; margin-bottom: 0.5rem; }
+    .reporte-correo__formato { flex: 1 1 210px; display: flex; align-items: center; gap: 0.6rem; border: 1px solid #ddd; padding: 0.75rem; cursor: pointer; }
+    .reporte-correo__formato--excel { color: #217346; }
+    .reporte-correo__formato--pdf { color: #a53c3c; }
+    .reporte-correo__formato--excel.es-activo { border-color: #217346; background: #f1f6f3; }
+    .reporte-correo__formato--pdf.es-activo { border-color: #a53c3c; background: #faf2f2; }
+    .reporte-correo__formato input { accent-color: currentColor; }
+    .reporte-correo__formato svg { flex-shrink: 0; }
+    .reporte-correo__formato strong, .reporte-correo__formato small { display: block; }
+    .reporte-correo__formato small { font-size: 0.72rem; color: #777; margin-top: 0.25rem; }
+    .reporte-correo__adjunto { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.6rem; margin-top: 1rem; background: #f1f6f3; border: 1px solid #dce6df; color: #217346; max-width: 100%; overflow-wrap: anywhere; font-size: 0.8rem; }
+    .reporte-correo__adjunto--pdf { background: #faf2f2; border-color: #eedddd; color: #a53c3c; }
+    .reporte-correo__adjunto svg { flex-shrink: 0; }
+    .reporte-correo__acciones { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; border-top: 1px solid #eee; padding-top: 1rem; }
+    .reporte-correo__ayuda { flex: 1; color: #888; font-size: 0.75rem; }
+    .reporte-correo__cancelar { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0.55rem 1rem; border: 1px solid #a53c3c; background: #a53c3c; color: #fff; cursor: pointer; font: inherit; font-size: 0.85rem; font-weight: 500; }
+    .reporte-correo__cancelar:hover:not(:disabled) { background: #873131; border-color: #873131; }
+    .reporte-correo__cancelar:focus-visible { outline: 2px solid #a53c3c; outline-offset: 2px; }
+    .reporte-correo__cancelar:disabled { opacity: 0.5; cursor: default; }
+}
+
+/* PDF: acción diferenciada de Excel por texto, icono y rojo sobrio. */
+.visor-reportes {
+    .visor-reportes__boton--pdf { color: #fff; background: #a53c3c; border-color: #a53c3c; }
+    .visor-reportes__boton--pdf:hover:not(:disabled) { background: #873131; border-color: #873131; }
+    .visor-reportes__boton--pdf:focus-visible { outline-color: #a53c3c; }
+}
+
+/* Cuerpo del correo: escritura libre con líneas limpias, sin esquinas redondeadas. */
+.reporte-correo {
+    .reporte-correo__mensaje { padding-top: 1rem; }
+    .reporte-correo__mensaje label { font-size: 0.85rem; color: #666; }
+    .reporte-correo__mensaje small { color: #999; }
+    .reporte-correo__mensaje-pie { display: flex; justify-content: space-between; gap: 1rem; color: #999; font-size: 0.7rem; margin-top: 0.3rem; }
+}
+
+/* Vue2Editor del compositor: barra reducida y bordes rectos. */
+.reporte-correo .reporte-correo__mensaje {
+    .quillWrapper { margin-top: 0.5rem; }
+    .ql-toolbar, .ql-container { border-color: #e2e2e2; border-radius: 0 !important; }
+    .ql-toolbar { background: #fafafa; }
+    .ql-container { font: 0.9rem/1.6 Arial,sans-serif; }
+    .ql-editor { min-height: 160px; max-height: 280px; overflow-y: auto; }
+    .ql-editor.ql-blank::before { font-style: normal; color: #999; }
+}
+
+/* Compositor adaptable: solo el cuerpo desplaza; las acciones permanecen accesibles. */
+.reporte-correo {
+    .vs-popup {
+        display: flex; flex-direction: column; width: 760px; max-width: 96vw;
+        max-height: calc(100vh - 32px); margin: 16px; overflow: visible;
+    }
+    .vs-popup--header { flex: 0 0 auto; }
+    .vs-popup--content {
+        display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0;
+        width: 100%; max-height: none !important; padding: 0.85rem 1rem;
+        overflow: hidden;
+    }
+    .reporte-correo__formulario { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .reporte-correo__cuerpo { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 0.3rem; }
+    .reporte-correo__acciones { flex: 0 0 auto; background: #fff; margin-top: 0.5rem; padding-top: 0.7rem; }
+    .reporte-correo__campo { padding: 0.15rem 0; }
+    .reporte-correo__mensaje { padding-top: 0.65rem; }
+    .reporte-correo__mensaje .quillWrapper { margin-top: 0.35rem; }
+    .reporte-correo__mensaje .ql-container { height: auto; min-height: 0 !important; }
+    .reporte-correo__mensaje .ql-editor { min-height: 130px !important; max-height: none; overflow-y: visible; }
+    .reporte-correo__contenido { padding: 0.75rem 0 0.5rem; }
+    .reporte-correo__contenido > p { margin-bottom: 0.5rem; font-size: 0.8rem; }
+    .reporte-correo__formatos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; min-width: 0; }
+    .reporte-correo__formato { min-width: 0; padding: 0.6rem; }
+    .reporte-correo__formato > span { min-width: 0; }
+    .reporte-correo__adjunto { margin-top: 0.6rem; padding: 0.45rem; }
+}
+@media (max-height: 800px) {
+    .reporte-correo {
+        .vs-popup--content { padding: 0.6rem 0.9rem; }
+        .reporte-correo__mensaje .ql-editor { min-height: 96px !important; }
+        .reporte-correo__contenido > p { display: none; }
+        .reporte-correo__formato { padding: 0.45rem; }
+        .reporte-correo__formato small { font-size: 0.68rem; }
+    }
+}
+@media (min-height: 1000px) {
+    .reporte-correo .reporte-correo__mensaje .ql-editor { min-height: 200px !important; }
+}
+@media (max-width: 540px) {
+    .reporte-correo {
+        .vs-popup { max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); margin: 8px; }
+        .vs-popup--content { padding: 0.5rem 0.65rem; }
+        .reporte-correo__campo > label { width: 52px; font-size: 0.8rem; }
+        .reporte-correo__formato { gap: 0.35rem; font-size: 0.85rem; flex-wrap: wrap; }
+        .reporte-correo__formato small { line-height: 1.4; }
+        .reporte-correo__mensaje-pie { flex-wrap: wrap; gap: 0.25rem; }
+        .reporte-correo__ayuda { display: none; }
+        .reporte-correo__cancelar { margin-left: auto; }
+    }
+}
+
+/* Sugerencias de clientes: no alteran el valor escrito hasta seleccionar una coincidencia. */
+.reporte-correo {
+    .reporte-correo__buscador { position: relative; }
+    .reporte-correo__sugerencias { position: absolute; top: 100%; left: 0; right: 0; z-index: 5; background: #fff; border: 1px solid #ddd; box-shadow: 0 5px 12px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; }
+    .reporte-correo__sugerencias ul { list-style: none; padding: 0; margin: 0; }
+    .reporte-correo__sugerencias button { display: block; width: 100%; border: 0; background: #fff; padding: 0.6rem 0.75rem; text-align: left; color: #555; cursor: pointer; font: inherit; }
+    .reporte-correo__sugerencias button:hover, .reporte-correo__sugerencias button.es-activa { background: #f6f1e3; }
+    .reporte-correo__sugerencias strong, .reporte-correo__sugerencias span { display: block; overflow-wrap: anywhere; }
+    .reporte-correo__sugerencias strong { font-size: 0.8rem; font-weight: 500; }
+    .reporte-correo__sugerencias span, .reporte-correo__sugerencias p { font-size: 0.78rem; color: #777; }
+    .reporte-correo__sugerencias p { padding: 0.6rem; margin: 0; }
+}
+
+/* Destinatarios múltiples del compositor. */
+.reporte-correo {
+    .reporte-correo__agregar { display: inline-flex; align-items: center; gap: 0.3rem; align-self: center; padding: 0.4rem; border: 1px solid #ddd; color: #8d7528; background: white; cursor: pointer; font-size: 0.8rem; }
+    .reporte-correo__destinatarios { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.6rem 0; }
+    .reporte-correo__destinatario { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid #dfd9c5; background: #f6f3ea; color: #666; padding: 0.3rem 0.5rem; font-size: 0.78rem; overflow-wrap: anywhere; max-width: 100%; }
+    .reporte-correo__destinatario button { display: inline-flex; flex-shrink: 0; padding: 0; background: none; border: 0; color: #777; cursor: pointer; }
+    .reporte-correo__privacidad { font-size: 0.72rem; color: #888; margin: 0.35rem 0; }
+}
+
+/* Validación y edición: acentos suaves con icono y texto, sin alertas intrusivas. */
+.reporte-correo {
+    .reporte-correo__validacion { display: flex; align-items: flex-start; gap: 0.3rem; margin: 0.2rem 0; padding: 0.3rem 0.45rem; background: #fbf3f2; border-left: 2px solid #ba7770; color: #945951; font-size: 0.75rem; line-height: 1.4; }
+    .reporte-correo__validacion svg, .reporte-correo__error-general svg { flex-shrink: 0; margin-top: 1px; }
+    .reporte-correo__error-general { display: flex; flex: 0 0 auto; align-items: flex-start; gap: 0.5rem; background: #fbf3f2; border-left: 3px solid #ba7770; color: #945951; padding: 0.65rem; font-size: 0.8rem; line-height: 1.5; margin-top: 0.5rem; }
+    .reporte-correo__destinatario.es-editando { border-color: #b18b1e; background: #f5eed9; }
+    .reporte-correo__destinatario .reporte-correo__editar-texto { display: inline; flex-shrink: 1; min-width: 0; text-align: left; overflow-wrap: anywhere; font: inherit; color: inherit; }
+    .reporte-correo__edicion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; color: #8d7528; font-size: 0.75rem; padding: 0.4rem 0; }
+    .reporte-correo__edicion button { color: #8d7528; border: 0; padding: 0; background: none; text-decoration: underline; font: inherit; cursor: pointer; }
+}
+
+/* Elección explícita del nombre al seleccionar un cliente. */
+.reporte-correo .reporte-correo__nombre-opciones {
+    padding: 0.65rem; margin: 0.5rem 0; background: #f8f5ec; border-left: 2px solid #b18b1e; color: #766538; font-size: 0.78rem; line-height: 1.5;
+    p { margin: 0 0 0.5rem; overflow-wrap: anywhere; }
+    > div { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    button { background: #fff; color: #766538; border: 1px solid #ded6bc; padding: 0.4rem 0.55rem; font: inherit; cursor: pointer; }
+    button:hover { background: #f2ecdb; }
+}
+
+/* Mensaje con una escala discreta equivalente a los campos del compositor. */
+.reporte-correo .reporte-correo__mensaje {
+    .ql-editor { font-size: 0.85rem !important; line-height: 1.6; }
+    .ql-editor.ql-blank::before { font-size: inherit !important; line-height: inherit; }
+}

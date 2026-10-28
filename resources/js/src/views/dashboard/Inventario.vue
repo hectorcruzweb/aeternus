@@ -9,7 +9,7 @@
       <button
         type="button"
         class="dashboard-enlace"
-        @click="downloadExcel('all')"
+        @click="abrirReporte('all')"
       >
         Reporte General <ArrowUpRightIcon size="13" aria-hidden="true" />
       </button>
@@ -43,7 +43,7 @@
               /><span v-else aria-hidden="true">—</span>
             </p>
             <button type="button" class="descripcion inventario-indicador__enlace"
-              aria-label="Descargar reporte de artículos inventariables" @click="downloadExcel('articles')">
+              aria-label="Ver reporte de artículos inventariables" @click="abrirReporte('articles')">
               Artículos inventariables <DownloadIcon size="13" aria-hidden="true" />
             </button>
           </div>
@@ -75,8 +75,8 @@
             <button
               type="button"
               class="descripcion inventario-indicador__enlace"
-              aria-label="Descargar reporte de desabastecidos"
-              @click="downloadExcel('low')"
+              aria-label="Ver reporte de desabastecidos"
+              @click="abrirReporte('low')"
             >
               Desabastecidos <DownloadIcon size="13" aria-hidden="true" />
             </button>
@@ -109,8 +109,8 @@
             <button
               type="button"
               class="descripcion inventario-indicador__enlace"
-              aria-label="Descargar reporte de sobreabastecidos"
-              @click="downloadExcel('over')"
+              aria-label="Ver reporte de sobreabastecidos"
+              @click="abrirReporte('over')"
             >
               Sobreabastecidos <DownloadIcon size="13" aria-hidden="true" />
             </button>
@@ -125,7 +125,7 @@
               <span v-else aria-hidden="true">—</span>
             </p>
             <button type="button" class="descripcion inventario-indicador__enlace"
-              aria-label="Descargar reporte de servicios" @click="downloadExcel('services')">
+              aria-label="Ver reporte de servicios" @click="abrirReporte('services')">
               Servicios <DownloadIcon size="13" aria-hidden="true" />
             </button>
           </div>
@@ -151,6 +151,7 @@
         </strong>
       </p>
     </div>
+    <VisorReportes :show="mostrarVisor" :cargar="cargarReporteExcel" :descargar-archivo="descargarReporteExcel" :descargar-pdf="descargarReportePdf" :enviar-correo="enviarReporteCorreo" @close="mostrarVisor = false" />
   </div>
   <div v-else class="skeleton">
     <p>Obteniendo información del inventario.</p>
@@ -158,6 +159,7 @@
 </template>
 <script>
 import DashboardSkeleton from "./DashboardSkeleton.vue";
+import VisorReportes from "../pages/VisorReportes.vue";
 import CountTo from "vue-count-to";
 import {
   PackageIcon,
@@ -175,6 +177,7 @@ export default {
   name: "Inventario(dashboard)",
   components: {
     DashboardSkeleton,
+    VisorReportes,
     CountTo,
     PackageIcon,
     AlertTriangleIcon,
@@ -191,6 +194,9 @@ export default {
     data: { type: [Array, Object], required: true },
     // Fecha o leyenda formateada por el padre; el campo real de la API está pendiente.
     ultimoAjuste: { type: String, default: null },
+  },
+  data() {
+    return { mostrarVisor: false, filtroReporte: "all" };
   },
   computed: {
     ultimoAjusteTexto() {
@@ -215,26 +221,27 @@ export default {
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
-    // Se conservan el servicio, los filtros, nombres de archivo y el indicador de carga.
-    async downloadExcel(filtro = "all") {
+    // El modal solicita y conserva una instantánea hasta cerrarse o actualizarse.
+    abrirReporte(filtro = "all") {
       if (this.cargando) return;
-      this.$vs.loading();
-      try {
-        const res = await inventario.descargarExcel(filtro);
-        const nombres = {
-          articles: "inventario_articulos_inventariables",
-          services: "inventario_servicios",
-          low: "inventario_desabastecidos",
-          over: "inventario_sobreabastecido",
-          all: "inventario_general",
-        };
-        const filename = nombres[filtro] || nombres.all;
-        this.$downloadFileExcel(res.data, `${filename} ${this.$fechaHora()}`);
-      } catch (error) {
-        this.$error("Error al descargar inventario:", error);
-      } finally {
-        this.$vs.loading.close();
-      }
+      this.filtroReporte = filtro;
+      this.mostrarVisor = true;
+    },
+    async enviarReporteCorreo(token, datos) {
+      const respuesta = await inventario.enviarExcelPreview(token, datos);
+      return respuesta.data;
+    },
+    async descargarReportePdf(token) {
+      const respuesta = await inventario.descargarPdfPreview(token);
+      return respuesta.data;
+    },
+    async descargarReporteExcel(token) {
+      const respuesta = await inventario.descargarExcelPreview(token);
+      return respuesta.data;
+    },
+    async cargarReporteExcel() {
+      const respuesta = await inventario.visualizarExcel(this.filtroReporte);
+      return respuesta.data;
     },
   },
   created() {

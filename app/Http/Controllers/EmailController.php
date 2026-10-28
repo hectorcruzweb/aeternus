@@ -9,6 +9,48 @@ use Illuminate\Support\Facades\Storage;
 class EmailController extends ApiController
 {
     /**
+     * Reportes del dashboard con mensaje opcional y adjunto Excel/PDF.
+     * Reutiliza remitente, datos de empresa y mails.mail. No altera pdf_email.
+     * El módulo llamante valida permisos, destinatario, asunto y longitud del mensaje.
+     */
+    public function reporte_email(array $datos, $contenido, $nombreArchivo, $mime)
+    {
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $destinatarios = $datos['destinatarios'] ?? [['email' => $datos['email_address'], 'nombre' => $datos['destinatario']]];
+        $data = [
+            'email' => $datos['email_address'], 'client_name' => count($destinatarios) === 1 ? $datos['destinatario'] : '',
+            'subject' => $datos['asunto'], 'mensaje_html' => $this->mensajeReporteSeguro($datos['mensaje'] ?? ''),
+            'address' => config('services.mailsistema.address'),
+            'empresa' => $empresa, 'name_pdf' => $nombreArchivo,
+        ];
+        Mail::send('mails.mail', $data, function ($message) use ($empresa, $data, $contenido, $nombreArchivo, $mime, $destinatarios) {
+            $message->from($data['address'], strtoupper($empresa->nombre_comercial));
+            if (count($destinatarios) === 1) {
+                $message->to($destinatarios[0]['email'], $destinatarios[0]['nombre'] ?? '');
+            } else {
+                // Copia oculta para no compartir correos de clientes entre destinatarios.
+                foreach ($destinatarios as $persona) $message->bcc($persona['email'], $persona['nombre'] ?? '');
+            }
+            $message->subject($data['subject']);
+            $message->attachData($contenido, $nombreArchivo, ['mime' => $mime]);
+        });
+        if (Mail::failures()) return $this->errorResponse('Ocurrió un error al enviar el correo.', 500);
+        return $this->successResponse(1, 200);
+    }
+
+    /** HTML permitido del editor; elimina scripts, imágenes y atributos peligrosos. */
+    private function mensajeReporteSeguro($mensaje)
+    {
+        $config = \HTMLPurifier_Config::createDefault();
+        $config->set('Core.Encoding', 'UTF-8');
+        $config->set('Cache.DefinitionImpl', null);
+        $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,ol,ul,li,a[href|title]');
+        $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true]);
+        $purificador = new \HTMLPurifier($config);
+        return $purificador->purify($mensaje);
+    }
+
+    /**
      * parameters lista de la funcion
      * to destinatario
      * to_name nombre del destinatario

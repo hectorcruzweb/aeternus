@@ -131,35 +131,68 @@
     @include break-points-content;
 }
 
+/* Franja de título y cierre separados, alineados y de la misma altura. */
 .forms-popup .vs-popup--header {
-    padding-top: 14px;
+    box-sizing: border-box;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    align-items: stretch;
+    column-gap: 10px;
+    padding: 14px 15px 0;
     margin-bottom: 28px !important;
-    height: 3rem;
+    height: auto;
+    min-height: 50px;
+    flex-shrink: 0;
     border-radius: 0 !important;
     background-color: #fff !important;
 }
 
 .forms-popup .vs-popup--title {
-    border-radius: 0px !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border-radius: 0 !important;
 }
 
 .forms-popup .vs-popup--title h3 {
     @extend .h5, .color-dark-700, .font-medium, .bg-dark-50;
+    box-sizing: border-box;
+    margin: 0;
+    min-height: 36px;
+    padding: 8px 12px !important;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
     text-align: center !important;
     text-transform: uppercase !important;
 }
 
 .forms-popup .vs-popup--close {
-    padding: 6.6px !important;
-    margin-top: 16px !important;
-    border-radius: 0px !important;
-    margin-right: 15px !important;
-    @extend .h1, .color-dark-900, .font-bold;
-    background-color: #d2d2d2 !important;
+    position: static;
+    width: 36px;
+    height: auto;
+    min-height: 36px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    @extend .h1, .font-bold;
+    color: #fff !important;
+    background-color: #a53c3c !important;
 }
 
+.forms-popup .vs-popup--close:hover { background-color: #873131 !important; }
+.forms-popup .vs-popup--close:focus-visible { outline: 2px solid #a53c3c; outline-offset: 2px; }
+
+/* Espacio de cierre común: evita botones pegados al borde sin aumentar la altura del modal. */
 .forms-popup .vs-popup--content {
-    padding: 0 1.5rem 0 1.5rem !important;
+    box-sizing: border-box;
+    padding: 0 1.5rem 1.25rem 1.5rem !important;
 }
 
 /*textos forms*/
