@@ -21,7 +21,8 @@
         type="button"
         class="dashboard-enlace"
         :disabled="isLoading"
-        ref="botonRecargar" @click="recargarDashboard"
+        ref="botonRecargar"
+        @click="recargarDashboard"
       >
         <RefreshCwIcon size="16" aria-hidden="true" />
         {{ isLoading ? "Actualizando…" : "Recargar dashboard" }}
@@ -35,11 +36,13 @@
     <!-- Las cards dibujan sus skeletons sin montar importes ni acciones reales. -->
     <template v-if="mostrarVistaGerencial">
       <div class="dashboard__operacion">
-        <ServiciosFunerarios :cargando="isLoading"
+        <ServiciosFunerarios
+          :cargando="isLoading"
           v-if="isLoading || tieneSeccion('servicios_funerarios')"
           :data="serviciosFunerarios"
         />
-        <Inventario :cargando="isLoading"
+        <Inventario
+          :cargando="isLoading"
           v-if="isLoading || tieneSeccion('inventario')"
           :data="inventario"
           :ultimo-ajuste="inventario.ultimoAjuste"
@@ -49,16 +52,21 @@
       <!-- El carrusel muestra las filas recibidas, incluido el general del backend. -->
       <section
         class="dashboard__resumen"
-        :class="{ 'dashboard__resumen--solo': !isLoading && !tieneSeccion('ventasSaldos') }"
+        :class="{
+          'dashboard__resumen--solo':
+            !isLoading && !tieneSeccion('ventasSaldos'),
+        }"
         aria-label="Ventas, saldos y facturación"
       >
-        <VentasSaldos :cargando="isLoading"
+        <VentasSaldos
+          :cargando="isLoading"
           v-if="isLoading || tieneSeccion('ventasSaldos')"
           :operaciones="ventasSaldos"
           :periodo-resumen="periodoResumen"
           @ver-reporte="prepararReporte"
         />
-        <Facturacion :cargando="isLoading"
+        <Facturacion
+          :cargando="isLoading"
           :facturacion="facturacion"
           :periodo-resumen="periodoResumen"
           @ver-reporte="prepararReporte"
@@ -66,16 +74,19 @@
       </section>
 
       <!-- Datos ficticios autorizados hasta integrar sus resúmenes del backend. -->
-      <PendientesResumen :cargando="isLoading"
+      <PendientesResumen
+        :cargando="isLoading"
         :pendientes="pendientes"
         @ver-reporte="prepararReporte"
       />
-      <SeguimientosResumen :cargando="isLoading"
+      <SeguimientosResumen
+        :cargando="isLoading"
         :seguimientos="seguimientos"
         :periodo-resumen="periodoResumen"
         @ver-reporte="prepararReporte"
       />
-      <VentasCobrosGrafica :cargando="isLoading"
+      <VentasCobrosGrafica
+        :cargando="isLoading"
         :datos="datosGrafica"
         :periodo="periodoGrafica"
         :anios="aniosGrafica"
@@ -87,7 +98,8 @@
     </template>
 
     <VistaLimitada v-else-if="isLoading || dashboardDisponible">
-      <ServiciosFunerarios :cargando="isLoading"
+      <ServiciosFunerarios
+        :cargando="isLoading"
         v-if="isLoading || tieneSeccion('servicios_funerarios')"
         :data="serviciosFunerarios"
       />
@@ -148,7 +160,8 @@ export default {
   computed: {
     mostrarVistaGerencial() {
       // Al inicio solo hay formas neutras; el servidor decide la vista con datos.
-      return this.isLoading ? this.vistaCarga !== "operativa"
+      return this.isLoading
+        ? this.vistaCarga !== "operativa"
         : this.dashboardDisponible && this.puedeVerDashboardCompleto;
     },
     puedeVerDashboardCompleto() {
@@ -351,7 +364,12 @@ export default {
       this.limpiarDashboard();
       // Carga Vuesax local en el botón: no cubrir los skeletons con una capa global.
       const contenedorCarga = this.$refs.botonRecargar;
-      this.$vs.loading({ container: contenedorCarga, scale: 0.35, background: "transparent", color: "#b69a3a" });
+      this.$vs.loading({
+        container: contenedorCarga,
+        scale: 0.35,
+        background: "transparent",
+        color: "#b69a3a",
+      });
       try {
         const response = await dashboard._fetchDashboard();
         if (this._dashboardDestruido) return;
