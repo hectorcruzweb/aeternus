@@ -1,5 +1,6 @@
 <template>
-  <section
+  <DashboardSkeleton v-if="cargando" variante="grafica" titulo="gráfica de ventas y cobros" />
+<section v-else
     class="dashboard-grafica dashboard-card"
     aria-label="Ventas, cobros y vencido por operación"
   >
@@ -140,6 +141,7 @@
 </template>
 
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import VueApexCharts from "vue-apexcharts";
 import CountTo from "vue-count-to";
 import { BarChart2Icon, ArrowUpRightIcon } from "vue-feather-icons";
@@ -162,14 +164,15 @@ const MESES = [
 
 export default {
   name: "VentasCobrosGrafica",
-  components: { VueApexCharts, CountTo, BarChart2Icon, ArrowUpRightIcon },
+  components: {
+    DashboardSkeleton, VueApexCharts, CountTo, BarChart2Icon, ArrowUpRightIcon },
   // El padre administra filtros y datos. La gráfica no hace solicitudes HTTP.
   props: {
     datos: { type: Array, required: true },
     periodo: { type: Object, required: true },
     anios: { type: Array, required: true },
-    anioActual: { type: Number, required: true },
-    mesActual: { type: Number, required: true },
+    anioActual: { type: Number, default: null },
+    mesActual: { type: Number, default: null },
     cargando: { type: Boolean, default: false },
     error: { type: String, default: "" },
   },
@@ -347,6 +350,7 @@ export default {
       );
     },
     cambiarAnio(valor) {
+      if (this.cargando) return;
       const anio = Number(valor);
       const mes =
         anio === this.anioActual && this.periodo.mes > this.mesActual
@@ -355,12 +359,14 @@ export default {
       this.$emit("cambiar-periodo", { anio, mes });
     },
     cambiarMes(valor) {
+      if (this.cargando) return;
       this.$emit("cambiar-periodo", {
         anio: this.periodo.anio,
         mes: valor === "" ? null : Number(valor),
       });
     },
     solicitarReporte() {
+      if (this.cargando) return;
       // Después conectaremos este contexto al pop-up con impresión y descargas.
       this.$emit("ver-reporte", {
         tipo: "ventas-cobros",

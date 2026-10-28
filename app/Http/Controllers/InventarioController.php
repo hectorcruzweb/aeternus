@@ -20,57 +20,89 @@ use Maatwebsite\Excel\Facades\Excel;
 class InventarioController extends ApiController
 {
 
-    public function getInventarioDashboard()
+    /**
+     * Fecha del último ajuste físico de inventario para el dashboard.
+     * tipo_movimientos_id=1 identifica el ajuste; fecha_movimiento es su fecha real.
+     * Consulta histórica hasta el corte, NO limitada al mes de ventas del dashboard.
+     * Solo status=1 es válido, según la regla confirmada del módulo.
+     * Excluye estados diferentes y NULL; no sustituye por fecha_registro.
+     * @param \Carbon\Carbon|null $fechaCorte Corte compartido; no se modifica.
+     * @return string Fecha en español (27 de octubre de 2026) o No disponible.
+     */
+    public function getUltimoAjusteInventarioDashboard(\Carbon\Carbon $fechaCorte = null)
     {
-        $articulos = Articulos::select([
-            'id',
-            'minimo',
-            'maximo',
-            'precio_venta',
-            'tipo_articulos_id',
-        ])
-            ->with(['inventario' => function ($q) {
-                $q->select([
-                    'articulos_id',
-                    'precio_compra_neto',
-                    'existencia'
-                ]);
-            }])
+        $corte = $fechaCorte
+            ? $fechaCorte->copy()->setTimezone('America/Mazatlan')
+            : \Carbon\Carbon::now('America/Mazatlan');
+
+        // MAX obtiene una fecha; no carga movimientos ni detalles en memoria.
+        $fecha = DB::table('movimientos_inventario')
+            ->where('tipo_movimientos_id', 1)
             ->where('status', 1)
-            ->get();
+            ->where('fecha_movimiento', '<=', $corte)
+            ->max('fecha_movimiento');
 
-        // Procesar resumen
-        $totalArticulos = $articulos->count();
-        $totalBajoMinimo = 0;
-        $totalSobreMaximo = 0;
-        $costoTotalGlobal = 0;
-
-        foreach ($articulos as $art) {
-            // Total existencia del artículo
-            $existTotal = $art->inventario
-                ? $art->inventario->sum('existencia')
-                : 0;
-            // Clasificación mínimo / máximo
-            if ($existTotal < $art->minimo && $art->tipo_articulos_id != 2) {
-                $totalBajoMinimo++;
-            }
-            if ($existTotal > $art->maximo && $art->tipo_articulos_id != 2) {
-                $totalSobreMaximo++;
-            }
-            // Costo total global basado en precio_venta de tabla articulos (tipo_articulos_id != 2)
-            if (!is_null($art->precio_venta) && $art->tipo_articulos_id != 2) {
-                $costoTotalGlobal += $existTotal * $art->precio_venta;
-            }
+        if (!$fecha) {
+            return 'No disponible';
         }
-        return [
-            'total_articulos' => $totalArticulos,
-            'articulos_bajo_minimo' => $totalBajoMinimo,
-            'articulos_sobre_maximo' => $totalSobreMaximo,
-            'costo_total_inventario' => $costoTotalGlobal,
-            'costo_total_inventario_texto' => '$ ' . number_format($costoTotalGlobal, 2) . " MXN",
-        ];
+
+        // Locale de esta instancia: no cambia el idioma global ni depende del SO.
+        return \Carbon\Carbon::parse($fecha, 'America/Mazatlan')
+            ->locale('es')
+            ->translatedFormat('j \\d\\e F \\d\\e Y');
     }
 
+    /**
+     * Versión de desarrollo del resumen de inventario; no sustituye al método original.
+     * Flujo: sumar existencias por artículo -> unir conceptos activos -> agregar totales.
+     * Devuelve las mismas claves JSON en una consulta, sin cargar modelos ni lotes en PHP.
+     * Conserva valoración a precio_venta y exclusión de tipo 2 para umbrales/importe.
+     * Sin efectos de escritura. No añadir una ruta pública para probarla.
+     * DashboardController continúa llamando getInventarioDashboard() hasta su validación.
+     */
+    public function getInventarioDashboard()
+    {
+        // Una fila por artículo: sus lotes no deben multiplicar el conteo de conceptos.
+        $existencias = DB::table('inventario')
+            ->select('articulos_id')
+            ->selectRaw('SUM(existencia) AS existencia_total')
+            ->groupBy('articulos_id');
+
+        $resumen = DB::table('articulos as a')
+            ->leftJoinSub($existencias, 'i', function ($join) {
+                $join->on('i.articulos_id', '=', 'a.id');
+            })
+            ->where('a.status', 1)
+            ->selectRaw('COUNT(*) AS total_articulos')
+            // El código anterior considera tipo NULL distinto de 2; mantenerlo.
+            ->selectRaw('COALESCE(SUM(CASE
+                WHEN COALESCE(a.tipo_articulos_id, 0) <> 2
+                    AND COALESCE(i.existencia_total, 0) < a.minimo
+                THEN 1 ELSE 0 END), 0) AS articulos_bajo_minimo')
+            ->selectRaw('COALESCE(SUM(CASE
+                WHEN COALESCE(a.tipo_articulos_id, 0) <> 2 AND (
+                    (a.maximo IS NOT NULL AND COALESCE(i.existencia_total, 0) > a.maximo)
+                    OR (a.maximo IS NULL AND COALESCE(i.existencia_total, 0) <> 0)
+                ) THEN 1 ELSE 0 END), 0) AS articulos_sobre_maximo')
+            // La rama de máximo NULL conserva la comparación PHP 7.4 anterior.
+            // Se mantiene precio_venta: no sustituir por costo de compra sin acordarlo.
+            ->selectRaw('COALESCE(SUM(CASE
+                WHEN COALESCE(a.tipo_articulos_id, 0) <> 2 AND a.precio_venta IS NOT NULL
+                THEN COALESCE(i.existencia_total, 0) * a.precio_venta
+                ELSE 0 END), 0) AS costo_total_inventario')
+            ->first();
+
+        // Mantener tipos numéricos y claves que ya consume el componente Vue.
+        $costoTotalGlobal = (float) $resumen->costo_total_inventario;
+
+        return [
+            'total_articulos' => (int) $resumen->total_articulos,
+            'articulos_bajo_minimo' => (int) $resumen->articulos_bajo_minimo,
+            'articulos_sobre_maximo' => (int) $resumen->articulos_sobre_maximo,
+            'costo_total_inventario' => $costoTotalGlobal,
+            'costo_total_inventario_texto' => '$ ' . number_format($costoTotalGlobal, 2) . ' MXN',
+        ];
+    }
 
 
 

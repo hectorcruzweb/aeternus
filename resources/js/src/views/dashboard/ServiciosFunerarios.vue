@@ -1,5 +1,6 @@
 <template>
-    <div class="servicios-funerarios">
+    <DashboardSkeleton v-if="cargando" variante="servicios" titulo="servicios funerarios" />
+<div v-else class="servicios-funerarios">
         <vue-slick-carousel ref="carousel" class="" v-bind="settings" v-if="data.length > 0">
             <div v-for="item in data" :key="item.id" :class="[
                 'slide-servicio',
@@ -80,15 +81,19 @@
     </div>
 </template>
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import ReportesServicio from '../pages/funeraria/servicios_funerarios/ReportesServicio.vue';
 export default {
     // Name of the component (optional)
     name: "ServiciosFunerarios(dashboard)",
     components: {
+    DashboardSkeleton,
         ReportesServicio
     },
     // Props: data passed from parent
     props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false },
         data: {
             type: Array,
             required: true
@@ -110,7 +115,7 @@ export default {
                 autoplay: true,
                 infinite: true,
                 slidesToShow: 1,
-                adaptiveHeight: true,
+                adaptiveHeight: false, // La card toma toda la altura de su fila, no solo la del texto.
                 autoplaySpeed: 10000,
                 pauseOnDotsHover: true,
                 pauseOnFocus: true,
@@ -121,6 +126,7 @@ export default {
     // Methods: functions you can call in template or other hooks
     methods: {
         ConsultarVenta(id_solicitud) {
+      if (this.cargando) return;
             this.$refs.carousel.pause(); //pauso el carrusel
             this.id_solicitud = id_solicitud;
             this.openReportes = true;

@@ -1,6 +1,7 @@
 <template>
   <!-- Cards independientes; cada indicador conserva su enlace al futuro reporte. -->
-  <section class="dashboard-pendientes" aria-label="Pendientes de atención">
+  <DashboardSkeleton v-if="cargando" variante="pendientes" titulo="pendientes" />
+<section v-else class="dashboard-pendientes" aria-label="Pendientes de atención">
     <article
       v-for="indicador in indicadores"
       :key="indicador.id"
@@ -75,6 +76,7 @@
 </template>
 
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
   CalendarIcon,
@@ -87,6 +89,7 @@ import { moneda } from "../../utils/formato";
 export default {
   name: "PendientesResumen",
   components: {
+    DashboardSkeleton,
     CountTo,
     CalendarIcon,
     ClockIcon,
@@ -94,7 +97,9 @@ export default {
     ArrowUpRightIcon,
   },
   // Los resúmenes llegan desde HomeInfo; este componente no consulta al servidor.
-  props: { pendientes: { type: Object, required: true } },
+  props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false }, pendientes: { type: Object, required: true } },
   computed: {
     indicadores() {
       const hoy = this.pendientes.venceHoy || {};
@@ -153,6 +158,7 @@ export default {
         : "No disponible";
     },
     solicitarReporte(indicador) {
+      if (this.cargando) return;
       const tipos = {
         hoy: "pagos-vence-hoy",
         proximos: "pagos-proximos-siete-dias",

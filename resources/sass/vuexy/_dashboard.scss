@@ -235,13 +235,14 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
         .servicios-funerarios {
             padding: 0;
-            display: block;
+            display: flex;
+            flex-direction: column;
             @extend .no-scrollbar;
             //position: relative !important;
             .slide-servicio {
                 padding: 21px;
                 display: grid !important;
-                height: auto;
+                height: 100%;
                 min-height: 238.625px;
                 /* El contenido puede crecer sin crear un scroll dentro de la card. */
                 grid-template-rows: minmax(48px, auto) minmax(135px, auto);
@@ -1286,3 +1287,69 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
 /* El papel no necesita rellenar el alto de la ventana. */
 @media print { .dashboard .dashboard-vista-limitada { min-height: 0 !important; } }
+
+/* Servicios: extender el dorado a toda la altura de la fila compartida con inventario. */
+.dashboard .dashboard__operacion .servicios-funerarios {
+    > .slick-slider { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; width: 100%; }
+    .slick-list { flex: 1 1 auto; height: 100% !important; }
+    .slick-track { display: flex; align-items: stretch; height: 100%; }
+    .slick-track > .slick-slide { display: flex; flex: 0 0 auto; height: 100%; }
+    .slick-slide > div { display: flex; width: 100%; height: 100%; }
+    .slide-servicio { width: 100%; height: 100%; box-sizing: border-box; }
+}
+
+/* Skeletons de cards: solo dashboard, sin librerías ni imágenes adicionales. */
+.dashboard {
+    .dashboard__resumen--solo { grid-template-columns: minmax(0, 1fr); }
+    .dashboard__acciones button { position: relative; overflow: hidden; }
+    .dashboard-skeleton { width: 100%; min-width: 0; }
+    .dashboard-skeleton__card {
+        min-width: 0; height: 100%; padding: 1.25rem;
+        background: #fff; border: 1px solid #e5e5e5; border-radius: 6px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, .035);
+    }
+    .dashboard-skeleton__cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+    .dashboard-skeleton__barra, .dashboard-skeleton__icono {
+        display: block; border-radius: 3px; background: #ececec;
+        background-image: linear-gradient(90deg, #ececec 20%, #f7f7f7 45%, #ececec 70%);
+        background-size: 250% 100%; animation: dashboard-skeleton-brillo 1.6s ease-in-out infinite;
+    }
+    .dashboard-skeleton__barra--titulo { width: 42%; height: 15px; }
+    .dashboard-skeleton__barra--accion { width: 22%; height: 10px; }
+    .dashboard-skeleton__datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+    .dashboard-skeleton__indicador { min-width: 0; }
+    .dashboard-skeleton__icono { width: 24px; height: 24px; margin-bottom: .6rem; }
+    .dashboard-skeleton__barra--etiqueta { width: 85%; height: 10px; margin-bottom: .6rem; }
+    .dashboard-skeleton__barra--valor { width: 70%; height: 24px; margin-bottom: .6rem; }
+    .dashboard-skeleton__barra--detalle { width: 60%; height: 8px; }
+    .dashboard-skeleton__barra--pie { width: 55%; height: 10px; margin-top: 1.5rem; }
+    .dashboard-skeleton--servicios .dashboard-skeleton__datos,
+    .dashboard-skeleton--inventario .dashboard-skeleton__datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-skeleton--servicios .dashboard-skeleton__card,
+    .dashboard-skeleton--inventario .dashboard-skeleton__card { min-height: 230px; }
+    .dashboard-skeleton--pendientes,
+    .dashboard-skeleton--seguimientos { display: grid; gap: 1rem; }
+    .dashboard-skeleton--pendientes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .dashboard-skeleton--seguimientos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .dashboard-skeleton--pendientes .dashboard-skeleton__datos,
+    .dashboard-skeleton--seguimientos .dashboard-skeleton__datos { grid-template-columns: minmax(0, 1fr); }
+    .dashboard-skeleton__grafica { display: flex; align-items: flex-end; gap: 3%; height: 240px; margin-top: 2rem; padding: 0 1rem; border-bottom: 1px solid #eee; }
+    .dashboard-skeleton__grafica > span { flex: 1; min-width: 0; background: #eee; border-radius: 3px 3px 0 0; }
+    .dashboard-skeleton__accesible { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+}
+@keyframes dashboard-skeleton-brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (max-width: 991px) {
+    .dashboard .dashboard-skeleton--seguimientos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 575px) {
+    .dashboard .dashboard-skeleton--pendientes,
+    .dashboard .dashboard-skeleton--seguimientos { grid-template-columns: minmax(0, 1fr); }
+    .dashboard .dashboard-skeleton__card { padding: 1rem; }
+    .dashboard .dashboard-skeleton__datos { gap: .75rem; }
+    .dashboard .dashboard-skeleton__barra--valor { height: 20px; width: 90%; }
+    .dashboard .dashboard-skeleton__grafica { height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dashboard .dashboard-skeleton__barra, .dashboard .dashboard-skeleton__icono { animation: none; }
+}
+@media print { .dashboard .dashboard-skeleton { display: none !important; } }

@@ -1,18 +1,18 @@
 <template>
-  <div class="dashboard">
-    <!-- Conservar siempre estas props visibles para configuración del programador. -->
+  <div class="dashboard" :aria-busy="isLoading ? 'true' : 'false'">
+    <!-- Configuración de temporada siempre visible para el programador. -->
     <MensajeTemporada
-      :habilitado="true && !isLoading"
+      :habilitado="false && !isLoading"
       :modo-desarrollador="false"
       :una-vez-por-sesion="false"
       :duracion="4000"
     />
-    <!-- Acciones del día: el backend de reportes se conectará después. -->
+
     <div class="dashboard__acciones" aria-label="Acciones del dashboard">
       <button
         type="button"
         class="dashboard-enlace"
-        :disabled="isLoading"
+        :disabled="isLoading || !dashboardDisponible"
         @click="solicitarResumenDia"
       >
         <DownloadIcon size="16" aria-hidden="true" /> Descargar reporte del día
@@ -21,54 +21,61 @@
         type="button"
         class="dashboard-enlace"
         :disabled="isLoading"
-        @click="recargarDashboard"
+        ref="botonRecargar" @click="recargarDashboard"
       >
         <RefreshCwIcon size="16" aria-hidden="true" />
         {{ isLoading ? "Actualizando…" : "Recargar dashboard" }}
       </button>
     </div>
+
     <p v-if="errorDashboard" class="dashboard__error" role="alert">
       {{ errorDashboard }}
     </p>
-    <template v-if="puedeVerDashboardCompleto">
-      <!-- Fila 1: componentes existentes; no cambiamos sus datos ni su diseño. -->
+
+    <!-- Las cards dibujan sus skeletons sin montar importes ni acciones reales. -->
+    <template v-if="mostrarVistaGerencial">
       <div class="dashboard__operacion">
-        <ServiciosFunerarios :data="serviciosFunerarios" />
-        <Inventario :data="inventario" />
+        <ServiciosFunerarios :cargando="isLoading"
+          v-if="isLoading || tieneSeccion('servicios_funerarios')"
+          :data="serviciosFunerarios"
+        />
+        <Inventario :cargando="isLoading"
+          v-if="isLoading || tieneSeccion('inventario')"
+          :data="inventario"
+          :ultimo-ajuste="inventario.ultimoAjuste"
+        />
       </div>
 
-      <!-- Fila 2: resumen financiero. En esta etapa usa datos locales de ejemplo. -->
+      <!-- El carrusel muestra las filas recibidas, incluido el general del backend. -->
       <section
         class="dashboard__resumen"
+        :class="{ 'dashboard__resumen--solo': !isLoading && !tieneSeccion('ventasSaldos') }"
         aria-label="Ventas, saldos y facturación"
       >
-        <VentasSaldos
+        <VentasSaldos :cargando="isLoading"
+          v-if="isLoading || tieneSeccion('ventasSaldos')"
           :operaciones="ventasSaldos"
           :periodo-resumen="periodoResumen"
           @ver-reporte="prepararReporte"
         />
-        <Facturacion
+        <Facturacion :cargando="isLoading"
           :facturacion="facturacion"
           :periodo-resumen="periodoResumen"
           @ver-reporte="prepararReporte"
         />
       </section>
 
-      <!-- Fila 3: pendientes actuales, independientes de los resúmenes históricos. -->
-      <PendientesResumen
+      <!-- Datos ficticios autorizados hasta integrar sus resúmenes del backend. -->
+      <PendientesResumen :cargando="isLoading"
         :pendientes="pendientes"
         @ver-reporte="prepararReporte"
       />
-
-      <!-- Seguimientos: actividad mensual y atención de la agenda. -->
-      <SeguimientosResumen
+      <SeguimientosResumen :cargando="isLoading"
         :seguimientos="seguimientos"
         :periodo-resumen="periodoResumen"
         @ver-reporte="prepararReporte"
       />
-
-      <!-- Fila 4: filtros y datos independientes; no altera las cards actuales. -->
-      <VentasCobrosGrafica
+      <VentasCobrosGrafica :cargando="isLoading"
         :datos="datosGrafica"
         :periodo="periodoGrafica"
         :anios="aniosGrafica"
@@ -78,8 +85,12 @@
         @ver-reporte="prepararReporte"
       />
     </template>
-    <VistaLimitada v-else>
-      <ServiciosFunerarios :data="serviciosFunerarios" />
+
+    <VistaLimitada v-else-if="isLoading || dashboardDisponible">
+      <ServiciosFunerarios :cargando="isLoading"
+        v-if="isLoading || tieneSeccion('servicios_funerarios')"
+        :data="serviciosFunerarios"
+      />
     </VistaLimitada>
   </div>
 </template>
@@ -113,91 +124,42 @@ export default {
     VentasCobrosGrafica,
   },
   data() {
-    const hoy = new Date();
     return {
-      // Datos actuales del backend: se conserva la consulta existente.
-      serviciosFunerarios: [],
-      inventario: [],
       isLoading: false,
       errorDashboard: "",
-      usuarioActivo: {}, // Copia reactiva de localStorage.userInfo.
-      // Datos de diseño. No representan una respuesta real de la API.
-      periodoResumen: hoy.toLocaleDateString("es-MX", {
-        month: "long",
-        year: "numeric",
-      }),
-      ventasSaldos: [
-        {
-          id: 1,
-          nombre: "Ventas en cementerio",
-          ventas: 210000,
-          porCobrar: 980000,
-          vencido: 140000,
-        },
-        {
-          id: 2,
-          nombre: "Cuotas de Mantenimiento",
-          ventas: 35000,
-          porCobrar: 180000,
-          vencido: 62000,
-        },
-        {
-          id: 3,
-          nombre: "Servicios funerarios",
-          ventas: 540000,
-          porCobrar: 420000,
-          vencido: 48000,
-        },
-        {
-          id: 4,
-          nombre: "Venta de planes funerarios",
-          ventas: 360000,
-          porCobrar: 810000,
-          vencido: 65000,
-        },
-        {
-          id: 5,
-          nombre: "Ventas en general",
-          ventas: 70000,
-          porCobrar: 70000,
-          vencido: 11000,
-        },
-      ],
-      facturacion: {
-        fechaCaducidadFiel: "2027-12-24",
-        timbresDisponibles: 86,
-        facturasPendientes: 12,
-        saldoPendiente: 28400,
-        ventasFacturadas: 425000,
-      },
-      // Conteos ficticios para diseñar la sección; no son estadísticas reales.
-      seguimientos: {
-        realizadosMes: 124,
-        programadosHoy: 9,
-        vencidos: 7,
-        clientesConPagosVencidos: 23,
-      },
-      // Ejemplos para diseñar la nueva fila; todavía no se calculan con la API.
-      pendientes: {
-        venceHoy: { cantidad: 6, importe: 18400 },
-        proximosSieteDias: { cantidad: 18, importe: 62800 },
-        solicitudesSinContrato: 3,
-      },
-      // Referencia temporal del navegador para la maqueta; luego vendrá del servidor.
-      fechaReferencia: { anio: hoy.getFullYear(), mes: hoy.getMonth() + 1 },
-      periodoGrafica: { anio: hoy.getFullYear(), mes: hoy.getMonth() + 1 },
+      dashboardDisponible: false,
+      vistaCarga: null, // Solo conserva el diseño previo durante la recarga, no sus datos.
+      acceso: { vista: null, secciones: [] },
+      meta: null,
+      serviciosFunerarios: [],
+      inventario: {},
+      ventasSaldos: [],
+      periodoResumen: "",
+      fechaReferencia: { anio: null, mes: null },
+      periodoGrafica: { anio: null, mes: null },
+      // Ejemplos independientes; se cargan al confirmar la vista gerencial.
+      facturacion: {},
+      pendientes: {},
+      seguimientos: {},
+      operacionesGraficaEjemplo: [],
       reportePendiente: null,
     };
   },
   computed: {
+    mostrarVistaGerencial() {
+      // Al inicio solo hay formas neutras; el servidor decide la vista con datos.
+      return this.isLoading ? this.vistaCarga !== "operativa"
+        : this.dashboardDisponible && this.puedeVerDashboardCompleto;
+    },
     puedeVerDashboardCompleto() {
-      const rol = this.usuarioActivo.roles_id;
-      return rol === 1 || rol === "1" || rol === 4 || rol === "4";
+      return this.dashboardDisponible && this.acceso.vista === "gerencial";
     },
     aniosGrafica() {
-      return Array.from({ length: 7 }, (_, i) => this.fechaReferencia.anio - i);
+      return Number.isInteger(this.fechaReferencia.anio)
+        ? Array.from({ length: 7 }, (_, i) => this.fechaReferencia.anio - i)
+        : [];
     },
-    // Generación EXCLUSIVA de ejemplos: reemplazar por resúmenes del backend después.
+    // Gráfica ficticia: independiente de ventasSaldos y de los importes reales.
     datosGrafica() {
       const p = this.periodoGrafica;
       const ultimoMes =
@@ -208,8 +170,7 @@ export default {
           : p.mes;
       const primerMes = p.mes === null ? 1 : p.mes;
       const factorAnio = 1 - (this.fechaReferencia.anio - p.anio) * 0.06;
-      const proporciones = { 1: 0.68, 2: 0.8, 3: 0.9, 4: 0.48, 5: 0.85 };
-      return this.ventasSaldos.map((operacion) => {
+      return this.operacionesGraficaEjemplo.map((operacion) => {
         let ventas = 0;
         let cobrado = 0;
         let vencido = 0;
@@ -219,10 +180,9 @@ export default {
           const ventaMes = Math.round(
             operacion.ventas * factorAnio * factorMes
           );
+          const cobradoMes = Math.round(ventaMes * operacion.proporcionCobro);
           ventas += ventaMes;
-          const cobradoMes = Math.round(ventaMes * proporciones[operacion.id]);
           cobrado += cobradoMes;
-          // Solo maqueta: esta proporción NO representa la regla real de cartera vencida.
           vencido += Math.round((ventaMes - cobradoMes) * 0.4);
         }
         return {
@@ -236,123 +196,222 @@ export default {
     },
   },
   methods: {
-    actualizarUsuarioDesdeStorage(evento) {
-      // El evento storage llega desde otras pestañas; focus cubre el regreso a ésta.
+    tieneSeccion(nombre) {
+      return (
+        this.dashboardDisponible && this.acceso.secciones.indexOf(nombre) !== -1
+      );
+    },
+    // Limpiar al recargar o fallar: nunca dejar importes/permisos de una sesión anterior.
+    limpiarDashboard() {
+      this.dashboardDisponible = false;
+      this.acceso = { vista: null, secciones: [] };
+      this.meta = null;
+      this.serviciosFunerarios = [];
+      this.inventario = {};
+      this.ventasSaldos = [];
+      this.periodoResumen = "";
+      this.fechaReferencia = { anio: null, mes: null };
+      this.periodoGrafica = { anio: null, mes: null };
+      this.facturacion = {};
+      this.pendientes = {};
+      this.seguimientos = {};
+      this.operacionesGraficaEjemplo = [];
+      this.reportePendiente = null;
+    },
+    // Validar la respuesta completa antes de publicar el estado del dashboard.
+    aplicarDatosDashboard(datos) {
+      const acceso = datos && datos.acceso;
+      const meta = datos && datos.meta;
+      const periodo = meta && meta.periodoResumen;
+      const anio = periodo && Number(periodo.anio);
+      const mes = periodo && Number(periodo.mes);
       if (
-        evento &&
-        evento.type === "storage" &&
-        evento.key !== "userInfo" &&
-        evento.key !== null
-      )
-        return;
-      let usuario = {};
-      try {
-        const valor =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem("userInfo")
-            : null;
-        const datos = valor ? JSON.parse(valor) : null;
-        if (datos && typeof datos === "object" && !Array.isArray(datos))
-          usuario = datos;
-      } catch (error) {
-        /* Sin datos válidos, conservar la vista restringida. */
+        !acceso ||
+        ["gerencial", "operativa"].indexOf(acceso.vista) === -1 ||
+        !Array.isArray(acceso.secciones) ||
+        !meta ||
+        !Number.isInteger(anio) ||
+        anio < 1000 ||
+        !Number.isInteger(mes) ||
+        mes < 1 ||
+        mes > 12 ||
+        typeof meta.fechaCorte !== "string"
+      ) {
+        throw new Error(
+          "La respuesta del dashboard no contiene acceso y periodo válidos."
+        );
       }
-      this.usuarioActivo = usuario;
-      if (!this.puedeVerDashboardCompleto) {
-        this.inventario = [];
-        this.reportePendiente = null;
+      const completa = acceso.vista === "gerencial";
+      const secciones = completa
+        ? acceso.secciones.slice()
+        : acceso.secciones.filter(
+            (nombre) => nombre === "servicios_funerarios"
+          );
+      const incluye = (nombre) => secciones.indexOf(nombre) !== -1;
+      if (
+        incluye("servicios_funerarios") &&
+        !Array.isArray(datos.servicios_funerarios)
+      ) {
+        throw new Error("No se recibió el resumen de servicios funerarios.");
       }
-    },
-    // Cambiar el filtro de esta gráfica no modifica los otros resúmenes.
-    cambiarPeriodoGrafica(periodo) {
-      if (!this.puedeVerDashboardCompleto) return;
-      this.periodoGrafica = { anio: periodo.anio, mes: periodo.mes };
-    },
-    recargarDashboard() {
-      if (this.isLoading) return;
-      // La recarga vuelve al mes actual; no recarga el navegador ni repite el modal.
-      const hoy = new Date();
-      this.fechaReferencia = {
-        anio: hoy.getFullYear(),
-        mes: hoy.getMonth() + 1,
-      };
-      this.periodoGrafica = { ...this.fechaReferencia };
-      this.periodoResumen = hoy.toLocaleDateString("es-MX", {
+      if (
+        incluye("inventario") &&
+        (!datos.inventario ||
+          typeof datos.inventario !== "object" ||
+          Array.isArray(datos.inventario))
+      ) {
+        throw new Error("No se recibió el resumen de inventario.");
+      }
+      if (incluye("ventasSaldos") && !Array.isArray(datos.ventasSaldos)) {
+        throw new Error("No se recibió el resumen de ventas y saldos.");
+      }
+
+      this.meta = meta;
+      this.acceso = { vista: acceso.vista, secciones };
+      this.fechaReferencia = { anio, mes };
+      this.periodoGrafica = { anio, mes };
+      // La fecha solo se construye para dar formato al mes enviado por el servidor.
+      this.periodoResumen = new Date(
+        Date.UTC(anio, mes - 1, 1)
+      ).toLocaleDateString("es-MX", {
         month: "long",
         year: "numeric",
+        timeZone: "UTC",
       });
+      this.serviciosFunerarios = incluye("servicios_funerarios")
+        ? datos.servicios_funerarios
+        : [];
+      this.inventario = incluye("inventario") ? datos.inventario : {};
+      this.ventasSaldos = incluye("ventasSaldos") ? datos.ventasSaldos : [];
+      if (completa) this.cargarEjemplosPendientes();
+      this.dashboardDisponible = true;
+    },
+    // Maqueta autorizada: retirar cada bloque al integrar su fuente real.
+    cargarEjemplosPendientes() {
+      this.facturacion = {
+        fechaCaducidadFiel: "2027-12-24",
+        timbresDisponibles: 86,
+        facturasPendientes: 12,
+        saldoPendiente: 28400,
+        ventasFacturadas: 425000,
+      };
+      this.seguimientos = {
+        realizadosMes: 124,
+        programadosHoy: 9,
+        vencidos: 7,
+        clientesConPagosVencidos: 23,
+      };
+      this.pendientes = {
+        venceHoy: { cantidad: 6, importe: 18400 },
+        proximosSieteDias: { cantidad: 18, importe: 62800 },
+        solicitudesSinContrato: 3,
+      };
+      this.operacionesGraficaEjemplo = [
+        {
+          id: 1,
+          nombre: "Ventas en cementerio",
+          ventas: 210000,
+          proporcionCobro: 0.68,
+        },
+        {
+          id: 2,
+          nombre: "Cuotas de Mantenimiento",
+          ventas: 35000,
+          proporcionCobro: 0.8,
+        },
+        {
+          id: 3,
+          nombre: "Servicios funerarios",
+          ventas: 540000,
+          proporcionCobro: 0.9,
+        },
+        {
+          id: 4,
+          nombre: "Venta de planes funerarios",
+          ventas: 360000,
+          proporcionCobro: 0.48,
+        },
+        {
+          id: 5,
+          nombre: "Ventas en general",
+          ventas: 70000,
+          proporcionCobro: 0.85,
+        },
+      ];
+    },
+    recargarDashboard() {
       return this._fetchDashboard();
     },
-    solicitarResumenDia() {
+    // Conservar el indicador de carga de Vuesax ya utilizado por el proyecto.
+    async _fetchDashboard() {
       if (this.isLoading) return;
-      this.actualizarUsuarioDesdeStorage();
-      const hoy = new Date();
-      const fecha =
-        hoy.getFullYear() +
-        "-" +
-        String(hoy.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(hoy.getDate()).padStart(2, "0");
+      this.vistaCarga = this.acceso.vista;
+      this.isLoading = true;
+      this.errorDashboard = "";
+      this.limpiarDashboard();
+      // Carga Vuesax local en el botón: no cubrir los skeletons con una capa global.
+      const contenedorCarga = this.$refs.botonRecargar;
+      this.$vs.loading({ container: contenedorCarga, scale: 0.35, background: "transparent", color: "#b69a3a" });
+      try {
+        const response = await dashboard._fetchDashboard();
+        if (this._dashboardDestruido) return;
+        // successResponse devuelve el objeto raíz directamente en response.data.
+        this.aplicarDatosDashboard(response.data);
+      } catch (error) {
+        if (this._dashboardDestruido) return;
+        this.limpiarDashboard();
+        this.errorDashboard =
+          "No fue posible actualizar el dashboard. Intenta recargarlo.";
+        if (typeof this.$error === "function")
+          this.$error("Error al obtener el dashboard:", error);
+      } finally {
+        this.isLoading = false;
+        this.$vs.loading.close(contenedorCarga);
+      }
+    },
+    solicitarResumenDia() {
+      if (this.isLoading || !this.dashboardDisponible) return;
       const contexto = {
         tipo: "dashboard-resumen-dia",
         titulo: this.puedeVerDashboardCompleto
           ? "Resumen general del día"
           : "Servicios funerarios del día",
-        vista: this.puedeVerDashboardCompleto ? "gerencial" : "operativa",
-        fecha,
-        anio: hoy.getFullYear(),
-        mes: hoy.getMonth() + 1,
+        vista: this.acceso.vista,
+        fecha: this.meta.fechaCorte,
+        anio: this.fechaReferencia.anio,
+        mes: this.fechaReferencia.mes,
       };
       this.reportePendiente = contexto;
       this.$emit("solicitar-reporte-dia", contexto);
-      // Contrato de intención, sin endpoint de descarga todavía. Autorizar en servidor.
+      // Solo intención: el endpoint de descarga se implementará con los reportes.
     },
-    // Mantenemos el indicador de carga que ya utiliza tu proyecto.
-    async _fetchDashboard() {
-      if (this.isLoading) return;
-      this.actualizarUsuarioDesdeStorage();
-      this.isLoading = true;
-      this.errorDashboard = "";
-      this.$vs.loading();
-      try {
-        const response = await dashboard._fetchDashboard();
-        this.serviciosFunerarios = Array.isArray(
-          response.data.servicios_funerarios
-        )
-          ? response.data.servicios_funerarios
-          : [];
-        this.inventario =
-          this.puedeVerDashboardCompleto && response.data.inventario
-            ? response.data.inventario
-            : [];
-      } catch (error) {
-        this.errorDashboard =
-          "No fue posible actualizar el dashboard. Intenta recargarlo.";
-        this.$error("Error al obtener el dashboard:", error);
-      } finally {
-        this.isLoading = false;
-        this.$vs.loading.close();
-      }
-    },
-    // Punto de integración del futuro pop-up. Hoy no abre vistas ni consulta datos.
     prepararReporte(contexto) {
-      if (!this.puedeVerDashboardCompleto) return;
-      this.reportePendiente = contexto;
-      // TODO: abrir el componente del reporte con este contexto.
+      if (this.isLoading || !this.puedeVerDashboardCompleto || !contexto)
+        return;
+      this.reportePendiente = Object.assign({}, contexto, {
+        fechaCorte: this.meta.fechaCorte,
+        periodoResumen: Object.assign({}, this.meta.periodoResumen),
+      });
+      // El futuro pop-up usará idResumen/empresa_operaciones_id del slide activo.
+    },
+    cambiarPeriodoGrafica(periodo) {
+      if (this.isLoading || !this.puedeVerDashboardCompleto) return;
+      this.periodoGrafica = { anio: periodo.anio, mes: periodo.mes };
+      // Por ahora solo cambia la gráfica de ejemplo; el endpoint real está pendiente.
     },
   },
   created() {
-    this._fetchDashboard();
+    this._dashboardDestruido = false;
+    this.isLoading = true;
   },
   mounted() {
-    window.addEventListener("storage", this.actualizarUsuarioDesdeStorage);
-    window.addEventListener("focus", this.actualizarUsuarioDesdeStorage);
+    // El botón ya existe para alojar la carga Vuesax sin bloquear el dashboard.
+    this.isLoading = false;
+    this._fetchDashboard();
   },
   beforeDestroy() {
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", this.actualizarUsuarioDesdeStorage);
-      window.removeEventListener("focus", this.actualizarUsuarioDesdeStorage);
-    }
+    this._dashboardDestruido = true;
   },
 };
 </script>
+

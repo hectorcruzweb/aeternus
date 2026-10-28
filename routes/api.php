@@ -10,7 +10,7 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
  */
-Route::get('/dashboard/build', 'DashboardController@buildDashboard');
+
 Route::get('/listar_inventario/{filtro?}/{export_excel?}', 'InventarioController@listar_inventario');
 
 /**en pruebas */
@@ -32,6 +32,11 @@ Route::middleware(['client'])->group(function () {
 
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
 Route::middleware(['auth:api'])->group(function () {
+    Route::get('/dashboard/build', 'DashboardController@buildDashboard');
+
+
+
+
     Route::post('firmas/firmar', 'FirmasController@firmar');
     Route::get('firmas/get_areas_firmar/{documento_id?}', 'FirmasController@get_areas_firmar');
     Route::get('firmas/get_firma/{operacion_id?}/{area_id?}/{tipo?}', 'FirmasController@get_firma');
@@ -291,7 +296,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('facturacion/timbrar_cfdi', 'FacturacionController@timbrar_cfdi')->middleware(['permiso:21,60']);
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
     /**rutas de reportes */
-Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
+    Route::get('reportes/get_reportes', 'ReportesController@get_reportes');
     Route::get('adeudos_cfdis', 'ReportesController@adeudos_cfdis');
     Route::get('ventas_x_mes_x_cfdis/{year}/{mes}', 'ReportesController@ventas_x_mes_x_cfdis');
     /**rutas de checador via web */
@@ -326,8 +331,6 @@ Route::middleware(['client'])->group(function () {
     Route::get('checador/get_huellas_users', 'ChecadorController@get_huellas_users');
     Route::get('checador/get_registros_checador/{registro_id?}/{usuario_id?}/{paginated?}/{area_filtro?}', 'ChecadorController@get_registros_checador');
 });
-
-//Route::get('funeraria/actualizar_saldos_operacion/{empresa_operaciones_id?}', 'FunerariaController@actualizar_saldos_operacion');
 
 Route::get('pdfs', 'Usuarios\UsuariosController@pdfs');
 

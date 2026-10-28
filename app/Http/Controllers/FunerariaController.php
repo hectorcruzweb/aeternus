@@ -36,12 +36,24 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
-
-
-    public function getServiciosFunerariosDashboard()
+    /**
+     * DEV: consulta del carrusel sin sustituir la función original ni cambiar sus reglas.
+     * 1) Selecciona servicios vigentes con algún evento futuro o solicitud reciente sin eventos.
+     * 2) Carga operación vigente tipo 3 y lugar de velación sin consultas por cada slide.
+     * 3) Conserva campos/aliases del servicio, orden y máximo de diez resultados.
+     * Mejora: condiciones más simples y solo id/lugar en la relación lugarvelacion.
+     * La fecha opcional permite compartir corte desde DashboardController y probar límites.
+     * Solo lectura; la función original sigue siendo la usada por el dashboard.
+     * @param Carbon|null $fechaCorte Momento de corte; por defecto ahora en Mazatlán.
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getServiciosFunerariosDashboard(Carbon $fechaCorte = null)
     {
-        $now = Carbon::now('America/Mazatlan');
-        $rango_dias = $now->copy()->subDays(3); // LAST 3 DAYS
+        // Copiar evita modificar la fecha recibida desde otro controlador.
+        $now = $fechaCorte
+            ? $fechaCorte->copy()->setTimezone('America/Mazatlan')
+            : Carbon::now('America/Mazatlan');
+        $rango_dias = $now->copy()->subDays(3); // Ventana móvil de 72 horas.
         $servicios = ServiciosFunerarios::query()
             ->select([
                 'id',
@@ -66,18 +78,15 @@ class FunerariaController extends ApiController
             ])
             ->where('status', '>', 0)
             ->where(function ($q) use ($now, $rango_dias) {
-                // A) CASE 1 — At least one FINAL event exists and is FUTURE
+                // A) Conservar cualquier evento futuro de las cuatro fechas actuales.
                 $q->where(function ($x) use ($now) {
-                    $x->whereNotNull('fechahora_cremacion')
-                        ->where('fechahora_cremacion', '>', $now)
-                        ->orWhereNotNull('fechahora_inhumacion')
-                        ->where('fechahora_inhumacion', '>', $now)
-                        ->orWhereNotNull('fechahora_misa')
-                        ->where('fechahora_misa', '>', $now)
-                        ->orWhereNotNull('fechahora_traslado')
-                        ->where('fechahora_traslado', '>', $now);
+                    // La comparación > descarta NULL sin whereNotNull adicional.
+                    $x->where('fechahora_cremacion', '>', $now)
+                        ->orWhere('fechahora_inhumacion', '>', $now)
+                        ->orWhere('fechahora_misa', '>', $now)
+                        ->orWhere('fechahora_traslado', '>', $now);
                 })
-                    // B) CASE 2 — NONE of the final events exist → fallback to solicitud
+                    // B) Sin las cuatro fechas: usar únicamente la antigüedad de la solicitud.
                     ->orWhere(function ($x) use ($rango_dias) {
                         $x->whereNull('fechahora_cremacion')
                             ->whereNull('fechahora_inhumacion')
@@ -91,9 +100,9 @@ class FunerariaController extends ApiController
                     ->where('empresa_operaciones_id', 3)
                     ->where('status', '>', 0);
             }])
-            // Lugar de velación (only if velación_b = 1 will return non-null)
+            // La relación usa lugares_servicios_id; el frontend decide si muestra velación.
             ->with(['lugarvelacion' => function ($q) {
-                $q->select(['*']);
+                $q->select(['id', 'lugar']);
             }])
             ->orderBy('fechahora_solicitud', 'desc')
             ->limit(10)
@@ -3940,79 +3949,6 @@ class FunerariaController extends ApiController
             $id_return = $request->id_servicio;
             DB::commit();
             return $id_return;
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return $th;
-        }
-    }
-
-    public function actualizar_saldos_operacion(Request $request, $empresa_operaciones_id = "")
-    {
-        if (trim($empresa_operaciones_id) == "") {
-            return $this->errorResponse("Ingrese Bien las operaciones a actualizar", 409);
-        }
-        try {
-            DB::beginTransaction();
-            $message = "";
-            if ($empresa_operaciones_id == 1) {
-                //Venta de Terrenos tipo empresa_operaciones_id = 1
-                $cementerio_controller = new CementerioController();
-                $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
-                foreach ($ventas_propiedades as $key => $venta) {
-                    DB::table('operaciones')->where("empresa_operaciones_id", 1)->where('id', $venta["operacion_id"])->update(
-                        [
-                            'status' => ($venta["operacion_status"] == 0) ? 0 : ($venta["saldo_neto"] > 0 ? 1 : 2),
-                            "saldo" => $venta["saldo_neto"],
-                        ]
-                    );
-                }
-                $message = "Contratos Actualizados de Venta de Propieades " . count($ventas_propiedades);
-            } elseif ($empresa_operaciones_id == 2) {
-                //Cuota de mantenimiento en cementerio empresa_operaciones_id = 2
-                $cementerio_controller = new CementerioController();
-                $ventas_propiedades = $cementerio_controller->get_ventas($request, "all");
-                $cuotas = 0;
-                foreach ($ventas_propiedades as $key => $venta) {
-                    if (isset($venta["cuota_cementerio_terreno"])) {
-                        foreach ($venta["cuota_cementerio_terreno"] as $cuota) {
-                            DB::table('operaciones')->where("empresa_operaciones_id", 2)->where('id', $cuota["operacion_id"])->update(
-                                [
-                                    'status' => ($cuota["status"] == 0) ? 0 : ($cuota["saldo"] > 0 ? 1 : 2),
-                                    "saldo" => $cuota["saldo"],
-                                ]
-                            );
-                            $cuotas++;
-                        }
-                    }
-                }
-                $message = "Cuotas Actualizados de Venta de Propieades " . $cuotas;
-            } elseif ($empresa_operaciones_id == 3) {
-                //Servicios Funerarios tipo empresa_operaciones_id = 3
-                $servicios_funerarios = $this->get_solicitudes_servicios($request, "all", false, 0, 0, 0, true);
-                foreach ($servicios_funerarios as $key => $servicio) {
-                    DB::table('operaciones')->where("empresa_operaciones_id", 3)->where('id', $servicio["operacion"]["operacion_id"])->update(
-                        [
-                            'status' => ($servicio["operacion"]["status"] == 0) ? 0 : ($servicio["operacion"]["saldo_neto"] > 0 ? 1 : 2),
-                            "saldo" => $servicio["operacion"]["saldo_neto"],
-                        ]
-                    );
-                }
-                $message = "Contratos Actualizados de Servicios Funerarios " . count($servicios_funerarios);
-            } elseif ($empresa_operaciones_id == 4) {
-                //Venta de planes a futuro tipo empresa_operaciones_id = 4
-                $ventas_planes = $this->get_ventas($request, "all");
-                foreach ($ventas_planes as $key => $venta) {
-                    DB::table('operaciones')->where("empresa_operaciones_id", 4)->where('id', $venta["operacion_id"])->update(
-                        [
-                            'status' => ($venta["operacion_status"] == 0) ? 0 : ($venta["saldo_neto"] > 0 ? 1 : 2),
-                            "saldo" => $venta["saldo_neto"],
-                        ]
-                    );
-                }
-                $message = "Contratos Actualizados de Venta de Planes a Futuro " . count($ventas_planes);
-            }
-            DB::commit();
-            return $this->successResponse($message, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
             return $th;

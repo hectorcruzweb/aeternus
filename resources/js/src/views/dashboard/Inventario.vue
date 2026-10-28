@@ -1,6 +1,7 @@
 <template>
-  <div
-    v-if="data.total_articulos !== undefined"
+  <DashboardSkeleton v-if="cargando" variante="inventario" titulo="inventario" />
+<div
+    v-else-if="data.total_articulos !== undefined"
     class="inventario inventario--resumen"
   >
     <header class="seccion-title">
@@ -161,6 +162,7 @@
   </div>
 </template>
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
   PackageIcon,
@@ -177,6 +179,7 @@ import inventario from "../../services/inventario";
 export default {
   name: "Inventario(dashboard)",
   components: {
+    DashboardSkeleton,
     CountTo,
     PackageIcon,
     AlertTriangleIcon,
@@ -188,6 +191,8 @@ export default {
   },
   // El padre inicia con [] y la API entrega indicadores como propiedades.
   props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false },
     data: { type: [Array, Object], required: true },
     // Fecha o leyenda formateada por el padre; el campo real de la API está pendiente.
     ultimoAjuste: { type: String, default: null },
@@ -217,6 +222,7 @@ export default {
     },
     // Se conservan el servicio, los filtros, nombres de archivo y el indicador de carga.
     async downloadExcel(filtro = "all") {
+      if (this.cargando) return;
       this.$vs.loading();
       try {
         const res = await inventario.descargarExcel(filtro);

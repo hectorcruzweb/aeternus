@@ -1,7 +1,14 @@
 <template>
-  <article class="dashboard-resumen-card dashboard-ventas">
+  <DashboardSkeleton v-if="cargando" variante="resumen" titulo="ventas y saldos" />
+<article v-else class="dashboard-resumen-card dashboard-ventas">
     <header class="dashboard-resumen-card__header">
-      <h2 aria-live="polite">{{ operacionSeleccionada.nombre }}</h2>
+      <h2 aria-live="polite">
+        {{
+          operacionSeleccionada
+            ? operacionSeleccionada.nombre
+            : "Ventas y saldos"
+        }}
+      </h2>
       <div class="dashboard-resumen-card__acciones">
         <div
           class="dashboard-carrusel__controles"
@@ -10,6 +17,7 @@
           <button
             type="button"
             class="dashboard-boton-icono"
+            :disabled="operacionesResumen.length < 2"
             aria-label="Operación anterior"
             @click="moverOperacion(-1)"
           >
@@ -18,6 +26,7 @@
           <button
             type="button"
             class="dashboard-boton-icono"
+            :disabled="operacionesResumen.length < 2"
             aria-label="Operación siguiente"
             @click="moverOperacion(1)"
           >
@@ -27,6 +36,7 @@
         <button
           type="button"
           class="dashboard-enlace"
+          :disabled="!operacionSeleccionada"
           @click="verReporteVentas"
         >
           Ver reporte <ArrowUpRightIcon size="13" aria-hidden="true" />
@@ -36,6 +46,8 @@
 
     <!-- El mismo carrusel usado en servicios; aquí no rota automáticamente. -->
     <VueSlickCarousel
+      v-if="operacionesResumen.length"
+      :key="claveCarrusel"
       ref="carruselOperaciones"
       v-bind="configuracionCarrusel"
       @afterChange="cambiarOperacionActiva"
@@ -86,7 +98,7 @@
                 class="dashboard-indicador__icono"
                 aria-hidden="true"
               />
-              Por cobrar</span
+              Por cobrar del mes</span
             >
             <strong
               class="dashboard-indicador__valor"
@@ -114,7 +126,7 @@
               />
               <span v-else aria-hidden="true">—</span>
             </strong>
-            <small>MXN · saldo actual</small>
+            <small>{{ periodoResumen }} · saldo actual</small>
           </div>
           <div class="dashboard-indicador">
             <span class="dashboard-indicador__etiqueta"
@@ -151,32 +163,19 @@
               />
               <span v-else aria-hidden="true">—</span>
             </strong>
-            <small :aria-label="porcentajeVencido(operacion) + ' del saldo'">
-              <CountTo
-                :key="
-                  operacion.id +
-                  '-porcentaje-' +
-                  (operacion.id === operacionSeleccionada.id
-                    ? 'activo'
-                    : 'inactivo')
-                "
-                :start-val="0"
-                :end-val="porcentajeNumerico(operacion)"
-                :duration="2000"
-                :decimals="1"
-                :autoplay="operacion.id === operacionSeleccionada.id"
-                suffix=" %"
-                aria-hidden="true"
-              />
-              <span aria-hidden="true"> del saldo</span>
-            </small>
+            <!-- Vencido histórico al consultar; no se divide entre el saldo del mes. -->
+            <small>Total vencido acumulado</small>
           </div>
         </div>
       </div>
     </VueSlickCarousel>
+    <p v-else class="dashboard-indicador__etiqueta">
+      No hay información disponible.
+    </p>
   </article>
 </template>
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import VueSlickCarousel from "vue-slick-carousel";
 import CountTo from "vue-count-to";
 import {
@@ -192,6 +191,7 @@ import { moneda } from "../../utils/formato";
 export default {
   name: "VentasSaldos",
   components: {
+    DashboardSkeleton,
     CountTo,
     VueSlickCarousel,
     ChevronLeftIcon,
@@ -201,8 +201,11 @@ export default {
     DollarSignIcon,
     AlertCircleIcon,
   },
-  // El padre entrega datos; este componente solo presenta el resumen.
+  // El padre entrega ventas y porCobrar del mes; vencido acumulado hasta la consulta.
+  // El componente presenta los importes recibidos, sin calcular vencidos ni porcentajes.
   props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false },
     operaciones: { type: Array, required: true },
     periodoResumen: { type: String, required: true },
   },
@@ -225,30 +228,26 @@ export default {
     };
   },
   computed: {
-    // Primera slide: total calculado; las siguientes son las cinco operaciones.
+    // Una fila recibida = un slide; conservar nombres, importes y orden del backend.
+    // No fabricar el general, sumar importes, filtrar tipos ni limitar su cantidad.
     operacionesResumen() {
-      const total = this.operaciones.reduce(
-        (resumen, operacion) => {
-          resumen.ventas += operacion.ventas;
-          resumen.porCobrar += operacion.porCobrar;
-          resumen.vencido += operacion.vencido;
-          return resumen;
-        },
-        {
-          id: "todas",
-          nombre: "Todas las operaciones",
-          ventas: 0,
-          porCobrar: 0,
-          vencido: 0,
-        }
-      );
-      return [total].concat(this.operaciones);
+      return this.operaciones;
+    },
+    claveCarrusel() {
+      return this.operaciones.map((operacion) => operacion.id).join("|");
     },
     operacionSeleccionada() {
       return (
         this.operacionesResumen[this.operacionActiva] ||
-        this.operacionesResumen[0]
+        this.operacionesResumen[0] ||
+        null
       );
+    },
+  },
+  watch: {
+    // Si cambia la lista de tipos, recrear el carrusel y activar su primera fila.
+    claveCarrusel() {
+      this.operacionActiva = 0;
     },
   },
   methods: {
@@ -268,20 +267,9 @@ export default {
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
-    porcentajeNumerico(operacion) {
-      return operacion.porCobrar > 0
-        ? (operacion.vencido / operacion.porCobrar) * 100
-        : 0;
-    },
-    porcentajeVencido(operacion) {
-      return operacion.porCobrar > 0
-        ? ((operacion.vencido / operacion.porCobrar) * 100).toLocaleString(
-            "es-MX",
-            { maximumFractionDigits: 1 }
-          ) + " %"
-        : "0 %";
-    },
     moverOperacion(paso) {
+      if (this.cargando) return;
+      if (this.operacionesResumen.length < 2) return;
       const carrusel = this.$refs.carruselOperaciones;
       if (!carrusel) return;
       if (paso < 0) carrusel.prev();
@@ -291,10 +279,13 @@ export default {
       this.operacionActiva = indice;
     },
     verReporteVentas() {
+      if (this.cargando) return;
       const seleccion = this.operacionSeleccionada;
+      if (!seleccion) return;
       // Solo enviamos el contexto; los detalles se pedirán desde el futuro pop-up.
       this.$emit("ver-reporte", {
         tipo: "ventas-saldos",
+        idResumen: seleccion.id, // Identificador recibido; "todas" para el general.
         empresa_operaciones_id: seleccion.id === "todas" ? null : seleccion.id,
         titulo: "Ventas y saldos · " + seleccion.nombre,
         periodo: this.periodoResumen,

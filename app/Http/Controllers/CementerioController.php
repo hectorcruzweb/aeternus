@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Ajustes;
@@ -605,7 +606,7 @@ class CementerioController extends ApiController
                 }
             }
 
-              //$cuota['propiedades']['venta_terreno']['ubicacion_texto'] = $this->ubicacion_texto($cuota['propiedades']['venta_terreno']['ubicacion']['ubicacion_texto'], $datos_cementerio);
+            //$cuota['propiedades']['venta_terreno']['ubicacion_texto'] = $this->ubicacion_texto($cuota['propiedades']['venta_terreno']['ubicacion']['ubicacion_texto'], $datos_cementerio);
         } //fin foreach cuotas
 
         return $resultado_query;
@@ -988,7 +989,7 @@ class CementerioController extends ApiController
                     }
                 },
             ])
-        /*
+            /*
             ->WhereHas(isset($request->filtrar_solo_adeudos) ? 'operacion' : 'registro', function ($q) use ($request) {
             if (isset($request->filtrar_solo_adeudos)) {
             $q->where('status', 1)->where('total', '>', 0);
@@ -1056,8 +1057,8 @@ class CementerioController extends ApiController
                 }
             }
             $area['propiedades'] = $propiedades;
-            $area['propiedades_vendidas']=count($propiedades);
-            $area['propieades_disponibles']=$area['propiedades_por_area']-$area['propiedades_vendidas'];
+            $area['propiedades_vendidas'] = count($propiedades);
+            $area['propieades_disponibles'] = $area['propiedades_por_area'] - $area['propiedades_vendidas'];
         }
 
         //return $cementerio;
@@ -1100,7 +1101,7 @@ class CementerioController extends ApiController
         $empresa       = $get_funeraria->get_empresa_data();
         $pdf           = PDF::loadView('cementerios/cementerio_mapa/reporte', ['empresa' => $empresa, 'cementerio' => $cementerio, 'idioma' => $idioma]);
         //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-        $name_pdf = $nombre_reporte.'.pdf';
+        $name_pdf = $nombre_reporte . '.pdf';
         $pdf->setOptions([
             'title'       => $name_pdf,
             'footer-html' => view('cementerios.cementerio_mapa.footer', ['empresa' => $empresa]),
@@ -1224,7 +1225,7 @@ class CementerioController extends ApiController
     public function get_cementerio()
     {
 
-         $datos = Propiedades::select(
+        $datos = Propiedades::select(
             '*',
             DB::raw(
                 '(NULL) AS nombre_area'
@@ -1259,17 +1260,17 @@ class CementerioController extends ApiController
                 $dato['nombre_area'] = 'mausoleo ' . $dato['propiedad_indicador'];
             }
 
-            if ($dato['tipo_propiedades_id']!=4 && $dato['tipo_propiedades_id']<8) {
+            if ($dato['tipo_propiedades_id'] != 4 && $dato['tipo_propiedades_id'] < 8) {
                 //Agregando cantidad de propiades por area del cementerio
                 //Todas estas son de una sola columna
-                $dato['propiedades_por_area']=$dato['filas']*$dato['columnas'];
-            }else if ($dato['tipo_propiedades_id']==4){
+                $dato['propiedades_por_area'] = $dato['filas'] * $dato['columnas'];
+            } else if ($dato['tipo_propiedades_id'] == 4) {
                 //cuadriples(hay filas y columnas)
-                $total_propiedades_por_area=0;
+                $total_propiedades_por_area = 0;
                 foreach ($dato['filas_columnas'] as $index_fila_columna => $fila_columna) {
-                    $total_propiedades_por_area+=$fila_columna['fin_columna']-$fila_columna['empieza_columna']+1;
+                    $total_propiedades_por_area += $fila_columna['fin_columna'] - $fila_columna['empieza_columna'] + 1;
                 }
-                $dato['propiedades_por_area']=$total_propiedades_por_area;
+                $dato['propiedades_por_area'] = $total_propiedades_por_area;
             }
 
 
@@ -1280,12 +1281,12 @@ class CementerioController extends ApiController
                     $precio['tipo_financiamiento']        = "Pago Único/Uso Inmediato";
                     $precio['tipo_financiamiento_ingles'] = "Spot Price";
                     $precio['pago_mensual']
-                    = 0;
+                        = 0;
                 } else {
                     $precio['tipo_financiamiento']        = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
                     $precio['tipo_financiamiento_ingles'] = $precio['financiamiento'] . "-Month Payment";
                     $precio['pago_mensual']
-                    = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
+                        = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
                 }
                 /**sacando los descuentos en caso de que tenga pronto pago */
                 if ($precio['descuento_pronto_pago_b'] == 1) {
@@ -2004,7 +2005,8 @@ class CementerioController extends ApiController
                     //return $this->errorResponse($id_operacion_cuota, 409);
                 }
             }
-            /**fin if servicio tipo agregar */else {
+            /**fin if servicio tipo agregar */
+            else {
                 $id_venta = $request->id_venta;
                 /**es modificar */
                 DB::table('ventas_terrenos')->where('id', '=', $request->id_venta)->update(
@@ -2118,7 +2120,7 @@ class CementerioController extends ApiController
                 $numero_convenio = 500;
             }
         } else {
-                                                   //se debe ingresar manualmente
+            //se debe ingresar manualmente
             $numero_convenio = $request->convenio; //es el que capturo el usuario
         }
 
@@ -2412,12 +2414,12 @@ class CementerioController extends ApiController
                     $precio['tipo_financiamiento']        = "Pago Único/Uso Inmediato";
                     $precio['tipo_financiamiento_ingles'] = "Spot Price";
                     $precio['pago_mensual']
-                    = 0;
+                        = 0;
                 } else {
                     $precio['tipo_financiamiento']        = "Pago a " . $precio['financiamiento'] . " Meses/A Futuro";
                     $precio['tipo_financiamiento_ingles'] = $precio['financiamiento'] . "-Month Payment";
                     $precio['pago_mensual']
-                    = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
+                        = ($precio['costo_neto'] - $precio['pago_inicial']) / $precio['financiamiento'];
                 }
                 /**sacando los descuentos en caso de que tenga pronto pago */
                 if ($precio['descuento_pronto_pago_b'] == 1) {
@@ -2881,10 +2883,10 @@ class CementerioController extends ApiController
                         ELSE "Mujer"
                         END) AS genero_des')
         )
-                ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
-                                                   //->where('roles_id', ">", 1)
-                ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
-                ->get());
+            ->join('roles', 'roles.id', '=', 'usuarios.roles_id')
+            //->where('roles_id', ">", 1)
+            ->where('usuarios.roles_id', '>', '1') //no muestro super usuarios
+            ->get());
     }
 
     //retorna que tipo de venta es de la propiedad, si es de uso inmediato o a futuro
@@ -2924,7 +2926,7 @@ class CementerioController extends ApiController
                 ->with('registro:id,nombre');
         }
         $resultado_query = $resultado_query->where('empresa_operaciones_id', '=', 1)
-        /**solo ventas de cementerio */
+            /**solo ventas de cementerio */
             ->select(
                 /**venta operacion */
                 'operaciones.id',
@@ -3085,7 +3087,7 @@ class CementerioController extends ApiController
                 }
             })
 
-        //aqui filtro solo cuando es busqueda por ubicacion en raw
+            //aqui filtro solo cuando es busqueda por ubicacion en raw
             ->WhereHas(isset($request->ubicacion_raw) ? 'venta_terreno' : 'registro', function ($q) use ($request) {
                 if (isset($request->ubicacion_raw)) {
                     $q->where('ubicacion', $request->ubicacion_raw);
@@ -3378,7 +3380,7 @@ class CementerioController extends ApiController
                         /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
                         $venta['total_cubierto'] += $programado['total_cubierto'];
                         /**verificado el monto que seria con pronnto pago  */
-                          //} //fin foreach if status 1 programado
+                        //} //fin foreach if status 1 programado
                     } //fin foreach programados
                     $venta['pagos_realizados']               = $pagos_realizados;
                     $venta['pagos_vigentes']                 = $pagos_vigentes;
@@ -3592,7 +3594,7 @@ class CementerioController extends ApiController
                             /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
                             $venta['total_cubierto'] += $programado['total_cubierto'];
                             /**verificado el monto que seria con pronnto pago  */
-                              //} //fin foreach if status 1 programado
+                            //} //fin foreach if status 1 programado
                         } //fin foreach programados
                         /** */
                     }
@@ -4350,14 +4352,14 @@ class CementerioController extends ApiController
                 }
                 $pagos_operacion =
                     json_decode($client->request(
-                    'GET',
-                    env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
-                    [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $token,
-                        ],
-                    ]
-                )->getBody(), true);
+                        'GET',
+                        env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
+                        [
+                            'headers' => [
+                                'Authorization' => 'Bearer ' . $token,
+                            ],
+                        ]
+                    )->getBody(), true);
             } catch (\GuzzleHttp\Exception\BadResponseException $e) {
                 return $this->errorResponse('Ocurrió un error durante la petición. Por favor reintente.', $e->getCode());
             }

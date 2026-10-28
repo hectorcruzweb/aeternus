@@ -1,5 +1,6 @@
 <template>
-  <article class="dashboard-resumen-card dashboard-facturacion">
+  <DashboardSkeleton v-if="cargando" variante="resumen" titulo="facturación" />
+<article v-else class="dashboard-resumen-card dashboard-facturacion">
     <header class="dashboard-resumen-card__header">
       <h2>Facturación</h2>
       <!-- Vigencia en días calendario; la fecha proviene del padre. -->
@@ -150,6 +151,7 @@
   </article>
 </template>
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
   FileTextIcon,
@@ -163,6 +165,7 @@ import { moneda } from "../../utils/formato";
 export default {
   name: "Facturacion",
   components: {
+    DashboardSkeleton,
     CountTo,
     FileTextIcon,
     ArrowUpRightIcon,
@@ -172,6 +175,8 @@ export default {
   },
   // Los tres indicadores se muestran juntos y no generan consultas adicionales.
   props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false },
     facturacion: { type: Object, required: true },
     periodoResumen: { type: String, required: true },
     fechaReferencia: { type: Date, default: () => new Date() },
@@ -268,6 +273,7 @@ export default {
     },
 
     verReporteFacturacion(tipo) {
+      if (this.cargando) return;
       const titulos = {
         timbres: "Timbres disponibles",
         facturas: "Facturas con adeudo",

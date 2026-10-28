@@ -1,6 +1,7 @@
-﻿<template>
+<template>
   <!-- Cards independientes: cada una conserva su hover y acceso al reporte. -->
-  <section class="dashboard-seguimientos" aria-label="Seguimientos a clientes">
+  <DashboardSkeleton v-if="cargando" variante="seguimientos" titulo="seguimientos" />
+<section v-else class="dashboard-seguimientos" aria-label="Seguimientos a clientes">
     <article
       v-for="indicador in indicadores"
       :key="indicador.id"
@@ -51,6 +52,7 @@
 </template>
 
 <script>
+import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
   CheckCircleIcon,
@@ -63,6 +65,7 @@ import {
 export default {
   name: "SeguimientosResumen",
   components: {
+    DashboardSkeleton,
     CountTo,
     CheckCircleIcon,
     CalendarIcon,
@@ -72,6 +75,8 @@ export default {
   },
   // Datos provisionales de diseño: la integración se decidirá con el backend.
   props: {
+    // Ocultar importes/acciones mientras el padre espera datos.
+    cargando: { type: Boolean, default: false },
     seguimientos: { type: Object, default: () => ({}) },
     periodoResumen: { type: String, default: "Mes en curso" },
   },
@@ -128,6 +133,7 @@ export default {
       );
     },
     solicitarReporte(indicador) {
+      if (this.cargando) return;
       this.$emit("ver-reporte", {
         tipo: "seguimientos-" + indicador.id,
         titulo: indicador.titulo,
