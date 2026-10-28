@@ -2,37 +2,32 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Events\AfterSheet;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
-use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 
-class InventarioExport implements
-    FromArray,
-    WithHeadings,
-    WithStyles,
-    WithDrawings,
-    ShouldAutoSize,
-    WithEvents,
-    WithCustomStartCell,
-    WithTitle
+/** Presentación del inventario. Recibe los datos y filtros del controlador sin consultarlos. */
+class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadings, WithDrawings, WithEvents, WithCustomStartCell, WithTitle
 {
     protected $items;
     protected $summary;
-    protected $row_inicio_headings = 7;
+    protected $row_inicio_headings = 10;
+    protected $generadoEn;
+
 
     public function __construct($items, $summary)
     {
         $this->items = $items;
         $this->summary = $summary;
+        $this->generadoEn = Carbon::now('America/Mazatlan')->format('d/m/Y H:i');
     }
 
     public function title(): string
@@ -40,226 +35,185 @@ class InventarioExport implements
         return 'Inventario';
     }
 
-    // ======================================================
-    //  LOGO
-    // ======================================================
     public function drawings()
     {
-        $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+        $drawing = new Drawing();
         $drawing->setPath(public_path(env('LOGOJPG')));
-        $drawing->setHeight(80);
-        $drawing->setCoordinates('A1'); // ubicamos en esquina superior izquierda
+        $drawing->setHeight(55);
+        $drawing->setCoordinates('A1');
+        $drawing->setOffsetX(6);
+        $drawing->setOffsetY(5);
         return $drawing;
     }
 
-
     public function startCell(): string
     {
-        return 'A' . $this->row_inicio_headings; // Headings will appear in row 7
+        return 'A' . $this->row_inicio_headings;
     }
 
-
-    // ======================================================
-    //  HEADINGS ORIGINALES
-    // ======================================================
     public function headings(): array
     {
-        return [
-            'Clave Sistema',
-            'Descripción',
-            'Existencia',
-            'Mínimo',
-            'Máximo',
-            'Bajo Mínimo',
-            'Sobre Máximo',
-            'Precio Venta',
-            'Costo Total',
-        ];
+        return ['Clave', 'Descripción', 'Existencia', 'Mín.', 'Máx.', 'Estado', 'Precio de venta', 'Valor total'];
     }
 
-    // ======================================================
-    //  ESTILOS
-    // ======================================================
-    public function styles(Worksheet $sheet)
+    /** Una sola leyenda sustituye las dos columnas Sí/No; los servicios no se clasifican como existencias. */
+    protected function estado($item): string
     {
-
-        // ===== PORTADA ESTILO =====
-        //$sheet->getStyle('B1:B8')->getFont()->setSize(12)->setBold(true);
-        //$sheet->getStyle('B1:B3')->getFont()->setSize(15);
-        //$sheet->getStyle('B1:B8')->getAlignment()->setHorizontal('left');
-        // ===== HEADINGS =====
-        $sheet->getStyle("A{$this->row_inicio_headings}:I{$this->row_inicio_headings}")->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => 'solid',
-                'startColor' => ['rgb' => '22292f']
-            ],
-            'alignment' => [
-                'horizontal' => 'center'
-            ]
-        ]);
-
-        // ===== DATOS =====
-        $start = $this->row_inicio_headings + 1;
-        $end   = $sheet->getHighestRow();
-        $sheet->getStyle("A{$start}:I{$end}")->getAlignment()->setHorizontal('center');
-
-        $currentRow = $start;
-        foreach ($this->items as $item) {
-
-
-            //eefcto tipo odd row
-            if ($currentRow % 2 !== 0) {
-                $sheet->getStyle("A{$currentRow}:I{$currentRow}")->applyFromArray([
-                    'fill' => [
-                        'fillType'   => 'solid',
-                        'startColor' => ['rgb' => 'F2F2F2'],
-                    ],
-                ]);
-            }
-            if ($item->en_orden != 1) {
-                // ❌ NO está en orden
-                $sheet->getStyle("C{$currentRow}:C{$currentRow}")
-                    ->getFont()
-                    ->getColor()
-                    ->setRGB('FF0000'); // Amarillo suave
-            }
-
-            $currentRow++;
+        if ((int) $item->tipo_articulos_id === 2) {
+            return 'Servicio';
         }
-        return [];
+        if ($item->desabastecido) {
+            return 'Bajo mínimo';
+        }
+        if ($item->sobreabastecido) {
+            return 'Sobre máximo';
+        }
+        return $item->en_orden ? 'En rango' : 'Sin clasificar';
     }
-    // ======================================================
-    //  CONTENIDO
-    // ======================================================
+
     public function array(): array
     {
-        // Espacio antes de headings
         $rows = [];
-        // ======== DETALLE ARTÍCULOS =========
         foreach ($this->items as $item) {
-            $costo = (float)$item->existencia * (float)$item->precio_venta;
+            $valor = (float) $item->existencia * (float) $item->precio_venta;
+            // Conserva la regla anterior de importes negativos: su revisión queda separada del diseño.
             $rows[] = [
                 $item->id,
                 $item->descripcion,
                 $item->existencia,
                 $item->minimo ?? 0,
                 $item->maximo ?? 0,
-                $item->desabastecido ? 'Sí' : 'No',
-                $item->sobreabastecido ? 'Sí' : 'No',
-                (float)$item->precio_venta > 0 ? (float)$item->precio_venta : '0.00',
-                $costo > 0 ? (float)$costo : '0.00',
+                $this->estado($item),
+                max((float) $item->precio_venta, 0),
+                max($valor, 0),
             ];
         }
         return $rows;
     }
 
-    // ======================================================
-    //  EVENTOS
-    // ======================================================
     public function registerEvents(): array
     {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
+        return [AfterSheet::class => function (AfterSheet $event) {
+            $sheet = $event->sheet->getDelegate();
+            $inicio = $this->row_inicio_headings + 1;
+            $fin = $inicio + count($this->items) - 1;
+            $ultimaFila = max($inicio, $fin);
+            $moneda = '"$ "#,##0.00;[Red]-"$ "#,##0.00;"$ "0.00';
 
-                $start = $this->row_inicio_headings + 1;
-                $end   = $sheet->getHighestRow();
-                $event->sheet->getStyle("H{$start}:H{$end}")
-                    ->getNumberFormat()
-                    ->setFormatCode('"$ "#,##0.00');
-                $event->sheet->getStyle("I{$start}:I{$end}")
-                    ->getNumberFormat()
-                    ->setFormatCode('"$ "#,##0.00');
-                $event->sheet->getStyle("B5:B5")
-                    ->getNumberFormat()
-                    ->setFormatCode('"$ "#,##0.00');
-
-                // Freeze everything above row 8 (keeps row 7 visible)
-                $event->sheet->getDelegate()->freezePane('A8');
-
-                // ==========================================
-                //  LOGO (A1)
-                // ==========================================
-                $sheet->getRowDimension(1)->setRowHeight(60);
-
-                // ==========================================
-                //  TITLES MANUALLY POSITIONED
-                // ==========================================
-
-                // =========================
-                // TITULOS (centrados)
-                // =========================
-                $sheet->mergeCells('A2:F2')->getStyle('A2')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('b18b1e');
-                $sheet->setCellValue('A2', $this->summary['reporte']);
-                $sheet->getStyle('H1')->getAlignment()->setHorizontal('left');
-                $sheet->getStyle('H1')->getAlignment()->setVertical('center');
-                $sheet->getStyle('I1')->getAlignment()->setVertical('center');
-
-                $sheet->mergeCells('A3:F3');
-                $sheet->setCellValue('A3', 'Fecha de impresión: ' . fechahora_completa());
-
-                // CENTRAR texto en A2 y A3
-                $sheet->getStyle('A2')->getAlignment()->setHorizontal('left');
-                $sheet->getStyle('A3')->getAlignment()->setHorizontal('left');
-
-                // =========================
-                // RESUMEN (LEFT EN COLUMNA H)
-                // =========================
-                $sheet->setCellValue('H1', 'Total de Conceptos');
-                $sheet->setCellValue('H2', 'Total de Artículos');
-                $sheet->setCellValue('H3', 'Total de Servicios');
-                $sheet->setCellValue('H4', 'Artículos Desabastecidos');
-                $sheet->setCellValue('H5', 'Artículos Sobreabastecidos');
-
-                // Alinear izquierda todos los textos de resumen
-                $sheet->getStyle('H1:H5')->getAlignment()->setHorizontal('left');
-
-                // =========================
-                // VALORES DEL RESUMEN (derecha en columna I)
-                // =========================
-                $sheet->setCellValue('I1', $this->summary['total_articulos']);
-                $sheet->setCellValue('I2', $this->summary['tipo_articulo']);
-                $sheet->setCellValue('I3', $this->summary['tipo_servicio']);
-                $sheet->setCellValue('I4', $this->summary['bajo_minimo']);
-                $sheet->setCellValue('I5', $this->summary['sobre_maximo']);
-
-
-                $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(12);
-                $sheet->getStyle('A5')->getFont()->setBold(true);
-                $sheet->setCellValue('A5', 'Costo Total de Inventario Listado');
-                $sheet->setCellValue('B5', $this->summary['costo_total_inventario']);
-                $sheet->getStyle('B5')->getAlignment()->setHorizontal('left');
-
-
-                // Alinear derecha valores numéricos
-                $sheet->getStyle('I1:I5')->getAlignment()->setHorizontal('right');
-
-                // ========== Ajuste de fuente ===============
-                $sheet->getStyle('H1:H5')->getFont()->setBold(true);
-
-                // Fit ALL columns on one page
-                $sheet->getPageSetup()
-                    ->setFitToWidth(1)
-                    ->setFitToHeight(0); // 0 = unlimited pages vertically
-
-                // Optional: set page orientation to landscape
-                $sheet->getPageSetup()
-                    ->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
-
-                // Optional: adjust paper size
-                $sheet->getPageSetup()
-                    ->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
-
-                // ---- MARGINS (1 cm = 0.39 inch) ----
-                $sheet->getPageMargins()->setTop(0.15);
-                $sheet->getPageMargins()->setBottom(0.39);
-                $sheet->getPageMargins()->setLeft(0.39);
-                $sheet->getPageMargins()->setRight(0.39);
+            // Arial se aplica al libro y a todas las celdas del reporte, incluidos encabezados y resumen.
+            $sheet->getParent()->getDefaultStyle()->getFont()->setName('Arial')->setSize(10);
+            $sheet->getStyle("A1:H{$ultimaFila}")->getFont()->setName('Arial')->setSize(10)->getColor()->setRGB('343A40');
+            $sheet->getStyle("A1:H{$ultimaFila}")->getAlignment()->setVertical('center');
+            $sheet->setShowGridlines(false);
+            $sheet->setPrintGridlines(false);
+            // Zoom de pantalla independiente del ajuste de impresión.
+            $sheet->getSheetView()->setZoomScale(115);
+            foreach (['A' => 12, 'B' => 52, 'C' => 14, 'D' => 10, 'E' => 10, 'F' => 22, 'G' => 22, 'H' => 23] as $col => $width) {
+                $sheet->getColumnDimension($col)->setWidth($width);
             }
-        ];
+            $sheet->getDefaultRowDimension()->setRowHeight(23);
+            $sheet->getRowDimension(1)->setRowHeight(22);
+            $sheet->getRowDimension(2)->setRowHeight(22);
+            $sheet->getRowDimension(3)->setRowHeight(19);
+            $sheet->mergeCells('C1:H2')->setCellValue('C1', $this->summary['reporte']);
+            $sheet->getStyle('C1')->getFont()->setSize(15)->setBold(true);
+            $sheet->getStyle('C1')->getAlignment()->setHorizontal('right')->setWrapText(true);
+            $sheet->mergeCells('C3:H3')->setCellValue('C3', 'Generado: ' . $this->generadoEn . ' · Moneda: MXN');
+            $sheet->getStyle('C3')->getAlignment()->setHorizontal('right');
+            $sheet->getStyle('C3')->getFont()->setSize(9)->getColor()->setRGB('69717A');
+            $sheet->getStyle('A3:H3')->getBorders()->getBottom()->setBorderStyle('thin')->getColor()->setRGB('B18B1E');
+            $sheet->getRowDimension(4)->setRowHeight(4);
+
+            // Acentos semánticos discretos: fondos casi blancos y texto de alto contraste.
+            $indicadores = [
+                ['A', 'A', 'Conceptos', 'total_articulos', 'F6F4EE', '80672C'],
+                ['B', 'B', 'Artículos', 'tipo_articulo', 'F1F4F7', '50667B'],
+                ['C', 'D', 'Servicios', 'tipo_servicio', 'F4F2F6', '6D617B'],
+                ['E', 'F', 'Bajo mínimo', 'bajo_minimo', 'FAF1F1', '89565B'],
+                ['G', 'H', 'Sobre máximo', 'sobre_maximo', 'FAF6EC', '826B42'],
+            ];
+            foreach ($indicadores as $indicador) {
+                list($a, $b, $titulo, $key, $fondo, $color) = $indicador;
+                if ($a !== $b) {
+                    $sheet->mergeCells("{$a}5:{$b}5");
+                    $sheet->mergeCells("{$a}6:{$b}6");
+                }
+                $sheet->setCellValue("{$a}5", $titulo);
+                $sheet->setCellValue("{$a}6", $this->summary[$key] ?? 0);
+                $sheet->getStyle("{$a}5:{$b}6")->getFill()->setFillType('solid')->getStartColor()->setRGB($fondo);
+                $sheet->getStyle("{$a}5:{$b}6")->getAlignment()->setHorizontal('center');
+                $sheet->getStyle("{$a}5:{$b}6")->getFont()->setBold(true)->getColor()->setRGB($color);
+                $sheet->getStyle("{$a}5")->getFont()->setSize(9);
+                $sheet->getStyle("{$a}6")->getFont()->setSize(14);
+            }
+            // Espaciado compacto antes del detalle, sin alterar los datos ni sus filas.
+            $sheet->getRowDimension(5)->setRowHeight(18);
+            $sheet->getRowDimension(6)->setRowHeight(23);
+            $sheet->getRowDimension(7)->setRowHeight(4);
+            $sheet->mergeCells('A8:F8')->setCellValue('A8', 'Valor a precio de venta del inventario listado (MXN)');
+            $sheet->mergeCells('G8:H8')->setCellValue('G8', $this->summary['costo_total_inventario'] ?? 0);
+            $sheet->getStyle('A8:H8')->getFont()->setBold(true)->getColor()->setRGB('967316');
+            $sheet->getStyle('G8')->getFont()->setSize(13);
+            $sheet->getStyle('G8')->getNumberFormat()->setFormatCode($moneda);
+            $sheet->getStyle('G8')->getAlignment()->setHorizontal('right');
+            $sheet->getRowDimension(8)->setRowHeight(23);
+            $sheet->mergeCells('A9:H9')->setCellValue('A9', 'Valoración: existencia × precio de venta. Servicios excluidos del valor total.');
+            $sheet->getRowDimension(9)->setRowHeight(18);
+            $sheet->getStyle('A9')->getFont()->setSize(9)->getColor()->setRGB('69717A');
+
+            $sheet->getStyle('A10:H10')->applyFromArray([
+                'font' => ['name' => 'Arial', 'bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '343A40']],
+                'alignment' => ['horizontal' => 'center', 'vertical' => 'center'],
+            ]);
+            $sheet->getRowDimension(10)->setRowHeight(28);
+            $sheet->getStyle('A10:H10')->getAlignment()->setHorizontal('center')->setVertical('center');
+
+            if ($fin >= $inicio) {
+                // Centra todos los datos listados; mantiene el formato numérico y monetario.
+                $sheet->getStyle("A{$inicio}:H{$fin}")->getAlignment()->setHorizontal('center');
+                $sheet->getStyle("G{$inicio}:H{$fin}")->getAlignment()->setHorizontal('center');
+                $sheet->getStyle("G{$inicio}:H{$fin}")->getNumberFormat()->setFormatCode($moneda);
+                $sheet->getStyle("C{$inicio}:E{$fin}")->getNumberFormat()->setFormatCode('#,##0.##');
+                $sheet->getStyle("B{$inicio}:B{$fin}")->getAlignment()->setWrapText(true)->setHorizontal('center');
+                $sheet->getStyle("F{$inicio}:F{$fin}")->getAlignment()->setHorizontal('center');
+                $row = $inicio;
+                foreach ($this->items as $item) {
+                    $sheet->getRowDimension($row)->setRowHeight(-1);
+                    if (($row - $inicio) % 2 === 1) {
+                        $sheet->getStyle("A{$row}:H{$row}")->getFill()->setFillType('solid')->getStartColor()->setRGB('F3F4F5');
+                    }
+                    $estado = $this->estado($item);
+                    // Sin fondos de alerta: el texto identifica el estado con acentos discretos.
+                    $colores = ['Bajo mínimo' => '89565B', 'Sobre máximo' => '826B42', 'En rango' => '4D705C', 'Servicio' => '6D617B'];
+                    if (isset($colores[$estado])) {
+                        $sheet->getStyle("F{$row}")->getFont()->setBold(true)->getColor()->setRGB($colores[$estado]);
+                    }
+                    $row++;
+                }
+                $sheet->setAutoFilter("A10:H{$fin}");
+            } else {
+                $sheet->mergeCells("A{$inicio}:H{$inicio}")->setCellValue("A{$inicio}", 'No hay conceptos para el filtro seleccionado.');
+            }
+
+            // Protección de lectura: celdas bloqueadas; se permite seleccionar/copiar y usar filtros existentes.
+            // La clave se genera por archivo y no se conserva. No equivale a cifrado del documento.
+            $proteccion = $sheet->getProtection();
+            $proteccion->setPassword(bin2hex(random_bytes(12)));
+            $proteccion->setSheet(true);
+            $proteccion->setObjects(true); // Impide mover, redimensionar o eliminar el logotipo.
+            $proteccion->setAutoFilter(false);
+            $proteccion->setSelectLockedCells(false);
+            $proteccion->setSelectUnlockedCells(false);
+            $sheet->getParent()->getSecurity()->setLockStructure(true);
+
+            // Impresión: una página de ancho, tantas de alto como requiera el detalle.
+
+            $sheet->freezePane('C11');
+            $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)->setPaperSize(PageSetup::PAPERSIZE_A4)
+                ->setFitToWidth(1)->setFitToHeight(0)->setRowsToRepeatAtTopByStartAndEnd(10, 10)->setPrintArea("A1:H{$ultimaFila}");
+            $sheet->getPageMargins()->setTop(0.3)->setBottom(0.4)->setLeft(0.25)->setRight(0.25);
+            $sheet->getHeaderFooter()->setOddFooter('&L&"Arial,Regular"&9Aeternus Funerales · Control de inventario&R&"Arial,Regular"&9Página &P de &N');
+        }];
     }
 }

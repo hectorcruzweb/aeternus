@@ -73,7 +73,11 @@ class InventarioController extends ApiController
                 $join->on('i.articulos_id', '=', 'a.id');
             })
             ->where('a.status', 1)
-            ->selectRaw('COUNT(*) AS total_articulos')
+            ->selectRaw('COUNT(*) AS total_conceptos')
+            // Artículos inventariables: excluir servicios, conservando el criterio existente para tipo NULL.
+            ->selectRaw('COALESCE(SUM(CASE WHEN COALESCE(a.tipo_articulos_id, 0) <> 2 THEN 1 ELSE 0 END), 0) AS total_inventariables')
+            // Conceptos activos de tipo servicio, sin multiplicarlos por sus lotes.
+            ->selectRaw('COALESCE(SUM(CASE WHEN a.tipo_articulos_id = 2 THEN 1 ELSE 0 END), 0) AS total_servicios')
             // El código anterior considera tipo NULL distinto de 2; mantenerlo.
             ->selectRaw('COALESCE(SUM(CASE
                 WHEN COALESCE(a.tipo_articulos_id, 0) <> 2
@@ -96,7 +100,9 @@ class InventarioController extends ApiController
         $costoTotalGlobal = (float) $resumen->costo_total_inventario;
 
         return [
-            'total_articulos' => (int) $resumen->total_articulos,
+            'total_conceptos' => (int) $resumen->total_conceptos,
+            'total_inventariables' => (int) $resumen->total_inventariables,
+            'total_servicios' => (int) $resumen->total_servicios,
             'articulos_bajo_minimo' => (int) $resumen->articulos_bajo_minimo,
             'articulos_sobre_maximo' => (int) $resumen->articulos_sobre_maximo,
             'costo_total_inventario' => $costoTotalGlobal,
@@ -111,6 +117,8 @@ class InventarioController extends ApiController
      *  - low: inventario bajo el mínimo
      *  - over: inventario sobre el máximo
      *  - all: todos
+     *  - articles: conceptos inventariables (excluye servicios)
+     *  - services: conceptos de tipo servicio
      */
     public function listar_inventario($filtro = 'all', $export_excel = false)
     {
@@ -158,6 +166,15 @@ class InventarioController extends ApiController
         // 🔍 filtros
         $reporte = '';
         switch ($filtro) {
+            // Misma clasificación del card: tipo 2 es servicio; los demás, inventariables.
+            case 'articles':
+                $query->whereRaw('COALESCE(articulos.tipo_articulos_id, 0) <> 2');
+                $reporte = 'Reporte de Artículos Inventariables';
+                break;
+            case 'services':
+                $query->where('articulos.tipo_articulos_id', 2);
+                $reporte = 'Reporte de Servicios';
+                break;
             case 'low':
                 $query->havingRaw('
                 articulos.tipo_articulos_id <> 2

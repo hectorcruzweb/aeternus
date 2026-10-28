@@ -926,20 +926,42 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .dashboard .dashboard-pendientes { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Último ajuste: metadato compacto debajo de los cuatro indicadores. */
-.dashboard .dashboard__operacion .inventario.inventario--resumen .inventario-ultimo-ajuste {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    margin: 0;
-    padding-top: 0.65rem;
-    border-top: 1px solid #eee;
-    color: #777;
-    font-size: 0.8rem;
-    line-height: 1.5;
-
-    svg { flex-shrink: 0; color: #8d7528; }
-    strong { color: #666; font-weight: 500; }
+/* Pie del inventario: ajuste a la izquierda y valoración a la derecha. */
+.dashboard .dashboard__operacion .inventario.inventario--resumen {
+    .inventario-icono--servicios { color: #726582; background: #f1edf5; }
+    .inventario-pie {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.45rem 1rem;
+        padding-top: 0.65rem;
+        border-top: 1px solid #eee;
+        color: #777;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+    .inventario-ultimo-ajuste {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0;
+        min-width: 0;
+        flex: 1 1 220px;
+        svg { flex-shrink: 0; color: #8d7528; }
+        strong { color: #666; font-weight: 500; }
+    }
+    .inventario-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        align-items: baseline;
+        gap: 0.35rem;
+        margin: 0 0 0 auto;
+        text-align: right;
+        strong { color: #666; font-weight: 600; overflow-wrap: anywhere; }
+        small { font-size: 0.72rem; font-weight: 400; }
+    }
 }
 
 /* Fila 4: gráfica de ventas y cobros. */

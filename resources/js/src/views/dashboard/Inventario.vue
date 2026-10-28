@@ -1,7 +1,7 @@
 <template>
   <DashboardSkeleton v-if="cargando" variante="inventario" titulo="inventario" />
 <div
-    v-else-if="data.total_articulos !== undefined"
+    v-else-if="data.total_inventariables !== undefined"
     class="inventario inventario--resumen"
   >
     <header class="seccion-title">
@@ -28,21 +28,24 @@
             <p
               class="cantidad"
               :aria-label="
-                cantidadValida(data.total_articulos)
-                  ? data.total_articulos + ' conceptos'
+                cantidadValida(data.total_inventariables)
+                  ? data.total_inventariables + ' artículos inventariables'
                   : 'No disponible'
               "
             >
               <CountTo
-                v-if="cantidadValida(data.total_articulos)"
+                v-if="cantidadValida(data.total_inventariables)"
                 :start-val="0"
-                :end-val="numero(data.total_articulos)"
+                :end-val="numero(data.total_inventariables)"
                 :duration="2000"
                 separator=","
                 aria-hidden="true"
               /><span v-else aria-hidden="true">—</span>
             </p>
-            <p class="descripcion">Conceptos</p>
+            <button type="button" class="descripcion inventario-indicador__enlace"
+              aria-label="Descargar reporte de artículos inventariables" @click="downloadExcel('articles')">
+              Artículos inventariables <DownloadIcon size="13" aria-hidden="true" />
+            </button>
           </div>
         </div>
         <div class="reporte">
@@ -113,33 +116,18 @@
             </button>
           </div>
         </div>
+        <!-- Conteo de conceptos de tipo servicio enviado por el backend. -->
         <div class="reporte">
-          <span
-            class="inventario-icono inventario-icono--costo"
-            aria-hidden="true"
-            ><DollarSignIcon size="20"
-          /></span>
+          <span class="inventario-icono inventario-icono--servicios" aria-hidden="true"><BriefcaseIcon size="20" /></span>
           <div class="inventario-indicador__contenido">
-            <p
-              class="cantidad"
-              :aria-label="moneda(data.costo_total_inventario)"
-            >
-              <CountTo
-                v-if="cantidadValida(data.costo_total_inventario)"
-                :start-val="0"
-                :end-val="numero(data.costo_total_inventario)"
-                :duration="2000"
-                :decimals="decimalesImporte(data.costo_total_inventario)"
-                prefix="$"
-                separator=","
-                decimal="."
-                aria-hidden="true"
-              /><span v-else aria-hidden="true">—</span>
-              <small class="inventario-indicador__moneda" aria-hidden="true"
-                >MXN</small
-              >
+            <p class="cantidad" :aria-label="cantidadValida(data.total_servicios) ? data.total_servicios + ' servicios' : 'No disponible'">
+              <CountTo v-if="cantidadValida(data.total_servicios)" :start-val="0" :end-val="numero(data.total_servicios)" :duration="2000" separator="," aria-hidden="true" />
+              <span v-else aria-hidden="true">—</span>
             </p>
-            <p class="descripcion">Costo Total</p>
+            <button type="button" class="descripcion inventario-indicador__enlace"
+              aria-label="Descargar reporte de servicios" @click="downloadExcel('services')">
+              Servicios <DownloadIcon size="13" aria-hidden="true" />
+            </button>
           </div>
         </div>
       </div>
@@ -148,14 +136,21 @@
         <img src="@assets/images/conserviciosfunerarios.svg" alt="" />
       </div>
     </div>
-    <!-- Dato opcional; no implica que cargar el dashboard sea un ajuste de inventario. -->
-    <p class="inventario-ultimo-ajuste">
-      <ClockIcon size="14" aria-hidden="true" />
-      <span
-        >Último ajuste de inventario:
-        <strong>{{ ultimoAjusteTexto }}</strong></span
-      >
-    </p>
+    <!-- Metadatos distribuidos; se apilan cuando el ancho disponible no es suficiente. -->
+    <div class="inventario-pie">
+      <p class="inventario-ultimo-ajuste">
+        <ClockIcon size="14" aria-hidden="true" />
+        <span>Último ajuste de inventario: <strong>{{ ultimoAjusteTexto }}</strong></span>
+      </p>
+      <p class="inventario-valor" :aria-label="'Valor de artículos inventariables a precio de venta, sin servicios: ' + moneda(data.costo_total_inventario)">
+        <span title="Existencias de artículos inventariables × precio de venta. No incluye servicios.">Valor de artículos inventariables:</span>
+        <strong>
+          <CountTo v-if="cantidadValida(data.costo_total_inventario)" :start-val="0" :end-val="numero(data.costo_total_inventario)" :duration="2000" :decimals="decimalesImporte(data.costo_total_inventario)" prefix="$" separator="," decimal="." aria-hidden="true" />
+          <span v-else>—</span>
+          <small> MXN</small>
+        </strong>
+      </p>
+    </div>
   </div>
   <div v-else class="skeleton">
     <p>Obteniendo información del inventario.</p>
@@ -168,7 +163,7 @@ import {
   PackageIcon,
   AlertTriangleIcon,
   LayersIcon,
-  DollarSignIcon,
+  BriefcaseIcon,
   ArrowUpRightIcon,
   DownloadIcon,
   ClockIcon,
@@ -184,7 +179,7 @@ export default {
     PackageIcon,
     AlertTriangleIcon,
     LayersIcon,
-    DollarSignIcon,
+    BriefcaseIcon,
     ArrowUpRightIcon,
     DownloadIcon,
     ClockIcon,
@@ -227,6 +222,8 @@ export default {
       try {
         const res = await inventario.descargarExcel(filtro);
         const nombres = {
+          articles: "inventario_articulos_inventariables",
+          services: "inventario_servicios",
           low: "inventario_desabastecidos",
           over: "inventario_sobreabastecido",
           all: "inventario_general",
