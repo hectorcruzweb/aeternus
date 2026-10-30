@@ -26,6 +26,67 @@ use PDF;
 
 class CementerioController extends ApiController
 {
+    /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido. */
+    public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return $this->getReporteCementerioPorTipo(1, $anio, $mes, $corte, $soloConteo);
+    }
+
+    /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio. */
+    public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return $this->getReporteCementerioPorTipo(2, $anio, $mes, $corte, $soloConteo);
+    }
+
+    private function getReporteCementerioPorTipo($tipo, $anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            $tipo, $anio, $mes, $corte, $soloConteo,
+            function (array $consultas, array $resultado) use ($tipo) {
+                return $this->completarDetalleReporteCementerio($consultas, $resultado, $tipo === 2);
+            }
+        );
+    }
+
+    /** Carga mínima del catálogo una vez; memoiza cada ubicación entre los tres apartados. */
+    private function completarDetalleReporteCementerio(array $consultas, array $resultado, $esCuota)
+    {
+        // La traducción existente solo requiere estos tres campos del catálogo.
+        // Cargarlo una vez evita consultar propiedades/precios por cada venta o pago.
+        $cementerio = $this;
+        $datosCementerio = \App\Propiedades::select('id', 'tipo_propiedades_id', 'propiedad_indicador')->get()->toArray();
+        $ubicaciones = [];
+        // LEFT JOIN conserva ventas aunque falte cliente o venta relacionada.
+        foreach ($consultas as $clave => $consulta) {
+            $filas = $consulta->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+                ->leftJoin('ventas_terrenos as vt', 'vt.id', '=', 'o.ventas_terrenos_id')
+                ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email', 'vt.ubicacion')
+                ;
+            if ($esCuota) {
+                // La cuota es compartida entre propiedades; la asignación individual es operaciones.
+                // No filtrar status del catálogo: conservar la misma base que el resumen financiero.
+                $filas->leftJoin('cuotas_cementerio as cc', 'cc.id', '=', 'o.cuotas_cementerio_id')
+                    ->addSelect('cc.descripcion as descripcion_cuota', 'cc.fecha_inicio as inicio_cuota', 'cc.fecha_fin as fin_cuota');
+            }
+            if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
+                    else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
+            $resultado[$clave] = $filas->get()->map(function ($f) use ($cementerio, $datosCementerio, &$ubicaciones) {
+                $codigo = trim((string) $f->ubicacion);
+                if (!array_key_exists($codigo, $ubicaciones)) {
+                    $ubicaciones[$codigo] = 'No disponible';
+                    // No mandar códigos vacíos/incompletos a ubicacion_texto (usa cuatro segmentos).
+                    if ($datosCementerio && preg_match('/^[0-9]+-[0-9]+-[0-9]+-[0-9]+$/D', $codigo)) {
+                        $texto = $cementerio->ubicacion_texto($codigo, $datosCementerio);
+                        $ubicaciones[$codigo] = trim($texto['ubicacion_texto'] ?? '') ?: 'No disponible';
+                    }
+                }
+                $f->ubicacion_texto = $ubicaciones[$codigo];
+                return (array) $f;
+            })->all();
+        }
+        return $resultado;
+    }
+
     /**CONTROL DE CUOTAS*/
     public function control_cuotas(Request $request, $tipo_servicio = '')
     {

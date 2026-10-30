@@ -4,7 +4,9 @@ import store from "../../../../store/store.js";
 // Token Refresh
 let isAlreadyFetchingAccessToken = false;
 let subscribers = [];
-let allowedErrorCodes = [422, 429, 500, 403, 404, 409, 414, 413];
+// HTTP 410 indica que venció un recurso temporal (p. ej. reporte), no la sesión.
+// Rechazar la petición para que el visor pida actualizar; no ejecutar logout.
+let allowedErrorCodes = [422, 429, 500, 403, 404, 409, 410, 414, 413];
 
 /** VALIDATE TOKEN EXISTENCE BEFORE ANY REQUEST */
 if (

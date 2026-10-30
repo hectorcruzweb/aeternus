@@ -1396,6 +1396,10 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .visor-reportes__acciones, .visor-reportes__hojas { display: flex; flex-wrap: wrap; gap: 0.5rem; }
     .visor-reportes__boton { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; border: 1px solid #ddd; padding: 0.55rem 0.8rem; color: #666; background: #fff; cursor: pointer; font: inherit; font-size: 0.85rem; }
     .visor-reportes__boton--principal { color: #fff; background: #a98a2e; border-color: #a98a2e; }
+    // Regreso al resumen: acción de navegación visible con el dorado de la aplicación.
+    .visor-reportes__boton--volver { color: #fff; background: #a98a2e; border-color: #a98a2e; font-weight: 600; }
+    .visor-reportes__boton--volver:not(:disabled):hover { background: #8d7224; border-color: #8d7224; box-shadow: 0 2px 6px rgba(115, 89, 22, 0.2); }
+    .visor-reportes__boton--volver:focus-visible { outline: 2px solid #6f581b; outline-offset: 2px; }
     .visor-reportes__boton:disabled { opacity: 0.5; cursor: default; }
     .visor-reportes__boton:focus-visible { outline: 2px solid #a98a2e; outline-offset: 2px; }
     .visor-reportes__hojas { margin-bottom: 0.5rem; }

@@ -11,14 +11,7 @@
 |
  */
 
-Route::get('/listar_inventario/{filtro?}/{export_excel?}', 'InventarioController@listar_inventario');
 
-// Vista previa privada: el controlador valida además Admin/Gerencia.
-Route::get('/inventario/dashboard/reporte-preview', 'InventarioController@previewInventarioDashboard')->middleware('auth:api');
-Route::get('/clientes/reportes/correos', 'ClientesController@buscarCorreosReportes')->middleware('auth:api');
-Route::get('/inventario/dashboard/reporte-preview/{token}/excel', 'InventarioController@descargarInventarioPreview')->middleware('auth:api');
-Route::get('/inventario/dashboard/reporte-preview/{token}/pdf', 'InventarioController@descargarInventarioPreviewPdf')->middleware('auth:api');
-Route::post('/inventario/dashboard/reporte-preview/{token}/correo', 'InventarioController@enviarInventarioPreviewCorreo')->middleware(['auth:api', 'throttle:5,1,dashboard-correo:']);
 
 /**en pruebas */
 
@@ -39,6 +32,29 @@ Route::middleware(['client'])->group(function () {
 
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
 Route::middleware(['auth:api'])->group(function () {
+    // Reportes del dashboard. Admin/Gerencia se validan además en cada controlador.
+    Route::get('/operaciones/reportes/general', 'OperacionesController@previewReporteGeneralOperaciones');
+    Route::get('/operaciones/reportes/general/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/general/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::get('/operaciones/reportes/general/{token}/excel-completo', 'OperacionesController@descargarReporteGeneralCompleto');
+    Route::post('/operaciones/reportes/general/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/operaciones/reportes/ventas-saldos', 'OperacionesController@previewVentasCementerio');
+    Route::get('/operaciones/reportes/ventas-saldos/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/ventas-saldos/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/operaciones/reportes/ventas-saldos/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/funeraria/reportes/ventas-saldos', 'FunerariaController@previewReporteServiciosFunerarios');
+    Route::get('/funeraria/reportes/planes/ventas-saldos', 'FunerariaController@previewReporteVentasPlanes');
+    Route::get('/funeraria/reportes/ventas-generales/ventas-saldos', 'FunerariaController@previewReporteVentasGenerales');
+    Route::get('/operaciones/reportes/ventas-cementerio', 'OperacionesController@previewVentasCementerio');
+    Route::get('/operaciones/reportes/ventas-cementerio/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/ventas-cementerio/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/operaciones/reportes/ventas-cementerio/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/inventario/dashboard/reporte-preview', 'InventarioController@previewInventarioDashboard');
+    Route::get('/clientes/reportes/correos', 'ClientesController@buscarCorreosReportes');
+    Route::get('/inventario/dashboard/reporte-preview/{token}/excel', 'InventarioController@descargarInventarioPreview');
+    Route::get('/inventario/dashboard/reporte-preview/{token}/pdf', 'InventarioController@descargarInventarioPreviewPdf');
+    Route::post('/inventario/dashboard/reporte-preview/{token}/correo', 'InventarioController@enviarInventarioPreviewCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/listar_inventario/{filtro?}/{export_excel?}', 'InventarioController@listar_inventario');
     Route::get('/dashboard/build', 'DashboardController@buildDashboard');
 
 

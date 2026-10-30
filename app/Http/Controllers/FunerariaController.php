@@ -36,6 +36,112 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+    /** Entrada de ventas en general: el servidor fija tipo5, independientemente del request. */
+    public function previewReporteVentasGenerales(Request $request)
+    {
+        $request->merge(['empresa_operaciones_id' => 5]);
+        return app(OperacionesController::class)->previewVentasCementerio($request);
+    }
+
+    /**
+     * Reporte tipo5. Número visible: operaciones.ventas_generales_id = ventas_generales.id.
+     * Carga únicamente cliente y contacto; no conceptos, inventario ni datos de otros módulos.
+     * No condiciona los saldos a entregado_b: entrega y situación de pago son independientes.
+     * Los LEFT JOIN y el motor compartido preservan las cantidades del resumen financiero.
+     */
+    public function getReporteVentasGenerales($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            5, $anio, $mes, $corte, $soloConteo,
+            function (array $consultas, array $resultado) {
+                foreach ($consultas as $clave => $consulta) {
+                    $filas = $consulta->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+                        ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email')
+                        ;
+                    if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
+                    else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
+                    $resultado[$clave] = $filas->get()->map(function ($fila) { return (array) $fila; })->all();
+                }
+                return $resultado;
+            }
+        );
+    }
+
+    /** Entrada tipo 4: el tipo se fija en el servidor, no depende del parámetro del usuario. */
+    public function previewReporteVentasPlanes(Request $request)
+    {
+        $request->merge(['empresa_operaciones_id' => 4]);
+        return app(OperacionesController::class)->previewVentasCementerio($request);
+    }
+
+    /**
+     * Venta de planes (tipo4): número de ventas_planes y nombre original contratado.
+     * Si no hay nombre original, usar planes_funerarios.plan como respaldo.
+     * No unir precios_planes: tiene varias tarifas por plan y duplicaría ventas;
+     * los importes históricos y los saldos proceden de la operación y sus programados.
+     * Conserva modalidades del módulo: 1 Uso Inmediato / 2 A Futuro.
+     */
+    public function getReporteVentasPlanesFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            4, $anio, $mes, $corte, $soloConteo,
+            function (array $consultas, array $resultado) {
+                foreach ($consultas as $clave => $consulta) {
+                    $filas = $consulta
+                        ->leftJoin('ventas_planes as vp', 'vp.id', '=', 'o.ventas_planes_id')
+                        ->leftJoin('planes_funerarios as pf', 'pf.id', '=', 'vp.planes_funerarios_id')
+                        ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+                        ->addSelect('vp.nombre_original', 'pf.plan as nombre_catalogo', 'vp.tipo_financiamiento as modalidad_id',
+                            'c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email')
+                        ;
+                    if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
+                    else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
+                    $resultado[$clave] = $filas->get()->map(function ($fila) {
+                        $fila->plan = trim($fila->nombre_original ?? '') ?: (trim($fila->nombre_catalogo ?? '') ?: 'No disponible');
+                        $fila->modalidad = [1 => 'Uso Inmediato', 2 => 'A Futuro'][(int) $fila->modalidad_id] ?? 'No disponible';
+                        return (array) $fila;
+                    })->all();
+                }
+                return $resultado;
+            }
+        );
+    }
+
+    /** Entrada del reporte tipo 3. El usuario no puede cambiar el tipo de esta ruta. */
+    public function previewReporteServiciosFunerarios(Request $request)
+    {
+        $request->merge(['empresa_operaciones_id' => 3]);
+        return app(OperacionesController::class)->previewVentasCementerio($request);
+    }
+
+    /**
+     * Reporte financiero de servicios CONTRATADOS (con operación vigente tipo 3).
+     * No incluye solicitudes sin contrato. Número visible: servicios_funerarios.id.
+     * OperacionesController calcula saldos, fechas y conteos; aquí se cargan servicio y cliente.
+     * El detalle no consulta propiedades, cuotas, planes ni conceptos del servicio.
+     * LEFT JOIN conserva el importe aunque falten datos descriptivos.
+     */
+    public function getReporteServiciosFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            3, $anio, $mes, $corte, $soloConteo,
+            function (array $consultas, array $resultado) {
+                foreach ($consultas as $clave => $consulta) {
+                    $filas = $consulta
+                        ->leftJoin('servicios_funerarios as sf', 'sf.id', '=', 'o.servicios_funerarios_id')
+                        ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+                        ->addSelect('sf.nombre_afectado as fallecido', 'c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email')
+                        ;
+                    if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
+                    else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
+                    // No filtrar sf.status: la vigencia financiera es la de la operación.
+                    $resultado[$clave] = $filas->get()->map(function ($fila) { return (array) $fila; })->all();
+                }
+                return $resultado;
+            }
+        );
+    }
+
     /**
      * DEV: consulta del carrusel sin sustituir la función original ni cambiar sus reglas.
      * 1) Selecciona servicios vigentes con algún evento futuro o solicitud reciente sin eventos.

@@ -15,8 +15,8 @@ class OperacionesController extends ApiController
      * Sin año/mes: mes actual; año y mes: mes; solo año: acumulado anual.
      * Devuelve únicamente resúmenes; los reportes desglosados quedan separados.
      * No carga clientes, ventas individuales ni pagos individuales en PHP.
-     * Por cobrar suma el pendiente de TODOS los pagos programados vigentes
-     * de las operaciones vendidas en el periodo, incluso con vencimiento futuro.
+     * Por cobrar suma el pendiente de pagos programados con fecha en el periodo,
+     * aunque la operación se haya vendido en meses anteriores.
      * No utiliza operaciones.saldo; una operación sin programados activos aporta cero.
      * Vencido: capital pendiente vencido de TODAS las operaciones vigentes hasta el corte.
      * El año/mes filtra únicamente ventas y porCobrar; NO limita el vencido acumulado.
@@ -92,7 +92,7 @@ class OperacionesController extends ApiController
             ->whereIn('o.status', [1, 2])
             ->where('o.fecha_operacion', '<=', $corte);
 
-        // Ventas y por cobrar de pagos programados se restringen a operaciones del periodo.
+        // Solo ventas se filtra por fecha_operacion; por cobrar usa fecha_programada.
         $operacionesPeriodo = (clone $operacionesVigentes)
             ->where('o.fecha_operacion', '>=', $inicio)
             ->where('o.fecha_operacion', '<', $finExclusivo);
@@ -110,7 +110,7 @@ class OperacionesController extends ApiController
             ->groupBy('ppp.pagos_programados_id');
 
         // Una fila por operación evita multiplicar ventas al unir sus pagos.
-        // Por cobrar incluye pendientes de todas las fechas, incluso NULL.
+        // Por cobrar usa fecha_programada del periodo; NULL y otros meses no califican.
         // Para vencido, hoy y fechas NULL no califican.
         $saldosPorOperacion = DB::table('pagos_programados as pp')
             ->joinSub((clone $operacionesVigentes)->select('o.id', 'o.empresa_operaciones_id'), 'op', function ($join) {
@@ -123,9 +123,10 @@ class OperacionesController extends ApiController
             ->select('pp.operaciones_id', 'op.empresa_operaciones_id')
             // Redondear por pago: un sobrepago no compensa otro programado.
             ->selectRaw('SUM(CASE
-                WHEN ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) > 0
+                WHEN pp.fecha_programada >= ? AND pp.fecha_programada < ?
+                 AND ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) > 0
                 THEN ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2)
-                ELSE 0 END) AS por_cobrar')
+                ELSE 0 END) AS por_cobrar', [$inicio->toDateString(), $finExclusivo->toDateString()])
             ->selectRaw('SUM(CASE
                 WHEN pp.fecha_programada < ?
                  AND ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) > 0
@@ -133,22 +134,20 @@ class OperacionesController extends ApiController
                 ELSE 0 END) AS vencido', [$corte->toDateString()])
             ->groupBy('pp.operaciones_id', 'op.empresa_operaciones_id');
 
-        // Dos agregados independientes: no unir el vencido histórico a ventas del mes.
+        // Dos agregados independientes: ventas por fecha de venta; saldos por fecha programada.
         // UNION ALL conserva tipos con vencido aunque no tengan ventas en el periodo.
         $ventasPeriodo = (clone $operacionesPeriodo)
-            ->leftJoinSub(clone $saldosPorOperacion, 's', function ($join) {
-                $join->on('s.operaciones_id', '=', 'o.id');
-            })
             ->select('o.empresa_operaciones_id')
             ->selectRaw('COALESCE(SUM(o.total), 0) AS ventas')
-            ->selectRaw('COALESCE(SUM(s.por_cobrar), 0) AS por_cobrar')
+            ->selectRaw('0 AS por_cobrar')
             ->selectRaw('0 AS vencido')
             ->groupBy('o.empresa_operaciones_id');
 
         $vencidoAcumulado = DB::query()
             ->fromSub($saldosPorOperacion, 'v')
             ->select('v.empresa_operaciones_id')
-            ->selectRaw('0 AS ventas, 0 AS por_cobrar')
+            ->selectRaw('0 AS ventas')
+            ->selectRaw('COALESCE(SUM(v.por_cobrar), 0) AS por_cobrar')
             ->selectRaw('COALESCE(SUM(v.vencido), 0) AS vencido')
             ->groupBy('v.empresa_operaciones_id');
 
@@ -190,6 +189,377 @@ class OperacionesController extends ApiController
 
         return $resumenes;
     }
+
+
+    /**
+     * Detalle exclusivo de tipo 1, separado del resumen ligero del dashboard.
+     * Ventas: fecha_operacion del mes. Por cobrar: fecha_programada del mes, de cualquier venta vigente.
+     * Vencidos: todas las ventas hasta hoy.
+     * $soloConteo evita cargar miles de filas al abrir el visor.
+     * No usa operaciones.saldo ni total_pago: aplica monto del enlace al programado.
+     */
+    public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(CementerioController::class)->getReporteVentasCementerio($anio, $mes, $corte, $soloConteo);
+    }
+
+    /** Tipo 2: cuotas por propiedad, sin duplicar consultas ni reglas de saldos. */
+    public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        return app(CementerioController::class)->getReporteCuotasMantenimiento($anio, $mes, $corte, $soloConteo);
+    }
+
+    /**
+     * Motor financiero común. Cada controlador del módulo aporta su detalle específico.
+     * El callback recibe las tres consultas y sus metadatos; no corre en modo soloConteo.
+     * Cementerio aporta tipos 1/2; Funeraria aporta tipos 3/4/5. Aquí no se cargan sus catálogos.
+     */
+    public function getReporteVentasSaldosOperacionesDetallado($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false, callable $completarDetalle = null)
+    {
+        if (!in_array($tipoOperacion, [1, 2, 3, 4, 5], true)) throw new \InvalidArgumentException('Reporte individual no disponible para ese tipo.');
+        $camposNumero = [1 => 'o.ventas_terrenos_id', 2 => 'o.ventas_terrenos_id', 3 => 'o.servicios_funerarios_id', 4 => 'o.ventas_planes_id', 5 => 'o.ventas_generales_id'];
+        $campoNumero = $camposNumero[$tipoOperacion];
+        // Etiquetas de presentación por módulo; no cambian los criterios financieros.
+        $titulos = [
+            1 => 'Reporte de Ventas y Saldos en Cementerio',
+            2 => 'Reporte de Cuotas de Mantenimiento',
+            3 => 'Reporte de Ventas y Saldos de Servicios Funerarios',
+            4 => 'Reporte de Ventas y Saldos de Planes Funerarios',
+            5 => 'Reporte de Ventas en General y Saldos',
+        ];
+        $modulos = [1 => 'Ventas en cementerio', 2 => 'Cuotas de Mantenimiento', 3 => 'Servicios funerarios', 4 => 'Venta de planes funerarios', 5 => 'Ventas en general'];
+        $etiquetasPeriodo = [1 => 'Ventas del mes', 2 => 'Cuotas del mes', 3 => 'Servicios contratados del mes', 4 => 'Planes vendidos del mes', 5 => 'Ventas del mes'];
+        $corte = $corte ? $corte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
+        if ($mes === null) throw new \InvalidArgumentException('Este reporte requiere un mes específico.');
+        // Reutiliza también la validación de periodo y las reglas del resumen existente.
+        $resumen = $this->getVentasSaldosOperacionesDashboard($tipoOperacion, $anio, $mes, $corte)[0];
+        $inicio = Carbon::create((int) $anio, (int) $mes, 1, 0, 0, 0, 'America/Mazatlan');
+        $fin = $inicio->copy()->addMonth();
+        $base = DB::table('operaciones as o')->where('o.empresa_operaciones_id', $tipoOperacion)
+            ->whereIn('o.status', [1, 2])->where('o.fecha_operacion', '<=', $corte);
+        $periodo = (clone $base)->where('o.fecha_operacion', '>=', $inicio)->where('o.fecha_operacion', '<', $fin);
+        $aplicaciones = DB::table('pagos_pagos_programados as ppp')
+            ->join('pagos as p', 'p.id', '=', 'ppp.pagos_id')->where('p.status', 1)
+            ->whereIn('p.movimientos_pagos_id', [1, 3, 4, 5])
+            ->select('ppp.pagos_programados_id')->selectRaw('SUM(ppp.monto) AS capital_cubierto')
+            ->groupBy('ppp.pagos_programados_id');
+        $pendiente = '(CASE WHEN ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) > 0 THEN ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) ELSE 0 END)';
+        $programados = DB::table('pagos_programados as pp')
+            ->leftJoinSub($aplicaciones, 'a', function ($j) { $j->on('a.pagos_programados_id', '=', 'pp.id'); })
+            ->where('pp.status', 1)->select('pp.id', 'pp.operaciones_id', 'pp.fecha_programada', 'pp.referencia_pago', 'pp.num_pago', 'pp.monto_programado')
+            ->selectRaw('COALESCE(a.capital_cubierto, 0) AS capital_cubierto')
+            ->selectRaw($pendiente . ' AS pendiente');
+        $saldos = DB::query()->fromSub(clone $programados, 'sp')->select('sp.operaciones_id')
+            ->selectRaw('SUM(sp.pendiente) AS por_cobrar')
+            ->selectRaw('SUM(CASE WHEN sp.fecha_programada < ? THEN sp.pendiente ELSE 0 END) AS vencido', [$corte->toDateString()])
+            ->groupBy('sp.operaciones_id');
+        $ventas = (clone $periodo)->leftJoinSub($saldos, 's', function ($j) { $j->on('s.operaciones_id', '=', 'o.id'); })
+            ->select('o.id as operacion_id', $campoNumero . ' as numero_venta', 'o.fecha_operacion', 'o.clientes_id', 'o.total')
+            ->selectRaw('COALESCE(s.por_cobrar, 0) AS por_cobrar, COALESCE(s.vencido, 0) AS vencido');
+        $conPagos = function ($operaciones) use ($programados, $campoNumero) {
+            return $operaciones->joinSub(clone $programados, 'pp', function ($j) { $j->on('pp.operaciones_id', '=', 'o.id'); })
+                ->where('pp.pendiente', '>', 0)
+                ->select('o.id as operacion_id', $campoNumero . ' as numero_venta', 'o.fecha_operacion', 'o.clientes_id',
+                    'pp.id as pago_programado_id', 'pp.num_pago', 'pp.referencia_pago', 'pp.fecha_programada', 'pp.monto_programado', 'pp.capital_cubierto', 'pp.pendiente');
+        };
+        $cobrar = $conPagos(clone $base)
+            ->where('pp.fecha_programada', '>=', $inicio->toDateString())
+            ->where('pp.fecha_programada', '<', $fin->toDateString());
+        $vencidos = $conPagos(clone $base)->where('pp.fecha_programada', '<', $corte->toDateString());
+        $consultas = ['ventas' => $ventas, 'por_cobrar' => $cobrar, 'vencidos' => $vencidos];
+        $conteos = [];
+        foreach ($consultas as $clave => $consulta) {
+            $conteos[$clave] = DB::query()->fromSub(clone $consulta, 'filas')->count();
+        }
+        $resultado = [
+            'tipo_operacion' => $tipoOperacion,
+            'titulo' => $titulos[$tipoOperacion],
+            'modulo' => $modulos[$tipoOperacion],
+            'etiqueta_periodo' => $etiquetasPeriodo[$tipoOperacion],
+            'etiqueta_conteo' => mb_strtolower($etiquetasPeriodo[$tipoOperacion], 'UTF-8'),
+            'periodo' => $inicio->locale('es')->translatedFormat('F \\d\\e Y'),
+            'anio' => (int) $anio, 'mes' => (int) $mes,
+            'fecha' => $corte->format('d') . '/' . ucfirst(rtrim($corte->locale('es')->translatedFormat('M'), '.')) . '/' . $corte->format('Y H:i'), 'corte' => $corte->toDateTimeString(),
+            'resumen' => $resumen, 'conteos' => $conteos, 'totalRegistros' => array_sum($conteos),
+        ];
+        if ($soloConteo) return $resultado;
+        if (!$completarDetalle) throw new \LogicException('Solicite el detalle mediante el controlador del módulo.');
+        return $completarDetalle($consultas, $resultado);
+    }
+
+    /** Resolver el controlador del módulo sin duplicar transporte, caché o exportación. */
+    private function obtenerReporteIndividual($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false)
+    {
+        if ($tipoOperacion === 3) {
+            return app(FunerariaController::class)->getReporteServiciosFunerarios($anio, $mes, $corte, $soloConteo);
+        }
+        if ($tipoOperacion === 4) {
+            return app(FunerariaController::class)->getReporteVentasPlanesFunerarios($anio, $mes, $corte, $soloConteo);
+        }
+        if ($tipoOperacion === 5) {
+            return app(FunerariaController::class)->getReporteVentasGenerales($anio, $mes, $corte, $soloConteo);
+        }
+        if ($tipoOperacion === 1) return $this->getReporteVentasCementerio($anio, $mes, $corte, $soloConteo);
+        if ($tipoOperacion === 2) return $this->getReporteCuotasMantenimiento($anio, $mes, $corte, $soloConteo);
+        throw new \InvalidArgumentException('Reporte individual no disponible.');
+    }
+
+
+    /** Resumen ejecutivo: dos consultas agregadas, sin clientes, ventas o pagos individuales. */
+    public function getResumenGeneralOperaciones($anio, $mes, Carbon $corte = null)
+    {
+        if ($mes === null) throw new \InvalidArgumentException('Indique un mes para el reporte general.');
+        $corte = $corte ? $corte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
+        $filas = $this->getVentasSaldosOperacionesDashboard(null, $anio, $mes, $corte);
+        $total = array_shift($filas);
+        $inicio = Carbon::create((int) $anio, (int) $mes, 1, 0, 0, 0, 'America/Mazatlan');
+        $conteos = DB::table('operaciones')->whereIn('status', [1, 2])
+            ->whereIn('empresa_operaciones_id', array_column($filas, 'id'))
+            ->where('fecha_operacion', '>=', $inicio)->where('fecha_operacion', '<', $inicio->copy()->addMonth())
+            ->where('fecha_operacion', '<=', $corte)
+            ->select('empresa_operaciones_id')->selectRaw('COUNT(*) AS cantidad')
+            ->groupBy('empresa_operaciones_id')->get()->keyBy('empresa_operaciones_id');
+        foreach ($filas as &$fila) $fila['cantidad'] = isset($conteos[$fila['id']]) ? (int) $conteos[$fila['id']]->cantidad : 0;
+        unset($fila);
+        $total['cantidad'] = array_sum(array_column($filas, 'cantidad'));
+        return [
+            'tipo_operacion' => 'todas', 'titulo' => 'Resumen General de Ventas y Saldos',
+            'modulo' => 'Todas las operaciones', 'etiqueta_periodo' => 'Ventas del mes',
+            'anio' => (int) $anio, 'mes' => (int) $mes,
+            'periodo' => $inicio->locale('es')->translatedFormat('F \\d\\e Y'),
+            'fecha' => $corte->format('d').'/'.ucfirst(rtrim($corte->locale('es')->translatedFormat('M'), '.')).'/'.$corte->format('Y H:i'),
+            'corte' => $corte->toDateTimeString(), 'resumen' => $total, 'tipos' => $filas,
+        ];
+    }
+
+    /** El reporte general abre solo cinco filas. No invoca reportes detallados. */
+    public function previewReporteGeneralOperaciones(Request $request)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        $request->validate(['anio' => 'required|integer|min:1000', 'mes' => 'required|integer|between:1,12']);
+        $corte = Carbon::now('America/Mazatlan');
+        try {
+            $datos = DB::transaction(function () use ($request, $corte) {
+                return $this->getResumenGeneralOperaciones($request->anio, $request->mes, $corte);
+            });
+        } catch (\InvalidArgumentException $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['periodo' => $e->getMessage()]);
+        }
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = $datos['titulo'].' '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        // Reutiliza propiedad/vigencia del token y el transporte de correo del visor.
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
+            'usuario_id' => (int) $usuario->id, 'modo' => 'general', 'datos' => $datos, 'nombre' => $nombre,
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => true,
+            'totalRegistros' => count($datos['tipos']), 'limiteVisualizacion' => 3500,
+            'hojas' => [['nombre' => 'Resumen general', 'html' => $this->htmlReporteCementerio($datos)]],
+            'reportesIndividuales' => array_map(function ($f) { return ['id' => $f['id'], 'nombre' => $f['nombre']]; }, $datos['tipos']),
+            'excelCompletoDisponible' => true,
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * Excel completo solo bajo solicitud. No llena el caché ni la vista con el historial.
+     * Consulta datos actuales del mismo periodo en una transacción de lectura.
+     * El usuario ve explícitamente que este archivo se actualiza al generarse.
+     */
+    public function descargarReporteGeneralCompleto(Request $request, $token)
+    {
+        $reporte = $this->datosReporteCementerio($request, $token);
+        abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas', 422, 'Este archivo corresponde al reporte general.');
+        $anterior = $reporte['datos'];
+        $datos = DB::transaction(function () use ($anterior) {
+            $corte = Carbon::now('America/Mazatlan');
+            $actual = $this->getResumenGeneralOperaciones($anterior['anio'], $anterior['mes'], $corte);
+            $actual['empresa'] = $anterior['empresa'];
+            $actual['detalles'] = [];
+            foreach ($actual['tipos'] as $tipo) {
+                // Cada módulo sigue siendo dueño de su información específica.
+                $actual['detalles'][] = $this->obtenerReporteIndividual((int) $tipo['id'], $anterior['anio'], $anterior['mes'], $corte);
+            }
+            return $actual;
+        });
+        $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
+        $respuesta = \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ResumenGeneralOperacionesExport($datos, true), $nombre);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. */
+    private function exportadorReporteVentas(array $datos)
+    {
+        return ($datos['tipo_operacion'] ?? null) === 'todas'
+            ? new \App\Exports\ResumenGeneralOperacionesExport($datos)
+            : new \App\Exports\VentasCementerioExport($datos);
+    }
+
+    /** Entrada del visor: instantánea privada de 15 minutos; no genera archivos al consultar. */
+    public function previewVentasCementerio(Request $request)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        $request->validate(['anio' => 'required|integer|min:1000', 'mes' => 'required|integer|between:1,12', 'empresa_operaciones_id' => 'sometimes|required|integer|in:1,2,3,4,5']);
+        $tipoOperacion = (int) $request->input('empresa_operaciones_id', 1);
+        $corte = Carbon::now('America/Mazatlan');
+        $limite = 3500; // Suma de filas de los tres apartados; no limita la descarga.
+        try {
+            $datos = DB::transaction(function () use ($request, $corte, $tipoOperacion, $limite) {
+                $datos = $this->obtenerReporteIndividual($tipoOperacion, $request->anio, $request->mes, $corte, true);
+                if ($datos['totalRegistros'] <= $limite) {
+                    $datos = $this->obtenerReporteIndividual($tipoOperacion, $request->anio, $request->mes, $corte);
+                }
+                return $datos;
+            });
+        } catch (\InvalidArgumentException $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['periodo' => $e->getMessage()]);
+        }
+        $visualizable = isset($datos['ventas']) && $datos['totalRegistros'] <= $limite;
+        // Empresa también se conserva en la instantánea: PDF, Excel y HTML muestran lo mismo.
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $html = $visualizable ? $this->htmlReporteCementerio($datos) : null;
+        if (!$visualizable) unset($datos['ventas'], $datos['por_cobrar'], $datos['vencidos']);
+        $token = bin2hex(random_bytes(32));
+        $vence = $corte->copy()->addMinutes(15);
+        $nombre = $datos['titulo'] . ' ' . $corte->format('Y-m-d H-i-s') . '.xlsx';
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_' . $token, [
+            'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
+            'modo' => $visualizable ? 'instantanea' : 'filtro',
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => $limite, 'totalRegistros' => $datos['totalRegistros'],
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Descargue el Excel completo. Los datos se actualizarán al generar el archivo.',
+            'hojas' => $visualizable ? [['nombre' => $datos['modulo'], 'html' => $html]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    private function usuarioReporteCementerio(Request $request)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario && in_array((int) $usuario->roles_id, [1, 4], true), 403);
+        return $usuario;
+    }
+
+    /** Verifica el propietario incluso si conoce un token válido de otro usuario. */
+    private function datosReporteCementerio(Request $request, $token)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        abort_unless(is_string($token) && preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $reporte = \Illuminate\Support\Facades\Cache::get('cementerio_reporte_' . $token);
+        abort_unless($reporte, 410, 'La consulta venció. Actualice el reporte.');
+        abort_unless((int) $reporte['usuario_id'] === (int) $usuario->id, 403);
+        if ($reporte['modo'] === 'filtro') {
+            $anterior = $reporte['datos'];
+            $reporte['datos'] = DB::transaction(function () use ($anterior) {
+                return $this->obtenerReporteIndividual((int) ($anterior['tipo_operacion'] ?? 1), $anterior['anio'], $anterior['mes']);
+            });
+            $reporte['datos']['empresa'] = $anterior['empresa'];
+        }
+        return $reporte;
+    }
+
+    private function htmlReporteCementerio(array $datos, $modoPdf = false)
+    {
+        $esGeneral = ($datos['tipo_operacion'] ?? null) === 'todas';
+        $ruta = public_path(env('LOGOJPG'));
+        $mime = is_file($ruta) ? (new \finfo(FILEINFO_MIME_TYPE))->file($ruta) : null;
+        $logo = in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true)
+            ? 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($ruta)) : null;
+        return view($esGeneral ? 'reportes.temporales_visor_excel.general_operaciones.resumen' : 'reportes.temporales_visor_excel.ventas_cementerio.reporte', [
+            'datos' => $datos, 'secciones' => $esGeneral ? [] : \App\Exports\VentasCementerioExport::secciones($datos),
+            'logo' => $logo, 'modoPdf' => $modoPdf,
+        ])->render();
+    }
+
+    private function pdfReporteCementerio(array $datos)
+    {
+        $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
+            'fechaImpresion' => Carbon::now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . Carbon::now('America/Mazatlan')->format('Y H:i'),
+            'dominio' => parse_url(config('app.url'), PHP_URL_HOST) ?: config('app.url'),
+        ])->render();
+        return \PDF::loadHTML($this->htmlReporteCementerio($datos, true))->setOptions([
+            'orientation' => 'landscape', 'page-size' => 'A4', 'encoding' => 'UTF-8',
+            'margin-top' => 10, 'margin-bottom' => 12, 'margin-left' => 10, 'margin-right' => 10,
+            'print-media-type' => true, 'disable-javascript' => false,
+            'enable-local-file-access' => false, 'disable-local-file-access' => true,
+            'footer-html' => $footer, 'footer-spacing' => 3,
+        ]);
+    }
+
+    public function descargarVentasCementerioExcel(Request $request, $token)
+    {
+        $reporte = $this->datosReporteCementerio($request, $token);
+        $respuesta = \Maatwebsite\Excel\Facades\Excel::download($this->exportadorReporteVentas($reporte['datos']), $reporte['nombre']);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    public function descargarVentasCementerioPdf(Request $request, $token)
+    {
+        $reporte = $this->datosReporteCementerio($request, $token);
+        $respuesta = $this->pdfReporteCementerio($reporte['datos'])->download(preg_replace('/\.xlsx$/i', '.pdf', $reporte['nombre']));
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** Correo con las mismas validaciones, confirmación y plantilla del visor. */
+    public function enviarVentasCementerioCorreo(Request $request, $token)
+    {
+        $request->validate([
+            'destinatario' => 'required_without:destinatarios|nullable|string|max:75',
+            'email_address' => 'required_without:destinatarios|nullable|email|max:75',
+            'destinatarios' => 'sometimes|required|array|min:1|max:20',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'formato' => 'sometimes|required|in:excel,pdf',
+            'mensaje' => 'nullable|string|max:30000', // HTML acotado; texto visible hasta 5000 caracteres.
+            'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
+        ]);
+        $destinatarios = $request->input('destinatarios', [[
+            'nombre' => $request->input('destinatario'), 'email' => $request->input('email_address'),
+        ]]);
+        $vistos = [];
+        foreach ($destinatarios as &$persona) {
+            $persona['email'] = trim($persona['email']);
+            $persona['nombre'] = trim($persona['nombre'] ?? '');
+            $clave = strtolower($persona['email']);
+            if (isset($vistos[$clave])) throw \Illuminate\Validation\ValidationException::withMessages(['destinatarios' => 'Hay correos duplicados en la lista.']);
+            $vistos[$clave] = true;
+        }
+        unset($persona);
+        $textoMensaje = html_entity_decode(strip_tags($request->input('mensaje', '') ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (mb_strlen(trim($textoMensaje), 'UTF-8') > 5000) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['mensaje' => 'El mensaje no debe superar 5000 caracteres.']);
+        }
+        $reporte = $this->datosReporteCementerio($request, $token);
+        $nombre = $reporte['nombre'];
+        if ($request->input('formato', 'excel') === 'pdf') {
+            $contenido = $this->pdfReporteCementerio($reporte['datos'])->output();
+            $nombre = preg_replace('/\.xlsx$/i', '.pdf', $nombre);
+        } else {
+            $contenido = \Maatwebsite\Excel\Facades\Excel::raw($this->exportadorReporteVentas($reporte['datos']), \Maatwebsite\Excel\Excel::XLSX);
+        }
+        // Texto del usuario y adjunto se entregan al envío compartido de reportes.
+        return app(EmailController::class)->reporte_email([
+            'email_address' => $destinatarios[0]['email'],
+            'destinatario' => $destinatarios[0]['nombre'],
+            'destinatarios' => $destinatarios,
+            'asunto' => $request->input('asunto') ?: $reporte['datos']['titulo'],
+            'mensaje' => $request->input('mensaje', ''),
+        ], $contenido, $nombre, $request->input('formato', 'excel') === 'pdf'
+            ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
 
     /**
      * Mantenimiento interno de saldo/status; NO llamar desde buildDashboard.

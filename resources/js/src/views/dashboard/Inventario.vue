@@ -142,7 +142,7 @@
         <ClockIcon size="14" aria-hidden="true" />
         <span>Último ajuste de inventario: <strong>{{ ultimoAjusteTexto }}</strong></span>
       </p>
-      <p class="inventario-valor" :aria-label="'Valor de artículos inventariables a precio de venta, sin servicios: ' + moneda(data.costo_total_inventario)">
+      <p class="inventario-valor" :aria-label="'Valor de artículos inventariables a precio de venta, sin servicios: ' + (cantidadValida(data.costo_total_inventario) ? moneda(data.costo_total_inventario) + ' MXN' : 'No disponible')">
         <span title="Existencias de artículos inventariables × precio de venta. No incluye servicios.">Valor de artículos inventariables:</span>
         <strong>
           <CountTo v-if="cantidadValida(data.costo_total_inventario)" :start-val="0" :end-val="numero(data.costo_total_inventario)" :duration="2000" :decimals="decimalesImporte(data.costo_total_inventario)" prefix="$" separator="," decimal="." aria-hidden="true" />

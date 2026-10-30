@@ -27,7 +27,7 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
     {
         $this->items = $items;
         $this->summary = $summary;
-        $this->generadoEn = Carbon::now('America/Mazatlan')->format('d/m/Y H:i');
+        $this->generadoEn = Carbon::now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . Carbon::now('America/Mazatlan')->format('Y H:i');
     }
 
     public function title(): string

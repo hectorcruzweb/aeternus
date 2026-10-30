@@ -17,8 +17,16 @@ class EmailController extends ApiController
     {
         $empresa = app(EmpresaController::class)->get_empresa_data();
         $destinatarios = $datos['destinatarios'] ?? [['email' => $datos['email_address'], 'nombre' => $datos['destinatario']]];
+        // Mantener el saludo del reporte; solo sustituir su destino durante las pruebas.
+        $nombreSaludo = count($destinatarios) === 1 ? ($destinatarios[0]['nombre'] ?? '') : '';
+        // app.env viene de APP_ENV y respeta config:cache. Únicamente production envía a clientes.
+        // Se reemplaza la lista completa: ningún destinatario capturado queda en To/CC/BCC.
+        // Esta regla solo afecta al envío nuevo de reportes; pdf_email conserva su flujo.
+        if (config('app.env') !== 'production') {
+            $destinatarios = [['email' => 'hectorcrzprz@gmail.com', 'nombre' => 'Héctor']];
+        }
         $data = [
-            'email' => $datos['email_address'], 'client_name' => count($destinatarios) === 1 ? $datos['destinatario'] : '',
+            'email' => $destinatarios[0]['email'], 'client_name' => $nombreSaludo,
             'subject' => $datos['asunto'], 'mensaje_html' => $this->mensajeReporteSeguro($datos['mensaje'] ?? ''),
             'address' => config('services.mailsistema.address'),
             'empresa' => $empresa, 'name_pdf' => $nombreArchivo,

@@ -65,7 +65,7 @@
             >
             <strong
               class="dashboard-indicador__valor dashboard-indicador__valor--ventas"
-              :aria-label="moneda(operacion.ventas)"
+              :aria-label="cantidadValida(operacion.ventas) ? moneda(operacion.ventas) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
               <CountTo
@@ -82,6 +82,7 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.ventas)"
                 prefix="$"
+                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
@@ -102,7 +103,7 @@
             >
             <strong
               class="dashboard-indicador__valor"
-              :aria-label="moneda(operacion.porCobrar)"
+              :aria-label="cantidadValida(operacion.porCobrar) ? moneda(operacion.porCobrar) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
               <CountTo
@@ -119,6 +120,7 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.porCobrar)"
                 prefix="$"
+                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
@@ -135,11 +137,11 @@
                 class="dashboard-indicador__icono"
                 aria-hidden="true"
               />
-              Vencido
+              Vencido Acumulado Histórico
             </span>
             <strong
               class="dashboard-indicador__valor dashboard-indicador__valor--vencido"
-              :aria-label="moneda(operacion.vencido)"
+              :aria-label="cantidadValida(operacion.vencido) ? moneda(operacion.vencido) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
               <CountTo
@@ -156,6 +158,7 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.vencido)"
                 prefix="$"
+                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
@@ -164,7 +167,7 @@
               <span v-else aria-hidden="true">—</span>
             </strong>
             <!-- Vencido histórico al consultar; no se divide entre el saldo del mes. -->
-            <small>Total vencido acumulado</small>
+            <small>A la fecha de consulta</small>
           </div>
         </div>
       </div>

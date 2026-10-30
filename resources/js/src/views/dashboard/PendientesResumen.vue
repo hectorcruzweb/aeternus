@@ -43,6 +43,7 @@
               indicador.esImporte ? decimalesImporte(indicador.valor) : 0
             "
             :prefix="indicador.esImporte ? '$' : ''"
+            :suffix="indicador.esImporte ? ' MXN' : ''"
             separator=","
             decimal="."
             aria-hidden="true"

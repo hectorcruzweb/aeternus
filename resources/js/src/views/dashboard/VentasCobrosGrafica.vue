@@ -57,7 +57,7 @@
         <span class="dashboard-indicador__etiqueta">Ventas del periodo</span>
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--ventas"
-          :aria-label="moneda(totalVentas)"
+          :aria-label="totalVentas !== null ? moneda(totalVentas) + ' MXN' : 'No disponible'"
         >
           <CountTo
             v-if="totalVentas !== null"
@@ -66,6 +66,7 @@
             :duration="2000"
             :decimals="decimalesImporte(totalVentas)"
             prefix="$"
+            suffix=" MXN"
             separator=","
             aria-hidden="true"
           /><span v-else aria-hidden="true">—</span>
@@ -77,7 +78,7 @@
         >
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--cobrado"
-          :aria-label="moneda(totalCobrado)"
+          :aria-label="totalCobrado !== null ? moneda(totalCobrado) + ' MXN' : 'No disponible'"
         >
           <CountTo
             v-if="totalCobrado !== null"
@@ -86,6 +87,7 @@
             :duration="2000"
             :decimals="decimalesImporte(totalCobrado)"
             prefix="$"
+            suffix=" MXN"
             separator=","
             aria-hidden="true"
           /><span v-else aria-hidden="true">—</span>
@@ -95,7 +97,7 @@
         <span class="dashboard-indicador__etiqueta">Vencido del periodo</span>
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--vencido"
-          :aria-label="moneda(totalVencido)"
+          :aria-label="totalVencido !== null ? moneda(totalVencido) + ' MXN' : 'No disponible'"
         >
           <CountTo
             v-if="totalVencido !== null"
@@ -104,6 +106,7 @@
             :duration="2000"
             :decimals="decimalesImporte(totalVencido)"
             prefix="$"
+            suffix=" MXN"
             separator=","
             aria-hidden="true"
           /><span v-else aria-hidden="true">—</span>

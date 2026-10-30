@@ -70,7 +70,7 @@
         >
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--vencido"
-          :aria-label="moneda(facturacion.saldoPendiente)"
+          :aria-label="cantidadValida(facturacion.saldoPendiente) ? moneda(facturacion.saldoPendiente) + ' MXN' : 'No disponible'"
         >
           <CountTo
             v-if="cantidadValida(facturacion.saldoPendiente)"
@@ -79,6 +79,7 @@
             :duration="2000"
             :decimals="decimalesImporte(facturacion.saldoPendiente)"
             prefix="$"
+            suffix=" MXN"
             separator=","
             decimal="."
             aria-hidden="true"
@@ -123,7 +124,7 @@
         >
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--cobrado"
-          :aria-label="moneda(facturacion.ventasFacturadas)"
+          :aria-label="cantidadValida(facturacion.ventasFacturadas) ? moneda(facturacion.ventasFacturadas) + ' MXN' : 'No disponible'"
         >
           <CountTo
             v-if="cantidadValida(facturacion.ventasFacturadas)"
@@ -132,6 +133,7 @@
             :duration="2000"
             :decimals="decimalesImporte(facturacion.ventasFacturadas)"
             prefix="$"
+            suffix=" MXN"
             separator=","
             decimal="."
             aria-hidden="true"

@@ -104,6 +104,21 @@
         :data="serviciosFunerarios"
       />
     </VistaLimitada>
+    <!-- Reporte del slide seleccionado; el visor no carga detalles hasta abrirse. -->
+    <VisorReportes
+      v-if="mostrarReporteVentas"
+      ref="visorVentas"
+      :show="mostrarReporteVentas"
+      :cargar="cargarReporteVentas"
+      :descargar-archivo="descargarVentasExcel"
+      :descargar-pdf="descargarVentasPdf"
+      :enviar-correo="enviarVentasCorreo"
+      :descargar-completo="esReporteGeneral ? descargarVentasCompleto : null"
+      :mostrar-volver-resumen="reporteDesdeGeneral && !esReporteGeneral"
+      @abrir-reporte="abrirReporteDesdeGeneral"
+      @volver-resumen="volverReporteGeneral"
+      @close="cerrarReporteVentas"
+    />
   </div>
 </template>
 
@@ -119,10 +134,13 @@ import VentasCobrosGrafica from "./dashboard/VentasCobrosGrafica.vue";
 import ServiciosFunerarios from "./dashboard/ServiciosFunerarios.vue";
 import Inventario from "./dashboard/Inventario.vue";
 import dashboard from "../services/dashboard";
+import VisorReportes from "./pages/VisorReportes.vue";
+import reportesVentas from "../services/reportesVentas";
 
 export default {
   name: "Dashboard",
   components: {
+    VisorReportes,
     VistaLimitada,
     DownloadIcon,
     RefreshCwIcon,
@@ -154,10 +172,14 @@ export default {
       pendientes: {},
       seguimientos: {},
       operacionesGraficaEjemplo: [],
+      mostrarReporteVentas: false,
+      reporteDesdeGeneral: false,
+      parametrosReporteVentas: null,
       reportePendiente: null,
     };
   },
   computed: {
+    esReporteGeneral() { return !!this.parametrosReporteVentas && this.parametrosReporteVentas.empresa_operaciones_id === "todas"; },
     mostrarVistaGerencial() {
       // Al inicio solo hay formas neutras; el servidor decide la vista con datos.
       return this.isLoading
@@ -410,8 +432,39 @@ export default {
         fechaCorte: this.meta.fechaCorte,
         periodoResumen: Object.assign({}, this.meta.periodoResumen),
       });
-      // El futuro pop-up usará idResumen/empresa_operaciones_id del slide activo.
+      if (contexto.tipo === "ventas-saldos") {
+        if (contexto.empresa_operaciones_id == null || [1, 2, 3, 4, 5].includes(Number(contexto.empresa_operaciones_id))) {
+          // El mes es el del resumen recibido del servidor, no el de la gráfica.
+          this.parametrosReporteVentas = {
+            empresa_operaciones_id: contexto.empresa_operaciones_id == null ? "todas" : Number(contexto.empresa_operaciones_id),
+            anio: this.meta.periodoResumen.anio,
+            mes: this.meta.periodoResumen.mes,
+          };
+          this.reporteDesdeGeneral = contexto.empresa_operaciones_id == null;
+          this.mostrarReporteVentas = true;
+        } else {
+          this.$vs.notify({ title: "Reporte pendiente", text: "El reporte de Todas las operaciones todavía no está disponible. Selecciona un tipo de operación.", color: "warning" });
+        }
+      }
     },
+    cerrarReporteVentas() { this.mostrarReporteVentas = false; this.reporteDesdeGeneral = false; },
+    abrirReporteDesdeGeneral(tipo) {
+      if (!this.puedeVerDashboardCompleto || ![1,2,3,4,5].includes(Number(tipo))) return;
+      this.reporteDesdeGeneral = true;
+      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: Number(tipo) });
+      this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
+    },
+    volverReporteGeneral() {
+      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: "todas" });
+      this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
+    },
+    async descargarVentasCompleto(token) { return (await reportesVentas.completo(token)).data; },
+    async cargarReporteVentas() {
+      return (await reportesVentas.visualizar(this.parametrosReporteVentas)).data;
+    },
+    async descargarVentasExcel(token) { return (await reportesVentas.excel(token, this.esReporteGeneral)).data; },
+    async descargarVentasPdf(token) { return (await reportesVentas.pdf(token, this.esReporteGeneral)).data; },
+    async enviarVentasCorreo(token, datos) { return (await reportesVentas.correo(token, datos, this.esReporteGeneral)).data; },
     cambiarPeriodoGrafica(periodo) {
       if (this.isLoading || !this.puedeVerDashboardCompleto) return;
       this.periodoGrafica = { anio: periodo.anio, mes: periodo.mes };

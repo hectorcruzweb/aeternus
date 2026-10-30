@@ -121,7 +121,7 @@ class InventarioController extends ApiController
         $usuario = $request->user('api');
         abort_unless($usuario && in_array((int) $usuario->roles_id, [1, 4], true), 403);
         $request->validate(['filtro' => 'required|in:all,low,over,articles,services']);
-        $limite = 2000; // Límite de filas para visualizar, no para descargar.
+        $limite = 3500; // Límite de filas para visualizar, no para descargar.
         $filtro = $request->input('filtro');
         list($consultaConteo, $nombreReporte) = $this->consultaReporteInventario($filtro);
         // SQL cuenta los grupos filtrados sin cargar todos los artículos en PHP.
@@ -146,7 +146,7 @@ class InventarioController extends ApiController
                 'resumen' => $resultado['resumen'],
                 'columnas' => $export->headings(),
                 'filas' => $export->array(),
-                'fecha' => $fecha->format('d/m/Y H:i'),
+                'fecha' => $fecha->format('d') . '/' . ucfirst(rtrim($fecha->locale('es')->translatedFormat('M'), '.')) . '/' . $fecha->format('Y H:i'),
                 'logo' => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logo)),
             ])->render();
     
@@ -158,7 +158,7 @@ class InventarioController extends ApiController
         $instantanea = [
             'usuario_id' => (int) $usuario->id,
             'modo' => $visualizable ? 'instantanea' : 'filtro',
-            'fecha_consulta' => $fecha->format('d/m/Y H:i'),
+            'fecha_consulta' => $fecha->format('d') . '/' . ucfirst(rtrim($fecha->locale('es')->translatedFormat('M'), '.')) . '/' . $fecha->format('Y H:i'),
             'filtro' => $filtro,
             'nombre' => $nombreReporte . ' ' . $fecha->format('Y-m-d H-i-s') . '.xlsx',
         ];
@@ -210,14 +210,14 @@ class InventarioController extends ApiController
         abort_unless(in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true), 422, 'Formato de logotipo no compatible.');
         $pdf = PDF::loadView('reportes.temporales_visor_excel.inventario.reporte', [
             'resumen' => $resumen, 'columnas' => $export->headings(), 'filas' => $export->array(),
-            'fecha' => $fechaConsulta ?: now('America/Mazatlan')->format('d/m/Y H:i'),
+            'fecha' => $fechaConsulta ?: now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . now('America/Mazatlan')->format('Y H:i'),
             'logo' => 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($logo)),
             'modoPdf' => true,
         ]);
         // Pie compartido del visor: fecha de generación, dominio configurado y paginación tenue.
         $dominio = parse_url(config('app.url'), PHP_URL_HOST) ?: config('app.url');
         $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
-            'fechaImpresion' => now('America/Mazatlan')->format('d/m/Y H:i'),
+            'fechaImpresion' => now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . now('America/Mazatlan')->format('Y H:i'),
             'dominio' => $dominio,
         ])->render();
         $pdf->setOptions([
@@ -295,7 +295,7 @@ class InventarioController extends ApiController
             $resultado = $this->listar_inventario($datos['filtro'], false);
             $articulos = $resultado['articulos'];
             $datos['resumen'] = $resultado['resumen'];
-            $datos['fecha_consulta'] = now('America/Mazatlan')->format('d/m/Y H:i');
+            $datos['fecha_consulta'] = now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . now('America/Mazatlan')->format('Y H:i');
         } else {
             $articulos = collect($datos['articulos'])->map(function ($item) { return (object) $item; });
         }

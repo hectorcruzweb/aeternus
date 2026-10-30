@@ -18,6 +18,12 @@
           >
         </div>
         <div class="visor-reportes__acciones">
+          <button v-if="mostrarVolverResumen" type="button" class="visor-reportes__boton visor-reportes__boton--volver" :disabled="isLoading || descargando || enviando" @click="$emit('volver-resumen')">
+            <ArrowLeftIcon size="18" aria-hidden="true" /> Volver al resumen general
+          </button>
+          <button v-if="descargarCompleto && reporte && reporte.excelCompletoDisponible" type="button" class="visor-reportes__boton visor-reportes__boton--excel" :disabled="isLoading || descargando || enviando" @click="descargarFormato('completo')" title="Genera todos los desgloses con los datos actuales">
+            <GridIcon size="17" /> {{ descargando && formatoDescarga === 'completo' ? 'Generando detalle…' : 'Excel detallado completo' }}
+          </button>
           <button
             type="button"
             class="visor-reportes__boton"
@@ -96,12 +102,13 @@
           :title="'Hoja ' + reporte.hojas[hojaActiva].nombre"
           ref="documento"
           sandbox="allow-same-origin allow-modals"
-          @load="documentoListo = !!reporte"
+          @load="documentoCargado"
           referrerpolicy="no-referrer"
           :srcdoc="documentoHtml"
         />
         <p class="visor-reportes__nota">
-          Vista HTML e impresión del reporte. El Excel se genera al descargar, con los mismos datos consultados. La consulta de descarga es válida por 15 minutos.
+          <span v-if="reporte.excelCompletoDisponible">El Excel y PDF del resumen contienen los totales mostrados. El Excel detallado completo actualiza los datos al generarse.</span>
+          <span v-else>Vista HTML e impresión del reporte. El Excel se genera al descargar, con los mismos datos consultados. La consulta de descarga es válida por 15 minutos.</span>
         </p>
       </template>
       <EnviarReporteCorreo v-if="mostrarCorreo && reporte && enviarCorreo" :show="mostrarCorreo"
@@ -111,11 +118,11 @@
   </div>
 </template>
 <script>
-import { GridIcon, PrinterIcon, MailIcon, FileTextIcon } from "vue-feather-icons";
+import { GridIcon, PrinterIcon, MailIcon, FileTextIcon, ArrowLeftIcon } from "vue-feather-icons";
 import EnviarReporteCorreo from "./EnviarReporteCorreo.vue";
 export default {
   name: "VisorReportes",
-  components: { GridIcon, PrinterIcon, MailIcon, FileTextIcon, EnviarReporteCorreo },
+  components: { GridIcon, PrinterIcon, MailIcon, FileTextIcon, ArrowLeftIcon, EnviarReporteCorreo },
   props: {
     show: { type: Boolean, default: false },
     // Vista HTML directa y token privado de la instantánea de datos.
@@ -123,6 +130,8 @@ export default {
     descargarArchivo: { type: Function, required: true },
     descargarPdf: { type: Function, default: null },
     enviarCorreo: { type: Function, default: null },
+    descargarCompleto: { type: Function, default: null },
+    mostrarVolverResumen: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -130,6 +139,7 @@ export default {
       reporte: null,
       archivo: null,
       archivoPdf: null,
+      archivoCompleto: null,
       formatoDescarga: null,
       hojaActiva: 0,
       error: "",
@@ -165,12 +175,14 @@ export default {
             this.consultar();
           });
         } else {
+          this.desvincularDocumento();
           this.peticion++;
           this.isLoading = false;
           this.reporte = null;
           this.documentoListo = false;
           this.archivo = null;
           this.archivoPdf = null;
+          this.archivoCompleto = null;
           this.descargando = false;
           this.errorDescarga = "";
           this.mostrarCorreo = false;
@@ -180,6 +192,29 @@ export default {
     },
   },
   methods: {
+    desvincularDocumento() {
+      if (this._documentoReportes) this._documentoReportes.removeEventListener("click", this.interceptarReporteIndividual);
+      this._documentoReportes = null;
+    },
+    documentoCargado() {
+      this.documentoListo = !!this.reporte;
+      this.desvincularDocumento();
+      const marco = this.$refs.documento;
+      if (marco && marco.contentDocument) {
+        this._documentoReportes = marco.contentDocument;
+        this._documentoReportes.addEventListener("click", this.interceptarReporteIndividual);
+      }
+    },
+    // El iframe no ejecuta scripts: el padre atiende solo los enlaces autorizados del resumen.
+    interceptarReporteIndividual(evento) {
+      const nodo = evento.target.closest ? evento.target : evento.target.parentElement;
+      const enlace = nodo && nodo.closest("[data-tipo-operacion]");
+      if (!enlace) return;
+      evento.preventDefault();
+      if (!this.reporte || this.isLoading || this.descargando || this.enviando) return;
+      const id = Number(enlace.getAttribute("data-tipo-operacion"));
+      if (this.reporte.reportesIndividuales.some(f => Number(f.id) === id)) this.$emit("abrir-reporte", id);
+    },
     // Interceptar solo el fondo; los controles internos y la X mantienen su funcionamiento.
     bloquearCierreExterior(evento) {
       if (evento.target.classList && evento.target.classList.contains("vs-popup--background")) {
@@ -199,9 +234,11 @@ export default {
       this.isLoading = true;
       this.error = "";
       this.errorDescarga = "";
+      this.desvincularDocumento();
       this.reporte = null;
       this.archivo = null;
       this.archivoPdf = null;
+      this.archivoCompleto = null;
       this.hojaActiva = 0;
       this.documentoListo = false;
       let contenedor = null;
@@ -228,7 +265,7 @@ export default {
         // No se transporta ni decodifica un Excel al consultar.
         this.reporte = {
           vistaPreviaDisponible: datos.vistaPreviaDisponible !== false,
-          limiteVisualizacion: datos.limiteVisualizacion || 2000,
+          limiteVisualizacion: datos.limiteVisualizacion || 3500,
           mensaje: datos.mensaje || "El reporte no se puede visualizar por su tamaño. Puede descargarlo completo.",
           titulo: typeof datos.titulo === "string" && datos.titulo.trim() ? datos.titulo : "Reporte",
           nombreArchivo: datos.nombreArchivo,
@@ -236,6 +273,8 @@ export default {
           totalRegistros: datos.totalRegistros,
           tokenDescarga: datos.tokenDescarga,
           venceEn: datos.venceEn,
+          excelCompletoDisponible: datos.excelCompletoDisponible === true,
+          reportesIndividuales: Array.isArray(datos.reportesIndividuales) ? datos.reportesIndividuales.filter(f => [1,2,3,4,5].includes(Number(f.id))) : [],
         };
       } catch (e) {
         if (this.show && id === this.peticion)
@@ -267,15 +306,16 @@ export default {
       try {
         // Generar solo al solicitarlo y reutilizar el Blob en descargas posteriores.
         const esPdf = formato === "pdf";
-        const solicitar = esPdf ? this.descargarPdf : this.descargarArchivo;
+        const completo = formato === "completo";
+        const solicitar = completo ? this.descargarCompleto : (esPdf ? this.descargarPdf : this.descargarArchivo);
         if (!solicitar) throw new Error("Este formato no está disponible para el reporte.");
-        const blob = (esPdf ? this.archivoPdf : this.archivo) || await solicitar(this.reporte.tokenDescarga);
+        const blob = (completo ? this.archivoCompleto : (esPdf ? this.archivoPdf : this.archivo)) || await solicitar(this.reporte.tokenDescarga);
         if (!this.show || id !== this.peticion) return;
         if (!(blob instanceof Blob)) throw new Error("No se recibió un archivo válido.");
-        if (esPdf) this.archivoPdf = blob; else this.archivo = blob;
+        if (completo) this.archivoCompleto = blob; else if (esPdf) this.archivoPdf = blob; else this.archivo = blob;
         const url = URL.createObjectURL(blob);
         const enlace = document.createElement("a");
-        enlace.href = url; enlace.download = esPdf ? this.reporte.nombreArchivo.replace(/\.xlsx$/i, ".pdf") : this.reporte.nombreArchivo;
+        enlace.href = url; enlace.download = esPdf ? this.reporte.nombreArchivo.replace(/\.xlsx$/i, ".pdf") : (completo ? "Detalle " + this.reporte.nombreArchivo : this.reporte.nombreArchivo);
         document.body.appendChild(enlace); enlace.click(); enlace.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       } catch (e) {
@@ -290,6 +330,7 @@ export default {
     },
   },
   beforeDestroy() {
+    this.desvincularDocumento();
     this.peticion++;
     this.$popupManager.unregister(this.$options.name);
   },
