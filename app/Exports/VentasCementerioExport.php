@@ -51,7 +51,9 @@ class VentasCementerioExport implements WithMultipleSheets
             $secciones[0]['columnas'][7] = 'Saldo de cuota';
             $secciones[0]['columnas'][6] = 'Total cuota';
             $secciones[1]['nota'] = 'Pagos pendientes programados para el mes consultado, incluyendo cuotas de años anteriores.';
-            $secciones[2]['nota'] = 'Pagos vencidos de todas las cuotas, incluidas las de años anteriores. No incluye los que vencen hoy.';
+            $secciones[2]['nota'] = array_key_exists('cuota_id', $datos)
+                ? 'Pagos vencidos de esta cuota a la fecha de consulta. No incluye los que vencen hoy.'
+                : 'Pagos vencidos de todas las cuotas, incluidas las de años anteriores. No incluye los que vencen hoy.';
             // Mostrar la descripción de la cuota, sin añadir fechas ni alterar el tipo 1.
             foreach (['ventas', 'por_cobrar', 'vencidos'] as $i => $clave) {
                 $secciones[$i]['columnas'][2] = 'Fecha de cuota';

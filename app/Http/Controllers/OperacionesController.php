@@ -214,7 +214,7 @@ class OperacionesController extends ApiController
      * El callback recibe las tres consultas y sus metadatos; no corre en modo soloConteo.
      * Cementerio aporta tipos 1/2; Funeraria aporta tipos 3/4/5. Aquí no se cargan sus catálogos.
      */
-    public function getReporteVentasSaldosOperacionesDetallado($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false, callable $completarDetalle = null)
+    public function getReporteVentasSaldosOperacionesDetallado($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false, callable $completarDetalle = null, $cuotaId = null)
     {
         if (!in_array($tipoOperacion, [1, 2, 3, 4, 5], true)) throw new \InvalidArgumentException('Reporte individual no disponible para ese tipo.');
         $camposNumero = [1 => 'o.ventas_terrenos_id', 2 => 'o.ventas_terrenos_id', 3 => 'o.servicios_funerarios_id', 4 => 'o.ventas_planes_id', 5 => 'o.ventas_generales_id'];
@@ -237,6 +237,11 @@ class OperacionesController extends ApiController
         $fin = $inicio->copy()->addMonth();
         $base = DB::table('operaciones as o')->where('o.empresa_operaciones_id', $tipoOperacion)
             ->whereIn('o.status', [1, 2])->where('o.fecha_operacion', '<=', $corte);
+        // El filtro de cuota conserva los mismos criterios financieros del reporte tipo 2.
+        if ($cuotaId !== null) {
+            if ($tipoOperacion !== 2) throw new \InvalidArgumentException('El filtro de cuota solo aplica al tipo 2.');
+            $base->whereRaw('COALESCE(o.cuotas_cementerio_id, 0) = ?', [(int) $cuotaId]);
+        }
         $periodo = (clone $base)->where('o.fecha_operacion', '>=', $inicio)->where('o.fecha_operacion', '<', $fin);
         $aplicaciones = DB::table('pagos_pagos_programados as ppp')
             ->join('pagos as p', 'p.id', '=', 'ppp.pagos_id')->where('p.status', 1)
@@ -270,6 +275,12 @@ class OperacionesController extends ApiController
         $conteos = [];
         foreach ($consultas as $clave => $consulta) {
             $conteos[$clave] = DB::query()->fromSub(clone $consulta, 'filas')->count();
+        }
+        if ($cuotaId !== null) {
+            // Agregar antes de enriquecer: no multiplicar ventas por sus pagos.
+            $resumen['ventas'] = round((float) DB::query()->fromSub(clone $ventas, 'v')->sum('v.total'), 2);
+            $resumen['porCobrar'] = round((float) DB::query()->fromSub(clone $cobrar, 'v')->sum('v.pendiente'), 2);
+            $resumen['vencido'] = round((float) DB::query()->fromSub(clone $vencidos, 'v')->sum('v.pendiente'), 2);
         }
         $resultado = [
             'tipo_operacion' => $tipoOperacion,
@@ -373,6 +384,12 @@ class OperacionesController extends ApiController
     public function descargarReporteGeneralCompleto(Request $request, $token)
     {
         $reporte = $this->datosReporteCementerio($request, $token);
+        if (!empty($reporte['datos']['resumen_cuotas'])) {
+            $datos = $this->datosDetalleCuotas($reporte['datos']);
+            $respuesta = \Maatwebsite\Excel\Facades\Excel::download($this->exportadorReporteVentas($datos), 'Cuotas de Mantenimiento - Detalle completo.xlsx');
+            $respuesta->headers->set('Cache-Control', 'no-store, private');
+            return $respuesta;
+        }
         abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas', 422, 'Este archivo corresponde al reporte general.');
         $datos = $this->datosDetalleGeneralVentas($reporte['datos']);
         $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
@@ -400,6 +417,7 @@ class OperacionesController extends ApiController
     /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. */
     private function exportadorReporteVentas(array $datos)
     {
+        if (!empty($datos['resumen_cuotas'])) return new \App\Exports\CuotasMantenimientoExport($datos, !empty($datos['detalles_cuotas']));
         return ($datos['tipo_operacion'] ?? null) === 'todas'
             ? new \App\Exports\ResumenGeneralOperacionesExport($datos)
             : new \App\Exports\VentasCementerioExport($datos);
@@ -411,6 +429,7 @@ class OperacionesController extends ApiController
         $usuario = $this->usuarioReporteCementerio($request);
         $request->validate(['anio' => 'required|integer|min:1000', 'mes' => 'required|integer|between:1,12', 'empresa_operaciones_id' => 'sometimes|required|integer|in:1,2,3,4,5']);
         $tipoOperacion = (int) $request->input('empresa_operaciones_id', 1);
+        if ($tipoOperacion === 2) return $this->previewCuotasMantenimiento($request, $usuario);
         $corte = Carbon::now('America/Mazatlan');
         $limite = 3500; // Suma de filas de los tres apartados; no limita la descarga.
         try {
@@ -448,6 +467,73 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
+    /** Entrada tipo 2: primero resumen por cuota; el detalle se solicita al seleccionarla. */
+    private function previewCuotasMantenimiento(Request $request, $usuario)
+    {
+        $request->validate(['cuota_id' => 'nullable|integer|min:0']);
+        $corte = Carbon::now('America/Mazatlan');
+        $cuotaId = $request->filled('cuota_id') ? (int) $request->input('cuota_id') : null;
+        try {
+            $datos = DB::transaction(function () use ($request, $corte, $cuotaId) {
+                $modulo = app(CementerioController::class);
+                if ($cuotaId === null) return $modulo->getResumenCuotasMantenimiento($request->anio, $request->mes, $corte);
+                $datos = $modulo->getDetalleCuotaMantenimiento($request->anio, $request->mes, $cuotaId, $corte, true);
+                abort_unless($datos['totalRegistros'] > 0, 404, 'La cuota no tiene información para este reporte.');
+                return $datos['totalRegistros'] <= 3500 ? $modulo->getDetalleCuotaMantenimiento($request->anio, $request->mes, $cuotaId, $corte) : $datos;
+            });
+        } catch (\InvalidArgumentException $e) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['periodo' => $e->getMessage()]);
+        }
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $resumen = !empty($datos['resumen_cuotas']);
+        $visualizable = $resumen ? count($datos['cuotas']) <= 3500 : isset($datos['ventas']);
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'Cuotas de Mantenimiento '.($resumen ? 'Resumen' : 'Detalle').' '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
+            'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
+            'modo' => ($resumen || $visualizable) ? 'instantanea' : 'filtro',
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => 3500, 'totalRegistros' => $resumen ? count($datos['cuotas']) : $datos['totalRegistros'],
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargarlo en Excel.',
+            'hojas' => $visualizable ? [['nombre' => $resumen ? 'Resumen por cuota' : 'Detalle de cuota', 'html' => $this->htmlReporteCementerio($datos)]] : [],
+            'reportesRelacionados' => $resumen ? array_map(function ($f) { return ['id' => 'cuota-'.$f['id'], 'nombre' => $f['descripcion']]; }, $datos['cuotas']) : [],
+            'excelCompletoDisponible' => $resumen,
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Descarga/correo completo: un único detalle enriquecido y separado por cuota en memoria. */
+    private function datosDetalleCuotas(array $anterior)
+    {
+        return DB::transaction(function () use ($anterior) {
+            $corte = Carbon::now('America/Mazatlan');
+            $modulo = app(CementerioController::class);
+            $datos = $modulo->getResumenCuotasMantenimiento($anterior['anio'], $anterior['mes'], $corte);
+            $datos['empresa'] = $anterior['empresa'];
+            $detalle = $modulo->getReporteCuotasMantenimiento($anterior['anio'], $anterior['mes'], $corte);
+            // Agrupar en una pasada: evita recorrer todo el historial por cada cuota.
+            $agrupados = [];
+            foreach (['ventas', 'por_cobrar', 'vencidos'] as $clave) {
+                foreach ($detalle[$clave] as $fila) $agrupados[(int) ($fila['cuota_id'] ?? 0)][$clave][] = $fila;
+            }
+            $datos['detalles_cuotas'] = [];
+            foreach ($datos['cuotas'] as $cuota) {
+                $d = $detalle; $d['resumen'] = $cuota; $d['cuota_id'] = $cuota['id'];
+                $d['titulo'] = 'Cuotas de Mantenimiento · '.$cuota['descripcion'];
+                foreach (['ventas', 'por_cobrar', 'vencidos'] as $clave) {
+                    $d[$clave] = $agrupados[$cuota['id']][$clave] ?? [];
+                }
+                $datos['detalles_cuotas'][] = $d;
+            }
+            return $datos;
+        });
+    }
+
     private function usuarioReporteCementerio(Request $request)
     {
         $usuario = $request->user('api');
@@ -466,6 +552,9 @@ class OperacionesController extends ApiController
         if ($reporte['modo'] === 'filtro') {
             $anterior = $reporte['datos'];
             $reporte['datos'] = DB::transaction(function () use ($anterior) {
+                if (array_key_exists('cuota_id', $anterior)) {
+                    return app(CementerioController::class)->getDetalleCuotaMantenimiento($anterior['anio'], $anterior['mes'], (int) $anterior['cuota_id'], null);
+                }
                 return $this->obtenerReporteIndividual((int) ($anterior['tipo_operacion'] ?? 1), $anterior['anio'], $anterior['mes']);
             });
             $reporte['datos']['empresa'] = $anterior['empresa'];
@@ -480,8 +569,8 @@ class OperacionesController extends ApiController
         $mime = is_file($ruta) ? (new \finfo(FILEINFO_MIME_TYPE))->file($ruta) : null;
         $logo = in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true)
             ? 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($ruta)) : null;
-        return view($esGeneral ? 'reportes.temporales_visor_excel.general_operaciones.resumen' : 'reportes.temporales_visor_excel.ventas_cementerio.reporte', [
-            'datos' => $datos, 'secciones' => $esGeneral ? [] : \App\Exports\VentasCementerioExport::secciones($datos),
+        return view(!empty($datos['resumen_cuotas']) ? 'reportes.temporales_visor_excel.cuotas_mantenimiento.resumen' : ($esGeneral ? 'reportes.temporales_visor_excel.general_operaciones.resumen' : 'reportes.temporales_visor_excel.ventas_cementerio.reporte'), [
+            'datos' => $datos, 'secciones' => ($esGeneral || !empty($datos['resumen_cuotas'])) ? [] : \App\Exports\VentasCementerioExport::secciones($datos),
             'logo' => $logo, 'modoPdf' => $modoPdf,
         ])->render();
     }
@@ -551,17 +640,17 @@ class OperacionesController extends ApiController
         $nombre = $reporte['nombre'];
         $completo = $request->boolean('completo');
         if ($completo) {
-            abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas', 422, 'Este reporte no ofrece un adjunto detallado completo adicional.');
+            abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas' || !empty($reporte['datos']['resumen_cuotas']), 422, 'Este reporte no ofrece un adjunto detallado completo adicional.');
             abort_unless($request->input('formato', 'excel') === 'excel', 422, 'El detalle completo se envía en formato Excel.');
-            $reporte['datos'] = $this->datosDetalleGeneralVentas($reporte['datos']);
-            $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
+            $reporte['datos'] = !empty($reporte['datos']['resumen_cuotas']) ? $this->datosDetalleCuotas($reporte['datos']) : $this->datosDetalleGeneralVentas($reporte['datos']);
+            $nombre = (!empty($reporte['datos']['resumen_cuotas']) ? 'Cuotas de Mantenimiento - Detalle completo ' : 'Detalle General de Ventas y Saldos ').now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
         }
 
         if ($request->input('formato', 'excel') === 'pdf') {
             $contenido = $this->pdfReporteCementerio($reporte['datos'])->output();
             $nombre = preg_replace('/\.xlsx$/i', '.pdf', $nombre);
         } else {
-            $contenido = \Maatwebsite\Excel\Facades\Excel::raw(($completo ? new \App\Exports\ResumenGeneralOperacionesExport($reporte['datos'], true) : $this->exportadorReporteVentas($reporte['datos'])), \Maatwebsite\Excel\Excel::XLSX);
+            $contenido = \Maatwebsite\Excel\Facades\Excel::raw(($completo && ($reporte['datos']['tipo_operacion'] ?? null) === 'todas' ? new \App\Exports\ResumenGeneralOperacionesExport($reporte['datos'], true) : $this->exportadorReporteVentas($reporte['datos'])), \Maatwebsite\Excel\Excel::XLSX);
         }
         // Texto del usuario y adjunto se entregan al envío compartido de reportes.
         return app(EmailController::class)->reporte_email([

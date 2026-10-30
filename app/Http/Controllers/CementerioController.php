@@ -66,7 +66,7 @@ class CementerioController extends ApiController
                 // La cuota es compartida entre propiedades; la asignación individual es operaciones.
                 // No filtrar status del catálogo: conservar la misma base que el resumen financiero.
                 $filas->leftJoin('cuotas_cementerio as cc', 'cc.id', '=', 'o.cuotas_cementerio_id')
-                    ->addSelect('cc.descripcion as descripcion_cuota', 'cc.fecha_inicio as inicio_cuota', 'cc.fecha_fin as fin_cuota');
+                    ->addSelect('o.cuotas_cementerio_id as cuota_id', 'cc.descripcion as descripcion_cuota', 'cc.fecha_inicio as inicio_cuota', 'cc.fecha_fin as fin_cuota');
             }
             if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
                     else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
@@ -85,6 +85,59 @@ class CementerioController extends ApiController
             })->all();
         }
         return $resultado;
+    }
+
+    /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. */
+    public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null)
+    {
+        return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            2, $anio, $mes, $corte, false,
+            function (array $consultas, array $resultado) {
+                $cuotas = [];
+                foreach ($consultas as $clave => $consulta) {
+                    $consulta->addSelect('o.cuotas_cementerio_id as cuota_id');
+                    $campo = $clave === 'ventas' ? 'total' : 'pendiente';
+                    $filas = DB::query()->fromSub($consulta, 'q')->selectRaw('COALESCE(q.cuota_id, 0) as cuota_id')
+                        ->selectRaw('COUNT(*) as cantidad, SUM(q.'.$campo.') as importe')
+                        ->groupBy(DB::raw('COALESCE(q.cuota_id, 0)'))->get();
+                    foreach ($filas as $fila) {
+                        $id = (int) $fila->cuota_id;
+                        if (!isset($cuotas[$id])) $cuotas[$id] = ['id' => $id, 'cantidad' => 0, 'ventas' => 0, 'porCobrar' => 0, 'vencido' => 0];
+                        $indicador = ['ventas' => 'ventas', 'por_cobrar' => 'porCobrar', 'vencidos' => 'vencido'][$clave];
+                        $cuotas[$id][$indicador] = round((float) $fila->importe, 2);
+                        if ($clave === 'ventas') $cuotas[$id]['cantidad'] = (int) $fila->cantidad;
+                    }
+                }
+                $catalogo = DB::table('cuotas_cementerio')->whereIn('id', array_keys($cuotas))
+                    ->select('id', 'descripcion', 'fecha_inicio')->get()->keyBy('id');
+                foreach ($cuotas as $id => &$cuota) {
+                    $registro = $catalogo->get($id);
+                    $cuota['descripcion'] = $registro ? (trim($registro->descripcion) ?: 'No disponible') : 'No disponible';
+                    $cuota['fecha_inicio'] = $registro ? $registro->fecha_inicio : null;
+                }
+                unset($cuota);
+                usort($cuotas, function ($a, $b) { return strcmp($b['fecha_inicio'] ?? '', $a['fecha_inicio'] ?? '') ?: ($b['id'] <=> $a['id']); });
+                $resultado['resumen_cuotas'] = true;
+                $resultado['cuotas'] = array_values($cuotas);
+                $resultado['resumen']['cantidad'] = array_sum(array_column($cuotas, 'cantidad'));
+                return $resultado;
+            }
+        );
+    }
+
+    /** Una cuota del catálogo, con los tres apartados y sus totales propios. */
+    public function getDetalleCuotaMantenimiento($anio, $mes, $cuotaId, Carbon $corte = null, $soloConteo = false)
+    {
+        $datos = app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
+            2, $anio, $mes, $corte, $soloConteo,
+            function (array $consultas, array $resultado) { return $this->completarDetalleReporteCementerio($consultas, $resultado, true); },
+            (int) $cuotaId
+        );
+        $descripcion = DB::table('cuotas_cementerio')->where('id', (int) $cuotaId)->value('descripcion');
+        $datos['cuota_id'] = (int) $cuotaId;
+        $datos['descripcion_cuota'] = trim($descripcion ?? '') ?: 'No disponible';
+        $datos['titulo'] = 'Cuotas de Mantenimiento · '.$datos['descripcion_cuota'];
+        return $datos;
     }
 
     /**CONTROL DE CUOTAS*/

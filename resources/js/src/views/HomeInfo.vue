@@ -137,9 +137,10 @@
       :descargar-archivo="descargarVentasExcel"
       :descargar-pdf="descargarVentasPdf"
       :enviar-correo="enviarVentasCorreo"
-      :descargar-completo="esReporteGeneral ? descargarVentasCompleto : null"
-      :mostrar-volver-resumen="reporteDesdeGeneral && !esReporteGeneral"
+      :descargar-completo="(esReporteGeneral || esResumenCuotas) ? descargarVentasCompleto : null"
+      :mostrar-volver-resumen="(reporteDesdeGeneral && !esReporteGeneral) || esDetalleCuota"
       @abrir-reporte="abrirReporteDesdeGeneral"
+      @abrir-relacionado="abrirDetalleCuota"
       @volver-resumen="volverReporteGeneral"
       @close="cerrarReporteVentas"
     />
@@ -210,6 +211,8 @@ export default {
     };
   },
   computed: {
+    esResumenCuotas() { return !!this.parametrosReporteVentas && Number(this.parametrosReporteVentas.empresa_operaciones_id) === 2 && this.parametrosReporteVentas.cuota_id == null; },
+    esDetalleCuota() { return !!this.parametrosReporteVentas && Number(this.parametrosReporteVentas.empresa_operaciones_id) === 2 && this.parametrosReporteVentas.cuota_id != null; },
     esReporteGeneral() { return !!this.parametrosReporteVentas && this.parametrosReporteVentas.empresa_operaciones_id === "todas"; },
     mostrarVistaGerencial() {
       // Al inicio solo hay formas neutras; el servidor decide la vista con datos.
@@ -529,11 +532,16 @@ export default {
     abrirReporteDesdeGeneral(tipo) {
       if (!this.puedeVerDashboardCompleto || ![1,2,3,4,5].includes(Number(tipo))) return;
       this.reporteDesdeGeneral = true;
-      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: Number(tipo) });
+      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: Number(tipo), cuota_id: null });
+      this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
+    },
+    abrirDetalleCuota(id) {
+      if (!this.puedeVerDashboardCompleto || !this.esResumenCuotas || !/^cuota-\d+$/.test(String(id))) return;
+      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { cuota_id: Number(String(id).slice(6)) });
       this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
     },
     volverReporteGeneral() {
-      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: "todas" });
+      this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: this.esDetalleCuota ? 2 : "todas", cuota_id: null });
       this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
     },
     async descargarVentasCompleto(token) { return (await reportesVentas.completo(token)).data; },
