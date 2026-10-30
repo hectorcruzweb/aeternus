@@ -73,7 +73,7 @@
         />
       </section>
 
-      <!-- Datos ficticios autorizados hasta integrar sus resúmenes del backend. -->
+      <!-- Indicadores de pagos y solicitudes con resúmenes reales del servidor. -->
       <PendientesResumen
         :cargando="isLoading"
         :pendientes="pendientes"
@@ -104,6 +104,19 @@
         :data="serviciosFunerarios"
       />
     </VistaLimitada>
+    <VisorReportes v-if="mostrarReporteSolicitudes" :show="mostrarReporteSolicitudes"
+      :cargar="cargarReporteSolicitudes" :descargar-archivo="descargarSolicitudesExcel"
+      :descargar-pdf="descargarSolicitudesPdf" :enviar-correo="enviarSolicitudesCorreo"
+      @close="mostrarReporteSolicitudes = false" />
+    <VisorReportes v-if="mostrarReporteProximosPagos" :show="mostrarReporteProximosPagos"
+      :cargar="cargarReporteProximosPagos" :descargar-archivo="descargarProximosPagosExcel"
+      :descargar-pdf="descargarProximosPagosPdf" :enviar-correo="enviarProximosPagosCorreo"
+      @close="mostrarReporteProximosPagos = false" />
+    <!-- Detalle de Vence hoy: se consulta únicamente al abrir el visor. -->
+    <VisorReportes v-if="mostrarReporteVenceHoy" :show="mostrarReporteVenceHoy"
+      :cargar="cargarReporteVenceHoy" :descargar-archivo="descargarVenceHoyExcel"
+      :descargar-pdf="descargarVenceHoyPdf" :enviar-correo="enviarVenceHoyCorreo"
+      @close="mostrarReporteVenceHoy = false" />
     <VisorReportes v-if="mostrarReporteCfdisMes" :show="mostrarReporteCfdisMes"
       :cargar="cargarReporteCfdisMes" :descargar-archivo="descargarCfdisMesExcel"
       :descargar-pdf="descargarCfdisMesPdf" :enviar-correo="enviarCfdisMesCorreo"
@@ -161,6 +174,9 @@ import Inventario from "./dashboard/Inventario.vue";
 import dashboard from "../services/dashboard";
 import VisorReportes from "./pages/VisorReportes.vue";
 import reportesVentas from "../services/reportesVentas";
+import reportesVenceHoy from "../services/reportesVenceHoy";
+import reportesProximosPagos from "../services/reportesProximosPagos";
+import reportesSolicitudesSinContrato from "../services/reportesSolicitudesSinContrato";
 import reportesTimbres from "../services/reportesTimbres";
 import reportesCfdisAdeudos from "../services/reportesCfdisAdeudos";
 import reportesCfdisMes from "../services/reportesCfdisMes";
@@ -200,6 +216,9 @@ export default {
       pendientes: {},
       seguimientos: {},
       operacionesGraficaEjemplo: [],
+      mostrarReporteSolicitudes: false,
+      mostrarReporteProximosPagos: false,
+      mostrarReporteVenceHoy: false,
       mostrarReporteCfdisMes: false,
       mostrarReporteCfdisAdeudos: false,
       mostrarReporteTimbres: false,
@@ -354,6 +373,15 @@ export default {
       this.ventasSaldos = incluye("ventasSaldos") ? datos.ventasSaldos : [];
       if (completa) {
         this.cargarEjemplosPendientes();
+        // Vence hoy ya es real: no conservar valores de ejemplo si falta el bloque.
+        this.pendientes.venceHoy = incluye("pendientes") && datos.pendientes && datos.pendientes.venceHoy
+          ? datos.pendientes.venceHoy : { cantidad: null, importe: null };
+        this.pendientes.proximosSieteDias = incluye("pendientes") && datos.pendientes && datos.pendientes.proximosSieteDias
+          ? datos.pendientes.proximosSieteDias : { cantidad: null, importe: null };
+        ["solicitudesSinContrato", "solicitudesAntiguasSinContrato", "solicitudesSinContratoAcumuladas", "diasSolicitudesRecientes"].forEach(campo => {
+          this.pendientes[campo] = incluye("pendientes") && datos.pendientes && Object.prototype.hasOwnProperty.call(datos.pendientes, campo)
+            ? datos.pendientes[campo] : null;
+        });
         // Todos los indicadores de facturación y la vigencia provienen del servidor.
         this.facturacion.timbresDisponibles = datos.facturacion &&
           Object.prototype.hasOwnProperty.call(datos.facturacion, "timbresDisponibles")
@@ -381,9 +409,12 @@ export default {
         clientesConPagosVencidos: 23,
       };
       this.pendientes = {
-        venceHoy: { cantidad: 6, importe: 18400 },
-        proximosSieteDias: { cantidad: 18, importe: 62800 },
-        solicitudesSinContrato: 3,
+        venceHoy: { cantidad: null, importe: null },
+        proximosSieteDias: { cantidad: null, importe: null },
+        solicitudesSinContrato: null,
+        solicitudesAntiguasSinContrato: null,
+        solicitudesSinContratoAcumuladas: null,
+        diasSolicitudesRecientes: null,
       };
       this.operacionesGraficaEjemplo = [
         {
@@ -476,6 +507,18 @@ export default {
         fechaCorte: this.meta.fechaCorte,
         periodoResumen: Object.assign({}, this.meta.periodoResumen),
       });
+      if (contexto.tipo === "solicitudes-sin-contrato") {
+        this.mostrarReporteSolicitudes = true;
+        return;
+      }
+      if (contexto.tipo === "pagos-proximos-siete-dias") {
+        this.mostrarReporteProximosPagos = true;
+        return;
+      }
+      if (contexto.tipo === "pagos-vence-hoy") {
+        this.mostrarReporteVenceHoy = true;
+        return;
+      }
       if (contexto.tipo === "facturacion-ventas") {
         this.mostrarReporteCfdisMes = true;
         return;
@@ -528,6 +571,18 @@ export default {
     async descargarTimbresCompleto(token) { return (await reportesTimbres.excel(token, true)).data; },
     async descargarTimbresPdf(token) { return (await reportesTimbres.pdf(token)).data; },
     async enviarTimbresCorreo(token, datos) { return (await reportesTimbres.correo(token, datos)).data; },
+    async cargarReporteSolicitudes() { return (await reportesSolicitudesSinContrato.visualizar()).data; },
+    async descargarSolicitudesExcel(token) { return (await reportesSolicitudesSinContrato.excel(token)).data; },
+    async descargarSolicitudesPdf(token) { return (await reportesSolicitudesSinContrato.pdf(token)).data; },
+    async enviarSolicitudesCorreo(token, datos) { return (await reportesSolicitudesSinContrato.correo(token, datos)).data; },
+    async cargarReporteProximosPagos() { return (await reportesProximosPagos.visualizar()).data; },
+    async descargarProximosPagosExcel(token) { return (await reportesProximosPagos.excel(token)).data; },
+    async descargarProximosPagosPdf(token) { return (await reportesProximosPagos.pdf(token)).data; },
+    async enviarProximosPagosCorreo(token, datos) { return (await reportesProximosPagos.correo(token, datos)).data; },
+    async cargarReporteVenceHoy() { return (await reportesVenceHoy.visualizar()).data; },
+    async descargarVenceHoyExcel(token) { return (await reportesVenceHoy.excel(token)).data; },
+    async descargarVenceHoyPdf(token) { return (await reportesVenceHoy.pdf(token)).data; },
+    async enviarVenceHoyCorreo(token, datos) { return (await reportesVenceHoy.correo(token, datos)).data; },
     cerrarReporteVentas() { this.mostrarReporteVentas = false; this.reporteDesdeGeneral = false; },
     abrirReporteDesdeGeneral(tipo) {
       if (!this.puedeVerDashboardCompleto || ![1,2,3,4,5].includes(Number(tipo))) return;

@@ -36,6 +36,94 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+    // Ventana acordada para priorizar seguimiento: hoy y los seis días anteriores.
+    private const DIAS_SOLICITUDES_RECIENTES = 7;
+
+    /** Solicitudes activas sin operación vigente de tipo 3; una fila por solicitud. */
+    private function consultaSolicitudesSinContrato(Carbon $corte)
+    {
+        return DB::table('servicios_funerarios as sf')->where('sf.status', '>', 0)
+            ->where(function ($q) use ($corte) {
+                // Conservar datos antiguos sin fecha; se mostrarán como No disponible.
+                $q->where('sf.fechahora_solicitud', '<=', $corte)->orWhereNull('sf.fechahora_solicitud');
+            })
+            ->whereNotExists(function ($q) {
+                // NOT EXISTS evita duplicar solicitudes cuando hay varias operaciones relacionadas.
+                $q->select(DB::raw(1))->from('operaciones as o')
+                    ->whereColumn('o.servicios_funerarios_id', 'sf.id')
+                    ->where('o.empresa_operaciones_id', 3)->where('o.status', '>', 0);
+            });
+    }
+
+    /** Un agregado clasifica todo el historial sin cargar contactos. Antiguas no se cancelan. */
+    public function getSolicitudesSinContratoDashboard(Carbon $fechaCorte = null)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
+        $desde = $corte->copy()->startOfDay()->subDays(self::DIAS_SOLICITUDES_RECIENTES - 1);
+        $fila = $this->consultaSolicitudesSinContrato($corte)
+            ->selectRaw('COUNT(*) AS total, SUM(CASE WHEN sf.fechahora_solicitud >= ? THEN 1 ELSE 0 END) AS recientes', [$desde->toDateTimeString()])->first();
+        $total = (int) $fila->total; $recientes = (int) $fila->recientes;
+        return ['recientes' => $recientes, 'antiguas' => $total - $recientes, 'total' => $total,
+            'dias' => self::DIAS_SOLICITUDES_RECIENTES, 'desde' => $desde->toDateString(), 'hasta' => $corte->toDateString()];
+    }
+
+    /** Texto relativo al día del corte; las fechas se copian para no alterar el cálculo de grupos. */
+    private function antiguedadSolicitudTexto($fecha, Carbon $corte)
+    {
+        if (!$fecha) return 'No disponible';
+        $desde = $fecha->copy()->startOfDay(); $hasta = $corte->copy()->startOfDay();
+        $dias = $desde->diffInDays($hasta);
+        if ($dias === 0) return 'Hoy';
+        if ($dias === 1) return 'Ayer';
+        if ($dias < 7) return 'Hace '.$dias.' días';
+        $anios = $desde->diffInYears($hasta);
+        if ($anios > 0) return 'Hace '.$anios.($anios === 1 ? ' año' : ' años');
+        $meses = $desde->diffInMonths($hasta);
+        if ($meses > 0) return 'Hace '.$meses.($meses === 1 ? ' mes' : ' meses');
+        $semanas = intdiv($dias, 7);
+        return 'Hace '.$semanas.($semanas === 1 ? ' semana' : ' semanas');
+    }
+
+    /** Dos grupos excluyentes: seguimiento reciente y solicitudes antiguas para revisión humana. */
+    public function getReporteSolicitudesSinContrato(Carbon $fechaCorte = null, $soloResumen = false)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
+        $resumen = $this->getSolicitudesSinContratoDashboard($corte);
+        $fecha = $corte->format('d').'/'.ucfirst(rtrim($corte->locale('es')->translatedFormat('M'), '.')).'/'.$corte->format('Y H:i');
+        $datos = ['tipo_operacion' => 'solicitudes_sin_contrato', 'titulo' => 'Reporte de Solicitudes de Servicio Funerario sin Contrato',
+            'modulo' => 'Solicitudes sin contrato', 'periodo' => 'Pendientes a la fecha de consulta',
+            'fecha' => $fecha, 'corte' => $corte->toDateTimeString(), 'totalRegistros' => $resumen['total'],
+            'resumen' => $resumen, 'resumenTexto' => $resumen['recientes'].' recientes para seguimiento | '.$resumen['antiguas'].' antiguas por revisar | '.$resumen['total'].' acumuladas',
+            'encabezadoPeriodo' => 'Solicitudes pendientes | Consultado al '.$fecha,
+            'avisoSaldos' => 'Las solicitudes antiguas requieren revisión. Su antigüedad no implica cancelación automática.'];
+        if ($soloResumen) return $datos;
+        $datos['solicitudes'] = $this->consultaSolicitudesSinContrato($corte)
+            ->select('sf.id as numero_servicio', 'sf.nombre_afectado as fallecido', 'sf.fechahora_solicitud',
+                'sf.nombre_informante', 'sf.telefono_informante', 'sf.nombre_contratante_temp', 'sf.telefono_contratante_temp')
+            ->orderBy('sf.fechahora_solicitud', 'desc')->orderBy('sf.id', 'desc')
+            ->get()->map(function ($f) use ($corte, $resumen) {
+                $texto = substr((string) $f->fechahora_solicitud, 0, 10);
+                $valida = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D', $texto, $partes) && checkdate((int) $partes[2], (int) $partes[3], (int) $partes[1]);
+                $fecha = $valida ? Carbon::parse($f->fechahora_solicitud, 'America/Mazatlan') : null;
+                $f->fecha_solicitud_texto = $fecha ? $fecha->format('d').'/'.ucfirst(rtrim($fecha->locale('es')->translatedFormat('M'), '.')).'/'.$fecha->format('Y H:i') : 'No disponible';
+                $f->antiguedad_dias = $fecha ? $fecha->copy()->startOfDay()->diffInDays($corte->copy()->startOfDay()) : null;
+                $f->antiguedad_texto = $this->antiguedadSolicitudTexto($fecha, $corte);
+                $f->reciente = $fecha && $fecha->toDateString() >= $resumen['desde'];
+                $f->estado = $f->reciente ? 'Seguimiento prioritario' : 'Por revisar';
+                return (array) $f;
+            })->all();
+        $datos['recientes'] = array_values(array_filter($datos['solicitudes'], function ($f) { return $f['reciente']; }));
+        $datos['antiguas'] = array_values(array_filter($datos['solicitudes'], function ($f) { return !$f['reciente']; }));
+        return $datos;
+    }
+
+    /** Entrada de su módulo; reutiliza exclusivamente el transporte protegido del visor. */
+    public function previewReporteSolicitudesSinContrato(Request $request)
+    {
+        return app(OperacionesController::class)->previewSolicitudesSinContrato($request);
+    }
+
+
     /** Entrada de ventas en general: el servidor fija tipo5, independientemente del request. */
     public function previewReporteVentasGenerales(Request $request)
     {

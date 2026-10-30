@@ -1,5 +1,5 @@
 <template>
-  <!-- Cards independientes; cada indicador conserva su enlace al futuro reporte. -->
+  <!-- Cards independientes; el padre resuelve el visor de cada reporte. -->
   <DashboardSkeleton v-if="cargando" variante="pendientes" titulo="pendientes" />
 <section v-else class="dashboard-pendientes" aria-label="Pendientes de atención">
     <article
@@ -68,7 +68,13 @@
           <span v-else aria-hidden="true">—</span
           ><span aria-hidden="true"> pagos programados</span>
         </small>
-        <small v-else>Servicios funerarios</small>
+        <small v-else>
+          Últimos {{ pendientes.diasSolicitudesRecientes || 7 }} días ·
+          <CountTo v-if="cantidadValida(pendientes.solicitudesAntiguasSinContrato)"
+            :start-val="0" :end-val="numero(pendientes.solicitudesAntiguasSinContrato)"
+            :duration="2000" :decimals="0" separator="," />
+          <span v-else>—</span> antiguas por revisar
+        </small>
       </div>
     </article>
   </section>
@@ -115,7 +121,7 @@ export default {
         },
         {
           id: "proximos",
-          titulo: "Próximos 7 días",
+          titulo: "Próximos 7 días · incluye hoy",
           icono: "ClockIcon",
           valor: proximos.importe,
           cantidad: proximos.cantidad,
@@ -124,7 +130,7 @@ export default {
         },
         {
           id: "solicitudes",
-          titulo: "Solicitudes sin contrato",
+          titulo: "Solicitudes recientes sin contrato",
           icono: "FileTextIcon",
           valor: this.pendientes.solicitudesSinContrato,
           esImporte: false,
@@ -163,13 +169,13 @@ export default {
         proximos: "pagos-proximos-siete-dias",
         solicitudes: "solicitudes-sin-contrato",
       };
-      // El padre abrirá el pop-up cuando se implemente; no se muestran tablas aquí.
+      // El padre abre el visor correspondiente; no se muestran tablas bajo el dashboard.
       this.$emit("ver-reporte", {
         tipo: tipos[indicador.id],
         titulo: indicador.titulo,
         periodo:
           indicador.id === "proximos"
-            ? "Desde mañana hasta los siguientes 7 días; excluye hoy"
+            ? "Hoy y los siguientes 6 días; 7 días en total"
             : "Estado actual",
       });
     },

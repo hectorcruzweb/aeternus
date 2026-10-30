@@ -54,10 +54,10 @@ class VentasCementerioHoja extends DefaultValueBinder implements FromArray, With
             $s->mergeCells('C3:'.$last.'3')->setCellValueExplicit('C3', implode(' · ', array_filter([
                 DireccionReportes::formatear($empresa), $empresa['telefono'] ?? '', mb_strtolower(trim($empresa['email'] ?? ''), 'UTF-8')
             ])), DataType::TYPE_STRING);
-            foreach ([5 => $d['titulo'].' · '.$sec['nombre'], 6 => ucfirst($d['periodo']).' | Corte: '.$d['fecha'].' | Moneda: MXN',
-                7 => ($d['etiqueta_periodo'] ?? 'Ventas del mes').': $ '.number_format($d['resumen']['ventas'],2).' MXN   |   Por cobrar del mes: $ '.number_format($d['resumen']['porCobrar'],2).' MXN   |   Vencido Acumulado Histórico: $ '.number_format($d['resumen']['vencido'],2).' MXN',
+            foreach ([5 => $d['titulo'].' · '.$sec['nombre'], 6 => $d['encabezadoPeriodo'] ?? (ucfirst($d['periodo']).' | Corte: '.$d['fecha'].' | Moneda: MXN'),
+                7 => $d['resumenTexto'] ?? (($d['etiqueta_periodo'] ?? 'Ventas del mes').': $ '.number_format($d['resumen']['ventas'],2).' MXN   |   Por cobrar del mes: $ '.number_format($d['resumen']['porCobrar'],2).' MXN   |   Vencido Acumulado Histórico: $ '.number_format($d['resumen']['vencido'],2).' MXN'),
                 8 => $sec['nota'],
-                9 => 'Por cobrar del mes y Vencido Acumulado Histórico no incluyen intereses.'] as $fila => $texto) {
+                9 => $d['avisoSaldos'] ?? 'Por cobrar del mes y Vencido Acumulado Histórico no incluyen intereses.'] as $fila => $texto) {
                 $s->mergeCells('A'.$fila.':'.$last.$fila)->setCellValueExplicit('A'.$fila,$texto,DataType::TYPE_STRING);
             }
             $s->getStyle('A5')->getFont()->setSize(15)->setBold(true)->getColor()->setRGB('967316');
@@ -86,6 +86,7 @@ class VentasCementerioHoja extends DefaultValueBinder implements FromArray, With
                 $ancho = in_array($titulo,['Cliente','Cliente / contratante','Fallecido','Plan funerario','Email','Referencia','Alcance','Ubicación','Cuota']) ? 30 : (strpos($titulo,'Teléfono')!==false ? 23 : 16);
                 $s->getColumnDimension($col)->setWidth($ancho);
             }
+            foreach ($sec['anchos'] ?? [] as $col => $ancho) $s->getColumnDimension($col)->setWidth($ancho);
             if ($sec['nombre'] === 'Resumen') { $s->getColumnDimension('A')->setWidth(33); $s->getColumnDimension('C')->setWidth(100); }
             if ($sec['nombre'] === 'Resumen general') {
                 foreach (['A'=>40,'B'=>18,'C'=>24,'D'=>24,'E'=>30] as $col=>$ancho) $s->getColumnDimension($col)->setWidth($ancho);
@@ -93,7 +94,7 @@ class VentasCementerioHoja extends DefaultValueBinder implements FromArray, With
                 $s->getRowDimension(7)->setRowHeight(30);
             }
             for ($fila=11; $fila<=$fin; $fila++) {
-                $s->getRowDimension($fila)->setRowHeight(34);
+                $s->getRowDimension($fila)->setRowHeight($sec['altoFila'] ?? 34);
                 if ($fila%2===0) $s->getStyle('A'.$fila.':'.$last.$fila)->getFill()->setFillType('solid')->getStartColor()->setRGB('F3F4F5');
                 if (isset($sec['estado']) && ($sec['filas'][$fila-11][$sec['estado']] ?? '') === 'Vencido') {
                     $s->getStyle(Coordinate::stringFromColumnIndex($sec['estado'] + 1).$fila)->getFont()->getColor()->setRGB('A53C3C');

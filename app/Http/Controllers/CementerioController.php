@@ -87,6 +87,22 @@ class CementerioController extends ApiController
         return $resultado;
     }
 
+    /** Traducciones en bloque para reportes: una carga del catálogo y una por código único. */
+    public function getUbicacionesTextoReporte(array $codigos)
+    {
+        $ubicaciones = [];
+        foreach ($codigos as $codigo) $ubicaciones[trim((string) $codigo)] = 'No disponible';
+        $validos = array_filter(array_keys($ubicaciones), function ($codigo) { return preg_match('/^[0-9]+-[0-9]+-[0-9]+-[0-9]+$/D', $codigo); });
+        if (!$validos) return $ubicaciones;
+        $catalogo = Propiedades::select('id', 'tipo_propiedades_id', 'propiedad_indicador')->get()->toArray();
+        foreach ($validos as $codigo) {
+            if (!$catalogo) continue;
+            $texto = $this->ubicacion_texto($codigo, $catalogo);
+            $ubicaciones[$codigo] = trim($texto['ubicacion_texto'] ?? '') ?: 'No disponible';
+        }
+        return $ubicaciones;
+    }
+
     /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. */
     public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null)
     {

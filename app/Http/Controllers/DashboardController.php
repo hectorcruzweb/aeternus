@@ -84,6 +84,18 @@ class DashboardController extends ApiController
                 app(FacturacionController::class)->getFacturacionMesDashboard($fechaCorte),
                 app(FacturacionController::class)->getVigenciaFirmaDashboard());
             $dashboard['acceso']['secciones'][] = 'facturacion';
+
+            // Tres indicadores agregados, sin cargar contactos o registros individuales.
+            $solicitudes = $this->serviciosFunerarios->getSolicitudesSinContratoDashboard($fechaCorte);
+            $dashboard['pendientes'] = [
+                'venceHoy' => $this->operaciones->getPagosVenceHoyDashboard($fechaCorte),
+                'proximosSieteDias' => $this->operaciones->getPagosProximosSieteDiasDashboard($fechaCorte),
+                'solicitudesSinContrato' => $solicitudes['recientes'],
+                'solicitudesAntiguasSinContrato' => $solicitudes['antiguas'],
+                'solicitudesSinContratoAcumuladas' => $solicitudes['total'],
+                'diasSolicitudesRecientes' => $solicitudes['dias'],
+            ];
+            $dashboard['acceso']['secciones'][] = 'pendientes';
         }
 
         // Agregaremos otros bloques aquí cuando sus reglas y consultas estén listas.

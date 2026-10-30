@@ -33,6 +33,18 @@ Route::middleware(['client'])->group(function () {
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
 Route::middleware(['auth:api'])->group(function () {
     // Reportes del dashboard. Admin/Gerencia se validan además en cada controlador.
+    Route::get('/funeraria/reportes/solicitudes-sin-contrato', 'FunerariaController@previewReporteSolicitudesSinContrato');
+    Route::get('/funeraria/reportes/solicitudes-sin-contrato/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/funeraria/reportes/solicitudes-sin-contrato/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/funeraria/reportes/solicitudes-sin-contrato/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/operaciones/reportes/proximos-pagos', 'OperacionesController@previewPagosProximosSieteDias');
+    Route::get('/operaciones/reportes/proximos-pagos/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/proximos-pagos/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/operaciones/reportes/proximos-pagos/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/operaciones/reportes/vence-hoy', 'OperacionesController@previewPagosVenceHoy');
+    Route::get('/operaciones/reportes/vence-hoy/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/vence-hoy/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/operaciones/reportes/vence-hoy/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
     Route::get('/facturacion/reportes/mes', 'FacturacionController@previewReporteCfdisMes');
     Route::get('/facturacion/reportes/mes/{token}/excel', 'FacturacionController@descargarCfdisMesExcel');
     Route::get('/facturacion/reportes/mes/{token}/pdf', 'FacturacionController@descargarCfdisMesPdf');
