@@ -772,8 +772,8 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         line-height: 1.3;
         font-variant-numeric: tabular-nums;
 
-        // CountTo renderiza un span: debe conservar exactamente el tamaño del padre.
-        span {
+        // CountTo conserva el tamaño del importe; la moneda tiene escala propia.
+        span:not(.dashboard-moneda) {
             font-size: inherit !important;
             font-weight: inherit;
             line-height: inherit;
@@ -1587,3 +1587,87 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
     .ql-editor { font-size: 0.85rem !important; line-height: 1.6; }
     .ql-editor.ql-blank::before { font-size: inherit !important; line-height: inherit; }
 }
+
+// Selector de detalle debajo del contador del editor, alineado a la derecha.
+.reporte-correo__opcion-detalle {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.35rem;
+    .reporte-correo__toggle {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+        max-width: 100%;
+        font-size: 0.8rem;
+        color: #666;
+        cursor: pointer;
+        input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        &.esta-deshabilitado { opacity: 0.6; cursor: default; }
+    }
+    .reporte-correo__toggle-pista {
+        position: relative;
+        display: inline-block;
+        flex-shrink: 0;
+        width: 32px;
+        height: 18px;
+        border-radius: 10px;
+        background: #c9c9c9;
+        transition: background 0.15s ease;
+        &::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.15s ease;
+        }
+    }
+    input:checked + .reporte-correo__toggle-pista {
+        background: #b18b1e;
+        &::after { transform: translateX(14px); }
+    }
+    input:focus + .reporte-correo__toggle-pista { outline: 2px solid #967316; outline-offset: 2px; }
+}
+
+// Unidad monetaria secundaria: escala relativa a cada cantidad, en todas las resoluciones.
+.dashboard .dashboard-indicador__valor .dashboard-moneda,
+.dashboard .dashboard-moneda {
+    display: inline-block;
+    margin-left: 0.3em;
+    font-size: 0.65em !important;
+    font-weight: 400;
+    line-height: 1;
+    vertical-align: baseline;
+    white-space: nowrap;
+}
+
+// Importe cubierto de las facturas del mes, incluidos pagos parciales.
+.dashboard-facturacion__saldado {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    margin: 0.25rem 0;
+    color: #34785d;
+    > span { font-size: 0.8rem; }
+    strong { font-size: 1.05rem; font-weight: 500; }
+}
+
+// Mes del reporte mensual al extremo derecho, junto al enlace.
+.dashboard-facturacion__reporte {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    small { margin: 0 0 0 auto; text-align: right; }
+}
+
+// Verde reservado al importe recibido/cubierto; facturado usa el dorado de ventas.
+.dashboard .dashboard-facturacion__saldado strong { color: #34785d; }

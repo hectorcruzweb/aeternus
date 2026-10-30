@@ -374,8 +374,17 @@ class OperacionesController extends ApiController
     {
         $reporte = $this->datosReporteCementerio($request, $token);
         abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas', 422, 'Este archivo corresponde al reporte general.');
-        $anterior = $reporte['datos'];
-        $datos = DB::transaction(function () use ($anterior) {
+        $datos = $this->datosDetalleGeneralVentas($reporte['datos']);
+        $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
+        $respuesta = \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ResumenGeneralOperacionesExport($datos, true), $nombre);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** Mismo detalle y corte para descargar o adjuntar el Excel completo. */
+    private function datosDetalleGeneralVentas(array $anterior)
+    {
+        return DB::transaction(function () use ($anterior) {
             $corte = Carbon::now('America/Mazatlan');
             $actual = $this->getResumenGeneralOperaciones($anterior['anio'], $anterior['mes'], $corte);
             $actual['empresa'] = $anterior['empresa'];
@@ -386,10 +395,6 @@ class OperacionesController extends ApiController
             }
             return $actual;
         });
-        $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
-        $respuesta = \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ResumenGeneralOperacionesExport($datos, true), $nombre);
-        $respuesta->headers->set('Cache-Control', 'no-store, private');
-        return $respuesta;
     }
 
     /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. */
@@ -522,6 +527,7 @@ class OperacionesController extends ApiController
             'destinatarios.*.nombre' => 'nullable|string|max:75',
             'destinatarios.*.email' => 'required|email|max:75',
             'formato' => 'sometimes|required|in:excel,pdf',
+            'completo' => 'sometimes|boolean',
             'mensaje' => 'nullable|string|max:30000', // HTML acotado; texto visible hasta 5000 caracteres.
             'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
         ]);
@@ -543,11 +549,19 @@ class OperacionesController extends ApiController
         }
         $reporte = $this->datosReporteCementerio($request, $token);
         $nombre = $reporte['nombre'];
+        $completo = $request->boolean('completo');
+        if ($completo) {
+            abort_unless(($reporte['datos']['tipo_operacion'] ?? null) === 'todas', 422, 'Este reporte no ofrece un adjunto detallado completo adicional.');
+            abort_unless($request->input('formato', 'excel') === 'excel', 422, 'El detalle completo se envía en formato Excel.');
+            $reporte['datos'] = $this->datosDetalleGeneralVentas($reporte['datos']);
+            $nombre = 'Detalle General de Ventas y Saldos '.now('America/Mazatlan')->format('Y-m-d H-i-s').'.xlsx';
+        }
+
         if ($request->input('formato', 'excel') === 'pdf') {
             $contenido = $this->pdfReporteCementerio($reporte['datos'])->output();
             $nombre = preg_replace('/\.xlsx$/i', '.pdf', $nombre);
         } else {
-            $contenido = \Maatwebsite\Excel\Facades\Excel::raw($this->exportadorReporteVentas($reporte['datos']), \Maatwebsite\Excel\Excel::XLSX);
+            $contenido = \Maatwebsite\Excel\Facades\Excel::raw(($completo ? new \App\Exports\ResumenGeneralOperacionesExport($reporte['datos'], true) : $this->exportadorReporteVentas($reporte['datos'])), \Maatwebsite\Excel\Excel::XLSX);
         }
         // Texto del usuario y adjunto se entregan al envío compartido de reportes.
         return app(EmailController::class)->reporte_email([

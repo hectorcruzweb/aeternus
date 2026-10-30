@@ -34,8 +34,7 @@
           }"
           :aria-label="etiquetaValor(indicador)"
         >
-          <CountTo
-            v-if="cantidadValida(indicador.valor)"
+          <template v-if="cantidadValida(indicador.valor)"><CountTo
             :start-val="0"
             :end-val="numero(indicador.valor)"
             :duration="2000"
@@ -43,11 +42,10 @@
               indicador.esImporte ? decimalesImporte(indicador.valor) : 0
             "
             :prefix="indicador.esImporte ? '$' : ''"
-            :suffix="indicador.esImporte ? ' MXN' : ''"
             separator=","
             decimal="."
             aria-hidden="true"
-          />
+          /><span v-if="indicador.esImporte" class="dashboard-moneda" aria-hidden="true">MXN</span></template>
           <span v-else aria-hidden="true">—</span>
         </strong>
         <small

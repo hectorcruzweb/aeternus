@@ -8,12 +8,10 @@
     $colorArchivo = $esExcel ? '#217346' : '#a53c3c';
     $nombreDocumento = preg_replace('/\s+\d{4}-\d{2}-\d{2}\s+\d{2}-\d{2}-\d{2}$/', '', pathinfo($archivo, PATHINFO_FILENAME));
     $esReporte = stripos(($subject ?? '') . ' ' . $archivo, 'reporte') !== false;
-    $nombreEmpresa = $empresa->nombre_comercial ?? 'Aeternus Funerales';
+    $nombreEmpresa = \App\Exports\NombreEmpresaReportes::formatear($empresa->nombre_comercial ?? null);
     $telefonoContacto = trim($empresa->telefono ?? '');
     $emailContacto = trim($empresa->email ?? '');
-    $calleContacto = trim(($empresa->calle ?? '') . (!empty($empresa->num_ext) ? ' núm. ' . $empresa->num_ext : ''));
-    $localidadContacto = implode(', ', array_filter([$empresa->colonia ?? '', $empresa->ciudad ?? '', $empresa->estado ?? '']));
-    $direccionContacto = implode(' · ', array_filter([$calleContacto, $localidadContacto]));
+    $direccionContacto = \App\Exports\DireccionReportes::formatear($empresa);
 @endphp
 <!doctype html>
 <html lang="es">
@@ -68,6 +66,8 @@ body,table,td,a{font-family:Arial,Helvetica,sans-serif}table{border-collapse:col
       @if (!empty($emailContacto))<td class="correo-contacto" width="55%" align="right" style="text-align:right;padding:4px 0;font-size:12px;line-height:1.6;color:#737981;word-break:break-word;">@if (filter_var($emailContacto, FILTER_VALIDATE_EMAIL))<a href="mailto:{{ $emailContacto }}" style="color:#737981;text-decoration:underline;">{{ $emailContacto }}</a>@else{{ $emailContacto }}@endif</td>@endif
     </tr></table>
     @if (!empty($direccionContacto))<p align="center" style="margin:16px 0 0;font-size:11px;line-height:1.7;color:#888d93;text-align:center;">Dirección: {{ $direccionContacto }}</p>@endif
+    <p style="margin:18px 0 0;font-size:11px;line-height:1.7;color:#888d93;text-align:center;">Este mensaje fue enviado automáticamente. Por favor, no respondas a este correo. Para recibir ayuda, utiliza los datos de contacto anteriores.</p>
+    <p style="margin:14px 0 0;padding-top:12px;border-top:1px solid #eeeeee;font-size:11px;line-height:1.7;color:#888d93;text-align:justify;"><strong>Confidencialidad:</strong> Este correo y sus archivos adjuntos pueden contener información confidencial y datos personales, y están dirigidos exclusivamente a su destinatario. Si lo recibiste por error, por favor no lo uses, copies ni compartas; elimina el mensaje y sus adjuntos y notifícalo a través de los datos de contacto indicados arriba.</p>
   </td></tr></table>
 </td></tr>
 </table>

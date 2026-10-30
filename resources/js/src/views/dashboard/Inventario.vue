@@ -147,7 +147,7 @@
         <strong>
           <CountTo v-if="cantidadValida(data.costo_total_inventario)" :start-val="0" :end-val="numero(data.costo_total_inventario)" :duration="2000" :decimals="decimalesImporte(data.costo_total_inventario)" prefix="$" separator="," decimal="." aria-hidden="true" />
           <span v-else>—</span>
-          <small> MXN</small>
+          <span v-if="cantidadValida(data.costo_total_inventario)" class="dashboard-moneda" aria-hidden="true">MXN</span>
         </strong>
       </p>
     </div>

@@ -2457,6 +2457,632 @@ class FacturacionController extends ApiController
             return $pdf->inline($name_pdf);
         }
     }
+    /** Misma configuración global que usa timbrar_cfdi (primer registro).
+     * Consultar únicamente la fecha, sin cargar archivos CER/KEY ni contraseña.
+     * DATE se entrega como día calendario YYYY-MM-DD; no convertir a UTC.
+     */
+    public function getVigenciaFirmaDashboard()
+    {
+        $valor=Facturacion::query()->value('fecha_vencimiento');
+        $fecha=$valor ? substr((string)$valor,0,10) : null;
+        $partes=[];
+        if (!$fecha || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D',$fecha,$partes)
+            || !checkdate((int)$partes[2],(int)$partes[3],(int)$partes[1])) {
+            $fecha=null;
+        }
+        return ['fechaCaducidadFiel'=>$fecha];
+    }
+
+    /** Resumen ligero de timbres: solo agrupa movimientos, nunca carga CFDI individuales. */
+    public function getTimbresDashboard($corte = null)
+    {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('movimientos_timbres')) {
+            return ['timbresDisponibles' => null];
+        }
+        $lotes = $this->resumenRecargasTimbres($corte ?: \Carbon\Carbon::now('America/Mazatlan'));
+        $activos = array_filter($lotes, function ($lote) { return $lote['activada']; });
+        return ['timbresDisponibles' => count($activos) ? array_sum(array_column($activos, 'disponibles')) : null];
+    }
+
+    /** Una fila por paquete; consumos y ajustes se agrupan antes de unir. */
+    private function resumenRecargasTimbres($corte)
+    {
+        $fecha = $corte->format('Y-m-d H:i:s');
+        $movimientos = DB::table('movimientos_timbres')->whereNotNull('recarga_id')
+            ->where('fecha_movimiento', '<=', $fecha)->groupBy('recarga_id')
+            ->select('recarga_id')->selectRaw("SUM(cantidad) AS movimiento_neto,
+                SUM(CASE WHEN tipo = 'consumo' THEN 1 ELSE 0 END) AS consumidos,
+                SUM(CASE WHEN tipo = 'ajuste' THEN cantidad ELSE 0 END) AS ajustes,
+                MIN(CASE WHEN tipo = 'consumo' THEN fecha_movimiento END) AS primer_consumo,
+                MAX(CASE WHEN tipo = 'consumo' THEN fecha_movimiento END) AS ultimo_consumo");
+        return DB::table('movimientos_timbres as r')->leftJoinSub($movimientos, 'm', function ($join) {
+            $join->on('m.recarga_id', '=', 'r.id');
+        })->whereIn('r.tipo', ['recarga', 'saldo_inicial'])->whereNull('r.recarga_id')
+            ->orderBy('r.fecha_activacion', 'desc')->orderBy('r.id', 'desc')
+            ->get(['r.id', 'r.tipo', 'r.referencia', 'r.cantidad', 'r.fecha_compra', 'r.fecha_activacion',
+                'm.movimiento_neto', 'm.consumidos', 'm.ajustes', 'm.primer_consumo', 'm.ultimo_consumo'])
+            ->map(function ($r) use ($fecha) {
+                $activada = $r->fecha_activacion && $r->fecha_activacion <= $fecha;
+                $restante = (int)$r->cantidad + (int)$r->movimiento_neto;
+                return ['id' => (int)$r->id, 'referencia' => $r->referencia, 'recargados' => (int)$r->cantidad,
+                    'fecha_compra' => $r->fecha_compra, 'fecha_activacion' => $r->fecha_activacion,
+                    'consumidos' => (int)$r->consumidos, 'ajustes' => (int)$r->ajustes,
+                    'disponibles' => $activada ? $restante : 0, 'activada' => (bool)$activada,
+                    'primer_consumo' => $r->primer_consumo, 'ultimo_consumo' => $r->ultimo_consumo,
+                    'estado' => !$activada ? 'Pendiente de activación' : ($restante < 0 ? 'Revisar saldo' : ($restante === 0 ? 'Agotada' : 'Disponible'))];
+            })->all();
+    }
+
+    /** Relación persistida: no reasignar por fecha ni excluir consumos de CFDI cancelados. */
+    private function consultaHistorialTimbres($recargaId, $corte)
+    {
+        $q = DB::table('movimientos_timbres as m')
+            ->join('movimientos_timbres as r', 'r.id', '=', 'm.recarga_id')
+            ->leftJoin('cfdis as c', 'c.id', '=', 'm.cfdis_id')
+            ->leftJoin('clientes as cl', 'cl.id', '=', 'c.clientes_id')
+            ->leftJoin('usuarios as u', 'u.id', '=', 'c.timbro_id')
+            ->leftJoin('sat_tipo_comprobante as tc', 'tc.id', '=', 'c.sat_tipo_comprobante_id')
+            ->where('m.tipo', 'consumo')->whereIn('r.tipo', ['recarga', 'saldo_inicial'])
+            ->whereNull('r.recarga_id')->where('m.fecha_movimiento', '<=', $corte)
+            ->select(['m.recarga_id', 'm.fecha_movimiento', 'm.asignacion_estimada', 'c.id as cfdi_id',
+                'c.uuid', 'c.fecha_timbrado', 'c.nombre_receptor', 'c.fecha_cancelacion', 'cl.nombre as cliente',
+                'u.nombre as usuario', 'tc.clave as tipo_clave', 'tc.tipo as tipo_cfdi']);
+        if ($recargaId !== null) $q->where('m.recarga_id', $recargaId);
+        return $q->orderBy('m.fecha_movimiento', 'desc')->orderBy('m.id', 'desc');
+    }
+
+    private function autorizarReporteFacturacion(Request $request)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario && in_array((int)$usuario->roles_id, [1, 4], true), 403);
+        return $usuario;
+    }
+
+    /** Resumen inicial; cada lote abre su propio historial dentro del mismo visor. */
+    public function previewReporteTimbres(Request $request)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        $request->validate(['recarga_id' => 'nullable|integer|min:1']);
+        abort_unless(\Illuminate\Support\Facades\Schema::hasTable('movimientos_timbres'), 409,
+            'El historial de timbres todavía no está preparado. Aplique la migración y el seeder.');
+        $id = $request->filled('recarga_id') ? (int)$request->input('recarga_id') : null;
+        $corte = \Carbon\Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($id, $corte) {
+            $lotes = $this->resumenRecargasTimbres($corte);
+            if ($id !== null) {
+                $lotes = array_values(array_filter($lotes, function ($r) use ($id) { return $r['id'] === $id; }));
+                abort_unless(count($lotes), 404, 'La recarga no existe.');
+            }
+            $total = $id === null ? count($lotes) : $this->consultaHistorialTimbres($id, $corte->format('Y-m-d H:i:s'))->count();
+            $filas = $id !== null && $total <= 3500
+                ? $this->consultaHistorialTimbres($id, $corte->format('Y-m-d H:i:s'))->get()->map(function ($r) { return (array)$r; })->all() : [];
+            return ['recargas' => $lotes, 'consumos' => $filas, 'totalRegistros' => $total];
+        });
+        $datos['recarga_id'] = $id;
+        $datos['titulo'] = $id === null ? 'Reporte de Recargas de Timbres' : 'Historial de Timbres · Recarga ' . $id;
+        $datos['corte'] = $corte->format('Y-m-d H:i:s');
+        $datos['fecha'] = \App\Exports\TimbresRecargasExport::fecha($datos['corte']);
+        // Conservar la vigencia junto con la instantánea del reporte y sus adjuntos.
+        $datos['fechaCaducidadFiel'] = $this->getVigenciaFirmaDashboard()['fechaCaducidadFiel'];
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $visualizable = $datos['totalRegistros'] <= 3500;
+        $token = bin2hex(random_bytes(32));
+        $vence = $corte->copy()->addMinutes(15);
+        $nombre = $datos['titulo'] . ' ' . $corte->format('Y-m-d H-i-s') . '.xlsx';
+        \Illuminate\Support\Facades\Cache::put('timbres_reporte_' . $token,
+            ['usuario_id' => (int)$usuario->id, 'datos' => $datos, 'nombre' => $nombre, 'masivo' => !$visualizable], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => 3500, 'totalRegistros' => $datos['totalRegistros'],
+            'mensaje' => 'El historial supera el tamaño de vista previa. Puede descargarlo completo; se consultarán los datos disponibles al descargar con el mismo corte.',
+            'excelCompletoDisponible' => $id === null,
+            'reportesRelacionados' => $id === null ? array_map(function ($r) {
+                return ['id' => 'recarga-' . $r['id']];
+            }, $datos['recargas']) : [],
+            'hojas' => $visualizable ? [['nombre' => $id === null ? 'Recargas' : 'Historial', 'html' => $this->htmlReporteTimbres($datos)]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Token privado por consulta; su vencimiento devuelve 410, no cierra la sesión. */
+    private function datosReporteTimbres(Request $request, $token, $completo = false)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $reporte = \Illuminate\Support\Facades\Cache::get('timbres_reporte_' . $token);
+        abort_unless($reporte, 410, 'La consulta venció. Actualice el reporte para continuar.');
+        abort_unless((int)$reporte['usuario_id'] === (int)$usuario->id, 403);
+        if ($completo || $reporte['masivo']) {
+            // Descargar detalle grande vuelve a consultar, manteniendo resumen y filas coherentes.
+            $reporte['datos'] = DB::transaction(function () use ($reporte) {
+                $datos = $reporte['datos'];
+                $lotes = $this->resumenRecargasTimbres(\Carbon\Carbon::parse($datos['corte'], 'America/Mazatlan'));
+                if ($datos['recarga_id'] !== null) {
+                    $lotes = array_values(array_filter($lotes, function ($r) use ($datos) { return $r['id'] === $datos['recarga_id']; }));
+                }
+                $datos['recargas'] = $lotes;
+                $datos['consumos'] = $this->consultaHistorialTimbres($datos['recarga_id'], $datos['corte'])
+                    ->get()->map(function ($r) { return (array)$r; })->all();
+                return $datos;
+            });
+        }
+        $reporte['datos']['completo'] = $completo;
+        return $reporte;
+    }
+
+    private function htmlReporteTimbres(array $datos, $pdf = false)
+    {
+        $ruta = public_path(env('LOGOJPG'));
+        $logo = null;
+        if (is_file($ruta)) {
+            $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($ruta);
+            if (in_array($mime, ['image/jpeg', 'image/png', 'image/gif'], true)) {
+                $logo = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($ruta));
+            }
+        }
+        return view('reportes.temporales_visor_excel.facturacion.timbres', [
+            'datos' => $datos, 'secciones' => \App\Exports\TimbresRecargasExport::secciones($datos),
+            'logo' => $logo, 'modoPdf' => $pdf,
+        ])->render();
+    }
+
+    public function descargarReporteTimbresExcel(Request $request, $token)
+    {
+        $request->validate(['completo' => 'sometimes|boolean']);
+        $completo = $request->boolean('completo');
+        $reporte = $this->datosReporteTimbres($request, $token, $completo);
+        $respuesta = \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\TimbresRecargasExport($reporte['datos']),
+            ($completo ? 'Detalle ' : '') . $reporte['nombre']);
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    private function construirPdfTimbres(array $datos)
+    {
+        $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
+            'fechaImpresion' => \App\Exports\TimbresRecargasExport::fecha(now('America/Mazatlan')),
+            'dominio' => parse_url(config('app.url'), PHP_URL_HOST) ?: config('app.url'),
+        ])->render();
+        return PDF::loadHTML($this->htmlReporteTimbres($datos, true))->setOptions([
+            'orientation' => 'landscape', 'page-size' => 'A4', 'encoding' => 'UTF-8',
+            'margin-top' => 10, 'margin-bottom' => 12, 'margin-left' => 10, 'margin-right' => 10,
+            'print-media-type' => true, 'disable-local-file-access' => true,
+            'footer-html' => $footer, 'footer-spacing' => 3,
+        ]);
+    }
+
+    public function descargarReporteTimbresPdf(Request $request, $token)
+    {
+        $reporte = $this->datosReporteTimbres($request, $token);
+        $respuesta = $this->construirPdfTimbres($reporte['datos'])->download(preg_replace('/\.xlsx$/i', '.pdf', $reporte['nombre']));
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** Envío reutiliza plantilla, destinatarios y desvío local del mail sender existente. */
+    public function enviarReporteTimbresCorreo(Request $request, $token)
+    {
+        // Autorizar antes de generar archivos o validar datos de destinatarios.
+        $reporte = $this->datosReporteTimbres($request, $token);
+        $request->validate([
+            'destinatario' => 'required_without:destinatarios|nullable|string|max:75',
+            'email_address' => 'required_without:destinatarios|nullable|email|max:75',
+            'destinatarios' => 'sometimes|required|array|min:1|max:20',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'formato' => 'sometimes|required|in:excel,pdf',
+            'completo' => 'sometimes|boolean',
+            'mensaje' => 'nullable|string|max:30000',
+            'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
+        ]);
+        $personas = $request->input('destinatarios', [['nombre' => $request->input('destinatario'), 'email' => $request->input('email_address')]]);
+        $vistos = [];
+        foreach ($personas as &$persona) {
+            $persona['email'] = mb_strtolower(trim($persona['email']), 'UTF-8');
+            $persona['nombre'] = trim($persona['nombre'] ?? '');
+            if (isset($vistos[$persona['email']])) throw \Illuminate\Validation\ValidationException::withMessages(['destinatarios' => 'Hay correos duplicados.']);
+            $vistos[$persona['email']] = true;
+        }
+        unset($persona);
+        if (mb_strlen(trim(html_entity_decode(strip_tags($request->input('mensaje', '') ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')), 'UTF-8') > 5000) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['mensaje' => 'El mensaje no debe superar 5000 caracteres.']);
+        }
+        $completo = $request->boolean('completo');
+        if ($completo) {
+            abort_unless($reporte['datos']['recarga_id'] === null, 422, 'El detalle completo se adjunta desde el resumen de recargas.');
+            abort_unless($request->input('formato', 'excel') === 'excel', 422, 'El detalle completo se envía en formato Excel.');
+            $reporte = $this->datosReporteTimbres($request, $token, true);
+            $reporte['nombre'] = 'Detalle ' . $reporte['nombre'];
+        }
+        $pdf = $request->input('formato', 'excel') === 'pdf';
+        $contenido = $pdf ? $this->construirPdfTimbres($reporte['datos'])->output()
+            : \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\TimbresRecargasExport($reporte['datos']), \Maatwebsite\Excel\Excel::XLSX);
+        return app(EmailController::class)->reporte_email([
+            'email_address' => $personas[0]['email'], 'destinatario' => $personas[0]['nombre'], 'destinatarios' => $personas,
+            'asunto' => $request->input('asunto') ?: $reporte['datos']['titulo'], 'mensaje' => $request->input('mensaje', ''),
+        ], $contenido, $pdf ? preg_replace('/\.xlsx$/i', '.pdf', $reporte['nombre']) : $reporte['nombre'],
+            $pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    /** Base compartida de ingresos vigentes para indicador y reportes.
+     * Predeterminado: PPD con adeudo de todo el historial. modoMes: PUE/PPD
+     * emitidos en el mes del corte, incluidos saldados y parcialmente cubiertos.
+     * Aplicaciones según get_cfdis_timbrados: relaciones 2/3 con CFDI status=1.
+     * Las aplicaciones no se restringen al mes de emisión; no es un cierre histórico.
+     */
+    private function consultaCfdisAdeudosBase($corte, $modoMes = false)
+    {
+        $aplicado = DB::table('cfdis_tipo_relacion as r')->join('cfdis as p', 'p.id', '=', 'r.cfdis_id')
+            ->where('p.status', 1)->whereIn('r.tipo_relacion_id', [2, 3])->groupBy('r.cfdis_id_relacionado')
+            ->select('r.cfdis_id_relacionado')
+            ->selectRaw('SUM(CASE WHEN r.tipo_relacion_id = 2 THEN COALESCE(r.monto_relacion,0) ELSE 0 END) AS pagos,
+                SUM(CASE WHEN r.tipo_relacion_id = 3 THEN COALESCE(r.monto_relacion,0) ELSE 0 END) AS egresos');
+        $facturas = DB::table('cfdis as c')->leftJoinSub($aplicado, 'a', function ($j) {
+                $j->on('a.cfdis_id_relacionado', '=', 'c.id');
+            })->leftJoin('sat_monedas as mo', 'mo.id', '=', 'c.sat_monedas_id')
+            ->where('c.status', 1)->where('c.sat_tipo_comprobante_id', 1)->whereIn('c.sat_metodos_pago_id', $modoMes ? [1,2] : [2])
+            ->where('c.fecha', '<=', $corte)
+            ->select(['c.id', 'c.uuid', 'c.clientes_id', 'c.fecha', 'c.total', 'c.nombre_receptor', 'c.rfc_receptor', 'c.timbro_id', 'c.sat_metodos_pago_id'])
+            ->selectRaw("COALESCE(mo.codigo_moneda, 'Sin moneda') AS moneda,
+                CASE WHEN c.sat_metodos_pago_id = 1 THEN COALESCE(c.total,0) ELSE ROUND(COALESCE(a.pagos,0),2) END AS pagos_aplicados, COALESCE(a.egresos,0) AS egresos_aplicados,
+                CASE WHEN c.sat_metodos_pago_id = 1 THEN 0 ELSE ROUND(COALESCE(c.total,0) - ROUND(COALESCE(a.pagos,0),2) - COALESCE(a.egresos,0),2) END AS saldo_pendiente");
+        if ($modoMes) {
+            $inicio=\Carbon\Carbon::parse($corte,'America/Mazatlan')->startOfMonth()->format('Y-m-d H:i:s');
+            $facturas->where('c.fecha','>=',$inicio);
+        }
+        $consulta=DB::query()->fromSub($facturas,'f');
+        return $modoMes ? $consulta : $consulta->where('f.saldo_pendiente','>',0);
+    }
+
+    private function resumenCfdisAdeudos($corte, $modoMes = false)
+    {
+        return $this->consultaCfdisAdeudosBase($corte, $modoMes)->select('f.moneda')->groupBy('f.moneda')->orderBy('f.moneda')
+            ->selectRaw("COUNT(*) AS cantidad,
+                SUM(CASE WHEN f.sat_metodos_pago_id=1 THEN 1 ELSE 0 END) AS cantidad_pue,
+                SUM(CASE WHEN f.sat_metodos_pago_id=2 THEN 1 ELSE 0 END) AS cantidad_ppd, SUM(f.total) AS facturado, SUM(f.pagos_aplicados) AS pagos,
+                SUM(f.egresos_aplicados) AS egresos, SUM(CASE WHEN f.saldo_pendiente > 0 THEN f.saldo_pendiente ELSE 0 END) AS pendiente,
+                SUM(CASE WHEN f.pagos_aplicados > f.total THEN f.total WHEN f.pagos_aplicados < 0 THEN 0 ELSE f.pagos_aplicados END) AS saldado,
+                SUM(CASE WHEN UPPER(TRIM(COALESCE(f.rfc_receptor,''))) = 'XAXX010101000' THEN 1 ELSE 0 END) AS publico_general")
+            ->get()->map(function ($r) { return ['moneda' => $r->moneda, 'cantidad' => (int)$r->cantidad,
+                'cantidad_pue' => (int)$r->cantidad_pue, 'cantidad_ppd' => (int)$r->cantidad_ppd,
+                'publico_general' => (int)$r->publico_general, 'otros_receptores' => (int)$r->cantidad - (int)$r->publico_general,
+                'facturado' => round((float)$r->facturado,2), 'pagos' => round((float)$r->pagos,2),
+                'saldado' => round((float)$r->saldado,2), 'egresos' => round((float)$r->egresos,2), 'pendiente' => round((float)$r->pendiente,2)]; })->all();
+    }
+
+    /** El card está expresado en MXN; el reporte conserva monedas por separado. */
+    public function getCfdisAdeudosDashboard($corte = null)
+    {
+        $corte = $corte ?: \Carbon\Carbon::now('America/Mazatlan');
+        $resumen = $this->resumenCfdisAdeudos($corte->format('Y-m-d H:i:s'));
+        $mxn = array_values(array_filter($resumen, function ($r) { return $r['moneda'] === 'MXN'; }));
+        return ['saldoPendiente' => $mxn[0]['pendiente'] ?? 0, 'facturasPendientes' => $mxn[0]['cantidad'] ?? 0,
+            'adeudosAcumulados' => true, 'adeudosMoneda' => 'MXN', 'adeudosCorte' => $corte->toIso8601String()];
+    }
+
+    private function detalleCfdisAdeudos($corte, $modoMes = false)
+    {
+        return $this->consultaCfdisAdeudosBase($corte, $modoMes)
+            ->leftJoin('clientes as cl', 'cl.id', '=', 'f.clientes_id')->leftJoin('usuarios as u', 'u.id', '=', 'f.timbro_id')
+            ->select('f.*', 'cl.nombre as cliente', 'u.nombre as usuario')
+            ->selectRaw('CASE WHEN EXISTS (SELECT 1 FROM cfdis_operaciones co WHERE co.cfdis_id = f.id) THEN 1 ELSE 0 END AS tiene_operaciones')
+            ->orderBy('f.fecha', 'desc')->orderBy('f.id', 'desc');
+    }
+
+    /** Una fila por aplicación vigente a una factura que aún conserva adeudo.
+     * Mostrar monto_relacion evita repetir el total del pago si cubre varios CFDI.
+     * Misma selección que el saldo: relación interna2, comprobante aplicador status1.
+     */
+    private function pagosRecibidosCfdisAdeudos($corte, $modoMes = false)
+    {
+        return $this->consultaCfdisAdeudosBase($corte, $modoMes)
+            ->join('cfdis_tipo_relacion as r', 'r.cfdis_id_relacionado', '=', 'f.id')
+            ->join('cfdis as p', 'p.id', '=', 'r.cfdis_id')
+            ->leftJoin('clientes as cl', 'cl.id', '=', 'f.clientes_id')
+            ->leftJoin('usuarios as u', 'u.id', '=', 'p.timbro_id')
+            ->where('r.tipo_relacion_id', 2)->where('p.status', 1)
+            ->select(['f.id as factura_id', 'f.uuid as factura_uuid', 'f.moneda', 'f.nombre_receptor',
+                'cl.nombre as cliente', 'p.id as pago_cfdi_id', 'p.uuid as pago_uuid', 'p.fecha_pago',
+                'p.fecha as fecha_comprobante', 'p.fecha_timbrado', 'r.monto_relacion as importe_aplicado',
+                'u.nombre as usuario'])
+            ->orderByRaw('COALESCE(p.fecha_pago,p.fecha) DESC')->orderBy('p.id', 'desc')->orderBy('f.id', 'desc');
+    }
+
+    /** Referencias de negocio de las operaciones ligadas, sin filtrar su estado histórico. */
+    private function operacionesCfdisAdeudos($corte, $modoMes = false)
+    {
+        return $this->consultaCfdisAdeudosBase($corte, $modoMes)
+            ->join('cfdis_operaciones as co', 'co.cfdis_id', '=', 'f.id')
+            ->join('operaciones as o', 'o.id', '=', 'co.operaciones_id')
+            ->leftJoin('clientes as oc', 'oc.id', '=', 'o.clientes_id')
+            ->select(['f.id as factura_id', 'o.id as operacion_id', 'o.empresa_operaciones_id',
+                'o.ventas_terrenos_id', 'o.cuotas_cementerio_id', 'o.servicios_funerarios_id',
+                'o.ventas_planes_id', 'o.ventas_generales_id', 'o.fecha_operacion', 'o.status', 'oc.nombre as cliente_operacion'])
+            ->distinct()->orderBy('f.id', 'desc')->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
+    }
+
+    /** Consulta propia del módulo de facturación; visor comparte el diseño corporativo. */
+    public function previewReporteCfdisAdeudos(Request $request)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        $corte = \Carbon\Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($corte) {
+            $fecha = $corte->format('Y-m-d H:i:s');
+            $resumen = $this->resumenCfdisAdeudos($fecha);
+            $cantidad = array_sum(array_column($resumen, 'cantidad'));
+            $cantidadPagos = $this->pagosRecibidosCfdisAdeudos($fecha)->count();
+            $cantidadOperaciones = DB::query()->fromSub($this->operacionesCfdisAdeudos($fecha), 'relaciones')->count();
+            $visible = $cantidad + $cantidadPagos + $cantidadOperaciones <= 3500;
+            return ['resumen' => $resumen, 'cantidad' => $cantidad, 'cantidadPagos' => $cantidadPagos,
+                'totalRegistros' => $cantidad + $cantidadPagos + $cantidadOperaciones,
+                'operaciones' => $visible ? $this->operacionesCfdisAdeudos($fecha)->get()->map(function ($r) { return (array)$r; })->all() : [],
+                'cfdis' => $visible ? $this->detalleCfdisAdeudos($fecha)->get()->map(function ($r) { return (array)$r; })->all() : [],
+                'pagos' => $visible ? $this->pagosRecibidosCfdisAdeudos($fecha)->get()->map(function ($r) { return (array)$r; })->all() : []];
+        });
+        $datos['titulo'] = 'CFDI con Adeudo · Acumulado Histórico';
+        $datos['corte'] = $corte->format('Y-m-d H:i:s');
+        $datos['fecha'] = \App\Exports\TimbresRecargasExport::fecha($datos['corte']);
+        // Conservar la vigencia junto con la instantánea del reporte y sus adjuntos.
+        $datos['fechaCaducidadFiel'] = $this->getVigenciaFirmaDashboard()['fechaCaducidadFiel'];
+        $datos['periodo'] = ucfirst($corte->locale('es')->translatedFormat('F Y'));
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial','razon_social','rfc','telefono','email','calle','num_ext','colonia','ciudad','estado'
+        ])) : [];
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'CFDI con Adeudo Acumulado '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        $visible = $datos['totalRegistros'] <= 3500;
+        \Illuminate\Support\Facades\Cache::put('cfdis_adeudos_reporte_'.$token,
+            ['usuario_id'=>(int)$usuario->id,'datos'=>$datos,'nombre'=>$nombre,'masivo'=>!$visible], $vence);
+        return response()->json(['titulo'=>$datos['titulo'],'nombreArchivo'=>$nombre,'tokenDescarga'=>$token,
+            'venceEn'=>$vence->toIso8601String(),'vistaPreviaDisponible'=>$visible,'limiteVisualizacion'=>3500,
+            'totalRegistros'=>$datos['totalRegistros'],
+            'mensaje'=>'El reporte supera el tamaño de vista previa. Puede descargarlo completo; se consultarán los datos disponibles al descargar con el mismo corte.',
+            'hojas'=>$visible ? [['nombre'=>'CFDI con adeudo','html'=>$this->htmlCfdisAdeudos($datos)]] : []
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    private function datosCfdisAdeudos(Request $request, $token)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $r = \Illuminate\Support\Facades\Cache::get('cfdis_adeudos_reporte_'.$token);
+        abort_unless($r,410,'La consulta venció. Actualice el reporte para continuar.');
+        abort_unless((int)$r['usuario_id']===(int)$usuario->id,403);
+        if ($r['masivo']) {
+            $r['datos'] = DB::transaction(function () use ($r) {
+                $d=$r['datos']; $d['resumen']=$this->resumenCfdisAdeudos($d['corte']);
+                $d['cantidad']=array_sum(array_column($d['resumen'],'cantidad'));
+                $d['cfdis']=$this->detalleCfdisAdeudos($d['corte'])->get()->map(function($r){return(array)$r;})->all();
+                $d['pagos']=$this->pagosRecibidosCfdisAdeudos($d['corte'])->get()->map(function($r){return(array)$r;})->all();
+                $d['operaciones']=$this->operacionesCfdisAdeudos($d['corte'])->get()->map(function($r){return(array)$r;})->all();
+                $d['cantidadPagos']=count($d['pagos']); $d['totalRegistros']=$d['cantidad']+$d['cantidadPagos']+count($d['operaciones']);
+                return $d;
+            });
+        }
+        return $r;
+    }
+
+    private function htmlCfdisAdeudos(array $datos, $pdf = false)
+    {
+        $ruta=public_path(env('LOGOJPG'));$logo=null;
+        if(is_file($ruta)){$mime=(new \finfo(FILEINFO_MIME_TYPE))->file($ruta);
+            if(in_array($mime,['image/jpeg','image/png','image/gif'],true))$logo='data:'.$mime.';base64,'.base64_encode(file_get_contents($ruta));}
+        return view('reportes.temporales_visor_excel.facturacion.adeudos',[
+            'datos'=>$datos,'secciones'=>\App\Exports\CfdisAdeudosExport::secciones($datos),'logo'=>$logo,'modoPdf'=>$pdf
+        ])->render();
+    }
+
+    private function pdfCfdisAdeudos(array $datos)
+    {
+        $footer=view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
+            'fechaImpresion'=>\App\Exports\TimbresRecargasExport::fecha(now('America/Mazatlan')),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url')])->render();
+        return PDF::loadHTML($this->htmlCfdisAdeudos($datos,true))->setOptions([
+            'orientation'=>'landscape','page-size'=>'A4','encoding'=>'UTF-8','print-media-type'=>true,
+            'margin-top'=>10,'margin-bottom'=>12,'margin-left'=>10,'margin-right'=>10,
+            'disable-local-file-access'=>true,'footer-html'=>$footer,'footer-spacing'=>3]);
+    }
+
+    public function descargarCfdisAdeudosExcel(Request $request,$token)
+    {
+        $r=$this->datosCfdisAdeudos($request,$token);
+        $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CfdisAdeudosExport($r['datos']),$r['nombre']);
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+    public function descargarCfdisAdeudosPdf(Request $request,$token)
+    {
+        $r=$this->datosCfdisAdeudos($request,$token);
+        $respuesta=$this->pdfCfdisAdeudos($r['datos'])->download(preg_replace('/\.xlsx$/i','.pdf',$r['nombre']));
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+
+    public function enviarCfdisAdeudosCorreo(Request $request, $token)
+    {
+        // Autorizar antes de generar archivos o validar datos de destinatarios.
+        $reporte = $this->datosCfdisAdeudos($request, $token);
+        $request->validate([
+            'destinatario' => 'required_without:destinatarios|nullable|string|max:75',
+            'email_address' => 'required_without:destinatarios|nullable|email|max:75',
+            'destinatarios' => 'sometimes|required|array|min:1|max:20',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'formato' => 'sometimes|required|in:excel,pdf',
+            'completo' => 'sometimes|boolean',
+            'mensaje' => 'nullable|string|max:30000',
+            'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
+        ]);
+        $personas = $request->input('destinatarios', [['nombre' => $request->input('destinatario'), 'email' => $request->input('email_address')]]);
+        $vistos = [];
+        foreach ($personas as &$persona) {
+            $persona['email'] = mb_strtolower(trim($persona['email']), 'UTF-8');
+            $persona['nombre'] = trim($persona['nombre'] ?? '');
+            if (isset($vistos[$persona['email']])) throw \Illuminate\Validation\ValidationException::withMessages(['destinatarios' => 'Hay correos duplicados.']);
+            $vistos[$persona['email']] = true;
+        }
+        unset($persona);
+        if (mb_strlen(trim(html_entity_decode(strip_tags($request->input('mensaje', '') ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')), 'UTF-8') > 5000) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['mensaje' => 'El mensaje no debe superar 5000 caracteres.']);
+        }
+        abort_if($request->boolean('completo'), 422, 'Este reporte ya incluye el detalle completo de los CFDI con adeudo.');
+        $pdf = $request->input('formato', 'excel') === 'pdf';
+        $contenido = $pdf ? $this->pdfCfdisAdeudos($reporte['datos'])->output()
+            : \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\CfdisAdeudosExport($reporte['datos']), \Maatwebsite\Excel\Excel::XLSX);
+        return app(EmailController::class)->reporte_email([
+            'email_address' => $personas[0]['email'], 'destinatario' => $personas[0]['nombre'], 'destinatarios' => $personas,
+            'asunto' => $request->input('asunto') ?: $reporte['datos']['titulo'], 'mensaje' => $request->input('mensaje', ''),
+        ], $contenido, $pdf ? preg_replace('/\.xlsx$/i', '.pdf', $reporte['nombre']) : $reporte['nombre'],
+            $pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+
+    /** Facturado y cubierto de facturas de este mes; no es cobranza de ventas antiguas. */
+    public function getFacturacionMesDashboard($corte = null)
+    {
+        $corte=$corte ?: \Carbon\Carbon::now('America/Mazatlan');
+        $resumen=$this->resumenCfdisAdeudos($corte->format('Y-m-d H:i:s'),true);
+        $mxn=array_values(array_filter($resumen,function($r){return $r['moneda']==='MXN';}));
+        return ['ventasFacturadas'=>$mxn[0]['facturado'] ?? 0,'saldadoFacturado'=>$mxn[0]['saldado'] ?? 0,
+            'cantidadFacturasMes'=>$mxn[0]['cantidad'] ?? 0];
+    }
+
+    public function previewReporteCfdisMes(Request $request)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        $corte = \Carbon\Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($corte) {
+            $fecha = $corte->format('Y-m-d H:i:s');
+            $resumen = $this->resumenCfdisAdeudos($fecha, true);
+            $cantidad = array_sum(array_column($resumen, 'cantidad'));
+            $cantidadPagos = $this->pagosRecibidosCfdisAdeudos($fecha, true)->count();
+            $cantidadOperaciones = DB::query()->fromSub($this->operacionesCfdisAdeudos($fecha, true), 'relaciones')->count();
+            $visible = $cantidad + $cantidadPagos + $cantidadOperaciones <= 3500;
+            return ['resumen' => $resumen, 'cantidad' => $cantidad, 'cantidadPagos' => $cantidadPagos,
+                'totalRegistros' => $cantidad + $cantidadPagos + $cantidadOperaciones,
+                'operaciones' => $visible ? $this->operacionesCfdisAdeudos($fecha, true)->get()->map(function ($r) { return (array)$r; })->all() : [],
+                'cfdis' => $visible ? $this->detalleCfdisAdeudos($fecha, true)->get()->map(function ($r) { return (array)$r; })->all() : [],
+                'pagos' => $visible ? $this->pagosRecibidosCfdisAdeudos($fecha, true)->get()->map(function ($r) { return (array)$r; })->all() : []];
+        });
+        $datos['modo_mes'] = true;
+        $datos['titulo'] = 'Reporte de Facturación del Mes';
+        $datos['corte'] = $corte->format('Y-m-d H:i:s');
+        $datos['fecha'] = \App\Exports\TimbresRecargasExport::fecha($datos['corte']);
+        // Conservar la vigencia junto con la instantánea del reporte y sus adjuntos.
+        $datos['fechaCaducidadFiel'] = $this->getVigenciaFirmaDashboard()['fechaCaducidadFiel'];
+        $datos['periodo'] = ucfirst($corte->locale('es')->translatedFormat('F Y'));
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial','razon_social','rfc','telefono','email','calle','num_ext','colonia','ciudad','estado'
+        ])) : [];
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'Facturacion del Mes '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        $visible = $datos['totalRegistros'] <= 3500;
+        \Illuminate\Support\Facades\Cache::put('cfdis_mes_reporte_'.$token,
+            ['usuario_id'=>(int)$usuario->id,'datos'=>$datos,'nombre'=>$nombre,'masivo'=>!$visible], $vence);
+        return response()->json(['titulo'=>$datos['titulo'],'nombreArchivo'=>$nombre,'tokenDescarga'=>$token,
+            'venceEn'=>$vence->toIso8601String(),'vistaPreviaDisponible'=>$visible,'limiteVisualizacion'=>3500,
+            'totalRegistros'=>$datos['totalRegistros'],
+            'mensaje'=>'El reporte supera el tamaño de vista previa. Puede descargarlo completo; se consultarán los datos disponibles al descargar con el mismo corte.',
+            'hojas'=>$visible ? [['nombre'=>'Facturación del mes','html'=>$this->htmlCfdisMes($datos)]] : []
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    private function datosCfdisMes(Request $request, $token)
+    {
+        $usuario = $this->autorizarReporteFacturacion($request);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $r = \Illuminate\Support\Facades\Cache::get('cfdis_mes_reporte_'.$token);
+        abort_unless($r,410,'La consulta venció. Actualice el reporte para continuar.');
+        abort_unless((int)$r['usuario_id']===(int)$usuario->id,403);
+        if ($r['masivo']) {
+            $r['datos'] = DB::transaction(function () use ($r) {
+                $d=$r['datos']; $d['resumen']=$this->resumenCfdisAdeudos($d['corte'], true);
+                $d['cantidad']=array_sum(array_column($d['resumen'],'cantidad'));
+                $d['cfdis']=$this->detalleCfdisAdeudos($d['corte'], true)->get()->map(function($r){return(array)$r;})->all();
+                $d['pagos']=$this->pagosRecibidosCfdisAdeudos($d['corte'], true)->get()->map(function($r){return(array)$r;})->all();
+                $d['operaciones']=$this->operacionesCfdisAdeudos($d['corte'], true)->get()->map(function($r){return(array)$r;})->all();
+                $d['cantidadPagos']=count($d['pagos']); $d['totalRegistros']=$d['cantidad']+$d['cantidadPagos']+count($d['operaciones']);
+                return $d;
+            });
+        }
+        return $r;
+    }
+
+    private function htmlCfdisMes(array $datos, $pdf = false)
+    {
+        $ruta=public_path(env('LOGOJPG'));$logo=null;
+        if(is_file($ruta)){$mime=(new \finfo(FILEINFO_MIME_TYPE))->file($ruta);
+            if(in_array($mime,['image/jpeg','image/png','image/gif'],true))$logo='data:'.$mime.';base64,'.base64_encode(file_get_contents($ruta));}
+        return view('reportes.temporales_visor_excel.facturacion.adeudos',[
+            'datos'=>$datos,'secciones'=>\App\Exports\CfdisMesExport::secciones($datos),'logo'=>$logo,'modoPdf'=>$pdf
+        ])->render();
+    }
+
+    private function pdfCfdisMes(array $datos)
+    {
+        $footer=view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
+            'fechaImpresion'=>\App\Exports\TimbresRecargasExport::fecha(now('America/Mazatlan')),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url')])->render();
+        return PDF::loadHTML($this->htmlCfdisMes($datos,true))->setOptions([
+            'orientation'=>'landscape','page-size'=>'A4','encoding'=>'UTF-8','print-media-type'=>true,
+            'margin-top'=>10,'margin-bottom'=>12,'margin-left'=>10,'margin-right'=>10,
+            'disable-local-file-access'=>true,'footer-html'=>$footer,'footer-spacing'=>3]);
+    }
+
+    public function descargarCfdisMesExcel(Request $request,$token)
+    {
+        $r=$this->datosCfdisMes($request,$token);
+        $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CfdisMesExport($r['datos']),$r['nombre']);
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+    public function descargarCfdisMesPdf(Request $request,$token)
+    {
+        $r=$this->datosCfdisMes($request,$token);
+        $respuesta=$this->pdfCfdisMes($r['datos'])->download(preg_replace('/\.xlsx$/i','.pdf',$r['nombre']));
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+
+    public function enviarCfdisMesCorreo(Request $request, $token)
+    {
+        // Autorizar antes de generar archivos o validar datos de destinatarios.
+        $reporte = $this->datosCfdisMes($request, $token);
+        $request->validate([
+            'destinatario' => 'required_without:destinatarios|nullable|string|max:75',
+            'email_address' => 'required_without:destinatarios|nullable|email|max:75',
+            'destinatarios' => 'sometimes|required|array|min:1|max:20',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'formato' => 'sometimes|required|in:excel,pdf',
+            'completo' => 'sometimes|boolean',
+            'mensaje' => 'nullable|string|max:30000',
+            'asunto' => ['nullable', 'string', 'max:150', 'not_regex:/[\r\n]/'],
+        ]);
+        $personas = $request->input('destinatarios', [['nombre' => $request->input('destinatario'), 'email' => $request->input('email_address')]]);
+        $vistos = [];
+        foreach ($personas as &$persona) {
+            $persona['email'] = mb_strtolower(trim($persona['email']), 'UTF-8');
+            $persona['nombre'] = trim($persona['nombre'] ?? '');
+            if (isset($vistos[$persona['email']])) throw \Illuminate\Validation\ValidationException::withMessages(['destinatarios' => 'Hay correos duplicados.']);
+            $vistos[$persona['email']] = true;
+        }
+        unset($persona);
+        if (mb_strlen(trim(html_entity_decode(strip_tags($request->input('mensaje', '') ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8')), 'UTF-8') > 5000) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['mensaje' => 'El mensaje no debe superar 5000 caracteres.']);
+        }
+        abort_if($request->boolean('completo'), 422, 'Este reporte ya incluye el detalle completo de la facturación del mes.');
+        $pdf = $request->input('formato', 'excel') === 'pdf';
+        $contenido = $pdf ? $this->pdfCfdisMes($reporte['datos'])->output()
+            : \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\CfdisMesExport($reporte['datos']), \Maatwebsite\Excel\Excel::XLSX);
+        return app(EmailController::class)->reporte_email([
+            'email_address' => $personas[0]['email'], 'destinatario' => $personas[0]['nombre'], 'destinatarios' => $personas,
+            'asunto' => $request->input('asunto') ?: $reporte['datos']['titulo'], 'mensaje' => $request->input('mensaje', ''),
+        ], $contenido, $pdf ? preg_replace('/\.xlsx$/i', '.pdf', $reporte['nombre']) : $reporte['nombre'],
+            $pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
 }
 
 class Autenticar
@@ -2491,6 +3117,8 @@ class wsFolio
 class wsFolios
 {
     public $folio;
+
+
 }
 
 /*

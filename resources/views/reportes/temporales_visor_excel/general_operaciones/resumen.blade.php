@@ -5,7 +5,7 @@
 @media print{.comparativo td{padding:2px 8px;font-size:10px}.leyenda{margin:6px 0}.pie{margin-top:6px;padding-top:6px}}
 </style></head><body><main class="reporte">
 @php($e = $datos['empresa'] ?? [])
-<table class="cabecera"><tr><td>@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ $e['nombre_comercial'] ?? 'Aeternus Funerales' }}</b><br>{{ $e['razon_social'] ?? '' }} · {{ $e['rfc'] ?? '' }}<br>{{ trim(($e['calle'] ?? '').' '.($e['num_ext'] ?? '')) }} · {{ $e['colonia'] ?? '' }} · {{ $e['ciudad'] ?? '' }}, {{ $e['estado'] ?? '' }}<br>{{ $e['telefono'] ?? '' }} · {{ mb_strtolower(trim($e['email'] ?? ''), 'UTF-8') }}</td></tr></table>
+<table class="cabecera"><tr><td>@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }}</b><br>{{ $e['razon_social'] ?? '' }} · {{ $e['rfc'] ?? '' }}<br>{{ \App\Exports\DireccionReportes::formatear($e) }}<br>{{ $e['telefono'] ?? '' }} · {{ mb_strtolower(trim($e['email'] ?? ''), 'UTF-8') }}</td></tr></table>
 <h1>{{ $datos['titulo'] }}</h1><p class="nota">{{ ucfirst($datos['periodo']) }} · Datos consultados al {{ $datos['fecha'] }} · Moneda: MXN</p>
 <table class="indicadores"><tr>@foreach(['ventas'=>'Ventas del mes','porCobrar'=>'Por cobrar del mes','vencido'=>'Vencido Acumulado Histórico'] as $clave=>$titulo)<td>{{ $titulo }}<strong>$ {{ number_format($datos['resumen'][$clave],2,'.',',') }} MXN</strong></td>@endforeach</tr></table>
 <div class="aviso-intereses" role="note"><span class="aviso-intereses__icono" aria-hidden="true">i</span><strong>Por cobrar del mes y Vencido Acumulado Histórico no incluyen intereses.</strong></div>
@@ -21,5 +21,5 @@
 <tr>@if($loop->first)<td class="nombre-tipo" rowspan="3">{{ $f['nombre'] }}</td>@endif
 <td class="pista"><div class="barra" style="width:{{ max(0,$f[$k])/$maximo*100 }}%;background:{{ $color }}"></div></td><td class="importe">$ {{ number_format($f[$k],2,'.',',') }}</td></tr>
 @endforeach @endforeach</tbody></table>
-<footer class="pie">{{ $e['nombre_comercial'] ?? 'Aeternus Funerales' }} · Resumen general · {{ $datos['fecha'] }}</footer>
+<footer class="pie">{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }} · Resumen general · {{ $datos['fecha'] }}</footer>
 </main></body></html>

@@ -6,7 +6,7 @@
 .aviso-intereses{margin:10px 0;padding:10px 12px;background:#fff4d6;color:#70530f;border-left:4px solid #b18b1e;font:600 12px/1.45 Arial,sans-serif;page-break-inside:avoid}.aviso-intereses__icono{display:inline-block;width:18px;height:18px;margin-right:7px;border:1px solid #997418;border-radius:50%;text-align:center;font:bold 13px/16px Arial,sans-serif;vertical-align:middle}@media print{.aviso-intereses{padding:7px 10px;font-size:10px}}
 </style></head><body><main class="reporte">
 @php($empresa = $datos['empresa'] ?? [])
-<table class="cabecera"><tr><td class="marca">@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ $empresa['nombre_comercial'] ?? 'Aeternus Funerales' }}</b><br>{{ $empresa['razon_social'] ?? '' }} · {{ $empresa['rfc'] ?? '' }}<br>{{ trim(($empresa['calle'] ?? '').' '.($empresa['num_ext'] ?? '')) }} · {{ $empresa['colonia'] ?? '' }} · {{ $empresa['ciudad'] ?? '' }}, {{ $empresa['estado'] ?? '' }}<br>{{ $empresa['telefono'] ?? '' }} · {{ mb_strtolower(trim($empresa['email'] ?? ''), 'UTF-8') }}</td></tr></table>
+<table class="cabecera"><tr><td class="marca">@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ \App\Exports\NombreEmpresaReportes::formatear($empresa['nombre_comercial'] ?? null) }}</b><br>{{ $empresa['razon_social'] ?? '' }} · {{ $empresa['rfc'] ?? '' }}<br>{{ \App\Exports\DireccionReportes::formatear($empresa) }}<br>{{ $empresa['telefono'] ?? '' }} · {{ mb_strtolower(trim($empresa['email'] ?? ''), 'UTF-8') }}</td></tr></table>
 <h1>{{ $datos['titulo'] }}</h1><p class="nota">Periodo consultado: {{ ucfirst($datos['periodo']) }} · Datos consultados al {{ $datos['fecha'] }} · Moneda: MXN</p>
 <table class="indicadores"><tr>@foreach(['ventas'=>($datos['etiqueta_periodo'] ?? 'Ventas del mes'),'porCobrar'=>'Por cobrar del mes','vencido'=>'Vencido Acumulado Histórico'] as $clave=>$titulo)<td>{{ $titulo }}<strong>$ {{ number_format($datos['resumen'][$clave],2,'.',',') }} MXN</strong></td>@endforeach</tr></table>
 <div class="aviso-intereses" role="note"><span class="aviso-intereses__icono" aria-hidden="true">i</span><strong>Por cobrar del mes y Vencido Acumulado Histórico no incluyen intereses.</strong></div>
@@ -20,5 +20,5 @@
 <tr class="total">@foreach($seccion['columnas'] as $indice=>$titulo)<td>@if($indice===0)TOTAL @elseif(in_array($indice,$seccion['moneda'],true))$ {{ number_format(array_sum(array_column($seccion['filas'],$indice)),2,'.',',') }}@endif</td>@endforeach</tr>
 </tbody></table></div></section>
 @endforeach
-<footer class="pie">{{ $empresa['nombre_comercial'] ?? 'Aeternus Funerales' }} · {{ $datos['modulo'] ?? 'Ventas en cementerio' }} · {{ $datos['fecha'] }}</footer>
+<footer class="pie">{{ \App\Exports\NombreEmpresaReportes::formatear($empresa['nombre_comercial'] ?? null) }} · {{ $datos['modulo'] ?? 'Ventas en cementerio' }} · {{ $datos['fecha'] }}</footer>
 </main></body></html>

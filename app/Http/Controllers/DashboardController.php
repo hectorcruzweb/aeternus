@@ -76,6 +76,14 @@ class DashboardController extends ApiController
             $dashboard['ventasSaldos'] = $this->operaciones
                 ->getVentasSaldosOperacionesDashboard(null, null, null, $fechaCorte);
             $dashboard['acceso']['secciones'][] = 'ventasSaldos';
+
+            // Solo el agregado real de timbres; el historial se consulta al abrir su reporte.
+            $dashboard['facturacion'] = app(FacturacionController::class)->getTimbresDashboard($fechaCorte);
+            $dashboard['facturacion'] = array_merge($dashboard['facturacion'],
+                app(FacturacionController::class)->getCfdisAdeudosDashboard($fechaCorte),
+                app(FacturacionController::class)->getFacturacionMesDashboard($fechaCorte),
+                app(FacturacionController::class)->getVigenciaFirmaDashboard());
+            $dashboard['acceso']['secciones'][] = 'facturacion';
         }
 
         // Agregaremos otros bloques aquí cuando sus reglas y consultas estén listas.

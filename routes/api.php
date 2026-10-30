@@ -33,6 +33,18 @@ Route::middleware(['client'])->group(function () {
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
 Route::middleware(['auth:api'])->group(function () {
     // Reportes del dashboard. Admin/Gerencia se validan además en cada controlador.
+    Route::get('/facturacion/reportes/mes', 'FacturacionController@previewReporteCfdisMes');
+    Route::get('/facturacion/reportes/mes/{token}/excel', 'FacturacionController@descargarCfdisMesExcel');
+    Route::get('/facturacion/reportes/mes/{token}/pdf', 'FacturacionController@descargarCfdisMesPdf');
+    Route::post('/facturacion/reportes/mes/{token}/correo', 'FacturacionController@enviarCfdisMesCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/facturacion/reportes/adeudos', 'FacturacionController@previewReporteCfdisAdeudos');
+    Route::get('/facturacion/reportes/adeudos/{token}/excel', 'FacturacionController@descargarCfdisAdeudosExcel');
+    Route::get('/facturacion/reportes/adeudos/{token}/pdf', 'FacturacionController@descargarCfdisAdeudosPdf');
+    Route::post('/facturacion/reportes/adeudos/{token}/correo', 'FacturacionController@enviarCfdisAdeudosCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/facturacion/reportes/timbres', 'FacturacionController@previewReporteTimbres');
+    Route::get('/facturacion/reportes/timbres/{token}/excel', 'FacturacionController@descargarReporteTimbresExcel');
+    Route::get('/facturacion/reportes/timbres/{token}/pdf', 'FacturacionController@descargarReporteTimbresPdf');
+    Route::post('/facturacion/reportes/timbres/{token}/correo', 'FacturacionController@enviarReporteTimbresCorreo')->middleware('throttle:5,1,dashboard-correo:');
     Route::get('/operaciones/reportes/general', 'OperacionesController@previewReporteGeneralOperaciones');
     Route::get('/operaciones/reportes/general/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
     Route::get('/operaciones/reportes/general/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');

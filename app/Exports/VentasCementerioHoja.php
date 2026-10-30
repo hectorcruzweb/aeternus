@@ -49,10 +49,10 @@ class VentasCementerioHoja extends DefaultValueBinder implements FromArray, With
             $fin = 10 + count($sec['filas']); $total = max(12, $fin + 1);
             $s->getStyle('A1:'.$last.$total)->getFont()->setName('Arial')->setSize(10)->getColor()->setRGB('343A40');
             $empresa = $d['empresa'] ?? [];
-            $s->mergeCells('C1:'.$last.'1')->setCellValueExplicit('C1', $empresa['nombre_comercial'] ?? 'Aeternus Funerales', DataType::TYPE_STRING);
+            $s->mergeCells('C1:'.$last.'1')->setCellValueExplicit('C1', \App\Exports\NombreEmpresaReportes::formatear($empresa['nombre_comercial'] ?? null), DataType::TYPE_STRING);
             $s->mergeCells('C2:'.$last.'2')->setCellValueExplicit('C2', implode(' · ', array_filter([$empresa['razon_social'] ?? '', $empresa['rfc'] ?? ''])), DataType::TYPE_STRING);
             $s->mergeCells('C3:'.$last.'3')->setCellValueExplicit('C3', implode(' · ', array_filter([
-                trim(($empresa['calle'] ?? '').' '.($empresa['num_ext'] ?? '')), $empresa['colonia'] ?? '', $empresa['ciudad'] ?? '', $empresa['estado'] ?? '', $empresa['telefono'] ?? '', mb_strtolower(trim($empresa['email'] ?? ''), 'UTF-8')
+                DireccionReportes::formatear($empresa), $empresa['telefono'] ?? '', mb_strtolower(trim($empresa['email'] ?? ''), 'UTF-8')
             ])), DataType::TYPE_STRING);
             foreach ([5 => $d['titulo'].' · '.$sec['nombre'], 6 => ucfirst($d['periodo']).' | Corte: '.$d['fecha'].' | Moneda: MXN',
                 7 => ($d['etiqueta_periodo'] ?? 'Ventas del mes').': $ '.number_format($d['resumen']['ventas'],2).' MXN   |   Por cobrar del mes: $ '.number_format($d['resumen']['porCobrar'],2).' MXN   |   Vencido Acumulado Histórico: $ '.number_format($d['resumen']['vencido'],2).' MXN',

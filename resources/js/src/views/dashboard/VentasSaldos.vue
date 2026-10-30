@@ -68,8 +68,7 @@
               :aria-label="cantidadValida(operacion.ventas) ? moneda(operacion.ventas) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
-              <CountTo
-                v-if="cantidadValida(operacion.ventas)"
+              <template v-if="cantidadValida(operacion.ventas)"><CountTo
                 :key="
                   operacion.id +
                   '-ventas-' +
@@ -82,12 +81,11 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.ventas)"
                 prefix="$"
-                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
                 aria-hidden="true"
-              />
+              /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
               <span v-else aria-hidden="true">—</span>
             </strong>
             <small>{{ periodoResumen }}</small>
@@ -106,8 +104,7 @@
               :aria-label="cantidadValida(operacion.porCobrar) ? moneda(operacion.porCobrar) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
-              <CountTo
-                v-if="cantidadValida(operacion.porCobrar)"
+              <template v-if="cantidadValida(operacion.porCobrar)"><CountTo
                 :key="
                   operacion.id +
                   '-porCobrar-' +
@@ -120,12 +117,11 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.porCobrar)"
                 prefix="$"
-                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
                 aria-hidden="true"
-              />
+              /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
               <span v-else aria-hidden="true">—</span>
             </strong>
             <small>{{ periodoResumen }} · saldo actual</small>
@@ -144,8 +140,7 @@
               :aria-label="cantidadValida(operacion.vencido) ? moneda(operacion.vencido) + ' MXN' : 'No disponible'"
             >
               <!-- Se recrea al activar el slide para animar únicamente la operación visible. -->
-              <CountTo
-                v-if="cantidadValida(operacion.vencido)"
+              <template v-if="cantidadValida(operacion.vencido)"><CountTo
                 :key="
                   operacion.id +
                   '-vencido-' +
@@ -158,12 +153,11 @@
                 :duration="2000"
                 :decimals="decimalesImporte(operacion.vencido)"
                 prefix="$"
-                suffix=" MXN"
                 separator=","
                 decimal="."
                 :autoplay="operacion.id === operacionSeleccionada.id"
                 aria-hidden="true"
-              />
+              /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
               <span v-else aria-hidden="true">—</span>
             </strong>
             <!-- Vencido histórico al consultar; no se divide entre el saldo del mes. -->

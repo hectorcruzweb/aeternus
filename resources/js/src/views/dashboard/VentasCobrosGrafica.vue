@@ -59,17 +59,15 @@
           class="dashboard-indicador__valor dashboard-indicador__valor--ventas"
           :aria-label="totalVentas !== null ? moneda(totalVentas) + ' MXN' : 'No disponible'"
         >
-          <CountTo
-            v-if="totalVentas !== null"
+          <template v-if="totalVentas !== null"><CountTo
             :start-val="0"
             :end-val="totalVentas"
             :duration="2000"
             :decimals="decimalesImporte(totalVentas)"
             prefix="$"
-            suffix=" MXN"
             separator=","
             aria-hidden="true"
-          /><span v-else aria-hidden="true">—</span>
+          /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template><span v-else aria-hidden="true">—</span>
         </strong>
       </div>
       <div class="dashboard-indicador">
@@ -80,17 +78,15 @@
           class="dashboard-indicador__valor dashboard-indicador__valor--cobrado"
           :aria-label="totalCobrado !== null ? moneda(totalCobrado) + ' MXN' : 'No disponible'"
         >
-          <CountTo
-            v-if="totalCobrado !== null"
+          <template v-if="totalCobrado !== null"><CountTo
             :start-val="0"
             :end-val="totalCobrado"
             :duration="2000"
             :decimals="decimalesImporte(totalCobrado)"
             prefix="$"
-            suffix=" MXN"
             separator=","
             aria-hidden="true"
-          /><span v-else aria-hidden="true">—</span>
+          /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template><span v-else aria-hidden="true">—</span>
         </strong>
       </div>
       <div class="dashboard-indicador">
@@ -99,17 +95,15 @@
           class="dashboard-indicador__valor dashboard-indicador__valor--vencido"
           :aria-label="totalVencido !== null ? moneda(totalVencido) + ' MXN' : 'No disponible'"
         >
-          <CountTo
-            v-if="totalVencido !== null"
+          <template v-if="totalVencido !== null"><CountTo
             :start-val="0"
             :end-val="totalVencido"
             :duration="2000"
             :decimals="decimalesImporte(totalVencido)"
             prefix="$"
-            suffix=" MXN"
             separator=","
             aria-hidden="true"
-          /><span v-else aria-hidden="true">—</span>
+          /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template><span v-else aria-hidden="true">—</span>
         </strong>
       </div>
     </div>

@@ -87,9 +87,18 @@
             :editor-toolbar="barraMensaje" :editor-options="opcionesMensaje"
             placeholder="Escribe un mensaje para acompañar el reporte…" />
           <div class="reporte-correo__mensaje-pie"><span class="reporte-correo__validacion" role="alert" v-if="longitudMensaje > 5000">El mensaje no debe superar 5000 caracteres.</span><span v-else>Formato de texto, listas y enlaces</span><span>{{ longitudMensaje }} / 5000</span></div>
+          <div v-if="detalleCompletoDisponible" class="reporte-correo__opcion-detalle">
+            <label class="reporte-correo__toggle" :class="{ 'esta-deshabilitado': isLoading }">
+              <span>Enviar detalle completo (Excel)</span>
+              <input v-model="datos.completo" type="checkbox" role="switch"
+                :aria-checked="datos.completo ? 'true' : 'false'" :disabled="isLoading" />
+              <span class="reporte-correo__toggle-pista" aria-hidden="true"></span>
+            </label>
+          </div>
         </div>
         <section class="reporte-correo__contenido">
           <p>Se enviará el reporte <strong>{{ titulo }}</strong> como archivo adjunto.</p>
+          <p v-if="datos.completo" class="reporte-correo__ayuda">El detalle completo se genera al enviar y puede tardar más. Disponible en Excel.</p>
           <fieldset class="reporte-correo__formatos" :disabled="isLoading">
             <legend>Formato del adjunto</legend>
             <label :class="['reporte-correo__formato', 'reporte-correo__formato--excel', { 'es-activo': datos.formato === 'excel' }]">
@@ -97,12 +106,12 @@
               <GridIcon size="22" aria-hidden="true" /><span><strong>Excel</strong><small>XLSX · Consultar y filtrar datos</small></span>
             </label>
             <label :class="['reporte-correo__formato', 'reporte-correo__formato--pdf', { 'es-activo': datos.formato === 'pdf' }]">
-              <input type="radio" v-model="datos.formato" value="pdf" name="formatoAdjunto" />
+              <input type="radio" v-model="datos.formato" value="pdf" name="formatoAdjunto" :disabled="datos.completo" />
               <FileTextIcon size="22" aria-hidden="true" /><span><strong>PDF</strong><small>Documento listo para imprimir</small></span>
             </label>
           </fieldset>
           <div :class="['reporte-correo__adjunto', { 'reporte-correo__adjunto--pdf': datos.formato === 'pdf' }]">
-            <PaperclipIcon size="16" aria-hidden="true" /><span>{{ titulo }}.{{ datos.formato === 'pdf' ? 'pdf' : 'xlsx' }}</span>
+            <PaperclipIcon size="16" aria-hidden="true" /><span>{{ datos.completo ? "Detalle " : "" }}{{ titulo }}.{{ datos.formato === 'pdf' ? 'pdf' : 'xlsx' }}</span>
           </div>
         </section>
         </div>
@@ -114,7 +123,7 @@
         </div>
       </form>
       <ConfirmarAceptar :persistente="true" v-if="openConfirmarAceptar" :show="openConfirmarAceptar" :callback-on-success="enviarReporte"
-        @closeVerificar="openConfirmarAceptar = false" :accion="'Enviar el reporte ' + (pendiente && pendiente.formato === 'pdf' ? 'PDF' : 'Excel') + ' a ' + (pendiente && pendiente.destinatarios.length > 1 ? pendiente.destinatarios.length + ' destinatarios' : (pendiente ? pendiente.email_address : ''))"
+        @closeVerificar="openConfirmarAceptar = false" :accion="'Enviar el reporte ' + (pendiente && pendiente.completo ? 'detallado completo en Excel' : (pendiente && pendiente.formato === 'pdf' ? 'PDF' : 'Excel')) + ' a ' + (pendiente && pendiente.destinatarios.length > 1 ? pendiente.destinatarios.length + ' destinatarios' : (pendiente ? pendiente.email_address : ''))"
         confirmarButton="Enviar Documento" z_index="z-index90k" />
     </vs-popup>
   </div>
@@ -132,6 +141,7 @@ export default {
     token: { type: String, required: true },
     titulo: { type: String, default: "Reporte" },
     enviar: { type: Function, required: true },
+    detalleCompletoDisponible: { type: Boolean, default: false },
   },
   data() {
     return {
@@ -141,7 +151,7 @@ export default {
       buscandoCorreo: false, errorBusquedaCorreo: "", temporizadorCorreo: null, secuenciaCorreo: 0, correoElegido: "",
       barraMensaje: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link', 'clean']],
       opcionesMensaje: { formats: ['bold', 'italic', 'underline', 'list', 'bullet', 'link'] },
-      datos: { destinatario: "", email_address: "", asunto: this.titulo || "Reporte", formato: "excel", mensaje: "" }, isLoading: false, error: "", pendiente: null, openConfirmarAceptar: false };
+      datos: { destinatario: "", email_address: "", asunto: this.titulo || "Reporte", formato: "excel", completo: false, mensaje: "" }, isLoading: false, error: "", pendiente: null, openConfirmarAceptar: false };
   },
   computed: {
     longitudMensaje() {
@@ -151,6 +161,8 @@ export default {
     },
   },
   watch: {
+    "datos.completo"(valor) { if (valor) this.datos.formato = "excel"; },
+    detalleCompletoDisponible(valor) { if (!valor) this.datos.completo = false; },
     "datos.destinatario"(valor) {
       if (this.correoPorConfirmar && valor !== this.correoPorConfirmar.nombre) this.correoPorConfirmar = null;
       if (this.campoEnFoco === "nombre") this.programarBusquedaCorreo(valor, "nombre");
@@ -340,7 +352,7 @@ export default {
       if (!this.destinatarios.length) { this.error = "Agrega al menos un destinatario."; return; }
       if (!await this.$validator.validateAll("correoReporte")) return;
       const primero = this.destinatarios[0];
-      this.pendiente = { destinatarios: this.destinatarios.map((p) => ({ nombre: p.nombre, email: p.email })), destinatario: primero.nombre || primero.email, email_address: primero.email, asunto: (this.datos.asunto || this.titulo || "Reporte").trim(), formato: this.datos.formato || "excel", mensaje: (this.datos.mensaje || "").trim() };
+      this.pendiente = { destinatarios: this.destinatarios.map((p) => ({ nombre: p.nombre, email: p.email })), destinatario: primero.nombre || primero.email, email_address: primero.email, asunto: (this.datos.asunto || this.titulo || "Reporte").trim(), formato: this.datos.completo && this.detalleCompletoDisponible ? "excel" : (this.datos.formato || "excel"), completo: this.detalleCompletoDisponible && this.datos.completo, mensaje: (this.datos.mensaje || "").trim() };
       this.openConfirmarAceptar = true;
     },
     async enviarReporte() {

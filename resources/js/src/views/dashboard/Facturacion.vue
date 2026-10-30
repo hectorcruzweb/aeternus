@@ -56,7 +56,7 @@
           class="dashboard-enlace"
           @click="verReporteFacturacion('timbres')"
         >
-          Ver movimientos <ArrowUpRightIcon size="13" aria-hidden="true" />
+          Ver reporte <ArrowUpRightIcon size="13" aria-hidden="true" />
         </button>
       </div>
       <div class="dashboard-indicador">
@@ -66,26 +66,25 @@
             class="dashboard-indicador__icono"
             aria-hidden="true"
           />
-          Facturas con adeudo</span
+          CFDI con adeudo acumulado</span
         >
         <strong
           class="dashboard-indicador__valor dashboard-indicador__valor--vencido"
           :aria-label="cantidadValida(facturacion.saldoPendiente) ? moneda(facturacion.saldoPendiente) + ' MXN' : 'No disponible'"
         >
-          <CountTo
-            v-if="cantidadValida(facturacion.saldoPendiente)"
+          <template v-if="cantidadValida(facturacion.saldoPendiente)"><CountTo
             :start-val="0"
             :end-val="numero(facturacion.saldoPendiente)"
             :duration="2000"
             :decimals="decimalesImporte(facturacion.saldoPendiente)"
             prefix="$"
-            suffix=" MXN"
             separator=","
             decimal="."
             aria-hidden="true"
-          />
+          /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
           <span v-else aria-hidden="true">—</span>
         </strong>
+        <small>Acumulado hasta {{ periodoResumen }}</small>
         <small
           :aria-label="
             cantidadValida(facturacion.facturasPendientes)
@@ -110,7 +109,7 @@
           class="dashboard-enlace"
           @click="verReporteFacturacion('facturas')"
         >
-          Ver facturas <ArrowUpRightIcon size="13" aria-hidden="true" />
+          Ver reporte <ArrowUpRightIcon size="13" aria-hidden="true" />
         </button>
       </div>
       <div class="dashboard-indicador">
@@ -120,27 +119,35 @@
             class="dashboard-indicador__icono"
             aria-hidden="true"
           />
-          Ventas facturadas</span
+          Facturado del mes</span
         >
         <strong
-          class="dashboard-indicador__valor dashboard-indicador__valor--cobrado"
+          class="dashboard-indicador__valor dashboard-indicador__valor--ventas"
           :aria-label="cantidadValida(facturacion.ventasFacturadas) ? moneda(facturacion.ventasFacturadas) + ' MXN' : 'No disponible'"
         >
-          <CountTo
-            v-if="cantidadValida(facturacion.ventasFacturadas)"
+          <template v-if="cantidadValida(facturacion.ventasFacturadas)"><CountTo
             :start-val="0"
             :end-val="numero(facturacion.ventasFacturadas)"
             :duration="2000"
             :decimals="decimalesImporte(facturacion.ventasFacturadas)"
             prefix="$"
-            suffix=" MXN"
             separator=","
             decimal="."
             aria-hidden="true"
-          />
+          /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
           <span v-else aria-hidden="true">—</span>
         </strong>
-        <small>{{ periodoResumen }}</small>
+        <div class="dashboard-facturacion__saldado">
+          <span>Saldado</span>
+          <strong :aria-label="cantidadValida(facturacion.saldadoFacturado) ? moneda(facturacion.saldadoFacturado) + ' MXN saldados' : 'No disponible'">
+            <template v-if="cantidadValida(facturacion.saldadoFacturado)"><CountTo
+              :start-val="0" :end-val="numero(facturacion.saldadoFacturado)" :duration="2000"
+              :decimals="decimalesImporte(facturacion.saldadoFacturado)" prefix="$" separator="," decimal="." aria-hidden="true"
+            /><span class="dashboard-moneda" aria-hidden="true">MXN</span></template>
+            <span v-else aria-hidden="true">—</span>
+          </strong>
+        </div>
+        <div class="dashboard-facturacion__reporte">
         <button
           type="button"
           class="dashboard-enlace"
@@ -148,6 +155,8 @@
         >
           Ver reporte <ArrowUpRightIcon size="13" aria-hidden="true" />
         </button>
+          <small>{{ periodoResumen }}</small>
+        </div>
       </div>
     </div>
   </article>
@@ -277,15 +286,15 @@ export default {
     verReporteFacturacion(tipo) {
       if (this.cargando) return;
       const titulos = {
-        timbres: "Timbres disponibles",
-        facturas: "Facturas con adeudo",
-        ventas: "Ventas facturadas",
+        timbres: "Reporte de Recargas de Timbres",
+        facturas: "CFDI con Adeudo · Acumulado Histórico",
+        ventas: "Reporte de Facturación del Mes",
       };
-      // El futuro pop-up recibirá el tipo de reporte, sin tablas en el dashboard.
+      // El padre abre el visor según el indicador; no se insertan tablas en el dashboard.
       this.$emit("ver-reporte", {
         tipo: "facturacion-" + tipo,
         titulo: titulos[tipo],
-        periodo: tipo === "ventas" ? this.periodoResumen : "Estado actual",
+        periodo: tipo === "facturas" ? "Acumulado hasta " + this.periodoResumen : (tipo === "ventas" ? this.periodoResumen : "Estado actual"),
       });
     },
   },

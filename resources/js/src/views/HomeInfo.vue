@@ -104,6 +104,30 @@
         :data="serviciosFunerarios"
       />
     </VistaLimitada>
+    <VisorReportes v-if="mostrarReporteCfdisMes" :show="mostrarReporteCfdisMes"
+      :cargar="cargarReporteCfdisMes" :descargar-archivo="descargarCfdisMesExcel"
+      :descargar-pdf="descargarCfdisMesPdf" :enviar-correo="enviarCfdisMesCorreo"
+      @close="mostrarReporteCfdisMes = false" />
+    <!-- Adeudo acumulado: consultar el detalle únicamente al abrir su reporte. -->
+    <VisorReportes v-if="mostrarReporteCfdisAdeudos" :show="mostrarReporteCfdisAdeudos"
+      :cargar="cargarReporteCfdisAdeudos" :descargar-archivo="descargarCfdisAdeudosExcel"
+      :descargar-pdf="descargarCfdisAdeudosPdf" :enviar-correo="enviarCfdisAdeudosCorreo"
+      @close="mostrarReporteCfdisAdeudos = false" />
+    <!-- Recargas e historial bajo demanda, sin cargar CFDI al abrir el dashboard. -->
+    <VisorReportes
+      v-if="mostrarReporteTimbres"
+      ref="visorTimbres"
+      :show="mostrarReporteTimbres"
+      :cargar="cargarReporteTimbres"
+      :descargar-archivo="descargarTimbresExcel"
+      :descargar-pdf="descargarTimbresPdf"
+      :enviar-correo="enviarTimbresCorreo"
+      :descargar-completo="recargaReporteTimbres === null ? descargarTimbresCompleto : null"
+      :mostrar-volver-resumen="recargaReporteTimbres !== null"
+      @abrir-relacionado="abrirHistorialRecarga"
+      @volver-resumen="volverRecargasTimbres"
+      @close="cerrarReporteTimbres"
+    />
     <!-- Reporte del slide seleccionado; el visor no carga detalles hasta abrirse. -->
     <VisorReportes
       v-if="mostrarReporteVentas"
@@ -136,6 +160,9 @@ import Inventario from "./dashboard/Inventario.vue";
 import dashboard from "../services/dashboard";
 import VisorReportes from "./pages/VisorReportes.vue";
 import reportesVentas from "../services/reportesVentas";
+import reportesTimbres from "../services/reportesTimbres";
+import reportesCfdisAdeudos from "../services/reportesCfdisAdeudos";
+import reportesCfdisMes from "../services/reportesCfdisMes";
 
 export default {
   name: "Dashboard",
@@ -172,6 +199,10 @@ export default {
       pendientes: {},
       seguimientos: {},
       operacionesGraficaEjemplo: [],
+      mostrarReporteCfdisMes: false,
+      mostrarReporteCfdisAdeudos: false,
+      mostrarReporteTimbres: false,
+      recargaReporteTimbres: null,
       mostrarReporteVentas: false,
       reporteDesdeGeneral: false,
       parametrosReporteVentas: null,
@@ -318,13 +349,23 @@ export default {
         : [];
       this.inventario = incluye("inventario") ? datos.inventario : {};
       this.ventasSaldos = incluye("ventasSaldos") ? datos.ventasSaldos : [];
-      if (completa) this.cargarEjemplosPendientes();
+      if (completa) {
+        this.cargarEjemplosPendientes();
+        // Todos los indicadores de facturación y la vigencia provienen del servidor.
+        this.facturacion.timbresDisponibles = datos.facturacion &&
+          Object.prototype.hasOwnProperty.call(datos.facturacion, "timbresDisponibles")
+          ? datos.facturacion.timbresDisponibles : null;
+        ["saldoPendiente", "facturasPendientes", "adeudosCorte", "adeudosMoneda", "ventasFacturadas", "saldadoFacturado", "cantidadFacturasMes", "fechaCaducidadFiel"].forEach(campo => {
+          this.facturacion[campo] = datos.facturacion && Object.prototype.hasOwnProperty.call(datos.facturacion, campo)
+            ? datos.facturacion[campo] : null;
+        });
+      }
       this.dashboardDisponible = true;
     },
     // Maqueta autorizada: retirar cada bloque al integrar su fuente real.
     cargarEjemplosPendientes() {
       this.facturacion = {
-        fechaCaducidadFiel: "2027-12-24",
+        fechaCaducidadFiel: null,
         timbresDisponibles: 86,
         facturasPendientes: 12,
         saldoPendiente: 28400,
@@ -432,6 +473,19 @@ export default {
         fechaCorte: this.meta.fechaCorte,
         periodoResumen: Object.assign({}, this.meta.periodoResumen),
       });
+      if (contexto.tipo === "facturacion-ventas") {
+        this.mostrarReporteCfdisMes = true;
+        return;
+      }
+      if (contexto.tipo === "facturacion-facturas") {
+        this.mostrarReporteCfdisAdeudos = true;
+        return;
+      }
+      if (contexto.tipo === "facturacion-timbres") {
+        this.recargaReporteTimbres = null;
+        this.mostrarReporteTimbres = true;
+        return;
+      }
       if (contexto.tipo === "ventas-saldos") {
         if (contexto.empresa_operaciones_id == null || [1, 2, 3, 4, 5].includes(Number(contexto.empresa_operaciones_id))) {
           // El mes es el del resumen recibido del servidor, no el de la gráfica.
@@ -447,6 +501,30 @@ export default {
         }
       }
     },
+    async cargarReporteCfdisMes() { return (await reportesCfdisMes.visualizar()).data; },
+    async descargarCfdisMesExcel(token) { return (await reportesCfdisMes.excel(token)).data; },
+    async descargarCfdisMesPdf(token) { return (await reportesCfdisMes.pdf(token)).data; },
+    async enviarCfdisMesCorreo(token, datos) { return (await reportesCfdisMes.correo(token, datos)).data; },
+    async cargarReporteCfdisAdeudos() { return (await reportesCfdisAdeudos.visualizar()).data; },
+    async descargarCfdisAdeudosExcel(token) { return (await reportesCfdisAdeudos.excel(token)).data; },
+    async descargarCfdisAdeudosPdf(token) { return (await reportesCfdisAdeudos.pdf(token)).data; },
+    async enviarCfdisAdeudosCorreo(token, datos) { return (await reportesCfdisAdeudos.correo(token, datos)).data; },
+    cerrarReporteTimbres() { this.mostrarReporteTimbres = false; this.recargaReporteTimbres = null; },
+    abrirHistorialRecarga(id) {
+      const coincidencia = /^recarga-([1-9]\d*)$/.exec(String(id));
+      if (!this.puedeVerDashboardCompleto || !coincidencia) return;
+      this.recargaReporteTimbres = Number(coincidencia[1]);
+      this.$nextTick(() => { if (this.$refs.visorTimbres) this.$refs.visorTimbres.consultar(); });
+    },
+    volverRecargasTimbres() {
+      this.recargaReporteTimbres = null;
+      this.$nextTick(() => { if (this.$refs.visorTimbres) this.$refs.visorTimbres.consultar(); });
+    },
+    async cargarReporteTimbres() { return (await reportesTimbres.visualizar(this.recargaReporteTimbres)).data; },
+    async descargarTimbresExcel(token) { return (await reportesTimbres.excel(token)).data; },
+    async descargarTimbresCompleto(token) { return (await reportesTimbres.excel(token, true)).data; },
+    async descargarTimbresPdf(token) { return (await reportesTimbres.pdf(token)).data; },
+    async enviarTimbresCorreo(token, datos) { return (await reportesTimbres.correo(token, datos)).data; },
     cerrarReporteVentas() { this.mostrarReporteVentas = false; this.reporteDesdeGeneral = false; },
     abrirReporteDesdeGeneral(tipo) {
       if (!this.puedeVerDashboardCompleto || ![1,2,3,4,5].includes(Number(tipo))) return;
