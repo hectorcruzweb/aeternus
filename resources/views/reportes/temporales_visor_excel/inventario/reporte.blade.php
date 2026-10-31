@@ -1,3 +1,10 @@
+{{--
+ Vista HTML/PDF de inventario; recibe columnas/filas del exportador para mantener el mismo contenido.
+ Dónde ajustar: Estilos y distribución de vista previa/impresión aquí. Los bloques modoPdf y @media print
+ pueden diferir de pantalla; el tamaño/márgenes del PDF se configuran también en el controlador.
+ Relacionado: VisorReportes.vue; controlador del reporte; exportador Excel equivalente
+ Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+--}}
 <!doctype html>
 <html lang="es">
 <head>

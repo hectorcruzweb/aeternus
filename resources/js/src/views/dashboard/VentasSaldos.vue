@@ -172,6 +172,15 @@
   </article>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Carrusel de resúmenes recibido del backend, incluido todas; el enlace usa el tipo del slide activo.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import VueSlickCarousel from "vue-slick-carousel";
 import CountTo from "vue-count-to";
@@ -206,6 +215,11 @@ export default {
     operaciones: { type: Array, required: true },
     periodoResumen: { type: String, required: true },
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de VentasSaldos; no consulta
+   * al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       operacionActiva: 0,
@@ -227,12 +241,26 @@ export default {
   computed: {
     // Una fila recibida = un slide; conservar nombres, importes y orden del backend.
     // No fabricar el general, sumar importes, filtrar tipos ni limitar su cantidad.
+    /**
+     * Detalle del método: Devuelve las filas válidas del carrusel en el orden del backend, sin crear otro
+     * total general.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     operacionesResumen() {
       return this.operaciones;
     },
+    /**
+     * Detalle del método: Identifica el conjunto de operaciones o reacciona a su cambio para mantener
+     * válido el slide activo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     claveCarrusel() {
       return this.operaciones.map((operacion) => operacion.id).join("|");
     },
+    /**
+     * Detalle del método: Devuelve el resumen del slide activo o el fallback definido cuando faltan filas.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     operacionSeleccionada() {
       return (
         this.operacionesResumen[this.operacionActiva] ||
@@ -243,6 +271,11 @@ export default {
   },
   watch: {
     // Si cambia la lista de tipos, recrear el carrusel y activar su primera fila.
+    /**
+     * Detalle del método: Identifica el conjunto de operaciones o reacciona a su cambio para mantener
+     * válido el slide activo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     claveCarrusel() {
       this.operacionActiva = 0;
     },
@@ -250,6 +283,11 @@ export default {
   methods: {
     moneda,
     // CountTo exige números; un dato ausente conserva el guion en lugar de mostrar cero.
+    /**
+     * Detalle del método: Devuelve si la cantidad es numérica y finita, distinguiendo cero real de
+     * ausencia de datos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cantidadValida(valor) {
       return (
         valor !== null &&
@@ -258,12 +296,27 @@ export default {
         Number.isFinite(Number(valor))
       );
     },
+    /**
+     * Detalle del método: Convierte a número la cantidad admitida por la validación local y usa el
+     * fallback definido para valores no válidos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     numero(valor) {
       return Number(valor);
     },
+    /**
+     * Detalle del método: Devuelve la precisión visual del importe, conservando centavos cuando existen;
+     * no redondea el saldo del backend.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
+    /**
+     * Detalle del método: Avanza o retrocede la selección del carrusel usando el paso recibido y sus
+     * límites.
+     * Entradas: paso (desplazamiento del carrusel para avanzar/retroceder).
+     */
     moverOperacion(paso) {
       if (this.cargando) return;
       if (this.operacionesResumen.length < 2) return;
@@ -272,9 +325,19 @@ export default {
       if (paso < 0) carrusel.prev();
       else carrusel.next();
     },
+    /**
+     * Detalle del método: Sincroniza el índice activo notificado por el carrusel para mantener correcto el
+     * enlace del reporte.
+     * Entradas: indice (posición seleccionada del arreglo local).
+     */
     cambiarOperacionActiva(indice) {
       this.operacionActiva = indice;
     },
+    /**
+     * Detalle del método: Emite al padre el contexto de tipo y periodo del slide visible; no suma de nuevo
+     * el concentrado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     verReporteVentas() {
       if (this.cargando) return;
       const seleccion = this.operacionSeleccionada;

@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Declara las rutas autenticadas de indicadores, vistas previas, descargas y correo.
+ * Dónde ajustar: Mantener los reportes dentro de auth:api. Los controladores validan además rol y
+ * propietario del token. El throttle de correo es independiente del acceso al visor.
+ * Relacionado: services/reportes*.js; DashboardController y controladores de reportes
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 /*
 |--------------------------------------------------------------------------

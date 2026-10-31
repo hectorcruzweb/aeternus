@@ -129,6 +129,16 @@
   </div>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Editor de destinatarios, asunto, mensaje vue2-editor y formato del adjunto.
+ * Dónde ajustar: Permite buscar clientes por nombre/correo, editar destinatarios, confirmar reemplazos y
+ * enviar hasta 20 receptores. El mensaje visible se limita a 5000 caracteres; el backend valida y sanea de
+ * nuevo.
+ * Relacionado: ClientesController@buscarCorreosReportes; EmailController@reporte_email; VisorReportes.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import { MailIcon, GridIcon, PaperclipIcon, FileTextIcon, SendIcon, PlusIcon, XIcon, Edit2Icon, CheckIcon, AlertCircleIcon } from "vue-feather-icons";
 import ConfirmarAceptar from "./confirmarAceptar.vue";
 import { VueEditor } from "vue2-editor";
@@ -143,6 +153,11 @@ export default {
     enviar: { type: Function, required: true },
     detalleCompletoDisponible: { type: Boolean, default: false },
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de EnviarReporteCorreo; no
+   * consulta al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       nombrePorConfirmar: null, correoPorConfirmar: null, campoBusqueda: "email", campoEnFoco: null, nombreElegido: "",
@@ -154,6 +169,11 @@ export default {
       datos: { destinatario: "", email_address: "", asunto: this.titulo || "Reporte", formato: this.soloPdf ? "pdf" : "excel", completo: false, mensaje: "" }, isLoading: false, error: "", pendiente: null, openConfirmarAceptar: false };
   },
   computed: {
+    /**
+     * Detalle del método: Devuelve la longitud del texto visible del editor para el contador/límite de
+     * 5000; el backend valida de nuevo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     longitudMensaje() {
       const contenido = document.createElement("div");
       contenido.innerHTML = this.datos.mensaje || "";
@@ -161,15 +181,39 @@ export default {
     },
   },
   watch: {
+    /**
+     * Detalle del método: Fuerza Excel al activar el detalle completo, ya que el adjunto ampliado usa
+     * XLSX.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     "datos.completo"(valor) { if (valor) this.datos.formato = "excel"; },
+    /**
+     * Detalle del método: Desactiva detalle completo si el reporte deja de ofrecer esa opción.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     detalleCompletoDisponible(valor) { if (!valor) this.datos.completo = false; },
+    /**
+     * Detalle del método: Observa cambios del nombre para sincronizar sugerencias sin sobrescribir otro
+     * dato silenciosamente.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     "datos.destinatario"(valor) {
       if (this.correoPorConfirmar && valor !== this.correoPorConfirmar.nombre) this.correoPorConfirmar = null;
       if (this.campoEnFoco === "nombre") this.programarBusquedaCorreo(valor, "nombre");
     },
+    /**
+     * Detalle del método: Observa el correo escrito para actualizar sugerencias; todavía no lo agrega a
+     * destinatarios.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     "datos.email_address"(valor) { if (this.nombrePorConfirmar && valor !== this.nombrePorConfirmar.email) this.nombrePorConfirmar = null; this.errorDestinatario = ""; if (this.campoEnFoco === "email") this.programarBusquedaCorreo(valor, "email"); },
     show: {
       immediate: true,
+      /**
+       * Detalle del método: Reacciona al valor observado para restablecer/preparar el formulario y el
+       * registro de su popup.
+       * Entradas: valor (valor recibido del control o propiedad observada).
+       */
       handler(valor) {
         if (valor) this.$popupManager.register(this, this.cerrar, "destinatario");
         else this.$popupManager.unregister(this.$options.name);
@@ -178,11 +222,22 @@ export default {
   },
   methods: {
     // Interceptar solo el fondo; los controles internos y la X mantienen su funcionamiento.
+    /**
+     * Detalle del método: Detiene el clic sobre el fondo del popup; conserva el cierre controlado con X y
+     * Escape.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     bloquearCierreExterior(evento) {
       if (evento.target.classList && evento.target.classList.contains("vs-popup--background")) {
         evento.preventDefault(); evento.stopImmediatePropagation();
       }
     },
+    /**
+     * Detalle del método: Espera la pausa de escritura y busca clientes por nombre/correo, descartando
+     * respuestas antiguas.
+     * Entradas: valor (valor recibido del control o propiedad observada); campo = "email" (campo del dato
+     * o indicador que se evalúa).
+     */
     programarBusquedaCorreo(valor, campo = "email") {
       this.campoBusqueda = campo;
       clearTimeout(this.temporizadorCorreo);
@@ -210,15 +265,33 @@ export default {
         }
       }, 350);
     },
+    /**
+     * Detalle del método: Identifica el campo activo y prepara sus sugerencias y navegación por teclado.
+     * Entradas: campo (campo del dato o indicador que se evalúa).
+     */
     enfocarBusqueda(campo) {
       this.campoEnFoco = campo;
       this.programarBusquedaCorreo(campo === "nombre" ? this.datos.destinatario : this.datos.email_address, campo);
     },
+    /**
+     * Detalle del método: Oculta coincidencias sin borrar los datos escritos del destinatario.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrarSugerencias() { this.sugerenciasAbiertas = false; },
+    /**
+     * Detalle del método: Procesa flechas, Enter y Escape en las sugerencias del nombre para
+     * navegar/seleccionar sin enviar el formulario accidentalmente.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     teclasNombre(evento) {
       if (evento.key === "Enter" && !(this.sugerenciasAbiertas && this.sugerenciaActiva >= 0)) { evento.preventDefault(); return; }
       this.teclasCorreo(evento);
     },
+    /**
+     * Detalle del método: Selecciona un cliente sugerido y solicita confirmación si reemplazaría un
+     * correo/nombre ya escrito.
+     * Entradas: cliente (cliente elegido de las sugerencias).
+     */
     seleccionarCorreo(cliente) {
       clearTimeout(this.temporizadorCorreo);
       this.secuenciaCorreo++;
@@ -251,18 +324,33 @@ export default {
       this.sugerenciasAbiertas = false;
       this.buscandoCorreo = false;
     },
+    /**
+     * Detalle del método: Aplica la decisión de mantener o reemplazar el correo al seleccionar un cliente
+     * por nombre.
+     * Entradas: usarCliente (decisión de reemplazar o mantener lo escrito).
+     */
     resolverCorreo(usarCliente) {
       if (!this.correoPorConfirmar || this.isLoading) return;
       if (usarCliente) { this.correoElegido = this.correoPorConfirmar.email; this.datos.email_address = this.correoPorConfirmar.email; }
       this.correoPorConfirmar = null;
       this.errorDestinatario = "";
     },
+    /**
+     * Detalle del método: Aplica la decisión de mantener o reemplazar el nombre al seleccionar un correo
+     * del cliente.
+     * Entradas: usarCliente (decisión de reemplazar o mantener lo escrito).
+     */
     resolverNombre(usarCliente) {
       if (!this.nombrePorConfirmar || this.isLoading) return;
       if (usarCliente) this.datos.destinatario = this.nombrePorConfirmar.nombre;
       this.nombrePorConfirmar = null;
       this.errorDestinatario = "";
     },
+    /**
+     * Detalle del método: Procesa flechas, Enter y Escape en las sugerencias del correo para
+     * navegar/seleccionar sin enviar el formulario accidentalmente.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     teclasCorreo(evento) {
       if (evento.key === "Enter" && !(this.sugerenciasAbiertas && this.sugerenciaActiva >= 0)) {
         evento.preventDefault(); this.agregarDestinatario(); return;
@@ -278,8 +366,23 @@ export default {
         evento.preventDefault(); this.seleccionarCorreo(this.sugerenciasCorreo[this.sugerenciaActiva]);
       }
     },
+    /**
+     * Detalle del método: Propaga el cambio de visibilidad al cierre controlado, respetando una operación
+     * en curso.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     alCambiarVisibilidad(valor) { if (!valor) this.cerrar(); },
+    /**
+     * Detalle del método: Cierra EnviarReporteCorreo mediante su mecanismo controlado, respetando bloqueos
+     * de una operación en curso y su limpieza local.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrar() { if (!this.isLoading) this.$emit("close"); },
+    /**
+     * Detalle del método: Carga un destinatario agregado en los inputs y recuerda su índice y la entrada
+     * previa para poder cancelar.
+     * Entradas: indice (posición seleccionada del arreglo local).
+     */
     editarDestinatario(indice) {
       if (this.isLoading || !this.destinatarios[indice]) return;
       if (this.indiceEdicion < 0) this.entradaAntesEditar = { nombre: this.datos.destinatario, email: this.datos.email_address };
@@ -296,6 +399,11 @@ export default {
         if (input) { input.focus(); input.select(); }
       });
     },
+    /**
+     * Detalle del método: Descarta la edición del destinatario y restaura la entrada previa sin aplicar
+     * cambios a la lista.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cancelarEdicion() {
       if (this.isLoading) return;
       this.nombrePorConfirmar = null;
@@ -307,12 +415,21 @@ export default {
       this.errorDestinatario = "";
       this.cerrarSugerencias();
     },
+    /**
+     * Detalle del método: Quita de la lista el índice elegido; no modifica la tabla de clientes.
+     * Entradas: indice (posición seleccionada del arreglo local).
+     */
     quitarDestinatario(indice) {
       if (this.isLoading) return;
       if (indice === this.indiceEdicion) this.cancelarEdicion();
       else if (indice < this.indiceEdicion) this.indiceEdicion--;
       this.destinatarios.splice(indice, 1);
     },
+    /**
+     * Detalle del método: Valida formato, duplicados y límite y agrega/actualiza la entrada; todavía no
+     * envía mensajes.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async agregarDestinatario() {
       if (this.isLoading) return false;
       if (this.correoPorConfirmar) { this.errorDestinatario = "Elige si deseas mantener el correo escrito o usar el del cliente."; return false; }
@@ -343,6 +460,11 @@ export default {
       this.cerrarSugerencias();
       return true;
     },
+    /**
+     * Detalle del método: Valida el formulario y guarda una copia del envío pendiente antes de abrir su
+     * confirmación.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async confirmar() {
       if (this.isLoading || this.openConfirmarAceptar || !this.show) return;
       this.error = "";
@@ -355,6 +477,11 @@ export default {
       this.pendiente = { destinatarios: this.destinatarios.map((p) => ({ nombre: p.nombre, email: p.email })), destinatario: primero.nombre || primero.email, email_address: primero.email, asunto: (this.datos.asunto || this.titulo || "Reporte").trim(), formato: this.datos.completo && this.detalleCompletoDisponible ? "excel" : (this.datos.formato || "excel"), completo: this.detalleCompletoDisponible && this.datos.completo, mensaje: (this.datos.mensaje || "").trim() };
       this.openConfirmarAceptar = true;
     },
+    /**
+     * Detalle del método: Devuelve una promesa de envío de los datos confirmados y gestiona éxito,
+     * validaciones y límite de intentos.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async enviarReporte() {
       if (!this.pendiente || this.isLoading || !this.show) return;
       const datos = this.pendiente;
@@ -388,6 +515,11 @@ export default {
       }
     },
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de EnviarReporteCorreo al
+   * destruirse; evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() { clearTimeout(this.temporizadorCorreo); this.secuenciaCorreo++; this.$popupManager.unregister(this.$options.name); },
 };
 </script>

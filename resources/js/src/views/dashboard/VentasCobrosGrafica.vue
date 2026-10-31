@@ -170,6 +170,17 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Compara operaciones 1/3/4/5 en barras y muestra cuotas tipo 2 aparte; permite elegir mes/año y reporte.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend. Mantener responsive: [] de ApexCharts: la adaptación móvil usa
+ * matchMedia para evitar el error de recursión observado. Los filtros visuales no cambian el alcance del
+ * reporte elegido.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import VueApexCharts from "vue-apexcharts";
 import CountTo from "vue-count-to";
@@ -204,9 +215,19 @@ export default {
     cargando: { type: Boolean, default: false },
     error: { type: String, default: "" },
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de VentasCobrosGrafica; no
+   * consulta al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return { meses: MESES, operacionReporteId: "todas", esPantallaCompacta: false, operacionesOcultas: [] };
   },
+  /**
+   * Detalle del método: Conecta matchMedia para adaptar la gráfica a móvil sin responsive recursivo de
+   * ApexCharts.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   mounted() {
     // Compatibilidad Apex3/Vue2: adaptar orientación sin usar el responsive interno,
     // que clona referencias circulares al desmontar y montar tras cambiar de periodo.
@@ -216,22 +237,52 @@ export default {
     if(this._mediaGrafica.addEventListener)this._mediaGrafica.addEventListener("change",this._cambiarPantallaGrafica);
     else this._mediaGrafica.addListener(this._cambiarPantallaGrafica);
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de VentasCobrosGrafica al
+   * destruirse; evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() {
     if(!this._mediaGrafica)return;
     if(this._mediaGrafica.removeEventListener)this._mediaGrafica.removeEventListener("change",this._cambiarPantallaGrafica);
     else this._mediaGrafica.removeListener(this._cambiarPantallaGrafica);
   },
   watch: {
-    datos: { immediate: true, handler(filas) {
+    datos: { immediate: true, /**
+   * Detalle del método: Reacciona a nuevos datos para mantener válidos filtros y selección locales.
+   * Entradas: filas (nuevo conjunto de filas observado).
+   */
+  handler(filas) {
       if(this.operacionReporteId === "todas" || !filas.length) return; // Conservar la selección mientras cambia el periodo.
       if(!filas.some(f => Number(f.id)===this.operacionReporteId)) this.operacionReporteId="todas";
     } },
   },
   computed: {
+    /**
+     * Detalle del método: Devuelve el tipo 2 para su panel separado; no lo incorpora a las barras.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cuotas() { return this.datos.find(f => Number(f.id)===2); },
+    /**
+     * Detalle del método: Devuelve campos y etiquetas de ventas, por cobrar y vencido del panel de cuotas.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     indicadoresCuotas() { return [{campo:"ventas",nombre:"Cuotas generadas del mes"},{campo:"porCobrar",nombre:"Por cobrar del mes"},{campo:"vencido",nombre:"Vencido Acumulado Histórico"}]; },
+    /**
+     * Detalle del método: Devuelve los tipos visibles de las barras excluyendo siempre cuotas tipo 2.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     datosVisibles() { return this.datos.filter(f => Number(f.id)!==2 && this.operacionVisible(f.id)); },
+    /**
+     * Detalle del método: Devuelve si las operaciones visibles contienen importes numéricos que pueden
+     * representarse.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     hayDatosVisibles() { return this.datosVisibles.some(f => [f.ventas,f.porCobrar,f.vencido].some(this.importeValido)); },
+    /**
+     * Detalle del método: Devuelve si hay datos utilizables para dibujar la gráfica.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     hayDatos() {
       return this.datos.some(
         (d) =>
@@ -240,16 +291,40 @@ export default {
           this.importeValido(d.vencido)
       );
     },
+    /**
+     * Detalle del método: Devuelve la suma de ventas de los tipos visibles mediante sumar; cuotas queda en
+     * su panel separado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     totalVentas() {
       return this.sumar("ventas");
     },
+    /**
+     * Detalle del método: Devuelve la suma de por cobrar de los tipos visibles mediante sumar; cuotas
+     * queda en su panel separado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     totalPorCobrar() {
       return this.sumar("porCobrar");
     },
+    /**
+     * Detalle del método: Devuelve la suma de vencido de los tipos visibles mediante sumar; cuotas queda
+     * en su panel separado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     totalVencido() {
       return this.sumar("vencido");
     },
+    /**
+     * Detalle del método: Devuelve el nombre del mes y año seleccionado para hacerlo visible en la card.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     periodoTexto() { return MESES[this.periodo.mes - 1] + " " + this.periodo.anio; },
+    /**
+     * Detalle del método: Transforma los tipos visibles en series de ventas, por cobrar y vencido de
+     * ApexCharts.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     series() {
       return [
         {
@@ -272,12 +347,21 @@ export default {
         },
       ];
     },
+    /**
+     * Detalle del método: Devuelve una descripción textual de la gráfica para accesibilidad.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     descripcionGrafica() {
       return (
         this.periodoTexto +
         ". Comparación de ventas, por cobrar del mes y vencido acumulado histórico por tipo de operación. Importes en pesos mexicanos."
       );
     },
+    /**
+     * Detalle del método: Devuelve ejes, leyendas, colores y formato de ApexCharts. Mantener responsive
+     * vacío: la adaptación móvil usa matchMedia para evitar recursión.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     opciones() {
       return {
         chart: {
@@ -317,19 +401,46 @@ export default {
     },
   },
   methods: {
+    /**
+     * Detalle del método: Emite al padre el reporte tipo 2 con el periodo actual de la gráfica.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     solicitarReporteCuotas() {
       if(this.cargando || this.error)return;
       this.$emit("ver-reporte",{tipo:"ventas-saldos-periodo",empresa_operaciones_id:2,anio:this.periodo.anio,mes:this.periodo.mes});
     },
     moneda,
+    /**
+     * Detalle del método: Devuelve si el ID no pertenece a la lista local de operaciones ocultas.
+     * Entradas: id (ID del elemento seleccionado en este contexto).
+     */
     operacionVisible(id) { return this.operacionesOcultas.indexOf(String(id)) === -1; },
+    /**
+     * Detalle del método: Agrega o retira un tipo de la lista oculta; solo cambia la comparación visual y
+     * sus totales visibles.
+     * Entradas: id (ID del elemento seleccionado en este contexto).
+     */
     alternarOperacion(id) {
       if(this.cargando || this.error || !this.datos.some(f => String(f.id)===String(id)))return;
       const clave=String(id);
       this.operacionesOcultas=this.operacionVisible(id)?this.operacionesOcultas.concat(clave):this.operacionesOcultas.filter(f=>f!==clave);
     },
+    /**
+     * Detalle del método: Vacía filtros locales para mostrar todos los tipos de barras; cuotas sigue
+     * aparte.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     mostrarTodas() { this.operacionesOcultas=[]; },
+    /**
+     * Detalle del método: Devuelve el importe formateado o el marcador de dato ausente, sin modificar la
+     * cifra numérica.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     importeTexto(valor) { return this.importeValido(valor)?moneda(Number(valor)):"—"; },
+    /**
+     * Detalle del método: Devuelve si el importe es numérico y finito; cero sigue siendo válido.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     importeValido(valor) {
       return (
         valor !== null &&
@@ -339,6 +450,11 @@ export default {
       );
     },
     // No presentar como total completo una suma con operaciones sin dato.
+    /**
+     * Detalle del método: Devuelve la suma del campo indicado de los tipos visibles, sin sumar el panel de
+     * cuotas.
+     * Entradas: campo (campo del dato o indicador que se evalúa).
+     */
     sumar(campo) {
       return this.datosVisibles.length &&
         this.datosVisibles.every((d) => this.importeValido(d[campo]))
@@ -347,9 +463,18 @@ export default {
           ) / 100
         : null;
     },
+    /**
+     * Detalle del método: Devuelve la precisión visual del importe, conservando centavos cuando existen;
+     * no redondea el saldo del backend.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
+    /**
+     * Detalle del método: Devuelve una etiqueta abreviada de importe para facilitar la lectura del eje.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     importeEje(valor) {
       const numero = Number(valor);
       if (!Number.isFinite(numero)) return "";
@@ -372,6 +497,11 @@ export default {
         );
       return moneda(numero);
     },
+    /**
+     * Detalle del método: Devuelve una etiqueta breve del tipo de operación para el eje, conservando el
+     * dato original.
+     * Entradas: dato (fila de operación usada como etiqueta).
+     */
     nombreCorto(dato) {
       return (
         {
@@ -383,6 +513,11 @@ export default {
         }[dato.id] || dato.nombre
       );
     },
+    /**
+     * Detalle del método: Valida y emite el cambio de año al padre, que realizará la consulta de la
+     * gráfica.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cambiarAnio(valor) {
       if (this.cargando) return;
       const entrada=valor && valor.target ? valor.target : null;
@@ -397,6 +532,11 @@ export default {
           : this.periodo.mes;
       this.$emit("cambiar-periodo", { anio, mes });
     },
+    /**
+     * Detalle del método: Valida y emite el cambio de mes al padre, sin afectar el periodo de otras
+     * tarjetas.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cambiarMes(valor) {
       if (this.cargando) return;
       this.$emit("cambiar-periodo", {
@@ -404,6 +544,11 @@ export default {
         mes: Number(valor),
       });
     },
+    /**
+     * Detalle del método: Emite al padre el indicador o contexto de reporte elegido cuando la card ya está
+     * lista.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     solicitarReporte() {
       if (this.cargando || this.error || !this.hayDatos || (this.operacionReporteId !== "todas" && !this.datos.some(f => Number(f.id)===Number(this.operacionReporteId)))) return;
       this.$emit("ver-reporte", {

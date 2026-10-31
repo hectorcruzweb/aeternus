@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Hoja Excel particular para presentar el detalle de una cuota de mantenimiento.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 namespace App\Exports;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -8,12 +17,26 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 class CuotaMantenimientoHoja extends VentasCementerioHoja
 {
     private $detalle;
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $nombre (título de la hoja
+     * o etiqueta del contexto).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(array $datos, $nombre)
     {
         $this->detalle = $datos;
         parent::__construct($datos, ['nombre' => $nombre, 'nota' => 'Detalle de la cuota. Importes expresados en MXN.',
             'columnas' => array_fill(0, 13, ''), 'filas' => [], 'moneda' => [], 'sinTotal' => true]);
     }
+    /**
+     * Detalle del método: Registra el formato posterior a llenar la hoja: encabezado, rangos, importes,
+     * estilos e impresión según esta clase.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Mapa de eventos de Maatwebsite Excel; el formato se aplica al ejecutarse
+     * AfterSheet, no al declarar el método.
+     */
     public function registerEvents(): array
     {
         $base = parent::registerEvents()[AfterSheet::class];

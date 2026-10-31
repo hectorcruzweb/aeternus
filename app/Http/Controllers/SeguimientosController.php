@@ -1,4 +1,15 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Consulta actividad realizada, agenda de próximos 7 días e histórico vencido de seguimientos.
+ * Dónde ajustar: Separar fecha efectiva del seguimiento y fecha programada. Las consultas del dashboard
+ * excluyen operaciones canceladas; consulta_historica permite revisar registros antiguos sin habilitar
+ * nuevas capturas sobre canceladas.
+ * Relacionado: SeguimientosResumen.vue; OperacionesController; InfoOperacion.vue;
+ * FormularioRegistrarSeguimiento.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -14,7 +25,12 @@ use Illuminate\Support\Facades\Mail;
 
 class SeguimientosController extends ApiController
 {
-    /** Regla común de reportes: excluir solo vínculos de cliente a operaciones canceladas. */
+    /** Regla común de reportes: excluir solo vínculos de cliente a operaciones canceladas. 
+     * Detalle del método: Aplica a una consulta de seguimientos la exclusión de operaciones canceladas sin
+     * confundir IDs de cotizaciones.
+     * Entradas: $consulta (Query Builder al que se aplican reglas compartidas).
+     * Salida / efectos: La consulta ajustada; se comparte entre realizados, agenda e histórico.
+     */
     private function sinOperacionesCanceladas($consulta)
     {
         return $consulta->where(function ($q) {
@@ -27,7 +43,15 @@ class SeguimientosController extends ApiController
         });
     }
 
-    /** Estado común de agenda e histórico: programados vigentes todavía sin atención. */
+    /** Estado común de agenda e histórico: programados vigentes todavía sin atención. 
+     * Mantenimiento: Solo seguimientos programados pendientes de atención. Excluir atendidos/cancelados y
+     * relaciones a operaciones canceladas, respetando que un ID de cotización no es operaciones.id.
+     
+     * Detalle del método: Selecciona programados pendientes, sin atención registrada, excluyendo
+     * cancelados y operaciones canceladas.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Query Builder base; las ventanas de fecha se aplican en consultas específicas.
+     */
     private function consultaProgramadosPendientes()
     {
         return $this->sinOperacionesCanceladas(DB::table('seguimientos as s')
@@ -35,7 +59,13 @@ class SeguimientosController extends ApiController
             ->whereNull('s.fechahora_registro_seguimiento'));
     }
 
-    /** Atraso legible al día del corte, sin alterar las fechas ni las reglas de vencimiento. */
+    /** Atraso legible al día del corte, sin alterar las fechas ni las reglas de vencimiento. 
+     * Detalle del método: Expresa el atraso en días, semanas, meses o años sin modificar la regla temporal
+     * del seguimiento.
+     * Entradas: $fecha (fecha del registro cuya antigüedad se mostrará); $corte (fecha de corte de la
+     * consulta).
+     * Salida / efectos: Texto humano para la columna de atraso.
+     */
     private function atrasoSeguimientoTexto(\Carbon\Carbon $fecha, \Carbon\Carbon $corte)
     {
         $desde=$fecha->copy()->startOfDay();$hasta=$corte->copy()->startOfDay();
@@ -50,7 +80,15 @@ class SeguimientosController extends ApiController
         return $semanas.($semanas===1?' semana':' semanas');
     }
 
-    /** Histórico pendiente: vence al día siguiente, sin límite inferior de antigüedad. */
+    /** Histórico pendiente: vence al día siguiente, sin límite inferior de antigüedad. 
+     * Mantenimiento: Un pendiente vence desde el día siguiente a su programación: hoy no está vencido. Excluir
+     * fechas nulas/cero heredadas. El texto humano del atraso no debe usarse para filtrar fechas.
+     
+     * Detalle del método: Limita los pendientes a fecha programada anterior a hoy y descarta fechas cero
+     * heredadas.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Consulta del histórico vencido; los pendientes de hoy no entran.
+     */
     private function consultaSeguimientosVencidosHistorico(\Carbon\Carbon $corte)
     {
         return $this->consultaProgramadosPendientes()
@@ -59,13 +97,24 @@ class SeguimientosController extends ApiController
             ->where('s.fechahora_programada','<',$corte->toDateString());
     }
 
+    /**
+     * Detalle del método: Cuenta los seguimientos pendientes vencidos del histórico al corte solicitado.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Entero del indicador, no el listado completo.
+     */
     public function getSeguimientosVencidosHistoricoDashboard(\Carbon\Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
         return (int) $this->consultaSeguimientosVencidosHistorico($corte)->count();
     }
 
-    /** Resumen y detalle histórico: no contar atendidos, cancelados ni pendientes de hoy. */
+    /** Resumen y detalle histórico: no contar atendidos, cancelados ni pendientes de hoy. 
+     * Detalle del método: Obtiene resumen y filas de pendientes vencidos con cliente, motivo, contactos y
+     * texto de atraso.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos/conteos del reporte histórico, más antiguos primero.
+     */
     public function getReporteSeguimientosVencidosHistorico(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
@@ -111,12 +160,23 @@ class SeguimientosController extends ApiController
         return $datos;
     }
 
+    /**
+     * Detalle del método: Prepara la vista previa de seguimientos vencidos históricos: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteSeguimientosVencidosHistorico(Request $request)
     {
         return app(OperacionesController::class)->previewSeguimientosVencidosHistorico($request);
     }
 
-    /** Agenda pendiente: hoy y seis días más; rango indexable y sin cargar contactos. */
+    /** Agenda pendiente: hoy y seis días más; rango indexable y sin cargar contactos. 
+     * Detalle del método: Filtra la consulta de pendientes entre hoy y los seis días siguientes.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Consulta de la agenda semanal, sin atendidos ni cancelados.
+     */
     private function consultaProgramadosProximosSieteDias(\Carbon\Carbon $corte)
     {
         return $this->consultaProgramadosPendientes()
@@ -124,13 +184,25 @@ class SeguimientosController extends ApiController
             ->where('s.fechahora_programada','<',$corte->copy()->addDays(7)->toDateString());
     }
 
+    /**
+     * Detalle del método: Cuenta la agenda pendiente de atención para los próximos siete días incluyendo
+     * hoy.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Cantidad agregada del indicador.
+     */
     public function getProgramadosProximosSieteDiasDashboard(\Carbon\Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
         return (int) $this->consultaProgramadosProximosSieteDias($corte)->count();
     }
 
-    /** Detalle de agenda, separado de realizados; los pendientes no tienen resultado de contacto. */
+    /** Detalle de agenda, separado de realizados; los pendientes no tienen resultado de contacto. 
+     * Detalle del método: Construye resumen y detalle de la agenda con programación, cliente, contacto y
+     * motivo.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte o conteos sin cargar filas.
+     */
     public function getReporteProgramadosProximosSieteDias(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
@@ -174,12 +246,27 @@ class SeguimientosController extends ApiController
         return $datos;
     }
 
+    /**
+     * Detalle del método: Prepara la vista previa de agenda semanal: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteProgramadosProximosSieteDias(Request $request)
     {
         return app(OperacionesController::class)->previewProgramadosProximosSieteDias($request);
     }
 
-    /** Realizados del mes: fecha efectiva, excluyendo operaciones canceladas según criterio vigente. */
+    /** Realizados del mes: fecha efectiva, excluyendo operaciones canceladas según criterio vigente. 
+     * Mantenimiento: La fecha efectiva de gestión define el mes; no usar fecha programada. El criterio vigente
+     * excluye operaciones canceladas, incluso si una decisión histórica anterior indicaba conservarlas.
+     
+     * Detalle del método: Selecciona gestiones por fecha efectiva dentro del mes, excluyendo operaciones
+     * canceladas según la regla vigente.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Consulta base de seguimientos realizados, no de citas programadas.
+     */
     private function consultaRealizadosMes(\Carbon\Carbon $corte)
     {
         $inicio = $corte->copy()->startOfMonth()->startOfDay();
@@ -194,14 +281,24 @@ class SeguimientosController extends ApiController
         return $this->sinOperacionesCanceladas($consulta);
     }
 
-    /** Una consulta agregada; no carga clientes, cotizaciones ni comentarios para el dashboard. */
+    /** Una consulta agregada; no carga clientes, cotizaciones ni comentarios para el dashboard. 
+     * Detalle del método: Cuenta las gestiones efectivamente realizadas durante el mes de consulta.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Entero del indicador mensual.
+     */
     public function getSeguimientosRealizadosMesDashboard(\Carbon\Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
         return (int) $this->consultaRealizadosMes($corte)->count();
     }
 
-    /** Reporte mensual de actividad: clientes registrados y prospectos bajo cotización. */
+    /** Reporte mensual de actividad: clientes registrados y prospectos bajo cotización. 
+     * Detalle del método: Prepara el desglose de gestiones del mes con cliente/cotización, motivo, medio,
+     * resultado y responsable.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte mensual o solo conteos.
+     */
     public function getReporteSeguimientosRealizadosMes(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
@@ -251,7 +348,13 @@ class SeguimientosController extends ApiController
         return $datos;
     }
 
-    /** El módulo aporta reglas y datos; el transporte usa el visor compartido ya protegido. */
+    /** El módulo aporta reglas y datos; el transporte usa el visor compartido ya protegido. 
+     * Detalle del método: Prepara la vista previa de gestiones del mes: valida acceso y parámetros y
+     * delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteSeguimientosRealizadosMes(Request $request)
     {
         return app(OperacionesController::class)->previewSeguimientosRealizadosMes($request);

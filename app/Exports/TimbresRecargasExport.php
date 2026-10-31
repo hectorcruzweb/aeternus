@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Organiza el Excel de lotes de timbres; el completo agrega el historial de cada lote en hojas separadas.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 namespace App\Exports;
 
 use Carbon\Carbon;
@@ -8,13 +17,33 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class TimbresRecargasExport implements WithMultipleSheets
 {
     private $datos;
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(array $datos) { $this->datos = $datos; }
+    /**
+     * Detalle del método: Formatea la fecha de un movimiento de timbres para mostrarla en las secciones
+     * del reporte.
+     * Entradas: $valor (valor que se debe formatear).
+     * Salida / efectos: Texto de fecha o valor alternativo cuando no existe; no cambia la fecha
+     * almacenada.
+     */
     public static function fecha($valor)
     {
         if (!$valor) return 'No disponible';
         $f = Carbon::parse($valor, 'America/Mazatlan');
         return $f->format('d') . '/' . ucfirst(rtrim($f->locale('es')->translatedFormat('M'), '.')) . '/' . $f->format('Y H:i:s');
     }
+    /**
+     * Detalle del método: Define títulos, columnas y filas de cada sección del reporte desde sus datos ya
+     * calculados.
+     * Entradas: $d (datos agregados y filas preparados para el reporte).
+     * Salida / efectos: Arreglo de secciones reutilizable por la exportación; no consulta la base de
+     * datos.
+     */
     public static function secciones(array $d): array
     {
         $filas = [];
@@ -39,6 +68,13 @@ class TimbresRecargasExport implements WithMultipleSheets
         }
         return $sec;
     }
+    /**
+     * Detalle del método: Organiza las pestañas del archivo a partir de las secciones de
+     * TimbresRecargasExport.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo de objetos de hoja para Excel; solo genera detalle completo cuando el
+     * contexto lo habilita.
+     */
     public function sheets(): array
     {
         // El reporte individual conserva su resumen y el historial del lote abierto.

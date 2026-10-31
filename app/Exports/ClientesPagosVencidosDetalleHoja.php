@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Hoja agrupada que muestra una sola cabecera por cliente y todos sus pagos/operaciones debajo.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Events\AfterSheet;
@@ -9,6 +18,12 @@ class ClientesPagosVencidosDetalleHoja extends VentasCementerioHoja
     private $bloques=[];
     private $filaTotal;
 
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(array $datos)
     {
         $columnas=['Tipo de operación','Núm. venta / servicio','Ubicación','Fallecido','Referencia','Concepto del pago','Fecha programada','Programado','Aplicado a capital','Pendiente','Estado'];
@@ -38,6 +53,13 @@ class ClientesPagosVencidosDetalleHoja extends VentasCementerioHoja
             'anchos'=>['A'=>30,'B'=>19,'C'=>30,'D'=>32,'E'=>29,'F'=>20,'G'=>22,'H'=>22,'I'=>22,'J'=>22,'K'=>18]]);
     }
 
+    /**
+     * Detalle del método: Registra el formato posterior a llenar la hoja: encabezado, rangos, importes,
+     * estilos e impresión según esta clase.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Mapa de eventos de Maatwebsite Excel; el formato se aplica al ejecutarse
+     * AfterSheet, no al declarar el método.
+     */
     public function registerEvents():array
     {
         $eventos=parent::registerEvents();$base=$eventos[AfterSheet::class];

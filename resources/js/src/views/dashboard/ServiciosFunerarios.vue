@@ -81,6 +81,15 @@
     </div>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Carrusel de servicios en proceso, datos operativos y acceso al expediente.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import ReportesServicio from '../pages/funeraria/servicios_funerarios/ReportesServicio.vue';
 export default {
@@ -103,6 +112,11 @@ export default {
     // Computed properties: derived reactive data
     computed: {},
     // Data function returns the component's reactive state
+    /**
+     * Detalle del método: Devuelve el estado reactivo inicial por instancia de ServiciosFunerarios; no
+     * consulta al servidor por sí mismo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     data() {
         return {
             id_solicitud: 0 /**para consultar los reportes */,
@@ -125,27 +139,56 @@ export default {
     },
     // Methods: functions you can call in template or other hooks
     methods: {
+        /**
+         * Detalle del método: Selecciona el servicio y abre su consulta/expediente existente sin modificar la
+         * contratación.
+         * Entradas: id_solicitud (número del servicio funerario a consultar).
+         */
         ConsultarVenta(id_solicitud) {
       if (this.cargando) return;
             this.$refs.carousel.pause(); //pauso el carrusel
             this.id_solicitud = id_solicitud;
             this.openReportes = true;
         },
+        /**
+         * Detalle del método: Cierra la lista de reportes del servicio funerario que estaba abierta.
+         * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+         */
         closeListaReportes() {
             this.openReportes = false;
             this.$refs.carousel.play(); //reanudamos el carrusel
         },
     },
     // Lifecycle hooks
+    /**
+     * Detalle del método: Inicializa el estado previo al montaje de ServiciosFunerarios; Vue lo ejecuta al
+     * crear la instancia, sin valor de retorno.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     created() {
         this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
     },
+    /**
+     * Detalle del método: Completa la preparación de ServiciosFunerarios cuando sus referencias de DOM ya
+     * están disponibles.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     mounted() {
         this.$log("Component mounted! " + this.$options.name); // DOM is ready
     },
+    /**
+     * Detalle del método: Libera recursos o invalida respuestas pendientes de ServiciosFunerarios al
+     * destruirse; evita listeners, tareas o popups huérfanos según la limpieza implementada.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     beforeDestroy() {
         this.$popupManager.unregister(this.$options.name);
     },
+    /**
+     * Detalle del método: Libera recursos o invalida respuestas pendientes de ServiciosFunerarios al
+     * destruirse; evita listeners, tareas o popups huérfanos según la limpieza implementada.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     destroyed() {
         this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
     },

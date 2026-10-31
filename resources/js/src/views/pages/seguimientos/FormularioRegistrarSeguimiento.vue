@@ -8,11 +8,6 @@
       :active="localShow"
       :ref="this.$options.name"
     >
-      <div v-if="tipo === 'consultar' && errorConsultaSeguimiento" class="px-2 py-2 text-warning" role="alert">
-        {{ errorConsultaSeguimiento }}
-        <button type="button" class="ml-2 text-primary underline" :disabled="cargandoConsultaSeguimiento"
-          @click="_loadSeguimientoDatos()">Reintentar</button>
-      </div>
       <div class="flex flex-wrap pb-4">
         <div class="px-2 w-full mb-2 flex flex-wrap" v-if="fueProgramado">
           <div
@@ -24,7 +19,6 @@
                 ref="InfoOperacion"
                 v-if="show"
                 :filters="filters"
-                :solo-consulta="tipo === 'consultar'"
                 @resultado="resultado_datos_cliente"
               >
               </InfoOperacion>
@@ -120,7 +114,6 @@
                     ref="InfoOperacion"
                     v-if="show"
                     :filters="filters"
-                :solo-consulta="tipo === 'consultar'"
                     @resultado="resultado_datos_cliente"
                   >
                   </InfoOperacion>
@@ -483,7 +476,7 @@ export default {
         //en este caso hay que consultar la info del seguimiento
         res =
           this.datos_seguimiento_request &&
-          Number(this.datos_seguimiento_request.programado_b) === 1
+          this.datos_seguimiento_request.programado_b === 1
             ? true
             : false;
       }
@@ -572,8 +565,6 @@ export default {
       motivos_de_cancelacion: [],
       //Datos del seguimiento en bruto
       datos_seguimiento_request: [],
-      errorConsultaSeguimiento: "",
-      cargandoConsultaSeguimiento: false,
       formData: {
         seguimiento_id: null,
         fechahora_seguimiento: "",
@@ -723,7 +714,7 @@ export default {
     },
     limpiarVentana() {},
     // Called when InfoOperacion is ready
-    resultado_datos_cliente(response, email = null, detalle = {}) {
+    resultado_datos_cliente(response, email = null) {
       if (response) {
         this.ready.InfoOperacion = true;
         if (
@@ -732,14 +723,8 @@ export default {
         ) {
           this.formData.email_seguimiento = email;
         }
-        this.checkReady();
       } else {
-        if (this.tipo === "consultar" && detalle.recuperable) {
-          // Mantener la consulta del seguimiento; InfoOperacion ofrece reintentar sus datos.
-          this.ready.InfoOperacion = true;
-          this.checkReady();
-          return;
-        }
+        this.$error("🚀 ~ resultado_datos_cliente ~ error:", response);
         this.cancelar();
       }
     },
@@ -765,16 +750,13 @@ export default {
       }
     },
     async _loadSeguimientoDatos() {
-      if (!this.show || this.cargandoConsultaSeguimiento) return;
-      this.cargandoConsultaSeguimiento = true;
-      this.errorConsultaSeguimiento = "";
+      if (!this.show) return; // stop here if not visible
       const params = {
         //cliente_id: this.filters.cliente_id,
         //tipo_cliente_id: this.filters.tipo_cliente_id,
         programado_b: this.tipo === "atender_seguimiento_programado" ? 1 : 0,
         status: 1,
         id: this.filters.seguimiento_id,
-        consulta_historica: this.tipo === "consultar" ? 1 : 0,
       };
       this.$log("🚀 ~ _getSeguimientosProgramados ~ params:", params);
       //this.$vs.loading();
@@ -850,15 +832,7 @@ export default {
           );
         }
         this.ready.loadSeguimientoDatos = true;
-        this.checkReady();
       } catch (error) {
-        const estado = Number((error.response && error.response.status) || error.status || 0);
-        if (this.tipo === "consultar" && ![401,403,404,422].includes(estado)) {
-          this.errorConsultaSeguimiento = "No fue posible cargar el seguimiento. Reintenta la consulta.";
-          this.localShow = true;
-          this.$popupManager.register(this, this.cancelar, null);
-          return;
-        }
         this.$vs.notify({
           title: "Error inesperado",
           text: error,
@@ -870,7 +844,7 @@ export default {
         this.$error("Error fetching seguimientos:", error);
         this.cancelar();
       } finally {
-        this.cargandoConsultaSeguimiento = false;
+        //this.$vs.loading.close();
       }
     },
     async _getResultadosMedios() {

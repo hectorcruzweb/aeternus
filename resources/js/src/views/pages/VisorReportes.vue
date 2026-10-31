@@ -213,6 +213,16 @@
   </div>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Modal reutilizable de vista previa HTML, impresión, descarga PDF/Excel y envío por correo.
+ * Dónde ajustar: Recibe funciones mediante props, no consulta tablas. consultar valida el contrato
+ * hojas/token; el iframe muestra HTML sin generar XLSX. soloPdf oculta Excel; descargarCompleto habilita
+ * el Excel ampliado.
+ * Relacionado: EnviarReporteCorreo.vue; HomeInfo.vue; services/reportes*.js; templates Blade
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import {
   GridIcon,
   PrinterIcon,
@@ -241,6 +251,11 @@ export default {
     descargarCompleto: { type: Function, default: null },
     mostrarVolverResumen: { type: Boolean, default: false },
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de VisorReportes; no consulta
+   * al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       isLoading: false,
@@ -260,6 +275,11 @@ export default {
     };
   },
   computed: {
+    /**
+     * Detalle del método: Devuelve HTML de la hoja activa con política de contenido restrictiva del
+     * iframe, o vacío si falta reporte.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     documentoHtml() {
       if (!this.reporte || !this.reporte.hojas.length) return "";
       const cabecera =
@@ -272,11 +292,21 @@ export default {
     },
   },
   watch: {
+    /**
+     * Detalle del método: Invalida el estado de documento listo cuando cambia de hoja; el load del iframe
+     * lo habilita de nuevo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     hojaActiva() {
       this.documentoListo = false;
     },
     show: {
       immediate: true,
+      /**
+       * Detalle del método: Observa apertura/cierre: registra el popup y consulta, o limpia reporte,
+       * archivos y peticiones pendientes.
+       * Entradas: abierto (estado de apertura observado).
+       */
       handler(abierto) {
         if (abierto) {
           this.$nextTick(() => {
@@ -302,6 +332,11 @@ export default {
     },
   },
   methods: {
+    /**
+     * Detalle del método: Retira el listener de navegación del iframe anterior y limpia su referencia para
+     * evitar duplicados.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     desvincularDocumento() {
       if (this._documentoReportes)
         this._documentoReportes.removeEventListener(
@@ -310,6 +345,11 @@ export default {
         );
       this._documentoReportes = null;
     },
+    /**
+     * Detalle del método: Marca lista la hoja y conecta sus enlaces autorizados con la navegación del
+     * visor.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     documentoCargado() {
       this.documentoListo = !!this.reporte;
       this.desvincularDocumento();
@@ -323,6 +363,11 @@ export default {
       }
     },
     // El iframe no ejecuta scripts: el padre atiende solo los enlaces autorizados del resumen.
+    /**
+     * Detalle del método: Intercepta enlaces del iframe y solo emite tipos/IDs incluidos en los metadatos
+     * autorizados del backend.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     interceptarReporteIndividual(evento) {
       const nodo = evento.target.closest
         ? evento.target
@@ -353,6 +398,11 @@ export default {
         this.$emit("abrir-reporte", id);
     },
     // Interceptar solo el fondo; los controles internos y la X mantienen su funcionamiento.
+    /**
+     * Detalle del método: Detiene el clic sobre el fondo del popup; conserva el cierre controlado con X y
+     * Escape.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     bloquearCierreExterior(evento) {
       if (
         evento.target.classList &&
@@ -362,13 +412,31 @@ export default {
         evento.stopImmediatePropagation();
       }
     },
+    /**
+     * Detalle del método: Propaga el cambio de visibilidad al cierre controlado, respetando una operación
+     * en curso.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     alCambiarVisibilidad(valor) {
       if (!valor) this.cerrar();
     },
+    /**
+     * Detalle del método: Cierra VisorReportes mediante su mecanismo controlado, respetando bloqueos de
+     * una operación en curso y su limpieza local.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrar() {
       if (this.enviando) return;
       this.$emit("close");
     },
+    // Mantenimiento: Contrato esperado: titulo, nombreArchivo, tokenDescarga hexadecimal de 64 caracteres, hojas
+    // [{nombre, html}] y metadatos de disponibilidad. Solo se reciben datos/HTML; XLSX/PDF se generan al
+    // solicitar descarga o correo.
+    /**
+     * Detalle del método: Devuelve una promesa que valida HTML/metadatos/token del reporte y descarta
+     * respuestas obsoletas. No genera XLSX al visualizar.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async consultar() {
       if (this.isLoading || this.enviando || !this.show) return;
       const id = ++this.peticion;
@@ -453,6 +521,13 @@ export default {
         if (id === this.peticion) this.isLoading = false;
       }
     },
+    // Mantenimiento: Imprime el documento HTML del iframe. No requiere descargar un XLSX; comprobar @media print de la
+    // plantilla al cambiar la presentación.
+    /**
+     * Detalle del método: Abre la impresión del HTML del iframe listo mediante el navegador y su CSS de
+     * impresión; no descarga Excel.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     imprimir() {
       if (this.isLoading || !this.documentoListo || !this.reporte) return;
       const marco = this.$refs.documento;
@@ -461,12 +536,26 @@ export default {
       marco.contentWindow.focus();
       marco.contentWindow.print();
     },
+    /**
+     * Detalle del método: Invoca la descarga estándar Excel mediante el método común de formatos; soloPdf
+     * restringe esta opción.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     descargar() {
       return this.descargarFormato("excel");
     },
+    /**
+     * Detalle del método: Solicita la descarga PDF mediante el callback del módulo que abrió el visor.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     descargarEnPdf() {
       return this.descargarFormato("pdf");
     },
+    /**
+     * Detalle del método: Obtiene/reutiliza un Blob del formato elegido, inicia descarga con URL temporal
+     * y la revoca. Devuelve una promesa y gestiona sus errores.
+     * Entradas: formato (variante de descarga elegida en el visor).
+     */
     async descargarFormato(formato) {
       if (!this.reporte || this.isLoading || this.descargando) return;
       const id = this.peticion;
@@ -524,6 +613,11 @@ export default {
       }
     },
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de VisorReportes al destruirse;
+   * evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() {
     this.desvincularDocumento();
     this.peticion++;

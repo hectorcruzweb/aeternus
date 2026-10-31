@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Construye y da formato al XLSX de inventario: logo, Arial, columnas, indicadores, protección y ajuste de
+ * impresión.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Exports;
 
@@ -23,6 +33,13 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
     protected $generadoEn;
 
 
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $items (conceptos de inventario de la exportación); $summary (resumen del listado de
+     * inventario).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct($items, $summary)
     {
         $this->items = $items;
@@ -30,11 +47,23 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
         $this->generadoEn = Carbon::now('America/Mazatlan')->format('d') . '/' . ucfirst(rtrim(Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('M'), '.')) . '/' . Carbon::now('America/Mazatlan')->format('Y H:i');
     }
 
+    /**
+     * Detalle del método: Obtiene el nombre de la pestaña de Excel desde la sección del reporte.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Texto que Maatwebsite Excel utiliza como título de hoja.
+     */
     public function title(): string
     {
         return 'Inventario';
     }
 
+    /**
+     * Detalle del método: Configura el logo de la empresa como dibujo de la hoja Excel y su
+     * posición/tamaño.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Dibujo o colección que agrega el exportador; revisar protección de objetos para
+     * evitar moverlo.
+     */
     public function drawings()
     {
         $drawing = new Drawing();
@@ -46,17 +75,35 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
         return $drawing;
     }
 
+    /**
+     * Detalle del método: Reserva las filas superiores para el encabezado corporativo e indica dónde
+     * comienza la tabla.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Coordenada inicial de la tabla en el XLSX; cambiarla exige revisar rangos en
+     * registerEvents.
+     */
     public function startCell(): string
     {
         return 'A' . $this->row_inicio_headings;
     }
 
+    /**
+     * Detalle del método: Define los títulos de columna en el mismo orden que los valores de cada fila.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo de encabezados para la hoja; sincronizarlo con array y los formatos
+     * numéricos.
+     */
     public function headings(): array
     {
         return ['Clave', 'Descripción', 'Existencia', 'Mín.', 'Máx.', 'Estado', 'Precio de venta', 'Valor total'];
     }
 
-    /** Una sola leyenda sustituye las dos columnas Sí/No; los servicios no se clasifican como existencias. */
+    /** Una sola leyenda sustituye las dos columnas Sí/No; los servicios no se clasifican como existencias. 
+     * Detalle del método: Clasifica el concepto de inventario según tipo, existencia y límites para
+     * mostrar su estado.
+     * Entradas: $item (concepto cuya existencia/estado se evalúa).
+     * Salida / efectos: Texto del estado usado en las filas exportadas.
+     */
     protected function estado($item): string
     {
         if ((int) $item->tipo_articulos_id === 2) {
@@ -71,6 +118,12 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
         return $item->en_orden ? 'En rango' : 'Sin clasificar';
     }
 
+    /**
+     * Detalle del método: Entrega o transforma las filas del reporte al orden de columnas que se
+     * exportará.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Matriz de valores para Excel; los importes deben seguir siendo numéricos.
+     */
     public function array(): array
     {
         $rows = [];
@@ -91,6 +144,13 @@ class InventarioExport implements FromArray, WithStrictNullComparison, WithHeadi
         return $rows;
     }
 
+    /**
+     * Detalle del método: Registra el formato posterior a llenar la hoja: encabezado, rangos, importes,
+     * estilos e impresión según esta clase.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Mapa de eventos de Maatwebsite Excel; el formato se aplica al ejecutarse
+     * AfterSheet, no al declarar el método.
+     */
     public function registerEvents(): array
     {
         return [AfterSheet::class => function (AfterSheet $event) {

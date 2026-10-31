@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Envía adjuntos del nuevo visor con el template corporativo y sanea el mensaje del editor.
+ * Dónde ajustar: reporte_email cambia todos los destinos a hectorcrzprz@gmail.com si app.env es diferente
+ * de production; con varios receptores usa BCC. mensajeReporteSeguro define el HTML admitido. pdf_email
+ * conserva el flujo anterior.
+ * Relacionado: EnviarReporteCorreo.vue; resources/views/mails/mail.blade.php; configuración de correo
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -12,6 +22,13 @@ class EmailController extends ApiController
      * Reportes del dashboard con mensaje opcional y adjunto Excel/PDF.
      * Reutiliza remitente, datos de empresa y mails.mail. No altera pdf_email.
      * El módulo llamante valida permisos, destinatario, asunto y longitud del mensaje.
+     
+     * Detalle del método: Sanea el mensaje y envía el adjunto por el correo del sistema; usa BCC con
+     * varios receptores y sustituye destinos fuera de production.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $contenido (bytes del
+     * adjunto a enviar); $nombreArchivo (nombre visible del adjunto); $mime (tipo MIME del adjunto).
+     * Salida / efectos: Respuesta de éxito/error del envío. Produce un envío real cuando se ejecuta en el
+     * proyecto.
      */
     public function reporte_email(array $datos, $contenido, $nombreArchivo, $mime)
     {
@@ -46,7 +63,12 @@ class EmailController extends ApiController
         return $this->successResponse(1, 200);
     }
 
-    /** HTML permitido del editor; elimina scripts, imágenes y atributos peligrosos. */
+    /** HTML permitido del editor; elimina scripts, imágenes y atributos peligrosos. 
+     * Detalle del método: Filtra el HTML del editor mediante HTMLPurifier, permitiendo solo formato y
+     * enlaces seguros.
+     * Entradas: $mensaje (HTML del editor que debe sanearse).
+     * Salida / efectos: HTML saneado; elimina scripts, imágenes y atributos no admitidos.
+     */
     private function mensajeReporteSeguro($mensaje)
     {
         $config = \HTMLPurifier_Config::createDefault();
@@ -65,6 +87,15 @@ class EmailController extends ApiController
      * subject motivo del correo
      * name_pdf nombre del pdf
      * pdf archivo pdf a enviar
+     
+     * Detalle del método: Mantiene el envío antiguo de PDFs y, si corresponde, XML de CFDI usando el
+     * template compartido.
+     * Entradas: $to (dato del contexto descrito en la firma); $to_name (dato del contexto descrito en la
+     * firma); $subject (dato del contexto descrito en la firma); $name_pdf (dato del contexto descrito en
+     * la firma); $pdf (selecciona presentación PDF frente a pantalla); $type (dato del contexto descrito
+     * en la firma); $id (dato del contexto descrito en la firma).
+     * Salida / efectos: Respuesta de éxito/error. No aplica la sustitución de destinatarios del nuevo
+     * reporte_email.
      */
     public function pdf_email($to = '', $to_name = '', $subject = '', $name_pdf = '', $pdf = null, $type = 'default', $id = '')
     {

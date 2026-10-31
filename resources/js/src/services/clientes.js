@@ -1,3 +1,11 @@
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Cliente HTTP del módulo de clientes, incluida la búsqueda de correos/nombres para los reportes.
+ * Dónde ajustar: La búsqueda devuelve sugerencias; la confirmación y la lista final se manejan en
+ * EnviarReporteCorreo.vue.
+ * Relacionado: ClientesController; EnviarReporteCorreo.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
 import axios from "@/axios.js";
 import axiosSuper from "axios";
 const CancelToken = axiosSuper.CancelToken;
@@ -8,6 +16,12 @@ export default {
     cancel: null,
 
     // Autocompletado limitado para destinatarios de reportes.
+    /**
+     * Detalle del método: Devuelve la promesa Axios de coincidencias de clientes para destinatarios; no
+     * envía correo.
+     * Entradas: q (texto de búsqueda de clientes); campo = "email" (campo del dato o indicador que se
+     * evalúa).
+     */
     buscarCorreosReportes(q, campo = "email") {
         return axios.get("/clientes/reportes/correos", { params: { q, campo } });
     },

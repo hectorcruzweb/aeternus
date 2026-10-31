@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Resúmenes de inventario y consulta/exportación de artículos y servicios.
+ * Dónde ajustar: getInventarioDashboard para indicadores; consultaReporteInventario para filtros;
+ * previewInventarioDashboard y datosReporteInventarioPreview para caché y límite de visualización. El
+ * valor de inventario actual usa precio_venta.
+ * Relacionado: InventarioExport.php; Inventario.vue; temporales_visor_excel/inventario/reporte.blade.php
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -28,6 +38,14 @@ class InventarioController extends ApiController
      * Excluye estados diferentes y NULL; no sustituye por fecha_registro.
      * @param \Carbon\Carbon|null $fechaCorte Corte compartido; no se modifica.
      * @return string Fecha en español (27 de octubre de 2026) o No disponible.
+     
+     * Mantenimiento: Último ajuste físico válido: MAX(fecha_movimiento), tipo_movimientos_id=1 y status=1
+     * hasta el corte. No está limitado al mes. Devuelve texto humano o No disponible.
+     
+     * Detalle del método: Busca el ajuste físico válido más reciente hasta el corte: tipo_movimientos_id=1
+     * y status=1.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Fecha en español o No disponible; no se limita al mes.
      */
     public function getUltimoAjusteInventarioDashboard(\Carbon\Carbon $fechaCorte = null)
     {
@@ -59,6 +77,15 @@ class InventarioController extends ApiController
      * Conserva valoración a precio_venta y exclusión de tipo 2 para umbrales/importe.
      * Sin efectos de escritura. No añadir una ruta pública para probarla.
      * DashboardController continúa llamando getInventarioDashboard() hasta su validación.
+     
+     * Mantenimiento: Solo indicadores, sin el listado del reporte. Separar total de conceptos, inventariables
+     * y servicios; servicios no participan en la valuación del stock. La valuación vigente usa precio de
+     * venta, aunque la clave conserve costo_total_inventario.
+     
+     * Detalle del método: Calcula conceptos, inventariables, servicios, faltantes/excedentes y valor de
+     * stock desde agregados.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo de indicadores; el valor vigente usa precio_venta y excluye servicios.
      */
     public function getInventarioDashboard()
     {
@@ -115,6 +142,15 @@ class InventarioController extends ApiController
     /**
      * Vista HTML directa: consulta una vez, sin generar ni leer un Excel.
      * Conserva una instantánea privada por 15 minutos; en reportes grandes guarda solo filtros.
+     
+     * Mantenimiento: No genera XLSX. Devuelve HTML y token privado. Hasta 3500 filas guarda instantánea; si
+     * excede, guarda filtros y ofrece descarga completa sin truncar registros.
+     
+     * Detalle del método: Prepara la vista previa de inventario: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
      */
     public function previewInventarioDashboard(Request $request)
     {
@@ -182,7 +218,14 @@ class InventarioController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Excel bajo demanda: instantánea pequeña o consulta completa del filtro masivo. */
+    /** Excel bajo demanda: instantánea pequeña o consulta completa del filtro masivo. 
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
+     */
     public function descargarInventarioPreview(Request $request, $token)
     {
         list($articulos, $resumen, $nombre) = $this->datosReporteInventarioPreview($request, $token);
@@ -191,7 +234,14 @@ class InventarioController extends ApiController
         return $respuesta;
     }
 
-    /** PDF bajo demanda desde los mismos datos autorizados que la descarga Excel. */
+    /** PDF bajo demanda desde los mismos datos autorizados que la descarga Excel. 
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga PDF correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga PDF; verifica acceso/vigencia y no envía correo. El resumen
+     * diario rechaza Excel.
+     */
     public function descargarInventarioPreviewPdf(Request $request, $token)
     {
         list($articulos, $resumen, $nombre, $fechaConsulta) = $this->datosReporteInventarioPreview($request, $token);
@@ -201,7 +251,13 @@ class InventarioController extends ApiController
         return $respuesta;
     }
 
-    /** Diseño PDF compartido entre descarga y correo. */
+    /** Diseño PDF compartido entre descarga y correo. 
+     * Detalle del método: Renderiza inventario con el diseño del visor y configura su impresión mediante
+     * el generador PDF.
+     * Entradas: $articulos (filas de inventario a representar); $resumen (indicadores asociados a esas
+     * filas); $fechaConsulta (fecha que se imprimirá en el reporte).
+     * Salida / efectos: Documento PDF listo para responder o adjuntar; no manda correo por sí solo.
+     */
     private function construirPdfReporteInventario($articulos, $resumen, $fechaConsulta)
     {
         $export = new InventarioExport($articulos, $resumen);
@@ -234,6 +290,13 @@ class InventarioController extends ApiController
      * Envía Excel o PDF con mensaje opcional mediante la plantilla y configuración existentes.
      * reporte_email mantiene separado el flujo de reportes sin alterar pdf_email.
      * Solo se invoca mediante POST autenticado y confirmación explícita del usuario.
+     
+     * Detalle del método: Valida destinatarios, asunto, mensaje y formato, genera el adjunto del reporte y
+     * delega el envío a EmailController.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta JSON del envío; el token debe pertenecer al usuario y el formato debe
+     * estar permitido.
      */
     public function enviarInventarioPreviewCorreo(Request $request, $token)
     {
@@ -281,7 +344,13 @@ class InventarioController extends ApiController
             ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     }
 
-    /** Validación común de rol, propietario y vigencia para descargar o enviar. */
+    /** Validación común de rol, propietario y vigencia para descargar o enviar. 
+     * Detalle del método: Verifica token, usuario y vigencia; recupera la instantánea o vuelve a consultar
+     * el filtro de un reporte grande.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Datos privados y nombre del reporte para generar la descarga o el correo.
+     */
     private function datosReporteInventarioPreview(Request $request, $token)
     {
         $usuario = $request->user('api');
@@ -309,6 +378,14 @@ class InventarioController extends ApiController
      *  - all: todos
      *  - articles: conceptos inventariables (excluye servicios)
      *  - services: conceptos de tipo servicio
+     
+     * Mantenimiento: Fuente común de filtros all/low/over/articles/services. Al agregar un filtro, actualizar
+     * validación de preview, servicio/card y título/columnas del reporte.
+     
+     * Detalle del método: Construye la consulta agrupada y el título del filtro
+     * all/low/over/articles/services.
+     * Entradas: $filtro (selección de inventario all/low/over/articles/services).
+     * Salida / efectos: Consulta reutilizable y nombre del reporte; no ejecuta la exportación.
      */
     private function consultaReporteInventario($filtro)
     {
@@ -387,6 +464,17 @@ class InventarioController extends ApiController
         return [$query, $reporte];
     }
 
+    /**
+     * Mantenimiento: Compatibilidad con el listado/exportación anterior: devuelve resumen y artículos o
+     * Excel::download según export_excel. Reutiliza consultaReporteInventario para que el visor y la descarga
+     * filtren igual.
+     
+     * Detalle del método: Ejecuta el listado filtrado y calcula su resumen con los mismos criterios del
+     * visor.
+     * Entradas: $filtro (selección de inventario all/low/over/articles/services); $export_excel (dato del
+     * contexto descrito en la firma).
+     * Salida / efectos: Resumen y artículos si export_excel=false; descarga XLSX cuando es true.
+     */
     public function listar_inventario($filtro = 'all', $export_excel = false)
     {
         list($query, $reporte) = $this->consultaReporteInventario($filtro);

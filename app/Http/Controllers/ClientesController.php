@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Incluye la búsqueda de destinatarios de reportes entre clientes existentes.
+ * Dónde ajustar: buscarCorreosReportes concentra la búsqueda por nombre/correo. No confundir sugerir un
+ * cliente con agregarlo automáticamente a la lista de destinatarios.
+ * Relacionado: EnviarReporteCorreo.vue; services/clientes.js; routes/api.php
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -14,7 +23,12 @@ use App\Http\Controllers\CementerioController;
 
 class ClientesController extends ApiController
 {
-    /** Sugerencias acotadas de clientes para el correo del visor; no carga expedientes. */
+    /** Sugerencias acotadas de clientes para el correo del visor; no carga expedientes. 
+     * Detalle del método: Busca clientes por texto de nombre/correo para ofrecer sugerencias al preparar
+     * un envío.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: JSON de coincidencias; no agrega destinatarios ni envía mensajes.
+     */
     public function buscarCorreosReportes(Request $request)
     {
         $usuario = $request->user('api');

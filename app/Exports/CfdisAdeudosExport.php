@@ -1,4 +1,13 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Organiza el reporte Excel de CFDI con adeudo, operaciones relacionadas y pagos recibidos.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 namespace App\Exports;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
@@ -6,7 +15,19 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class CfdisAdeudosExport implements WithMultipleSheets
 {
     private $datos;
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(array $datos) { $this->datos=$datos; }
+    /**
+     * Detalle del método: Agrupa pagos y operaciones relacionadas por factura para imprimirlos debajo de
+     * su CFDI.
+     * Entradas: $d (datos agregados y filas preparados para el reporte).
+     * Salida / efectos: Bloques con factura, pagos y operaciones; agrupar no recalcula saldos.
+     */
     public static function bloques(array $d): array
     {
         $pagos=[];$operaciones=[];
@@ -16,7 +37,12 @@ class CfdisAdeudosExport implements WithMultipleSheets
         foreach($d['cfdis'] as $c)$bloques[]=['factura'=>$c,'pagos'=>$pagos[(string)$c['id']] ?? [],'operaciones'=>$operaciones[(string)$c['id']] ?? []];
         return $bloques;
     }
-    /** Referencias visibles del módulo, nunca operaciones.id. */
+    /** Referencias visibles del módulo, nunca operaciones.id. 
+     * Detalle del método: Describe una operación fiscal relacionada con su referencia comercial, fecha,
+     * cliente y aviso de cancelación.
+     * Entradas: $o (operación relacionada con un CFDI).
+     * Salida / efectos: Texto legible que no expone operaciones.id como número de venta.
+     */
     public static function operacion(array $o): string
     {
         $tipos=[1=>['Ventas en cementerio','Venta','ventas_terrenos_id'],2=>['Cuotas de Mantenimiento','Venta en cementerio','ventas_terrenos_id'],
@@ -27,6 +53,13 @@ class CfdisAdeudosExport implements WithMultipleSheets
             .' · Cliente: '.(trim($o['cliente_operacion'] ?? '') ?: 'No disponible')
             .((int)$o['status']===0 ? ' · Cancelada' : '');
     }
+    /**
+     * Detalle del método: Define títulos, columnas y filas de cada sección del reporte desde sus datos ya
+     * calculados.
+     * Entradas: $d (datos agregados y filas preparados para el reporte).
+     * Salida / efectos: Arreglo de secciones reutilizable por la exportación; no consulta la base de
+     * datos.
+     */
     public static function secciones(array $d): array
     {
         $resumen=[];$resumenTipos=[];$varias=count($d['resumen'])>1;
@@ -58,5 +91,12 @@ class CfdisAdeudosExport implements WithMultipleSheets
                 'nota'=>'Las operaciones y pagos aparecen debajo de su factura. El importe de cada pago se alinea bajo Total pagado.'],
         ];
     }
+    /**
+     * Detalle del método: Organiza las pestañas del archivo a partir de las secciones de
+     * CfdisAdeudosExport.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo de objetos de hoja para Excel; solo genera detalle completo cuando el
+     * contexto lo habilita.
+     */
     public function sheets(): array { return array_map(function($s){return new CfdisAdeudosHoja($this->datos,$s);},self::secciones($this->datos)); }
 }

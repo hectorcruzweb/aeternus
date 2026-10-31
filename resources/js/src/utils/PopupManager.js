@@ -1,3 +1,11 @@
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Administra la pila, foco y cierre de popups del proyecto.
+ * Dónde ajustar: Revisar aquí superposición/foco entre visor, correo y confirmación; los estilos de
+ * título, X y espaciado viven en _dashboard.scss.
+ * Relacionado: plugins/popupManager.js; VisorReportes.vue; EnviarReporteCorreo.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
 import Vue from "vue";
 
 const state = Vue.observable({
@@ -7,6 +15,12 @@ const state = Vue.observable({
 const PopupManager = {
     state,
 
+    /**
+     * Detalle del método: Registra el popup en la pila, conecta cierre y ajusta foco/scroll tras
+     * actualizar el DOM; devuelve una promesa.
+     * Entradas: popupInstance (instancia Vue del popup que se registra); closeFn (callback autorizado para
+     * cerrar el popup); focusRef = null (referencia del control al que se dará foco).
+     */
     async register(popupInstance, closeFn, focusRef = null) {
         if (!popupInstance || !popupInstance.$options) {
             console.warn("PopupManager.register: invalid component instance");
@@ -96,6 +110,11 @@ const PopupManager = {
         }
     },
 
+    /**
+     * Detalle del método: Retira popup y listeners y restaura el foco/scroll de la pila para no dejar
+     * registros huérfanos.
+     * Entradas: popupId (nombre/identificador del popup registrado).
+     */
     unregister(popupId) {
         Vue.nextTick(() => {
             setTimeout(() => {
@@ -120,6 +139,10 @@ const PopupManager = {
             }, 100);
         });
     },
+    /**
+     * Detalle del método: Cierra solo el popup superior al recibir Escape mediante su callback registrado.
+     * Entradas: e (evento de teclado o interfaz).
+     */
     handleEsc(e) {
         if ((e.key === "Escape" || e.key === "Esc") && state.stack.length > 0) {
             const topPopup = state.stack[state.stack.length - 1];
@@ -133,6 +156,11 @@ const PopupManager = {
         }
     },
 
+    /**
+     * Detalle del método: Sincroniza foco y bloqueo de scroll con el popup superior tras abrir o cerrar
+     * otro modal.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     updateFocusAndScroll() {
         // --- Manejo de Scroll ---
         if (state.stack.length > 0) {
@@ -148,6 +176,11 @@ const PopupManager = {
         }
     },
 
+    /**
+     * Detalle del método: Mantiene Tab/Shift+Tab dentro del popup superior para que el foco no escape al
+     * contenido de fondo.
+     * Entradas: e (evento de teclado o interfaz).
+     */
     handleTab(e) {
         if (e.key !== "Tab") return;
         const top = state.stack[state.stack.length - 1];
@@ -179,6 +212,11 @@ const PopupManager = {
         }
     },
 
+    /**
+     * Detalle del método: Conecta los manejadores globales de teclado que coordinan foco y cierre de
+     * popups.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     init() {
         if (!this._initialized) {
             window.addEventListener("keydown", this.handleEsc.bind(this));

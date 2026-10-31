@@ -25,6 +25,15 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Plantillas de espera por tipo de card, antes de que existan datos y mientras se recargan.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 // Estructura compartida: no contiene datos, importes, permisos ni acciones reales.
 export default {
   name: "DashboardSkeleton",
@@ -33,7 +42,15 @@ export default {
     titulo: { type: String, default: "información" },
   },
   computed: {
+    /**
+     * Detalle del método: Devuelve cuántas tarjetas de espera necesita la variante del skeleton.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cantidadCards() { return this.variante === "pendientes" ? 3 : this.variante === "seguimientos" ? 4 : 1; },
+    /**
+     * Detalle del método: Devuelve cuántos indicadores simulados dibujar durante la carga de esa variante.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cantidadIndicadores() {
       if (this.variante === "pendientes" || this.variante === "seguimientos") return 1;
       return this.variante === "servicios" || this.variante === "inventario" ? 4 : 3;

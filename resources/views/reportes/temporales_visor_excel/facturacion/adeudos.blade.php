@@ -1,3 +1,11 @@
+{{--
+ Vista compartida de adeudos históricos y facturado del mes; factura principal y, debajo, operaciones y
+ pagos recibidos.
+ Dónde ajustar: Estilos y distribución de vista previa/impresión aquí. Los bloques modoPdf y @media print
+ pueden diferir de pantalla; el tamaño/márgenes del PDF se configuran también en el controlador.
+ Relacionado: VisorReportes.vue; controlador del reporte; exportador Excel equivalente
+ Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+--}}
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ $datos['titulo'] }}</title>

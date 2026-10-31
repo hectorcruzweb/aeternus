@@ -81,6 +81,15 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Indicadores y enlaces de pagos de hoy, próximos 7 días y solicitudes recientes sin contrato.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
@@ -106,6 +115,11 @@ export default {
     // Ocultar importes/acciones mientras el padre espera datos.
     cargando: { type: Boolean, default: false }, pendientes: { type: Object, required: true } },
   computed: {
+    /**
+     * Detalle del método: Devuelve las definiciones visuales de indicadores a partir de sus props; los
+     * importes y conteos proceden del backend.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     indicadores() {
       const hoy = this.pendientes.venceHoy || {};
       const proximos = this.pendientes.proximosSieteDias || {};
@@ -141,6 +155,11 @@ export default {
   },
   methods: {
     // Preservar la diferencia entre cero y un dato que aún no está disponible.
+    /**
+     * Detalle del método: Devuelve si la cantidad es numérica y finita, distinguiendo cero real de
+     * ausencia de datos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cantidadValida(valor) {
       return (
         valor !== null &&
@@ -149,12 +168,27 @@ export default {
         Number.isFinite(Number(valor))
       );
     },
+    /**
+     * Detalle del método: Convierte a número la cantidad admitida por la validación local y usa el
+     * fallback definido para valores no válidos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     numero(valor) {
       return Number(valor);
     },
+    /**
+     * Detalle del método: Devuelve la precisión visual del importe, conservando centavos cuando existen;
+     * no redondea el saldo del backend.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
+    /**
+     * Detalle del método: Devuelve la presentación del valor del indicador distinguiendo importes de
+     * conteos.
+     * Entradas: indicador (definición del indicador cuyo reporte se solicita).
+     */
     etiquetaValor(indicador) {
       return this.cantidadValida(indicador.valor)
         ? indicador.esImporte
@@ -162,6 +196,11 @@ export default {
           : indicador.valor + " solicitudes"
         : "No disponible";
     },
+    /**
+     * Detalle del método: Emite al padre el indicador o contexto de reporte elegido cuando la card ya está
+     * lista.
+     * Entradas: indicador (definición del indicador cuyo reporte se solicita).
+     */
     solicitarReporte(indicador) {
       if (this.cargando) return;
       const tipos = {

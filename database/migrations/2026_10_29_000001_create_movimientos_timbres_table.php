@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Crea el libro de movimientos de timbres con recargas, consumos y ajustes.
+ * Dónde ajustar: cfdis_id enlaza el consumo a la factura; recarga_id apunta al lote de esta misma tabla.
+ * referencia es un identificador/UUID, no una FK. No editar migraciones ya aplicadas para cambiar
+ * producción: usar una nueva.
+ * Relacionado: HistorialTimbresSeeder; FacturacionController
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -25,6 +35,11 @@ class CreateMovimientosTimbresTable extends Migration
      * La fecha de compra desconocida se conserva NULL, sin inventar fechas.
      * Esta migración no inserta datos
      * ni modifica todavía el timbrado ni genera reportes.
+     
+     * Detalle del método: Crea movimientos_timbres con índices y claves foráneas hacia CFDI y la recarga
+     * de la misma tabla.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Sin valor de retorno; modifica el esquema al ejecutar la migración.
      */
     public function up()
     {
@@ -62,7 +77,12 @@ class CreateMovimientosTimbresTable extends Migration
         });
     }
 
-    /** Retirar la autorrelación antes de eliminar la tabla en MySQL/MariaDB. */
+    /** Retirar la autorrelación antes de eliminar la tabla en MySQL/MariaDB. 
+     * Detalle del método: Retira la autorrelación y elimina movimientos_timbres al revertir esta
+     * migración.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Sin valor de retorno; elimina esa estructura y sus datos si se ejecuta.
+     */
     public function down()
     {
         Schema::table('movimientos_timbres', function (Blueprint $table) {

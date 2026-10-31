@@ -173,6 +173,16 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Coordina carga del dashboard, permisos recibidos, filtros de gráfica y apertura de todos los visores.
+ * Dónde ajustar: _fetchDashboard carga el JSON; cambiarPeriodoGrafica/cargarGrafica actualizan solo la
+ * gráfica; programarActualizacionInactiva actualiza tras 5 minutos sin actividad. Las acciones superiores
+ * siguen el scroll y cambian de fondo al fijarse.
+ * Relacionado: services/dashboard.js; dashboard/*.vue; VisorReportes.vue; _dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import { DownloadIcon, RefreshCwIcon, FileTextIcon } from "vue-feather-icons";
 import VistaLimitada from "./dashboard/VistaLimitada.vue";
 import MensajeTemporada from "./dashboard/MensajeTemporada.vue";
@@ -214,6 +224,11 @@ export default {
     PendientesResumen,
     VentasCobrosGrafica,
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de HomeInfo; no consulta al
+   * servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       isLoading: false,
@@ -255,28 +270,68 @@ export default {
     };
   },
   computed: {
+    /**
+     * Detalle del método: Indica si se muestra el resumen del tipo 2 sin una cuota individual elegida.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     esResumenCuotas() { return !!this.parametrosReporteVentas && Number(this.parametrosReporteVentas.empresa_operaciones_id) === 2 && this.parametrosReporteVentas.cuota_id == null; },
+    /**
+     * Detalle del método: Indica si el contexto del visor corresponde a una cuota concreta.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     esDetalleCuota() { return !!this.parametrosReporteVentas && Number(this.parametrosReporteVentas.empresa_operaciones_id) === 2 && this.parametrosReporteVentas.cuota_id != null; },
+    /**
+     * Detalle del método: Indica si el reporte seleccionado es todas las operaciones.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     esReporteGeneral() { return !!this.parametrosReporteVentas && this.parametrosReporteVentas.empresa_operaciones_id === "todas"; },
+    /**
+     * Detalle del método: Decide la estructura visual durante carga y según la vista autorizada por el
+     * servidor.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     mostrarVistaGerencial() {
       // Al inicio solo hay formas neutras; el servidor decide la vista con datos.
       return this.isLoading
         ? this.vistaCarga !== "operativa"
         : this.dashboardDisponible && this.puedeVerDashboardCompleto;
     },
+    /**
+     * Detalle del método: Comprueba el acceso gerencial recibido del backend para habilitar acciones e
+     * indicadores.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     puedeVerDashboardCompleto() {
       return this.dashboardDisponible && this.acceso.vista === "gerencial";
     },
     // Fuente real; el filtro mensual nunca modifica las cards del resumen inicial.
+    /**
+     * Detalle del método: Devuelve las filas de operacionesGrafica sin recalcular los importes.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     datosGrafica() { return this.operacionesGrafica; },
   },
   methods: {
     // Cinco minutos sin interacción: actualizar y volver a contar mientras siga inactivo.
+    // Mantenimiento: Reinicia el temporizador de 5 minutos desde la última actividad; no es una recarga periódica que
+    // interrumpa al usuario activo.
+    /**
+     * Detalle del método: Reinicia el temporizador de 5 minutos desde la última actividad; todavía no
+     * consulta datos.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     programarActualizacionInactiva() {
       clearTimeout(this._temporizadorInactividad);
       if(this._dashboardDestruido)return;
       this._temporizadorInactividad=setTimeout(()=>this.actualizarPorInactividad(),5*60*1000);
     },
+    // Mantenimiento: Evita recargar con reportes abiertos u otra carga en curso, conserva el periodo elegido de la
+    // gráfica y reprograma el temporizador.
+    /**
+     * Detalle del método: Pospone la recarga si hay reportes abiertos u otra carga; de lo contrario
+     * actualiza y conserva el periodo de la gráfica. Devuelve una promesa.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async actualizarPorInactividad() {
       const reporteAbierto=Object.keys(this.$data).some(k=>k.indexOf("mostrarReporte")===0 && this[k]===true);
       if(this.isLoading || this.cargandoGrafica || reporteAbierto || !this.dashboardDisponible){
@@ -289,12 +344,21 @@ export default {
           (periodo.anio!==this.periodoGrafica.anio || periodo.mes!==this.periodoGrafica.mes)) await this.cambiarPeriodoGrafica(periodo);
       } finally { this.programarActualizacionInactiva(); }
     },
+    /**
+     * Detalle del método: Devuelve si el JSON válido del backend autoriza la sección indicada.
+     * Entradas: nombre (clave de sección que se desea comprobar).
+     */
     tieneSeccion(nombre) {
       return (
         this.dashboardDisponible && this.acceso.secciones.indexOf(nombre) !== -1
       );
     },
     // Limpiar al recargar o fallar: nunca dejar importes/permisos de una sesión anterior.
+    /**
+     * Detalle del método: Vacía datos y permisos anteriores e invalida peticiones tardías de la gráfica
+     * para no mostrar importes obsoletos.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     limpiarDashboard() {
       this.dashboardDisponible = false;
       this.acceso = { vista: null, secciones: [] };
@@ -315,6 +379,11 @@ export default {
       this.reportePendiente = null;
     },
     // Validar la respuesta completa antes de publicar el estado del dashboard.
+    /**
+     * Detalle del método: Valida el contrato del JSON antes de actualizar cards y periodo. Lanza error si
+     * falta acceso, metadatos o bloques requeridos.
+     * Entradas: datos (respuesta del módulo o datos confirmados del envío, según el método).
+     */
     aplicarDatosDashboard(datos) {
       const acceso = datos && datos.acceso;
       const meta = datos && datos.meta;
@@ -412,6 +481,11 @@ export default {
       this.dashboardDisponible = true;
     },
     // Maqueta autorizada: retirar cada bloque al integrar su fuente real.
+    /**
+     * Detalle del método: Inicializa valores de maqueta heredados; aplicarDatosDashboard los sustituye
+     * después por los indicadores reales integrados. No hace consultas.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cargarEjemplosPendientes() {
       this.facturacion = {
         fechaCaducidadFiel: null,
@@ -436,10 +510,22 @@ export default {
       };
 
     },
+    /**
+     * Detalle del método: Devuelve la promesa de la carga principal invocada por Actualizar datos.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     recargarDashboard() {
       return this._fetchDashboard();
     },
     // Actualizar datos mostrando los skeletons propios del dashboard.
+    // Mantenimiento: Carga raíz y aplica acceso.vista/secciones del backend; muestra skeletons y evita peticiones
+    // simultáneas. Las descargas del visor tienen su propio estado y no deben controlar la sesión del
+    // sistema.
+    /**
+     * Detalle del método: Consulta el JSON raíz, gestiona carga/errores y aplica datos autorizados.
+     * Devuelve la promesa de la consulta.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async _fetchDashboard() {
       if (this.isLoading) return;
       this.vistaCarga = this.acceso.vista;
@@ -463,11 +549,42 @@ export default {
         this.isLoading = false;
       }
     },
+    /**
+     * Detalle del método: Abre el visor diario solo con datos disponibles y acceso gerencial; todavía no
+     * descarga el PDF.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     solicitarResumenDia() { if(!this.isLoading && this.puedeVerDashboardCompleto)this.mostrarReporteDia=true; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte Dia usando
+     * su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteDia(){return (await reportesResumenDia.visualizar()).data;},
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte. Compatibilidad heredada: el resumen diario solo admite PDF y no debe habilitarse esta
+     * descarga Excel.
+     * Entradas: t (token privado del reporte).
+     */
     async descargarDiaExcel(t){return (await reportesResumenDia.excel(t)).data;},
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: t (token privado del reporte).
+     */
     async descargarDiaPdf(t){return (await reportesResumenDia.pdf(t)).data;},
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: t (token privado del reporte); d (datos confirmados del envío).
+     */
     async enviarDiaCorreo(t,d){return (await reportesResumenDia.correo(t,d)).data;},
+    /**
+     * Detalle del método: Interpreta el contexto emitido por cada card y abre el visor correcto con tipo y
+     * periodo seleccionados.
+     * Entradas: contexto (tipo, periodo y origen emitidos por la card).
+     */
     prepararReporte(contexto) {
       if (this.isLoading || !this.puedeVerDashboardCompleto || !contexto)
         return;
@@ -542,92 +659,385 @@ export default {
         }
       }
     },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte CfdisMes
+     * usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteCfdisMes() { return (await reportesCfdisMes.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarCfdisMesExcel(token) { return (await reportesCfdisMes.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarCfdisMesPdf(token) { return (await reportesCfdisMes.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarCfdisMesCorreo(token, datos) { return (await reportesCfdisMes.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * CfdisAdeudos usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteCfdisAdeudos() { return (await reportesCfdisAdeudos.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarCfdisAdeudosExcel(token) { return (await reportesCfdisAdeudos.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarCfdisAdeudosPdf(token) { return (await reportesCfdisAdeudos.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarCfdisAdeudosCorreo(token, datos) { return (await reportesCfdisAdeudos.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Cierra el visor de timbres y limpia el lote seleccionado para volver al resumen
+     * al reabrir.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrarReporteTimbres() { this.mostrarReporteTimbres = false; this.recargaReporteTimbres = null; },
+    /**
+     * Detalle del método: Selecciona el lote autorizado solicitado desde el resumen y pide su vista de
+     * consumos al visor.
+     * Entradas: id (ID del elemento seleccionado en este contexto).
+     */
     abrirHistorialRecarga(id) {
       const coincidencia = /^recarga-([1-9]\d*)$/.exec(String(id));
       if (!this.puedeVerDashboardCompleto || !coincidencia) return;
       this.recargaReporteTimbres = Number(coincidencia[1]);
       this.$nextTick(() => { if (this.$refs.visorTimbres) this.$refs.visorTimbres.consultar(); });
     },
+    /**
+     * Detalle del método: Quita la selección de lote y recarga el resumen de recargas dentro del mismo
+     * visor.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     volverRecargasTimbres() {
       this.recargaReporteTimbres = null;
       this.$nextTick(() => { if (this.$refs.visorTimbres) this.$refs.visorTimbres.consultar(); });
     },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte Timbres
+     * usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteTimbres() { return (await reportesTimbres.visualizar(this.recargaReporteTimbres)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarTimbresExcel(token) { return (await reportesTimbres.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarTimbresCompleto(token) { return (await reportesTimbres.excel(token, true)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarTimbresPdf(token) { return (await reportesTimbres.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarTimbresCorreo(token, datos) { return (await reportesTimbres.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * ClientesPagosVencidos usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteClientesPagosVencidos() { return (await reportesClientesPagosVencidos.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarClientesPagosVencidosExcel(token) { return (await reportesClientesPagosVencidos.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarClientesPagosVencidosPdf(token) { return (await reportesClientesPagosVencidos.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarClientesPagosVencidosCorreo(token, datos) { return (await reportesClientesPagosVencidos.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * SeguimientosVencidos usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteSeguimientosVencidos() { return (await reportesSeguimientosVencidos.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosVencidosExcel(token) { return (await reportesSeguimientosVencidos.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosVencidosPdf(token) { return (await reportesSeguimientosVencidos.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarSeguimientosVencidosCorreo(token, datos) { return (await reportesSeguimientosVencidos.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * SeguimientosProgramados usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteSeguimientosProgramados() { return (await reportesSeguimientosProgramados.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosProgramadosExcel(token) { return (await reportesSeguimientosProgramados.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosProgramadosPdf(token) { return (await reportesSeguimientosProgramados.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarSeguimientosProgramadosCorreo(token, datos) { return (await reportesSeguimientosProgramados.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * SeguimientosRealizados usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteSeguimientosRealizados() { return (await reportesSeguimientosRealizados.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosRealizadosExcel(token) { return (await reportesSeguimientosRealizados.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSeguimientosRealizadosPdf(token) { return (await reportesSeguimientosRealizados.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarSeguimientosRealizadosCorreo(token, datos) { return (await reportesSeguimientosRealizados.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * Solicitudes usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteSolicitudes() { return (await reportesSolicitudesSinContrato.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSolicitudesExcel(token) { return (await reportesSolicitudesSinContrato.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarSolicitudesPdf(token) { return (await reportesSolicitudesSinContrato.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarSolicitudesCorreo(token, datos) { return (await reportesSolicitudesSinContrato.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte
+     * ProximosPagos usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteProximosPagos() { return (await reportesProximosPagos.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarProximosPagosExcel(token) { return (await reportesProximosPagos.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarProximosPagosPdf(token) { return (await reportesProximosPagos.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarProximosPagosCorreo(token, datos) { return (await reportesProximosPagos.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte VenceHoy
+     * usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteVenceHoy() { return (await reportesVenceHoy.visualizar()).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarVenceHoyExcel(token) { return (await reportesVenceHoy.excel(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarVenceHoyPdf(token) { return (await reportesVenceHoy.pdf(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarVenceHoyCorreo(token, datos) { return (await reportesVenceHoy.correo(token, datos)).data; },
+    /**
+     * Detalle del método: Cierra el visor de ventas y limpia la bandera de navegación desde el reporte
+     * general.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrarReporteVentas() { this.mostrarReporteVentas = false; this.reporteDesdeGeneral = false; },
+    /**
+     * Detalle del método: Valida el tipo seleccionado y carga su detalle manteniendo el periodo del
+     * concentrado.
+     * Entradas: tipo (tipo de reporte/operación seleccionado).
+     */
     abrirReporteDesdeGeneral(tipo) {
       if (!this.puedeVerDashboardCompleto || ![1,2,3,4,5].includes(Number(tipo))) return;
       this.reporteDesdeGeneral = true;
       this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: Number(tipo), cuota_id: null });
       this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
     },
+    /**
+     * Detalle del método: Valida el identificador cuota-N de la navegación y pide el desglose de esa
+     * cuota.
+     * Entradas: id (ID del elemento seleccionado en este contexto).
+     */
     abrirDetalleCuota(id) {
       if (!this.puedeVerDashboardCompleto || !this.esResumenCuotas || !/^cuota-\d+$/.test(String(id))) return;
       this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { cuota_id: Number(String(id).slice(6)) });
       this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
     },
+    /**
+     * Detalle del método: Regresa de cuota individual a resumen de cuotas, o de operación individual al
+     * concentrado, conservando el periodo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     volverReporteGeneral() {
       this.parametrosReporteVentas = Object.assign({}, this.parametrosReporteVentas, { empresa_operaciones_id: this.esDetalleCuota ? 2 : "todas", cuota_id: null });
       this.$nextTick(() => { if (this.$refs.visorVentas) this.$refs.visorVentas.consultar(); });
     },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarVentasCompleto(token) { return (await reportesVentas.completo(token)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con response.data de la vista previa del reporte Ventas
+     * usando su servicio y contexto seleccionado.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarReporteVentas() {
       return (await reportesVentas.visualizar(this.parametrosReporteVentas)).data;
     },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob Excel para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarVentasExcel(token) { return (await reportesVentas.excel(token, this.esReporteGeneral)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con Blob PDF para el visor mediante el servicio del
+     * reporte.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     async descargarVentasPdf(token) { return (await reportesVentas.pdf(token, this.esReporteGeneral)).data; },
+    /**
+     * Detalle del método: Devuelve una promesa con la respuesta del envío del reporte seleccionado,
+     * delegando token y datos confirmados a su servicio.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     async enviarVentasCorreo(token, datos) { return (await reportesVentas.correo(token, datos, this.esReporteGeneral)).data; },
+    /**
+     * Detalle del método: Devuelve si el año/mes es válido y no posterior a la fecha de referencia del
+     * servidor.
+     * Entradas: periodo (objeto con año y mes solicitados).
+     */
     periodoGraficaValido(periodo) {
       const anio=Number(periodo && periodo.anio),mes=Number(periodo && periodo.mes);
       return Number.isInteger(anio) && anio>=1000 && anio<=this.fechaReferencia.anio &&
         Number.isInteger(mes) && mes>=1 && mes<=12 &&
         (anio<this.fechaReferencia.anio || mes<=this.fechaReferencia.mes);
     },
+    /**
+     * Detalle del método: Acepta un periodo válido y devuelve la consulta exclusiva de la gráfica; no
+     * cambia las demás cards.
+     * Entradas: periodo (objeto con año y mes solicitados).
+     */
     cambiarPeriodoGrafica(periodo) {
       if (this.isLoading || !this.puedeVerDashboardCompleto || !this.periodoGraficaValido(periodo)) return;
       this.periodoGrafica={anio:Number(periodo.anio),mes:Number(periodo.mes)};
       return this.cargarGrafica();
     },
+    // Mantenimiento: Consulta solo el periodo local de la gráfica. _graficaSolicitud descarta respuestas tardías para que
+    // un mes anterior no reemplace al último elegido.
+    /**
+     * Detalle del método: Devuelve una promesa que consulta el periodo elegido y descarta respuestas
+     * anteriores mediante _graficaSolicitud.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     async cargarGrafica() {
       if (this.isLoading || !this.puedeVerDashboardCompleto || !this.periodoGraficaValido(this.periodoGrafica)) return;
       const periodo=Object.assign({},this.periodoGrafica);
@@ -651,10 +1061,20 @@ export default {
       }
     },
   },
+  /**
+   * Detalle del método: Inicializa el estado previo al montaje de HomeInfo; Vue lo ejecuta al crear la
+   * instancia, sin valor de retorno.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   created() {
     this._dashboardDestruido = false;
     this.isLoading = true;
   },
+  /**
+   * Detalle del método: Conecta scroll/actividad, programa la actualización por inactividad y solicita
+   * los datos iniciales.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   mounted() {
     // Capturar también el scroll de contenedores interiores del layout.
     this._posicionarAccionesDashboard=()=>{
@@ -674,6 +1094,11 @@ export default {
     this.isLoading = false;
     this._fetchDashboard();
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de HomeInfo al destruirse;
+   * evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() {
     window.removeEventListener("scroll",this._posicionarAccionesDashboard,true);
     window.removeEventListener("resize",this._posicionarAccionesDashboard);

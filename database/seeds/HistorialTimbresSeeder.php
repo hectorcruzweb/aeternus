@@ -1,4 +1,15 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Reconstruye consumos históricos por fechas y disponibilidad FIFO de tres recargas confirmadas.
+ * Dónde ajustar: RECARGAS configura 2000/2000/500. Incluye CFDI cancelados que fueron timbrados;
+ * asignacion_estimada distingue la reconstrucción del historial real del proveedor. No registra
+ * automáticamente consumos futuros.
+ * Relacionado: movimientos_timbres; FacturacionController; timbrado futuro pendiente de integración
+ * específica
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -30,6 +41,13 @@ class HistorialTimbresSeeder extends Seeder
         ['referencia' => 'HIST-20260519-233248', 'cantidad' => 500, 'activacion' => '2026-05-19 23:32:48'],
     ];
 
+    /**
+     * Detalle del método: Reconstruye el histórico FIFO de las tres recargas confirmadas, incluyendo CFDI
+     * timbrados cancelados y evitando consumos duplicados.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Informa el resultado; guarda en transacción y revierte ante inconsistencias. No se
+     * ejecuta al consultar el dashboard.
+     */
     public function run()
     {
         if (!Schema::hasTable('movimientos_timbres')) {

@@ -1,3 +1,11 @@
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Cliente HTTP de inventario; incluye visualizarExcel y descargas/envío para el nuevo visor.
+ * Dónde ajustar: Conservar contratos de funciones usadas por otros módulos; el nombre visualizarExcel es
+ * histórico y devuelve una vista HTML de reporte.
+ * Relacionado: InventarioController; HomeInfo.vue; VisorReportes.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
 import axios from "@/axios.js";
 import axiosSuper from "axios";
 const CancelToken = axiosSuper.CancelToken;
@@ -109,18 +117,44 @@ export default {
         });
     },
     // Vista HTML directa y token privado para descargar la misma selección.
+    /**
+     * Detalle del método: Solicita HTML/metadatos/token de inventario por filtro; devuelve promesa Axios y
+     * no genera XLSX pese al nombre histórico.
+     * Entradas: filtro = "all" (filtro de inventario; all usa el listado general).
+     */
     visualizarExcel(filtro = "all") {
         return axios.get("/inventario/dashboard/reporte-preview", { params: { filtro } });
     },
+    /**
+     * Detalle del método: Envía token y datos confirmados del correo de inventario al backend; devuelve la
+     * promesa del envío.
+     * Entradas: token (token privado del reporte, distinto al de sesión); datos (respuesta del módulo o
+     * datos confirmados del envío, según el método).
+     */
     enviarExcelPreview(token, datos) {
         return axios.post("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/correo", datos);
     },
+    /**
+     * Detalle del método: Devuelve la promesa Axios con Blob PDF del reporte de inventario autorizado por
+     * token.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     descargarPdfPreview(token) {
         return axios.get("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/pdf", { responseType: "blob" });
     },
+    /**
+     * Detalle del método: Devuelve la promesa Axios con Blob XLSX del reporte de inventario autorizado por
+     * token.
+     * Entradas: token (token privado del reporte, distinto al de sesión).
+     */
     descargarExcelPreview(token) {
         return axios.get("/inventario/dashboard/reporte-preview/" + encodeURIComponent(token) + "/excel", { responseType: "blob" });
     },
+    /**
+     * Detalle del método: Conserva la descarga directa anterior del Excel de inventario por filtro; no
+     * exige abrir el visor.
+     * Entradas: filtro = "all" (filtro de inventario; all usa el listado general).
+     */
     descargarExcel(filtro = "all") {
         return axios.get("/listar_inventario/" + filtro + "/1", {
             responseType: "blob",

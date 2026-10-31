@@ -1,4 +1,12 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Construye el JSON del dashboard y decide la vista gerencial u operativa desde el usuario autenticado.
+ * Dónde ajustar: Agregar bloques agregados en buildDashboard; no cargar aquí el desglose de los reportes.
+ * Relacionado: HomeInfo.vue; controladores de cada módulo; routes/api.php
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -12,6 +20,13 @@ class DashboardController extends ApiController
     protected $operaciones;
 
     // Reutilizamos los controladores de cada módulo; sus métodos devuelven datos.
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $serviciosFunerarios (dato del contexto descrito en la firma); $inventario (dato del
+     * contexto descrito en la firma); $operaciones (controlador inyectado que ejecuta la conciliación).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(
         FunerariaController $serviciosFunerarios,
         InventarioController $inventario,
@@ -26,6 +41,11 @@ class DashboardController extends ApiController
      * Flujo: autenticar -> resolver acceso -> obtener resúmenes permitidos -> JSON.
      * La ruta debe permanecer dentro del grupo auth:api.
      * Los detalles y exportaciones se consultarán mediante sus propias rutas.
+     
+     * Detalle del método: Resuelve permisos del usuario autenticado y reúne los indicadores permitidos con
+     * la fecha de corte del servidor.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON raíz con meta, acceso y bloques autorizados; 401 si no hay sesión.
      */
     public function buildDashboard(Request $request)
     {

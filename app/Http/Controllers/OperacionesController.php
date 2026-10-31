@@ -1,4 +1,16 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Motor compartido de ventas, capital pendiente, vencimientos y transporte de reportes del dashboard.
+ * Dónde ajustar: Cálculos: getVentasSaldosOperacionesDashboard y
+ * getReporteVentasSaldosOperacionesDetallado. Transporte: preview*, datosReporteCementerio,
+ * htmlReporteCementerio y exportadorReporteVentas. Los nombres Cementerio también se usan para otros
+ * módulos.
+ * Relacionado: CementerioController; FunerariaController; SeguimientosController; app/Exports;
+ * VisorReportes.vue
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -9,7 +21,16 @@ use App\Http\Controllers\ApiController;
 
 class OperacionesController extends ApiController
 {
-    /** Histórico de seguimientos vencidos: consultas en SeguimientosController, transporte compartido. */
+    /** Histórico de seguimientos vencidos: consultas en SeguimientosController, transporte compartido. 
+     * Mantenimiento: Resumen diario: reutiliza buildDashboard y agrega cliente/contacto de los servicios. Si
+     * no existe contrato vigente, usa nombre_contratante_temp, telefono_contratante_temp y
+     * parentesco_contratante_temp. La respuesta soloPdf impide exportarlo como Excel.
+     
+     * Detalle del método: Construye el resumen del día desde el dashboard y completa contactos de
+     * servicios, usando contratante temporal si no existe contrato.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: JSON de vista previa y token privado; soloPdf=true. No genera un XLSX.
+     */
     public function previewResumenDashboard(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -63,7 +84,13 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Histórico de seguimientos vencidos: consultas en SeguimientosController, transporte compartido. */
+    /** Histórico de seguimientos vencidos: consultas en SeguimientosController, transporte compartido. 
+     * Detalle del método: Prepara la vista previa de seguimientos vencidos históricos: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewSeguimientosVencidosHistorico(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -93,7 +120,13 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Agenda de próximos siete días: consultas en SeguimientosController, transporte compartido. */
+    /** Agenda de próximos siete días: consultas en SeguimientosController, transporte compartido. 
+     * Detalle del método: Prepara la vista previa de agenda de próximos siete días: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewProgramadosProximosSieteDias(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -123,7 +156,13 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Transporte mensual de seguimientos: reglas y datos en SeguimientosController. */
+    /** Transporte mensual de seguimientos: reglas y datos en SeguimientosController. 
+     * Detalle del método: Prepara la vista previa de seguimientos realizados del mes: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewSeguimientosRealizadosMes(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -153,7 +192,13 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Transporte de solicitudes: las consultas y sus reglas permanecen en FunerariaController. */
+    /** Transporte de solicitudes: las consultas y sus reglas permanecen en FunerariaController. 
+     * Detalle del método: Prepara la vista previa de solicitudes sin contrato: valida acceso y parámetros
+     * y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewSolicitudesSinContrato(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -183,7 +228,16 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Catálogo compartido por los resúmenes y reportes de operaciones. */
+    /** Catálogo compartido por los resúmenes y reportes de operaciones. 
+     * Mantenimiento: Catálogo central de nombres/orden del carrusel. Un nuevo tipo requiere también relación
+     * de negocio, detalle de reporte, rutas y pruebas; agregar solo el nombre no implementa su desglose.
+     
+     * Detalle del método: Define los tipos de operación y sus nombres en el orden usado por el carrusel y
+     * los reportes.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo id => nombre. Ampliar también el detalle y las rutas al incorporar otro
+     * tipo.
+     */
     public function getTiposOperacionesDashboard()
     {
         return [1 => 'Ventas en cementerio', 2 => 'Cuotas de Mantenimiento', 3 => 'Servicios funerarios',
@@ -195,6 +249,16 @@ class OperacionesController extends ApiController
      * Primero suma aplicaciones vigentes a capital: no repite importes al unir pagos.
      * Excluye canceladas, intereses, saldados y operaciones posteriores al corte.
      * El rango conserva el uso del índice de fecha y acepta columnas DATE o DATETIME.
+     
+     * Mantenimiento: Base compartida de capital pendiente para hoy, próximos días y clientes vencidos. Se
+     * suman aplicaciones por pago programado antes de unir operaciones para evitar duplicar importes.
+     
+     * Detalle del método: Arma la consulta común de pagos pendientes: aplica capital vigente por
+     * programado y filtra el alcance de hoy, próximos días o vencidos.
+     * Entradas: $corte (fecha de corte de la consulta); $dias (alcance en días; la implementación
+     * distingue hoy, próximos o histórico).
+     * Salida / efectos: Query Builder reutilizable; construir la consulta no equivale a devolver todavía
+     * todas las filas.
      */
     private function consultaPagosPorVencer(Carbon $corte, $dias = 1)
     {
@@ -226,7 +290,12 @@ class OperacionesController extends ApiController
         return $consulta;
     }
 
-    /** Clientes únicos del histórico vencido; no cargar contactos ni filas en el dashboard. */
+    /** Clientes únicos del histórico vencido; no cargar contactos ni filas en el dashboard. 
+     * Detalle del método: Cuenta clientes únicos con al menos un programado pendiente vencido antes del
+     * día de consulta.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Cantidad de clientes, no cantidad de pagos ni suma de saldos.
+     */
     public function getClientesPagosVencidosDashboard(Carbon $fechaCorte = null)
     {
         $corte=$fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -234,17 +303,36 @@ class OperacionesController extends ApiController
             ->selectRaw('COUNT(DISTINCT COALESCE(q.clientes_id,0)) AS cantidad')->value('cantidad');
     }
 
+    /**
+     * Detalle del método: Solicita el detalle histórico de programados vencidos para presentarlo agrupado
+     * por cliente y operación.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte, o resumen/conteos cuando soloResumen está activo.
+     */
     public function getReporteClientesPagosVencidos(Carbon $fechaCorte = null, $soloResumen = false)
     {
         return $this->getReportePagosPorVencer(0,$fechaCorte,$soloResumen);
     }
 
+    /**
+     * Detalle del método: Prepara la vista previa de clientes con pagos vencidos: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewClientesPagosVencidos(Request $request)
     {
         return $this->previewPagosPorVencer($request,0);
     }
 
-    /** Solo agregados: el dashboard no consulta contactos ni carga pagos individuales. */
+    /** Solo agregados: el dashboard no consulta contactos ni carga pagos individuales. 
+     * Detalle del método: Obtiene cantidad e importe de capital pendiente de los programados con
+     * vencimiento hoy.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Resumen del indicador, sin cargar el detalle de contactos.
+     */
     public function getPagosVenceHoyDashboard(Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -252,7 +340,12 @@ class OperacionesController extends ApiController
         return ['cantidad' => $datos['cantidad'], 'importe' => $datos['pendiente']];
     }
 
-    /** Siete días naturales: hoy y los siguientes seis, con los mismos criterios de capital. */
+    /** Siete días naturales: hoy y los siguientes seis, con los mismos criterios de capital. 
+     * Detalle del método: Obtiene cantidad e importe de pagos pendientes de hoy y los seis días
+     * siguientes.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Resumen de próximos siete días, incluyendo hoy.
+     */
     public function getPagosProximosSieteDiasDashboard(Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -260,7 +353,13 @@ class OperacionesController extends ApiController
         return ['cantidad' => $datos['cantidad'], 'importe' => $datos['pendiente']];
     }
 
-    /** Una consulta agregada, reutilizada por el indicador y por el reporte detallado. */
+    /** Una consulta agregada, reutilizada por el indicador y por el reporte detallado. 
+     * Detalle del método: Agrega cantidad, capital pendiente y clientes de la consulta compartida sin
+     * recuperar el desglose completo.
+     * Entradas: $corte (fecha de corte de la consulta); $dias (alcance en días; la implementación
+     * distingue hoy, próximos o histórico).
+     * Salida / efectos: Arreglo de totales para la card correspondiente al alcance solicitado.
+     */
     private function resumenPagosPorVencer(Carbon $corte, $dias = 1)
     {
         $filas = DB::query()->fromSub($this->consultaPagosPorVencer($corte, $dias), 'q')
@@ -278,18 +377,40 @@ class OperacionesController extends ApiController
         return $resumen;
     }
 
-    /** Detalle bajo demanda. No expone IDs internos de operación/pago al usuario. */
+    /** Detalle bajo demanda. No expone IDs internos de operación/pago al usuario. 
+     * Detalle del método: Especializa el reporte común de pagos para el día de consulta.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte de hoy, o solo resumen si se solicita.
+     */
     public function getReportePagosVenceHoy(Carbon $fechaCorte = null, $soloResumen = false)
     {
         return $this->getReportePagosPorVencer(1, $fechaCorte, $soloResumen);
     }
 
+    /**
+     * Detalle del método: Especializa el reporte común para hoy y los seis días siguientes.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte de próximos pagos, ordenados para su cobro.
+     */
     public function getReportePagosProximosSieteDias(Carbon $fechaCorte = null, $soloResumen = false)
     {
         return $this->getReportePagosPorVencer(7, $fechaCorte, $soloResumen);
     }
 
-    /** Motor compartido: intervalo explícito y datos específicos únicamente al pedir detalle. */
+    /** Motor compartido: intervalo explícito y datos específicos únicamente al pedir detalle. 
+     * Mantenimiento: Reutiliza la consulta base para resumen/detalle. El alcance de próximos días incluye hoy;
+     * el orden de cobro es fecha ascendente. Clientes vencidos usa el alcance histórico y agrupa por cliente.
+     
+     * Detalle del método: Prepara encabezados, resúmenes y detalle de pagos; agrega contactos, concepto,
+     * referencia y ubicación/fallecido según operación.
+     * Entradas: $dias (alcance en días; la implementación distingue hoy, próximos o histórico);
+     * $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen (si está
+     * activo evita cargar el detalle completo).
+     * Salida / efectos: Arreglo del reporte. El modo de resumen evita cargar filas; el detalle conserva el
+     * alcance de fechas solicitado.
+     */
     private function getReportePagosPorVencer($dias, Carbon $fechaCorte = null, $soloResumen = false)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -378,17 +499,37 @@ class OperacionesController extends ApiController
         return $datos;
     }
 
-    /** Mismo visor/transporte autenticado de los reportes de operaciones. */
+    /** Mismo visor/transporte autenticado de los reportes de operaciones. 
+     * Detalle del método: Prepara la vista previa de pagos de hoy: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewPagosVenceHoy(Request $request)
     {
         return $this->previewPagosPorVencer($request, 1);
     }
 
+    /**
+     * Detalle del método: Prepara la vista previa de próximos pagos: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewPagosProximosSieteDias(Request $request)
     {
         return $this->previewPagosPorVencer($request, 7);
     }
 
+    /**
+     * Detalle del método: Valida acceso, cuenta filas y prepara el HTML o los filtros diferidos del
+     * reporte de pagos según su tamaño.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $dias (alcance en días; la
+     * implementación distingue hoy, próximos o histórico).
+     * Salida / efectos: JSON con disponibilidad de vista previa, hojas y token de descarga.
+     */
     private function previewPagosPorVencer(Request $request, $dias)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -419,7 +560,14 @@ class OperacionesController extends ApiController
     }
 
 
-    /** Alcance visible y persistente en visor/Excel/PDF/correo de reportes de gráfica. */
+    /** Alcance visible y persistente en visor/Excel/PDF/correo de reportes de gráfica. 
+     * Detalle del método: Añade al reporte la fecha límite y la leyenda que distingue vencido a consulta
+     * de vencido limitado al mes.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $hastaPeriodo (activa la
+     * leyenda del vencido limitado al periodo); $limiteExclusivo (fecha superior que no se incluye en los
+     * vencimientos).
+     * Salida / efectos: Mismo arreglo de datos con metadatos de alcance; no recalcula importes.
+     */
     private function anotarAlcanceVencido(array $datos,$hastaPeriodo,$limiteExclusivo)
     {
         $datos['vencido_hasta_periodo']=(bool)$hastaPeriodo;
@@ -432,7 +580,16 @@ class OperacionesController extends ApiController
         return $datos;
     }
 
-    /** Gráfica mensual: solo agregados de los tipos, sin fila general ni detalles. */
+    /** Gráfica mensual: solo agregados de los tipos, sin fila general ni detalles. 
+     * Mantenimiento: Endpoint exclusivo de la gráfica: valida mes/año y acceso gerencial. No altera el periodo
+     * de las otras tarjetas. El vencido se limita al mes elegido, pero descuenta las aplicaciones vigentes
+     * actuales.
+     
+     * Detalle del método: Valida el mes/año y consulta las cinco operaciones para la gráfica, recortando
+     * el vencido al periodo elegido.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: JSON con periodo y operaciones; no modifica el resumen mensual de las demás cards.
+     */
     public function getGraficaVentasSaldosDashboard(Request $request)
     {
         $this->usuarioReporteCementerio($request);
@@ -475,6 +632,21 @@ class OperacionesController extends ApiController
      * Cada fila: id, nombre, ventas, porCobrar y vencido; sin movimientos incluye ceros.
      * El general usa id="todas", que no es un ID de tipo en la base de datos.
      * @throws \InvalidArgumentException Por tipo/periodo inválido o futuro.
+     
+     * Mantenimiento: REGLAS A CONSERVAR: ventas por fecha_operacion del periodo; por cobrar por
+     * fecha_programada del periodo, incluso de ventas anteriores; vencido histórico con fecha anterior a hoy.
+     * Solo operaciones status 1/2, programados status 1 y pagos status 1, movimientos 1/3/4/5, aplicando
+     * ppp.monto. No incluye intereses ni usa operaciones.saldo. Cada pendiente se redondea y limita a cero por
+     * programado. vencidoHastaPeriodo recorta fechas de vencimiento; no reconstruye pagos al cierre histórico.
+     
+     * Detalle del método: Agrega ventas por fecha de operación, por cobrar por fecha programada y vencido
+     * histórico a partir de capital aplicado vigente.
+     * Entradas: $tipoOperacion (tipo del catálogo; null permite todos en el resumen); $anio (año del
+     * periodo solicitado); $mes (mes del periodo solicitado); $fechaCorte (fecha opcional del corte; si
+     * falta se usa la actual del módulo); $vencidoHastaPeriodo (limita vencimientos al mes elegido usando
+     * pendiente actual).
+     * Salida / efectos: Filas con id, nombre, ventas, porCobrar y vencido. Con tipo null incluye todas; no
+     * usa operaciones.saldo.
      */
     public function getVentasSaldosOperacionesDashboard($tipoOperacion = null, $anio = null, $mes = null, Carbon $fechaCorte = null, $vencidoHastaPeriodo = false)
     {
@@ -638,13 +810,28 @@ class OperacionesController extends ApiController
      * Vencidos: todas las ventas hasta hoy.
      * $soloConteo evita cargar miles de filas al abrir el visor.
      * No usa operaciones.saldo ni total_pago: aplica monto del enlace al programado.
+     
+     * Detalle del método: Obtiene el reporte individual de ventas en cementerio (tipo 1) mediante el motor
+     * financiero compartido.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Estructura de ventas, por cobrar y vencidos; puede limitarse a conteos.
      */
     public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(CementerioController::class)->getReporteVentasCementerio($anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
-    /** Tipo 2: cuotas por propiedad, sin duplicar consultas ni reglas de saldos. */
+    /** Tipo 2: cuotas por propiedad, sin duplicar consultas ni reglas de saldos. 
+     * Detalle del método: Obtiene el reporte de cuotas de mantenimiento (tipo 2) conservando el alcance y
+     * reglas financieras compartidas.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Estructura de datos/conteos de cuotas; el controlador del módulo añade el contexto
+     * de cementerio.
+     */
     public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(CementerioController::class)->getReporteCuotasMantenimiento($anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
@@ -654,6 +841,20 @@ class OperacionesController extends ApiController
      * Motor financiero común. Cada controlador del módulo aporta su detalle específico.
      * El callback recibe las tres consultas y sus metadatos; no corre en modo soloConteo.
      * Cementerio aporta tipos 1/2; Funeraria aporta tipos 3/4/5. Aquí no se cargan sus catálogos.
+     
+     * Mantenimiento: Contrato compartido del desglose: ventas, por_cobrar y vencidos tienen alcances
+     * distintos. No unir todo por la fecha de venta. completarDetalle añade campos propios del módulo sin
+     * duplicar el cálculo de capital. soloConteo permite decidir si cabe en el visor antes de cargar filas.
+     
+     * Detalle del método: Construye las tres consultas independientes de ventas, por cobrar mensual y
+     * vencidos históricos, y permite completar campos del módulo.
+     * Entradas: $tipoOperacion (tipo del catálogo; null permite todos en el resumen); $anio (año del
+     * periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de corte de la consulta);
+     * $soloConteo (si está activo devuelve conteos en lugar de todas las filas); $completarDetalle
+     * (callback del módulo para enriquecer consultas/resultado); $cuotaId (cuota concreta que limita el
+     * desglose); $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Arreglo con resumen, filas o conteos; respeta cuota y límite del vencido cuando se
+     * indican.
      */
     public function getReporteVentasSaldosOperacionesDetallado($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false, callable $completarDetalle = null, $cuotaId = null, $vencidoHastaPeriodo = false)
     {
@@ -742,7 +943,14 @@ class OperacionesController extends ApiController
         return $completarDetalle($consultas, $resultado);
     }
 
-    /** Resolver el controlador del módulo sin duplicar transporte, caché o exportación. */
+    /** Resolver el controlador del módulo sin duplicar transporte, caché o exportación. 
+     * Detalle del método: Selecciona el controlador y método de detalle correspondiente al tipo 1/2/3/4/5.
+     * Entradas: $tipoOperacion (tipo del catálogo; null permite todos en el resumen); $anio (año del
+     * periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de corte de la consulta);
+     * $soloConteo (si está activo devuelve conteos en lugar de todas las filas); $vencidoHastaPeriodo
+     * (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Datos del reporte individual o error si el tipo no está soportado.
+     */
     private function obtenerReporteIndividual($tipoOperacion, $anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         if ($tipoOperacion === 3) {
@@ -760,7 +968,16 @@ class OperacionesController extends ApiController
     }
 
 
-    /** Resumen ejecutivo: dos consultas agregadas, sin clientes, ventas o pagos individuales. */
+    /** Resumen ejecutivo: dos consultas agregadas, sin clientes, ventas o pagos individuales. 
+     * Mantenimiento: Obtiene el concentrado de los tipos. La comparación visual separa cuotas por escala; eso
+     * no excluye cuotas de los totales generales. El detalle completo se arma bajo demanda.
+     
+     * Detalle del método: Reúne los totales y cantidades de cada tipo para el concentrado general.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente
+     * actual).
+     * Salida / efectos: Resumen por tipo y totales; el desglose completo se carga aparte.
+     */
     public function getResumenGeneralOperaciones($anio, $mes, Carbon $corte = null, $vencidoHastaPeriodo = false)
     {
         if ($mes === null) throw new \InvalidArgumentException('Indique un mes para el reporte general.');
@@ -790,7 +1007,13 @@ class OperacionesController extends ApiController
         return $this->anotarAlcanceVencido($datos,$vencidoHastaPeriodo,$limite);
     }
 
-    /** El reporte general abre solo cinco filas. No invoca reportes detallados. */
+    /** El reporte general abre solo cinco filas. No invoca reportes detallados. 
+     * Detalle del método: Prepara la vista previa de concentrado general de operaciones: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteGeneralOperaciones(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -827,6 +1050,13 @@ class OperacionesController extends ApiController
      * Excel completo solo bajo solicitud. No llena el caché ni la vista con el historial.
      * Consulta datos actuales del mismo periodo en una transacción de lectura.
      * El usuario ve explícitamente que este archivo se actualiza al generarse.
+     
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel con todo el
+     * detalle solicitado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
      */
     public function descargarReporteGeneralCompleto(Request $request, $token)
     {
@@ -845,7 +1075,13 @@ class OperacionesController extends ApiController
         return $respuesta;
     }
 
-    /** Mismo detalle y corte para descargar o adjuntar el Excel completo. */
+    /** Mismo detalle y corte para descargar o adjuntar el Excel completo. 
+     * Detalle del método: Reconstruye los desgloses de todas las operaciones usando el contexto de periodo
+     * guardado al abrir el resumen.
+     * Entradas: $anterior (contexto de reporte previamente guardado para reconstruir el detalle).
+     * Salida / efectos: Datos ampliados para el Excel completo; consulta los datos disponibles al
+     * ejecutarse.
+     */
     private function datosDetalleGeneralVentas(array $anterior)
     {
         return DB::transaction(function () use ($anterior) {
@@ -861,7 +1097,15 @@ class OperacionesController extends ApiController
         });
     }
 
-    /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. */
+    /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. 
+     * Mantenimiento: Punto de selección del exportador según tipo_operacion. Para integrar un nuevo reporte en
+     * el transporte compartido, revisar también htmlReporteCementerio y la generación diferida en
+     * datosReporteCementerio.
+     
+     * Detalle del método: Elige la clase exportadora a partir de tipo_operacion en los datos del reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Objeto exportador para Maatwebsite Excel; todavía no es una respuesta descargable.
+     */
     private function exportadorReporteVentas(array $datos)
     {
         if (($datos['tipo_operacion'] ?? null) === 'resumen_dashboard') return new \App\Exports\ResumenDashboardExport($datos);
@@ -877,7 +1121,13 @@ class OperacionesController extends ApiController
             : new \App\Exports\VentasCementerioExport($datos);
     }
 
-    /** Entrada del visor: instantánea privada de 15 minutos; no genera archivos al consultar. */
+    /** Entrada del visor: instantánea privada de 15 minutos; no genera archivos al consultar. 
+     * Detalle del método: Prepara la vista previa de ventas y saldos individuales: valida acceso y
+     * parámetros y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewVentasCementerio(Request $request)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -921,7 +1171,13 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Entrada tipo 2: primero resumen por cuota; el detalle se solicita al seleccionarla. */
+    /** Entrada tipo 2: primero resumen por cuota; el detalle se solicita al seleccionarla. 
+     * Detalle del método: Prepara el resumen por cuota o el detalle de la cuota elegida, con navegación y
+     * caché privada.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $usuario (usuario previamente
+     * autorizado).
+     * Salida / efectos: JSON para el visor con reporte y enlaces a cuotas autorizadas.
+     */
     private function previewCuotasMantenimiento(Request $request, $usuario)
     {
         $request->validate(['cuota_id' => 'nullable|integer|min:0']);
@@ -961,7 +1217,12 @@ class OperacionesController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Descarga/correo completo: un único detalle enriquecido y separado por cuota en memoria. */
+    /** Descarga/correo completo: un único detalle enriquecido y separado por cuota en memoria. 
+     * Detalle del método: Completa el resumen de cuotas con los datos individuales necesarios para generar
+     * el reporte ampliado.
+     * Entradas: $anterior (contexto de reporte previamente guardado para reconstruir el detalle).
+     * Salida / efectos: Arreglo con detalles por cuota conservando periodo y alcance guardados.
+     */
     private function datosDetalleCuotas(array $anterior)
     {
         return DB::transaction(function () use ($anterior) {
@@ -988,6 +1249,12 @@ class OperacionesController extends ApiController
         });
     }
 
+    /**
+     * Detalle del método: Comprueba que la petición provenga de Admin o Gerencia; el nombre histórico se
+     * comparte con otros reportes.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Usuario autenticado o interrupción 403; no basta con ocultar enlaces en Vue.
+     */
     private function usuarioReporteCementerio(Request $request)
     {
         $usuario = $request->user('api');
@@ -995,7 +1262,18 @@ class OperacionesController extends ApiController
         return $usuario;
     }
 
-    /** Verifica el propietario incluso si conoce un token válido de otro usuario. */
+    /** Verifica el propietario incluso si conoce un token válido de otro usuario. 
+     * Mantenimiento: Nombre histórico: recupera reportes de varios módulos. Verifica usuario propietario y
+     * caducidad del token privado. Si solo se guardaron filtros por tamaño, reconstruye el detalle al
+     * descargar; puede reflejar datos actualizados. Caducidad del reporte es HTTP 410, no cierre de sesión.
+     
+     * Detalle del método: Recupera el contexto privado del token, comprueba propietario/caducidad y
+     * reconstruye detalle diferido si hace falta.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Contexto del reporte disponible para descargar/enviar; caducidad 410, sin cerrar
+     * sesión.
+     */
     private function datosReporteCementerio(Request $request, $token)
     {
         $usuario = $this->usuarioReporteCementerio($request);
@@ -1051,6 +1329,16 @@ class OperacionesController extends ApiController
         return $reporte;
     }
 
+    /**
+     * Mantenimiento: Selecciona la vista Blade por tipo_operacion; varias familias reutilizan el transporte
+     * pese al nombre Cementerio. modoPdf ajusta presentación, no los importes.
+     
+     * Detalle del método: Selecciona y renderiza el Blade apropiado para la familia del reporte y el modo
+     * de visualización.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $modoPdf (activa las
+     * variantes de presentación para PDF).
+     * Salida / efectos: Cadena HTML; no crea Excel y no envía correo.
+     */
     private function htmlReporteCementerio(array $datos, $modoPdf = false)
     {
         if (($datos['tipo_operacion'] ?? null) === 'resumen_dashboard') return view('reportes.temporales_visor_excel.dashboard.resumen',['datos'=>$datos])->render();
@@ -1083,6 +1371,16 @@ class OperacionesController extends ApiController
         ])->render();
     }
 
+    /**
+     * Mantenimiento: Configuración física del PDF (tamaño, orientación y márgenes). Resumen diario: carta
+     * vertical; otros reportes: configuración compartida. Los estilos de impresión de la plantilla también
+     * intervienen.
+     
+     * Detalle del método: Convierte el HTML del reporte a PDF con sus márgenes y orientación; el resumen
+     * diario usa carta vertical.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Objeto/documento PDF para descarga o adjunto, según el llamante.
+     */
     private function pdfReporteCementerio(array $datos)
     {
         $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
@@ -1098,6 +1396,14 @@ class OperacionesController extends ApiController
         ]);
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
+     */
     public function descargarVentasCementerioExcel(Request $request, $token)
     {
         $reporte = $this->datosReporteCementerio($request, $token);
@@ -1107,6 +1413,14 @@ class OperacionesController extends ApiController
         return $respuesta;
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga PDF correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga PDF; verifica acceso/vigencia y no envía correo. El resumen
+     * diario rechaza Excel.
+     */
     public function descargarVentasCementerioPdf(Request $request, $token)
     {
         $reporte = $this->datosReporteCementerio($request, $token);
@@ -1115,7 +1429,18 @@ class OperacionesController extends ApiController
         return $respuesta;
     }
 
-    /** Correo con las mismas validaciones, confirmación y plantilla del visor. */
+    /** Correo con las mismas validaciones, confirmación y plantilla del visor. 
+     * Mantenimiento: Valida destinatarios, mensaje y formato; prepara el adjunto y delega SMTP a
+     * EmailController. Resumen diario solo admite PDF. El detalle completo de reportes compatibles se solicita
+     * expresamente, no se genera al abrir el visor.
+     
+     * Detalle del método: Valida destinatarios, asunto, mensaje y formato, genera el adjunto del reporte y
+     * delega el envío a EmailController.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta JSON del envío; el token debe pertenecer al usuario y el formato debe
+     * estar permitido.
+     */
     public function enviarVentasCementerioCorreo(Request $request, $token)
     {
         $request->validate([
@@ -1188,6 +1513,19 @@ class OperacionesController extends ApiController
      * @param bool $aplicar false=simulación; true=guardar con commit automático.
      * @param array $tiposOperacion 1..5; vacío = todos.
      * @return array Conteos, incidencias (máximo 50), IDs manuales no encontrados.
+     
+     * Mantenimiento: MANTENIMIENTO CON ESCRITURA, independiente de los indicadores. Por defecto simula;
+     * aplicar=true guarda dentro de transacción. No reactiva canceladas. Omite e informa operaciones sin
+     * programación válida/coherente; las excepciones explícitas quedan status 0 conservando saldo. Revisar
+     * incidencias aunque el comando termine sin excepción.
+     
+     * Detalle del método: Concilia saldo y status guardados contra programados y pagos vigentes, sin
+     * reactivar canceladas y reportando incidencias.
+     * Entradas: $operacionesStatus0 (lista verificada de operaciones.id a dejar canceladas); $aplicar
+     * (false simula; true permite guardar en transacción); $tiposOperacion (tipos de operación que entran
+     * al mantenimiento).
+     * Salida / efectos: Resultado de simulación o aplicación. Solo aplicar=true guarda; las excepciones
+     * fuerzan status 0 conservando saldo.
      */
     public function mantenerSaldosStatusOperaciones(array $operacionesStatus0 = [], $aplicar = false, array $tiposOperacion = [])
     {

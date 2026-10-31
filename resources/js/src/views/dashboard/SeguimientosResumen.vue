@@ -52,6 +52,16 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Indicadores y enlaces de realizados del mes, agenda semanal, vencidos históricos y clientes con pagos
+ * vencidos.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
@@ -81,6 +91,11 @@ export default {
     periodoResumen: { type: String, default: "Mes en curso" },
   },
   computed: {
+    /**
+     * Detalle del método: Devuelve las definiciones visuales de indicadores a partir de sus props; los
+     * importes y conteos proceden del backend.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     indicadores() {
       return [
         {
@@ -122,6 +137,11 @@ export default {
   methods: {
     Number,
     // Conteos enteros no negativos; ausentes no se convierten en cero.
+    /**
+     * Detalle del método: Devuelve si la cantidad es numérica y finita, distinguiendo cero real de
+     * ausencia de datos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cantidadValida(valor) {
       return (
         valor !== null &&
@@ -132,6 +152,11 @@ export default {
         Number(valor) >= 0
       );
     },
+    /**
+     * Detalle del método: Emite al padre el indicador o contexto de reporte elegido cuando la card ya está
+     * lista.
+     * Entradas: indicador (definición del indicador cuyo reporte se solicita).
+     */
     solicitarReporte(indicador) {
       if (this.cargando) return;
       this.$emit("ver-reporte", {

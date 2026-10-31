@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Completa los reportes de operaciones 1 (ventas) y 2 (cuotas) con sus datos de cementerio.
+ * Dónde ajustar: Reglas particulares en completarDetalleReporteCementerio; resumen/desglose por cuota en
+ * getResumenCuotasMantenimiento y getDetalleCuotaMantenimiento. Ubicaciones: getUbicacionesTextoReporte
+ * reutiliza ubicacion_texto.
+ * Relacionado: OperacionesController; CuotasMantenimientoExport; VentasCementerioExport
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -26,18 +36,42 @@ use PDF;
 
 class CementerioController extends ApiController
 {
-    /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido. */
+    /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido. 
+     * Detalle del método: Obtiene el reporte individual de ventas en cementerio (tipo 1) mediante el motor
+     * financiero compartido.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Estructura de ventas, por cobrar y vencidos; puede limitarse a conteos.
+     */
     public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return $this->getReporteCementerioPorTipo(1, $anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
-    /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio. */
+    /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio. 
+     * Detalle del método: Obtiene el reporte de cuotas de mantenimiento (tipo 2) conservando el alcance y
+     * reglas financieras compartidas.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Estructura de datos/conteos de cuotas; el controlador del módulo añade el contexto
+     * de cementerio.
+     */
     public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return $this->getReporteCementerioPorTipo(2, $anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
+    /**
+     * Detalle del método: Prepara la consulta de tipo 1 o 2 y enlaza el enriquecimiento propio del
+     * cementerio con el motor financiero.
+     * Entradas: $tipo (tipo de operación o contexto del reporte); $anio (año del periodo solicitado); $mes
+     * (mes del periodo solicitado); $corte (fecha de corte de la consulta); $soloConteo (si está activo
+     * devuelve conteos en lugar de todas las filas); $vencidoHastaPeriodo (limita vencimientos al mes
+     * elegido usando pendiente actual).
+     * Salida / efectos: Datos del reporte/conteos con los alcances solicitados.
+     */
     private function getReporteCementerioPorTipo($tipo, $anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
@@ -48,7 +82,14 @@ class CementerioController extends ApiController
         );
     }
 
-    /** Carga mínima del catálogo una vez; memoiza cada ubicación entre los tres apartados. */
+    /** Carga mínima del catálogo una vez; memoiza cada ubicación entre los tres apartados. 
+     * Detalle del método: Añade cliente, venta, cuota y ubicación traducida a las consultas compartidas de
+     * capital.
+     * Entradas: $consultas (consultas base de las secciones a enriquecer); $resultado (estructura de
+     * salida que recibirá datos del módulo); $esCuota (distingue cuotas de ventas de cementerio).
+     * Salida / efectos: Resultado enriquecido para las secciones del reporte; no duplica la lógica del
+     * cálculo de saldos.
+     */
     private function completarDetalleReporteCementerio(array $consultas, array $resultado, $esCuota)
     {
         // La traducción existente solo requiere estos tres campos del catálogo.
@@ -87,7 +128,15 @@ class CementerioController extends ApiController
         return $resultado;
     }
 
-    /** Traducciones en bloque para reportes: una carga del catálogo y una por código único. */
+    /** Traducciones en bloque para reportes: una carga del catálogo y una por código único. 
+     * Mantenimiento: Traduce códigos distintos de ubicación con ubicacion_texto y reutiliza el resultado
+     * dentro del reporte, evitando consultar/traducir de nuevo para cada fila de pago.
+     
+     * Detalle del método: Traduce códigos distintos usando ubicacion_texto y datos del cementerio,
+     * reutilizando cada traducción.
+     * Entradas: $codigos (códigos de ubicación que necesitan traducción).
+     * Salida / efectos: Mapa de código a ubicación legible para usarlo en varias filas.
+     */
     public function getUbicacionesTextoReporte(array $codigos)
     {
         $ubicaciones = [];
@@ -103,7 +152,17 @@ class CementerioController extends ApiController
         return $ubicaciones;
     }
 
-    /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. */
+    /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. 
+     * Mantenimiento: Agrupa operaciones tipo 2 por cuota; permite abrir cada desglose y generar el Excel con
+     * sus hojas. La descripción visible procede de cuotas_cementerio.descripcion.
+     
+     * Detalle del método: Agrupa importes y conteos del tipo 2 por cuota para permitir revisión general y
+     * navegación al detalle.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente
+     * actual).
+     * Salida / efectos: Arreglo del resumen por cuota y totales del periodo.
+     */
     public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
@@ -141,7 +200,15 @@ class CementerioController extends ApiController
         );
     }
 
-    /** Una cuota del catálogo, con los tres apartados y sus totales propios. */
+    /** Una cuota del catálogo, con los tres apartados y sus totales propios. 
+     * Detalle del método: Consulta solo la cuota seleccionada y completa el contexto de venta/propiedad y
+     * contacto.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $cuotaId (cuota
+     * concreta que limita el desglose); $corte (fecha de corte de la consulta); $soloConteo (si está
+     * activo devuelve conteos en lugar de todas las filas); $vencidoHastaPeriodo (limita vencimientos al
+     * mes elegido usando pendiente actual).
+     * Salida / efectos: Detalle o conteos del reporte de esa cuota.
+     */
     public function getDetalleCuotaMantenimiento($anio, $mes, $cuotaId, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         $datos = app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(

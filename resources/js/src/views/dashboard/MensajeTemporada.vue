@@ -331,6 +331,15 @@
 </template>
 
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Controla el mensaje de temporada con props explícitas; HomeInfo decide si está habilitado.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import { SunIcon, HeartIcon, StarIcon, XIcon } from "vue-feather-icons";
 
 // Calendario: ventanas amplias para fechas clave; el resto, solo el día.
@@ -537,6 +546,11 @@ export default {
         })),
     },
   },
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de MensajeTemporada; no
+   * consulta al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       visible: false,
@@ -549,6 +563,11 @@ export default {
   },
   computed: {
     // La fecha celebrada es distinta de la ventana en que se muestra el aviso.
+    /**
+     * Detalle del método: Devuelve la fecha real o de previsualización usada para elegir la temporada
+     * decorativa.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     fechaCelebracion() {
       const temporada = this.temporadaActual;
       if (!temporada) return "";
@@ -591,9 +610,18 @@ export default {
         meses[fin.mes - 1]
       );
     },
+    /**
+     * Detalle del método: Resuelve los controles de previsualización o reacciona a sus cambios para uso
+     * del programador.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     controlesDesarrollo() {
       return this.modoDesarrollador;
     },
+    /**
+     * Detalle del método: Devuelve la configuración visual de la temporada que se muestra.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     decoracionActual() {
       const decoracion =
         this.temporadaActual && this.temporadaActual.decoracion;
@@ -611,6 +639,10 @@ export default {
         ? decoracion
         : "estrellas";
     },
+    /**
+     * Detalle del método: Resuelve qué temporada corresponde a la fecha/configuración actual del mensaje.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     temporadaActual() {
       if (this.vistaPrevia && this.controlesDesarrollo) {
         return (
@@ -637,6 +669,10 @@ export default {
           }) || null
       );
     },
+    /**
+     * Detalle del método: Devuelve la clave usada para recordar si el mensaje ya se mostró en esta sesión.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     claveSesion() {
       const t = this.temporadaActual;
       if (!t) return null;
@@ -653,19 +689,39 @@ export default {
     },
   },
   watch: {
+    /**
+     * Detalle del método: Resuelve los controles de previsualización o reacciona a sus cambios para uso
+     * del programador.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     controlesDesarrollo(valor) {
       if (!valor && this.vistaPrevia) this.cerrar();
     },
+    /**
+     * Detalle del método: Reacciona a la habilitación del mensaje para intentar mostrarlo o cancelar su
+     * espera.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     habilitado(valor) {
       if (valor) this.intentarMostrar();
       else this.cerrar();
     },
   },
+  /**
+   * Detalle del método: Inicializa el estado previo al montaje de MensajeTemporada; Vue lo ejecuta al
+   * crear la instancia, sin valor de retorno.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   created() {
     this._temporizadorTemporada = null;
     this._focoAnteriorTemporada = null;
     this._consultaEscritorio = null;
   },
+  /**
+   * Detalle del método: Conecta adaptación de pantalla e intenta mostrar el mensaje según su
+   * configuración.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   mounted() {
     // Un ancho de 1024px es el umbral de escritorio; móvil no consume la sesión.
     this._consultaEscritorio = window.matchMedia("(min-width: 1024px)");
@@ -679,6 +735,11 @@ export default {
     this.estaMontado = true;
     this.intentarMostrar();
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de MensajeTemporada al
+   * destruirse; evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() {
     if (this._consultaEscritorio) {
       if (this._consultaEscritorio.removeEventListener)
@@ -693,6 +754,11 @@ export default {
   },
   methods: {
     // La prueba no marca ni borra sessionStorage y permite fechas desactivadas.
+    /**
+     * Detalle del método: Abre la temporada elegida desde los controles de desarrollo para revisar su
+     * presentación.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     previsualizarTemporada() {
       if (
         !this.controlesDesarrollo ||
@@ -710,6 +776,10 @@ export default {
       this.visible = true;
     },
     // Normaliza las fechas móviles sin alterar el calendario recibido por props.
+    /**
+     * Detalle del método: Devuelve la configuración conocida de una temporada o su fallback.
+     * Entradas: temporada (temporada a resolver o previsualizar).
+     */
     resolverTemporada(temporada) {
       if (!temporada || !temporada.regla) return temporada;
       const anio = this.fechaReferencia.getFullYear();
@@ -749,12 +819,22 @@ export default {
       }
       return temporada;
     },
+    /**
+     * Detalle del método: Actualiza el estado de escritorio/móvil recibido del medio de pantalla
+     * observado.
+     * Entradas: evento (evento del DOM que se procesa).
+     */
     actualizarEscritorio(evento) {
       this.esEscritorio = evento.matches;
       if (this.esEscritorio) this.intentarMostrar();
       else this.cerrar();
     },
     // Posiciones deterministas: las partículas no cambian de lugar con cada render.
+    /**
+     * Detalle del método: Devuelve estilos de posición y tiempos de animación para la partícula indicada
+     * por índice.
+     * Entradas: indice (posición seleccionada del arreglo local).
+     */
     estiloParticula(indice) {
       const posiciones = [6, 94, 20, 80, 34, 66, 44, 56];
       return {
@@ -763,6 +843,11 @@ export default {
         animationDuration: 2.1 + indice * 0.13 + "s",
       };
     },
+    /**
+     * Detalle del método: Evalúa habilitación, temporada y política de una vez por sesión antes de
+     * abrir/programar el mensaje.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     intentarMostrar() {
       // Espera a que termine el loading del dashboard. Sin temporada, no muestra nada.
       if (
@@ -796,10 +881,18 @@ export default {
       this._temporizadorTemporada = setTimeout(this.cerrar, this.duracion);
     },
     // El foco queda en el cierre mientras el aviso es visible y vuelve al terminar.
+    /**
+     * Detalle del método: Mueve el foco al control de cierre después de abrir el mensaje.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     enfocarCierre() {
       const boton = this.$refs.botonCerrar;
       if (this.visible && boton) boton.focus();
     },
+    /**
+     * Detalle del método: Devuelve el foco al elemento anterior al cerrar el mensaje de temporada.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     restaurarFoco() {
       const elemento = this._focoAnteriorTemporada;
       this._focoAnteriorTemporada = null;
@@ -811,11 +904,20 @@ export default {
       )
         elemento.focus();
     },
+    /**
+     * Detalle del método: Cierra MensajeTemporada mediante su mecanismo controlado, respetando bloqueos de
+     * una operación en curso y su limpieza local.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     cerrar() {
       this.visible = false;
       this.vistaPrevia = false;
       this.limpiarTemporizador();
     },
+    /**
+     * Detalle del método: Cancela el temporizador del mensaje para impedir aperturas tardías.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     limpiarTemporizador() {
       if (this._temporizadorTemporada !== null) {
         clearTimeout(this._temporizadorTemporada);

@@ -1,3 +1,13 @@
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Estilos del dashboard, skeletons, gráfica, visor, correo y ajustes compartidos de sus modales.
+ * Dónde ajustar: Buscar por prefijos dashboard-, visor- y reporte-correo. La barra superior usa
+ * dashboard__acciones--superiores, sticky y fondo al fijarse; el margen superior compacto está al final.
+ * No contiene estilos del documento PDF/Excel.
+ * Relacionado: HomeInfo.vue; dashboard/*.vue; VisorReportes.vue; EnviarReporteCorreo.vue; Blade y Exports
+ * tienen estilos propios
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
 /*barra de usuario top del dashboard*/
 .menu-dropdown-aeternus {
     .vs-dropdown--custom.vs-dropdown--menu {

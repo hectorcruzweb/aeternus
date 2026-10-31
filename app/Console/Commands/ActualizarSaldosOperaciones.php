@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Entrada Artisan de mantenimiento de saldo/status, separada de la lectura del dashboard.
+ * Dónde ajustar: OPERACIONES_STATUS_0 contiene operaciones.id verificadas (3412 y 897), no IDs de
+ * servicios. Sin --aplicar simula; --tipo limita los tipos. La actualización real se delega a
+ * mantenerSaldosStatusOperaciones.
+ * Relacionado: OperacionesController; php artisan help operaciones:actualizar-saldos
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Console\Commands;
 
@@ -91,6 +101,11 @@ AYUDA;
      * El comando es el punto de entrada de mantenimiento, separado del dashboard.
      * Laravel resuelve el controlador por inyección; no usa Request ni rutas web.
      * Solo --aplicar habilita escrituras. La función hace commit/rollback completo.
+     
+     * Detalle del método: Lee --tipo y --aplicar, incorpora excepciones de operaciones.id y llama al
+     * mantenimiento de saldo/status.
+     * Entradas: $operaciones (controlador inyectado que ejecuta la conciliación).
+     * Salida / efectos: Código de salida del comando y resumen por consola; simula por defecto.
      */
     public function handle(OperacionesController $operaciones)
     {

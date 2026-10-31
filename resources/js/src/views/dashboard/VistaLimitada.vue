@@ -45,6 +45,15 @@
   </section>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Presenta la vista operativa restringida con los servicios permitidos por el backend.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import {
   ShieldIcon,
   LockIcon,
@@ -68,6 +77,11 @@ export default {
     PieChartIcon,
   },
   // Solo etiquetas estáticas: sin cantidades, enlaces ni peticiones adicionales.
+  /**
+   * Detalle del método: Devuelve el estado reactivo inicial por instancia de VistaLimitada; no consulta
+   * al servidor por sí mismo.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   data() {
     return {
       altoDisponible: null,
@@ -85,6 +99,11 @@ export default {
       ],
     };
   },
+  /**
+   * Detalle del método: Conecta cambios de tamaño y programa la medición inicial de la vista
+   * restringida.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   mounted() {
     this._ajusteAltura = null;
     this.programarAjusteAltura();
@@ -97,6 +116,11 @@ export default {
       if (footer) this._observadorAltura.observe(footer);
     }
   },
+  /**
+   * Detalle del método: Libera recursos o invalida respuestas pendientes de VistaLimitada al destruirse;
+   * evita listeners, tareas o popups huérfanos según la limpieza implementada.
+   * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+   */
   beforeDestroy() {
     window.removeEventListener("resize", this.programarAjusteAltura);
     if (this._ajusteAltura !== null)
@@ -104,6 +128,11 @@ export default {
     if (this._observadorAltura) this._observadorAltura.disconnect();
   },
   methods: {
+    /**
+     * Detalle del método: Programa una medición del layout de la vista limitada evitando recalcular a cada
+     * evento seguido.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     programarAjusteAltura() {
       if (this._ajusteAltura !== null) return;
       this._ajusteAltura = window.requestAnimationFrame(() => {
@@ -111,6 +140,11 @@ export default {
         this.ajustarAltura();
       });
     },
+    /**
+     * Detalle del método: Mide espacio visible y ajusta altura de la vista restringida; no cambia datos ni
+     * permisos.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     ajustarAltura() {
       if (!this.$el || !this.$el.getBoundingClientRect) return;
       const top =

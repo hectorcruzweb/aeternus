@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Define secciones/columnas del Excel individual de ventas y saldos; se reutiliza para los distintos tipos
+ * de operación.
+ * Dónde ajustar: Los datos se calculan en los controladores. Cambiar aquí columnas, nombres de hojas y
+ * presentación de XLSX; sincronizar títulos con la plantilla Blade equivalente.
+ * Relacionado: app/Http/Controllers; resources/views/reportes/temporales_visor_excel
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -7,8 +17,21 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 class VentasCementerioExport implements WithMultipleSheets
 {
     private $datos;
+    /**
+     * Detalle del método: Conserva las dependencias o datos recibidos para usarlos durante la generación
+     * del componente/reporte.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Instancia inicializada; no ejecuta por sí mismo una descarga ni un envío.
+     */
     public function __construct(array $datos) { $this->datos = $datos; }
 
+    /**
+     * Detalle del método: Define títulos, columnas y filas de cada sección del reporte desde sus datos ya
+     * calculados.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Arreglo de secciones reutilizable por la exportación; no consulta la base de
+     * datos.
+     */
     public static function secciones(array $datos): array
     {
         $fecha = function ($valor) { return $valor ? (function ($f) { return $f->format('d') . '/' . ucfirst(rtrim($f->locale('es')->translatedFormat('M'), '.')) . '/' . $f->format('Y'); })(\Carbon\Carbon::parse($valor)) : 'No disponible'; };
@@ -125,6 +148,13 @@ class VentasCementerioExport implements WithMultipleSheets
         return $secciones;
     }
 
+    /**
+     * Detalle del método: Organiza las pestañas del archivo a partir de las secciones de
+     * VentasCementerioExport.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Arreglo de objetos de hoja para Excel; solo genera detalle completo cuando el
+     * contexto lo habilita.
+     */
     public function sheets(): array
     {
         $d = $this->datos;

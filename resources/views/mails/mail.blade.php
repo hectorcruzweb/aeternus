@@ -1,3 +1,10 @@
+{{--
+ Template corporativo del correo: logo, saludo, mensaje, adjunto y contacto de empresa.
+ Dónde ajustar: Modificar aquí estética del cuerpo, dirección y leyendas de no
+ responder/confidencialidad. También lo usa el envío antiguo pdf_email: comprobar ambas variantes.
+ Relacionado: EmailController; NombreEmpresaReportes; DireccionReportes
+ Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+--}}
 @php
     // La imagen viaja dentro del correo (CID), sin depender de la URL local de la aplicación.
     $rutaLogo = public_path('images/logo/aeternus.jpg');

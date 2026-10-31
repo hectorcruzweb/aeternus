@@ -162,6 +162,16 @@
   </article>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Muestra timbres, adeudo fiscal histórico, facturado/cubierto del mes y vigencia de firma; emite el
+ * reporte seleccionado.
+ * Dónde ajustar: Cambiar textos/composición aquí y estilos en _dashboard.scss; los importes y permisos
+ * proceden de HomeInfo y del backend.
+ * Relacionado: HomeInfo.vue; DashboardController; resources/sass/vuexy/_dashboard.scss
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import DashboardSkeleton from "./DashboardSkeleton.vue";
 import CountTo from "vue-count-to";
 import {
@@ -193,6 +203,11 @@ export default {
     fechaReferencia: { type: Date, default: () => new Date() },
   },
   computed: {
+    /**
+     * Detalle del método: Interpreta la fecha real de vigencia de firma; devuelve fecha válida o ausencia
+     * de dato.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     fechaFiel() {
       // Contrato provisional: fecha local YYYY-MM-DD; no interpretar texto ambiguo.
       const valor = this.facturacion.fechaCaducidadFiel;
@@ -230,6 +245,10 @@ export default {
         texto: partes[3] + "/" + meses[mes - 1] + "/" + anio,
       };
     },
+    /**
+     * Detalle del método: Calcula los días restantes de vigencia para los avisos visuales del card.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     diasVigenciaFiel() {
       if (!this.fechaFiel || Number.isNaN(this.fechaReferencia.getTime()))
         return null;
@@ -241,6 +260,11 @@ export default {
         86400000
       );
     },
+    /**
+     * Detalle del método: Devuelve si la firma entra en el umbral local de advertencia; no consulta ni
+     * renueva certificados ante el SAT.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     fielPorVencer() {
       return (
         this.diasVigenciaFiel !== null &&
@@ -248,6 +272,11 @@ export default {
         this.diasVigenciaFiel < 15
       );
     },
+    /**
+     * Detalle del método: Devuelve el texto breve de vigencia/vencimiento que se muestra en el encabezado
+     * fiscal.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     etiquetaVigenciaFiel() {
       if (this.diasVigenciaFiel === null)
         return "Firma Electrónica: vigencia no disponible";
@@ -255,6 +284,10 @@ export default {
       if (this.diasVigenciaFiel === 0) return "Firma Electrónica vence hoy:";
       return "Firma Electrónica válida hasta:";
     },
+    /**
+     * Detalle del método: Devuelve el mensaje auxiliar sobre días de vigencia o firma vencida.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     detalleVigenciaFiel() {
       const dias = this.diasVigenciaFiel;
       if (dias === null) return "Fecha de caducidad no disponible";
@@ -268,6 +301,11 @@ export default {
   methods: {
     moneda,
     // CountTo exige números; un dato ausente conserva el guion en lugar de mostrar cero.
+    /**
+     * Detalle del método: Devuelve si la cantidad es numérica y finita, distinguiendo cero real de
+     * ausencia de datos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     cantidadValida(valor) {
       return (
         valor !== null &&
@@ -276,13 +314,28 @@ export default {
         Number.isFinite(Number(valor))
       );
     },
+    /**
+     * Detalle del método: Convierte a número la cantidad admitida por la validación local y usa el
+     * fallback definido para valores no válidos.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     numero(valor) {
       return Number(valor);
     },
+    /**
+     * Detalle del método: Devuelve la precisión visual del importe, conservando centavos cuando existen;
+     * no redondea el saldo del backend.
+     * Entradas: valor (valor recibido del control o propiedad observada).
+     */
     decimalesImporte(valor) {
       return Math.round(Number(valor) * 100) % 100 === 0 ? 0 : 2;
     },
 
+    /**
+     * Detalle del método: Emite al padre el reporte fiscal elegido; no genera ni descarga el archivo en el
+     * card.
+     * Entradas: tipo (tipo de reporte/operación seleccionado).
+     */
     verReporteFacturacion(tipo) {
       if (this.cargando) return;
       const titulos = {

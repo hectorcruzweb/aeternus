@@ -1,4 +1,15 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Calcula timbres disponibles, CFDI con adeudo, facturado/cubierto del mes y vigencia de firma; construye
+ * sus reportes.
+ * Dónde ajustar: getTimbresDashboard y resumenRecargasTimbres para lotes; consultaCfdisAdeudosBase para
+ * saldo fiscal; getFacturacionMesDashboard para importes del card; getVigenciaFirmaDashboard para
+ * facturacion.fecha_vencimiento.
+ * Relacionado: movimientos_timbres; cfdis_tipo_relacion; Facturacion.vue; exportadores Cfdis* y Timbres*
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -2460,6 +2471,13 @@ class FacturacionController extends ApiController
     /** Misma configuración global que usa timbrar_cfdi (primer registro).
      * Consultar únicamente la fecha, sin cargar archivos CER/KEY ni contraseña.
      * DATE se entrega como día calendario YYYY-MM-DD; no convertir a UTC.
+     
+     * Mantenimiento: La vigencia real procede de facturacion.fecha_vencimiento; se muestra en el card y los
+     * reportes de facturación. No proviene del catálogo SAT.
+     
+     * Detalle del método: Lee la fecha de vencimiento de la firma electrónica registrada en facturacion.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     * Salida / efectos: Dato de vigencia para el card y los encabezados de reportes fiscales.
      */
     public function getVigenciaFirmaDashboard()
     {
@@ -2473,7 +2491,12 @@ class FacturacionController extends ApiController
         return ['fechaCaducidadFiel'=>$fecha];
     }
 
-    /** Resumen ligero de timbres: solo agrupa movimientos, nunca carga CFDI individuales. */
+    /** Resumen ligero de timbres: solo agrupa movimientos, nunca carga CFDI individuales. 
+     * Detalle del método: Suma los timbres disponibles de las recargas activadas hasta el corte, si existe
+     * la tabla de movimientos.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Resumen de timbres disponibles; no consulta al proveedor externo.
+     */
     public function getTimbresDashboard($corte = null)
     {
         if (!\Illuminate\Support\Facades\Schema::hasTable('movimientos_timbres')) {
@@ -2484,7 +2507,15 @@ class FacturacionController extends ApiController
         return ['timbresDisponibles' => count($activos) ? array_sum(array_column($activos, 'disponibles')) : null];
     }
 
-    /** Una fila por paquete; consumos y ajustes se agrupan antes de unir. */
+    /** Una fila por paquete; consumos y ajustes se agrupan antes de unir. 
+     * Mantenimiento: Saldo de cada lote = cantidad inicial + movimientos hijos al corte. Este cálculo no
+     * consulta el saldo del proveedor externo. Los consumos deben existir en movimientos_timbres.
+     
+     * Detalle del método: Suma consumos/ajustes por lote y los combina con la cantidad inicial y fecha de
+     * activación.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Consulta/filas de recargas con sus totales y disponibilidad al corte.
+     */
     private function resumenRecargasTimbres($corte)
     {
         $fecha = $corte->format('Y-m-d H:i:s');
@@ -2513,7 +2544,12 @@ class FacturacionController extends ApiController
             })->all();
     }
 
-    /** Relación persistida: no reasignar por fecha ni excluir consumos de CFDI cancelados. */
+    /** Relación persistida: no reasignar por fecha ni excluir consumos de CFDI cancelados. 
+     * Detalle del método: Selecciona movimientos de consumo y datos de los CFDI del lote indicado hasta el
+     * corte.
+     * Entradas: $recargaId (ID del lote de timbres a consultar); $corte (fecha de corte de la consulta).
+     * Salida / efectos: Consulta del historial para la vista y el Excel detallado.
+     */
     private function consultaHistorialTimbres($recargaId, $corte)
     {
         $q = DB::table('movimientos_timbres as m')
@@ -2531,6 +2567,12 @@ class FacturacionController extends ApiController
         return $q->orderBy('m.fecha_movimiento', 'desc')->orderBy('m.id', 'desc');
     }
 
+    /**
+     * Detalle del método: Valida sesión y rol de Admin/Gerencia antes de permitir un reporte de
+     * facturación.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Usuario autorizado o error de acceso.
+     */
     private function autorizarReporteFacturacion(Request $request)
     {
         $usuario = $request->user('api');
@@ -2538,7 +2580,13 @@ class FacturacionController extends ApiController
         return $usuario;
     }
 
-    /** Resumen inicial; cada lote abre su propio historial dentro del mismo visor. */
+    /** Resumen inicial; cada lote abre su propio historial dentro del mismo visor. 
+     * Detalle del método: Prepara la vista previa de recargas de timbres: valida acceso y parámetros y
+     * delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteTimbres(Request $request)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -2587,7 +2635,14 @@ class FacturacionController extends ApiController
         ])->header('Cache-Control', 'no-store, private');
     }
 
-    /** Token privado por consulta; su vencimiento devuelve 410, no cierra la sesión. */
+    /** Token privado por consulta; su vencimiento devuelve 410, no cierra la sesión. 
+     * Detalle del método: Recupera el contexto privado de timbres y carga el historial cuando se pide un
+     * lote o el archivo completo.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión); $completo (solicita desgloses completos donde
+     * el reporte los permite).
+     * Salida / efectos: Datos del reporte validados por propietario y caducidad.
+     */
     private function datosReporteTimbres(Request $request, $token, $completo = false)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -2613,6 +2668,13 @@ class FacturacionController extends ApiController
         return $reporte;
     }
 
+    /**
+     * Detalle del método: Renderiza el Blade de recargas e historial con el contexto del reporte y el modo
+     * PDF/pantalla.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $pdf (selecciona
+     * presentación PDF frente a pantalla).
+     * Salida / efectos: HTML, sin crear un libro de Excel.
+     */
     private function htmlReporteTimbres(array $datos, $pdf = false)
     {
         $ruta = public_path(env('LOGOJPG'));
@@ -2629,6 +2691,14 @@ class FacturacionController extends ApiController
         ])->render();
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
+     */
     public function descargarReporteTimbresExcel(Request $request, $token)
     {
         $request->validate(['completo' => 'sometimes|boolean']);
@@ -2640,6 +2710,11 @@ class FacturacionController extends ApiController
         return $respuesta;
     }
 
+    /**
+     * Detalle del método: Genera PDF desde la vista de timbres y configura página y pie de impresión.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Documento PDF para descarga o envío.
+     */
     private function construirPdfTimbres(array $datos)
     {
         $footer = view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
@@ -2654,6 +2729,14 @@ class FacturacionController extends ApiController
         ]);
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga PDF correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga PDF; verifica acceso/vigencia y no envía correo. El resumen
+     * diario rechaza Excel.
+     */
     public function descargarReporteTimbresPdf(Request $request, $token)
     {
         $reporte = $this->datosReporteTimbres($request, $token);
@@ -2662,7 +2745,14 @@ class FacturacionController extends ApiController
         return $respuesta;
     }
 
-    /** Envío reutiliza plantilla, destinatarios y desvío local del mail sender existente. */
+    /** Envío reutiliza plantilla, destinatarios y desvío local del mail sender existente. 
+     * Detalle del método: Valida destinatarios, asunto, mensaje y formato, genera el adjunto del reporte y
+     * delega el envío a EmailController.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta JSON del envío; el token debe pertenecer al usuario y el formato debe
+     * estar permitido.
+     */
     public function enviarReporteTimbresCorreo(Request $request, $token)
     {
         // Autorizar antes de generar archivos o validar datos de destinatarios.
@@ -2712,6 +2802,17 @@ class FacturacionController extends ApiController
      * emitidos en el mes del corte, incluidos saldados y parcialmente cubiertos.
      * Aplicaciones según get_cfdis_timbrados: relaciones 2/3 con CFDI status=1.
      * Las aplicaciones no se restringen al mes de emisión; no es un cierre histórico.
+     
+     * Mantenimiento: Saldo fiscal separado del capital de operaciones: usa cfdis_tipo_relacion con CFDI
+     * aplicador vigente y relaciones internas 2 (pagos) y 3 (egresos). PUE se considera cubierto; PPD conserva
+     * el pendiente calculado. modoMes incluye ingresos PUE/PPD emitidos en el mes; sin modoMes devuelve PPD
+     * histórico con saldo positivo.
+     
+     * Detalle del método: Calcula saldo fiscal desde relaciones de pagos/egresos vigentes; distingue PPD
+     * histórico y PUE/PPD emitido en el mes.
+     * Entradas: $corte (fecha de corte de la consulta); $modoMes (dato del contexto descrito en la firma).
+     * Salida / efectos: Query Builder de facturas con pagos_aplicados, egresos_aplicados y
+     * saldo_pendiente; no usa programados de operaciones.
      */
     private function consultaCfdisAdeudosBase($corte, $modoMes = false)
     {
@@ -2737,6 +2838,12 @@ class FacturacionController extends ApiController
         return $modoMes ? $consulta : $consulta->where('f.saldo_pendiente','>',0);
     }
 
+    /**
+     * Detalle del método: Agrupa por moneda los importes fiscales, cantidades PUE/PPD y receptores público
+     * en general.
+     * Entradas: $corte (fecha de corte de la consulta); $modoMes (dato del contexto descrito en la firma).
+     * Salida / efectos: Arreglo de totales por moneda; evita sumar monedas diferentes.
+     */
     private function resumenCfdisAdeudos($corte, $modoMes = false)
     {
         return $this->consultaCfdisAdeudosBase($corte, $modoMes)->select('f.moneda')->groupBy('f.moneda')->orderBy('f.moneda')
@@ -2753,7 +2860,11 @@ class FacturacionController extends ApiController
                 'saldado' => round((float)$r->saldado,2), 'egresos' => round((float)$r->egresos,2), 'pendiente' => round((float)$r->pendiente,2)]; })->all();
     }
 
-    /** El card está expresado en MXN; el reporte conserva monedas por separado. */
+    /** El card está expresado en MXN; el reporte conserva monedas por separado. 
+     * Detalle del método: Extrae el total pendiente y cantidad de facturas históricas con adeudo en MXN.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Indicadores del card con metadatos de corte y moneda.
+     */
     public function getCfdisAdeudosDashboard($corte = null)
     {
         $corte = $corte ?: \Carbon\Carbon::now('America/Mazatlan');
@@ -2763,6 +2874,12 @@ class FacturacionController extends ApiController
             'adeudosAcumulados' => true, 'adeudosMoneda' => 'MXN', 'adeudosCorte' => $corte->toIso8601String()];
     }
 
+    /**
+     * Detalle del método: Añade cliente, usuario y existencia de vínculos de operación a la consulta
+     * fiscal de facturas.
+     * Entradas: $corte (fecha de corte de la consulta); $modoMes (dato del contexto descrito en la firma).
+     * Salida / efectos: Consulta ordenada por fecha descendente para las filas principales del reporte.
+     */
     private function detalleCfdisAdeudos($corte, $modoMes = false)
     {
         return $this->consultaCfdisAdeudosBase($corte, $modoMes)
@@ -2775,6 +2892,15 @@ class FacturacionController extends ApiController
     /** Una fila por aplicación vigente a una factura que aún conserva adeudo.
      * Mostrar monto_relacion evita repetir el total del pago si cubre varios CFDI.
      * Misma selección que el saldo: relación interna2, comprobante aplicador status1.
+     
+     * Mantenimiento: Detalle debajo de la factura: mostrar monto_relacion aplicado a esa factura, no repetir
+     * el total de un comprobante que cubrió varias. No recalcular aquí el total de la factura.
+     
+     * Detalle del método: Consulta cada aplicación fiscal recibida de un comprobante vigente a las
+     * facturas del reporte.
+     * Entradas: $corte (fecha de corte de la consulta); $modoMes (dato del contexto descrito en la firma).
+     * Salida / efectos: Consulta con importe_aplicado por factura; no repetir el total del comprobante que
+     * cubrió varias.
      */
     private function pagosRecibidosCfdisAdeudos($corte, $modoMes = false)
     {
@@ -2791,7 +2917,17 @@ class FacturacionController extends ApiController
             ->orderByRaw('COALESCE(p.fecha_pago,p.fecha) DESC')->orderBy('p.id', 'desc')->orderBy('f.id', 'desc');
     }
 
-    /** Referencias de negocio de las operaciones ligadas, sin filtrar su estado histórico. */
+    /** Referencias de negocio de las operaciones ligadas, sin filtrar su estado histórico. 
+     * Mantenimiento: Aporta referencias y cliente de las operaciones vinculadas para contexto del CFDI. Las
+     * referencias visibles son las del negocio, no operaciones.id; el vínculo histórico puede conservar
+     * operaciones canceladas.
+     
+     * Detalle del método: Recupera las operaciones vinculadas y su cliente para mostrarlas como contexto
+     * debajo de la factura.
+     * Entradas: $corte (fecha de corte de la consulta); $modoMes (dato del contexto descrito en la firma).
+     * Salida / efectos: Consulta con referencias de negocio; conserva el vínculo histórico aunque la
+     * operación se haya cancelado.
+     */
     private function operacionesCfdisAdeudos($corte, $modoMes = false)
     {
         return $this->consultaCfdisAdeudosBase($corte, $modoMes)
@@ -2804,7 +2940,13 @@ class FacturacionController extends ApiController
             ->distinct()->orderBy('f.id', 'desc')->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
     }
 
-    /** Consulta propia del módulo de facturación; visor comparte el diseño corporativo. */
+    /** Consulta propia del módulo de facturación; visor comparte el diseño corporativo. 
+     * Detalle del método: Prepara la vista previa de CFDI con adeudo: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteCfdisAdeudos(Request $request)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -2845,6 +2987,13 @@ class FacturacionController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /**
+     * Detalle del método: Recupera el token fiscal de adeudos y su detalle guardado o diferido,
+     * comprobando usuario y vigencia.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Contexto validado del reporte de adeudos, listo para generar archivo.
+     */
     private function datosCfdisAdeudos(Request $request, $token)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -2866,6 +3015,12 @@ class FacturacionController extends ApiController
         return $r;
     }
 
+    /**
+     * Detalle del método: Renderiza facturas con adeudo y, debajo, sus operaciones y pagos relacionados.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $pdf (selecciona
+     * presentación PDF frente a pantalla).
+     * Salida / efectos: HTML para vista previa o PDF; importes ya calculados por las consultas.
+     */
     private function htmlCfdisAdeudos(array $datos, $pdf = false)
     {
         $ruta=public_path(env('LOGOJPG'));$logo=null;
@@ -2876,6 +3031,11 @@ class FacturacionController extends ApiController
         ])->render();
     }
 
+    /**
+     * Detalle del método: Genera el PDF del reporte de adeudos con el diseño y pie fiscal compartidos.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Documento PDF descargable o adjuntable.
+     */
     private function pdfCfdisAdeudos(array $datos)
     {
         $footer=view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
@@ -2887,12 +3047,28 @@ class FacturacionController extends ApiController
             'disable-local-file-access'=>true,'footer-html'=>$footer,'footer-spacing'=>3]);
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
+     */
     public function descargarCfdisAdeudosExcel(Request $request,$token)
     {
         $r=$this->datosCfdisAdeudos($request,$token);
         $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CfdisAdeudosExport($r['datos']),$r['nombre']);
         $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
     }
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga PDF correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga PDF; verifica acceso/vigencia y no envía correo. El resumen
+     * diario rechaza Excel.
+     */
     public function descargarCfdisAdeudosPdf(Request $request,$token)
     {
         $r=$this->datosCfdisAdeudos($request,$token);
@@ -2900,6 +3076,14 @@ class FacturacionController extends ApiController
         $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
     }
 
+    /**
+     * Detalle del método: Valida destinatarios, asunto, mensaje y formato, genera el adjunto del reporte y
+     * delega el envío a EmailController.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta JSON del envío; el token debe pertenecer al usuario y el formato debe
+     * estar permitido.
+     */
     public function enviarCfdisAdeudosCorreo(Request $request, $token)
     {
         // Autorizar antes de generar archivos o validar datos de destinatarios.
@@ -2939,7 +3123,16 @@ class FacturacionController extends ApiController
     }
 
 
-    /** Facturado y cubierto de facturas de este mes; no es cobranza de ventas antiguas. */
+    /** Facturado y cubierto de facturas de este mes; no es cobranza de ventas antiguas. 
+     * Mantenimiento: Facturado y cubierto del mes de emisión. Cubierto incluye pagos parciales; no equivale a
+     * sumar únicamente facturas liquidadas. El card muestra MXN y el reporte conserva agrupación por moneda.
+     
+     * Detalle del método: Resume en MXN lo emitido en el mes y lo cubierto de esas facturas, incluyendo
+     * pagos parciales.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Importes facturado/cubierto y cantidad de facturas; no significa solo facturas
+     * completamente liquidadas.
+     */
     public function getFacturacionMesDashboard($corte = null)
     {
         $corte=$corte ?: \Carbon\Carbon::now('America/Mazatlan');
@@ -2949,6 +3142,13 @@ class FacturacionController extends ApiController
             'cantidadFacturasMes'=>$mxn[0]['cantidad'] ?? 0];
     }
 
+    /**
+     * Detalle del método: Prepara la vista previa de facturación mensual: valida acceso y parámetros y
+     * delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteCfdisMes(Request $request)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -2990,6 +3190,13 @@ class FacturacionController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /**
+     * Detalle del método: Recupera el contexto privado del reporte mensual de CFDI y reconstruye el
+     * detalle si fue diferido.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Datos validados de facturas del mes para descarga o correo.
+     */
     private function datosCfdisMes(Request $request, $token)
     {
         $usuario = $this->autorizarReporteFacturacion($request);
@@ -3011,6 +3218,13 @@ class FacturacionController extends ApiController
         return $r;
     }
 
+    /**
+     * Detalle del método: Renderiza el reporte mensual usando el diseño de facturación con importes,
+     * métodos y relaciones de cada factura.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado); $pdf (selecciona
+     * presentación PDF frente a pantalla).
+     * Salida / efectos: HTML para pantalla/PDF, sin generar todavía el XLSX.
+     */
     private function htmlCfdisMes(array $datos, $pdf = false)
     {
         $ruta=public_path(env('LOGOJPG'));$logo=null;
@@ -3021,6 +3235,12 @@ class FacturacionController extends ApiController
         ])->render();
     }
 
+    /**
+     * Detalle del método: Convierte el reporte mensual fiscal a PDF con la configuración y pie de
+     * impresión.
+     * Entradas: $datos (datos del reporte ya preparados o del envío validado).
+     * Salida / efectos: Documento PDF listo para descarga/envío.
+     */
     private function pdfCfdisMes(array $datos)
     {
         $footer=view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
@@ -3032,12 +3252,28 @@ class FacturacionController extends ApiController
             'disable-local-file-access'=>true,'footer-html'=>$footer,'footer-spacing'=>3]);
     }
 
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga Excel correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga Excel; verifica acceso/vigencia y no envía correo. El
+     * resumen diario rechaza Excel.
+     */
     public function descargarCfdisMesExcel(Request $request,$token)
     {
         $r=$this->datosCfdisMes($request,$token);
         $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CfdisMesExport($r['datos']),$r['nombre']);
         $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
     }
+    /**
+     * Detalle del método: Recupera el reporte privado del token y genera la descarga PDF correspondiente
+     * al contexto seleccionado.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta de descarga PDF; verifica acceso/vigencia y no envía correo. El resumen
+     * diario rechaza Excel.
+     */
     public function descargarCfdisMesPdf(Request $request,$token)
     {
         $r=$this->datosCfdisMes($request,$token);
@@ -3045,6 +3281,14 @@ class FacturacionController extends ApiController
         $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
     }
 
+    /**
+     * Detalle del método: Valida destinatarios, asunto, mensaje y formato, genera el adjunto del reporte y
+     * delega el envío a EmailController.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío); $token (identificador privado
+     * del contexto del reporte; no es el token de sesión).
+     * Salida / efectos: Respuesta JSON del envío; el token debe pertenecer al usuario y el formato debe
+     * estar permitido.
+     */
     public function enviarCfdisMesCorreo(Request $request, $token)
     {
         // Autorizar antes de generar archivos o validar datos de destinatarios.

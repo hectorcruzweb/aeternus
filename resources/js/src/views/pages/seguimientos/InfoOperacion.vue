@@ -26,6 +26,16 @@
     </div>
 </template>
 <script>
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Muestra la operación/cliente del seguimiento y permite consultar el vínculo histórico de una operación
+ * cancelada.
+ * Dónde ajustar: Conservar seguimiento_historico_id al consultar; la excepción de lectura no autoriza
+ * registrar nuevos seguimientos sobre canceladas.
+ * Relacionado: FormularioRegistrarSeguimiento.vue; SeguimientosController
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 import clientes from "../../../services/clientes";
 export default {
     name: "InfoOperacion",
@@ -33,15 +43,34 @@ export default {
         filters: { type: Object, required: true },
         soloConsulta: { type: Boolean, default: false },
     },
+    /**
+     * Detalle del método: Devuelve el estado reactivo inicial por instancia de InfoOperacion; no consulta
+     * al servidor por sí mismo.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     data() {
         return { cliente: {}, operacion_descripcion: null, aviso: "", errorRecuperable: false, cargando: false, solicitudActual: 0 };
     },
     watch: {
-        filters: { deep: true, immediate: true, handler(valor) { if (valor && valor.cliente_id) this._fetchData(); } },
+        filters: { deep: true, immediate: true, /**
+   * Detalle del método: Reacciona al cliente/operación observado para volver a cargar su información.
+   * Entradas: valor (valor recibido del control o propiedad observada).
+   */
+  handler(valor) { if (valor && valor.cliente_id) this._fetchData(); } },
+        /**
+         * Detalle del método: Reacciona al modo de consulta para recargar información histórica sin autorizar
+         * nuevas capturas sobre canceladas.
+         * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+         */
         soloConsulta() { if (this.filters.cliente_id) this._fetchData(); },
     },
     methods: {
         // Normalizar como texto evita diferencias número/string y pérdida de precisión en BIGINT.
+        /**
+         * Detalle del método: Devuelve un identificador normalizado válido o el fallback que impide usar un ID
+         * inválido.
+         * Entradas: valor (valor recibido del control o propiedad observada).
+         */
         normalizarId(valor) {
             if (valor === null || valor === undefined || typeof valor === "boolean") return null;
             const texto = String(valor).trim();
@@ -49,6 +78,11 @@ export default {
             const id = texto.replace(/^0+(?=\d)/, "");
             return id === "0" ? null : id;
         },
+        /**
+         * Detalle del método: Carga cliente/operación con el contexto histórico autorizado y devuelve una
+         * promesa; comunica resultado y aviso de cancelación al formulario.
+         * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+         */
         async _fetchData() {
             const solicitud = ++this.solicitudActual;
             this.cargando = true; this.aviso = ""; this.errorRecuperable = false;
@@ -95,6 +129,11 @@ export default {
             }
         },
     },
+    /**
+     * Detalle del método: Libera recursos o invalida respuestas pendientes de InfoOperacion al destruirse;
+     * evita listeners, tareas o popups huérfanos según la limpieza implementada.
+     * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
+     */
     beforeDestroy() { this.solicitudActual++; },
 };
 </script>

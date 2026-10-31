@@ -1,4 +1,14 @@
 <?php
+/**
+ * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
+ * Provee servicios en proceso, solicitudes sin contrato y detalle de operaciones 3, 4 y 5.
+ * Dónde ajustar: getServiciosFunerariosDashboard conserva ventana móvil de 72 horas cuando no hay eventos
+ * fechados; solicitudes recientes usan 7 días incluyendo hoy. Los métodos getReporte* completan los datos
+ * propios de cada operación.
+ * Relacionado: OperacionesController; ServiciosFunerarios.vue; reportesVentas.js
+ * Guía del proyecto: docs/dashboard/README.md; catálogo: docs/dashboard/ARCHIVOS.md.
+ */
+
 
 namespace App\Http\Controllers;
 
@@ -39,7 +49,12 @@ class FunerariaController extends ApiController
     // Ventana acordada para priorizar seguimiento: hoy y los seis días anteriores.
     private const DIAS_SOLICITUDES_RECIENTES = 7;
 
-    /** Solicitudes activas sin operación vigente de tipo 3; una fila por solicitud. */
+    /** Solicitudes activas sin operación vigente de tipo 3; una fila por solicitud. 
+     * Detalle del método: Selecciona solicitudes funerarias vigentes que no tienen una operación
+     * contractual vigente y existían al corte.
+     * Entradas: $corte (fecha de corte de la consulta).
+     * Salida / efectos: Query Builder base para conteos y reporte; no cancela solicitudes antiguas.
+     */
     private function consultaSolicitudesSinContrato(Carbon $corte)
     {
         return DB::table('servicios_funerarios as sf')->where('sf.status', '>', 0)
@@ -55,7 +70,15 @@ class FunerariaController extends ApiController
             });
     }
 
-    /** Un agregado clasifica todo el historial sin cargar contactos. Antiguas no se cancelan. */
+    /** Un agregado clasifica todo el historial sin cargar contactos. Antiguas no se cancelan. 
+     * Mantenimiento: Separa recientes (hoy y 6 días anteriores) del historial antiguo. Son oportunidades de
+     * seguimiento; la antigüedad no cancela automáticamente la solicitud.
+     
+     * Detalle del método: Separa solicitudes recientes (hoy y seis días anteriores) de antiguas a partir
+     * de la consulta base.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Conteos recientes, antiguas, total y número de días usados.
+     */
     public function getSolicitudesSinContratoDashboard(Carbon $fechaCorte = null)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -67,7 +90,13 @@ class FunerariaController extends ApiController
             'dias' => self::DIAS_SOLICITUDES_RECIENTES, 'desde' => $desde->toDateString(), 'hasta' => $corte->toDateString()];
     }
 
-    /** Texto relativo al día del corte; las fechas se copian para no alterar el cálculo de grupos. */
+    /** Texto relativo al día del corte; las fechas se copian para no alterar el cálculo de grupos. 
+     * Detalle del método: Convierte la antigüedad de una solicitud al lenguaje de
+     * hoy/ayer/días/semanas/meses/años.
+     * Entradas: $fecha (fecha del registro cuya antigüedad se mostrará); $corte (fecha de corte de la
+     * consulta).
+     * Salida / efectos: Texto para el usuario; las consultas siguen usando fechas reales.
+     */
     private function antiguedadSolicitudTexto($fecha, Carbon $corte)
     {
         if (!$fecha) return 'No disponible';
@@ -84,7 +113,13 @@ class FunerariaController extends ApiController
         return 'Hace '.$semanas.($semanas === 1 ? ' semana' : ' semanas');
     }
 
-    /** Dos grupos excluyentes: seguimiento reciente y solicitudes antiguas para revisión humana. */
+    /** Dos grupos excluyentes: seguimiento reciente y solicitudes antiguas para revisión humana. 
+     * Detalle del método: Prepara resumen y desglose de oportunidades recientes e historial de solicitudes
+     * sin contrato.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo); $soloResumen
+     * (si está activo evita cargar el detalle completo).
+     * Salida / efectos: Datos del reporte o solo conteos, según soloResumen.
+     */
     public function getReporteSolicitudesSinContrato(Carbon $fechaCorte = null, $soloResumen = false)
     {
         $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
@@ -117,14 +152,26 @@ class FunerariaController extends ApiController
         return $datos;
     }
 
-    /** Entrada de su módulo; reutiliza exclusivamente el transporte protegido del visor. */
+    /** Entrada de su módulo; reutiliza exclusivamente el transporte protegido del visor. 
+     * Detalle del método: Prepara la vista previa de solicitudes sin contrato: valida acceso y parámetros
+     * y delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteSolicitudesSinContrato(Request $request)
     {
         return app(OperacionesController::class)->previewSolicitudesSinContrato($request);
     }
 
 
-    /** Entrada de ventas en general: el servidor fija tipo5, independientemente del request. */
+    /** Entrada de ventas en general: el servidor fija tipo5, independientemente del request. 
+     * Detalle del método: Prepara la vista previa de ventas generales: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteVentasGenerales(Request $request)
     {
         $request->merge(['empresa_operaciones_id' => 5]);
@@ -136,6 +183,14 @@ class FunerariaController extends ApiController
      * Carga únicamente cliente y contacto; no conceptos, inventario ni datos de otros módulos.
      * No condiciona los saldos a entregado_b: entrega y situación de pago son independientes.
      * Los LEFT JOIN y el motor compartido preservan las cantidades del resumen financiero.
+     
+     * Detalle del método: Completa el reporte financiero tipo 5 con los datos y referencia propios de la
+     * venta general.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Ventas, por cobrar y vencidos o sus conteos; cálculo de capital delegado a
+     * OperacionesController.
      */
     public function getReporteVentasGenerales($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
@@ -155,7 +210,13 @@ class FunerariaController extends ApiController
         );
     }
 
-    /** Entrada tipo 4: el tipo se fija en el servidor, no depende del parámetro del usuario. */
+    /** Entrada tipo 4: el tipo se fija en el servidor, no depende del parámetro del usuario. 
+     * Detalle del método: Prepara la vista previa de ventas de planes: valida acceso y parámetros y delega
+     * consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteVentasPlanes(Request $request)
     {
         $request->merge(['empresa_operaciones_id' => 4]);
@@ -168,6 +229,13 @@ class FunerariaController extends ApiController
      * No unir precios_planes: tiene varias tarifas por plan y duplicaría ventas;
      * los importes históricos y los saldos proceden de la operación y sus programados.
      * Conserva modalidades del módulo: 1 Uso Inmediato / 2 A Futuro.
+     
+     * Detalle del método: Completa el reporte financiero tipo 4 con información del plan y modalidad de
+     * contratación.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Datos de ventas de planes, por cobrar y vencidos del alcance solicitado.
      */
     public function getReporteVentasPlanesFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
@@ -195,7 +263,13 @@ class FunerariaController extends ApiController
         );
     }
 
-    /** Entrada del reporte tipo 3. El usuario no puede cambiar el tipo de esta ruta. */
+    /** Entrada del reporte tipo 3. El usuario no puede cambiar el tipo de esta ruta. 
+     * Detalle del método: Prepara la vista previa de servicios funerarios: valida acceso y parámetros y
+     * delega consulta/renderizado al flujo del reporte.
+     * Entradas: $request (petición autenticada, filtros y/o datos de envío).
+     * Salida / efectos: Respuesta JSON con HTML/metadatos y token privado, o error de validación/acceso;
+     * no descarga un Excel al abrir.
+     */
     public function previewReporteServiciosFunerarios(Request $request)
     {
         $request->merge(['empresa_operaciones_id' => 3]);
@@ -208,6 +282,14 @@ class FunerariaController extends ApiController
      * OperacionesController calcula saldos, fechas y conteos; aquí se cargan servicio y cliente.
      * El detalle no consulta propiedades, cuotas, planes ni conceptos del servicio.
      * LEFT JOIN conserva el importe aunque falten datos descriptivos.
+     
+     * Detalle del método: Completa el reporte financiero tipo 3 con número de servicio y fallecido para
+     * identificar la contratación.
+     * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
+     * corte de la consulta); $soloConteo (si está activo devuelve conteos en lugar de todas las filas);
+     * $vencidoHastaPeriodo (limita vencimientos al mes elegido usando pendiente actual).
+     * Salida / efectos: Datos de servicios, por cobrar y vencidos; no muestra operaciones.id como
+     * referencia comercial.
      */
     public function getReporteServiciosFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
@@ -240,6 +322,15 @@ class FunerariaController extends ApiController
      * Solo lectura; la función original sigue siendo la usada por el dashboard.
      * @param Carbon|null $fechaCorte Momento de corte; por defecto ahora en Mazatlán.
      * @return \Illuminate\Database\Eloquent\Collection
+     
+     * Mantenimiento: Criterio operativo: servicio vigente con algún evento futuro; si no tiene ninguna de las
+     * cuatro fechas, solicitud de las últimas 72 horas. Orden reciente primero y límite 10. No confundir esta
+     * ventana con los 7 días de solicitudes sin contrato.
+     
+     * Detalle del método: Lista servicios vigentes con evento futuro o, sin fechas de evento, solicitud de
+     * las últimas 72 horas.
+     * Entradas: $fechaCorte (fecha opcional del corte; si falta se usa la actual del módulo).
+     * Salida / efectos: Colección de hasta 10 servicios recientes con operación y lugar de velación.
      */
     public function getServiciosFunerariosDashboard(Carbon $fechaCorte = null)
     {
