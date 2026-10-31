@@ -385,6 +385,56 @@ class ClientesController extends ApiController
         );
     }
 
+    /** Consulta histórica acotada al seguimiento y su cliente; no alimenta nuevas capturas. */
+    private function datosClienteSeguimientoHistorico($seguimiento)
+    {
+        $tipo = (int) $seguimiento->tipo_cliente_id;
+        if ($tipo === 1) {
+            $cliente = DB::table('clientes')->where('id', $seguimiento->clientes_id)
+                ->select('id','nombre','direccion','ciudad','estado','email')->first();
+            $nombre = $cliente ? $cliente->nombre : 'Cliente no disponible';
+            $direccion = $cliente ? implode(', ', array_filter([$cliente->direccion, $cliente->ciudad, $cliente->estado])) : 'No disponible';
+        } else {
+            $cliente = DB::table('cotizaciones')->where('id', $seguimiento->clientes_id)
+                ->select('id','cliente_nombre as nombre','cliente_email as email','status')->first();
+            $nombre = $cliente ? $cliente->nombre : 'Prospecto no disponible';
+            $direccion = 'Cliente bajo cotización';
+        }
+        $datos = ['id' => $seguimiento->clientes_id, 'nombre' => $nombre, 'direccion_completa' => $direccion,
+            'tipo_cliente_id' => $tipo, 'email' => $cliente ? mb_strtolower(trim($cliente->email ?? ''), 'UTF-8') : null,
+            'operaciones' => [], 'consulta_historica' => true, 'cliente_disponible' => (bool) $cliente];
+        if (!$seguimiento->operaciones_id) return $this->successResponse($datos, 200);
+        if ($tipo === 2) {
+            // No interpretar el ID de una cotización como operaciones.id.
+            if ($cliente && (string) $cliente->id === (string) $seguimiento->operaciones_id) {
+                $datos['operaciones'][] = ['operacion_id' => $cliente->id, 'descripcion' => 'COTIZACIÓN '.$cliente->id,
+                    'saldo' => null, 'status' => $cliente->status];
+            }
+            return $this->successResponse($datos, 200);
+        }
+        // El vínculo y la pertenencia se verifican en servidor, incluso para operaciones canceladas.
+        $op = DB::table('operaciones')->where('id', $seguimiento->operaciones_id)
+            ->where('clientes_id', $seguimiento->clientes_id)
+            ->select('id','empresa_operaciones_id','status','saldo','fecha_operacion','ventas_terrenos_id',
+                'cuotas_cementerio_id','servicios_funerarios_id','ventas_planes_id','ventas_generales_id')->first();
+        if (!$op) return $this->successResponse($datos, 200);
+        $nombres = [1=>'VENTA DE ESPACIO EN CEMENTERIO',2=>'CUOTA DE MANTENIMIENTO',3=>'SERVICIO FUNERARIO',4=>'PLAN FUNERARIO',5=>'VENTA EN GENERAL'];
+        $descripcion = $nombres[(int) $op->empresa_operaciones_id] ?? 'OPERACIÓN';
+        if (in_array((int) $op->empresa_operaciones_id, [1,2], true)) {
+            $codigo = DB::table('ventas_terrenos')->where('id', $op->ventas_terrenos_id)->value('ubicacion');
+            $mapa = app(CementerioController::class)->getUbicacionesTextoReporte([$codigo]);
+            $descripcion .= ' · '.($mapa[trim((string) $codigo)] ?? 'No disponible');
+            if ((int) $op->empresa_operaciones_id === 2) $descripcion .= ' · '.(DB::table('cuotas_cementerio')->where('id',$op->cuotas_cementerio_id)->value('descripcion') ?: 'Cuota no disponible');
+        } elseif ((int) $op->empresa_operaciones_id === 3) {
+            $descripcion .= ' · '.(DB::table('servicios_funerarios')->where('id',$op->servicios_funerarios_id)->value('nombre_afectado') ?: 'Fallecido no disponible');
+        } elseif ((int) $op->empresa_operaciones_id === 4) {
+            $descripcion .= ' · '.(DB::table('ventas_planes')->where('id',$op->ventas_planes_id)->value('nombre_original') ?: 'Plan no disponible');
+        }
+        $datos['operaciones'][] = ['operacion_id'=>$op->id, 'descripcion'=>$descripcion,
+            'saldo'=>'$'.number_format((float) $op->saldo,2,'.',',').' MXN', 'status'=>$op->status];
+        return $this->successResponse($datos, 200);
+    }
+
     public function get_clientes_seguimientos(Request $request)
     {
         $nameFilter            = trim($request->nombre ?? '');
@@ -414,6 +464,19 @@ class ClientesController extends ApiController
                 && $tipoClienteFilter === '1')) {
                 return $this->errorResponse("Validation error, code:summary.", 409);
             }
+        }
+
+        if ($request->has('seguimiento_historico_id')) {
+            $request->validate(['seguimiento_historico_id' => 'required|integer|min:1']);
+            if ($filtrar_x_operaciones !== '1' || !in_array($tipoClienteFilter, ['1','2'], true) || $idFilter <= 0 || $summary !== '') {
+                return $this->errorResponse('Consulta histórica no válida.', 422);
+            }
+            // No confiar en operacion_id del navegador: resolver el vínculo almacenado.
+            $seguimiento = Seguimientos::select('id','tipo_cliente_id','clientes_id','operaciones_id')
+                ->where('id',$request->seguimiento_historico_id)->where('clientes_id',$idFilter)
+                ->where('tipo_cliente_id',$tipoClienteFilter)->first();
+            if (!$seguimiento) return $this->errorResponse('El seguimiento no corresponde al cliente indicado.', 404);
+            return $this->datosClienteSeguimientoHistorico($seguimiento);
         }
 
         // === CLIENTES ===

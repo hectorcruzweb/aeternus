@@ -1,5 +1,10 @@
 <template>
     <div>
+        <div v-if="aviso" class="px-2 py-2 text-warning" role="status">
+            {{ aviso }}
+            <button v-if="errorRecuperable" type="button" class="ml-2 text-primary underline"
+                :disabled="cargando" @click="_fetchData()">{{ cargando ? "Cargando…" : "Reintentar" }}</button>
+        </div>
         <!-- Datos del Cliente y Operación Seleccionada -->
         <div class="flex flex-wrap">
             <div class="w-full md:w-6/12 px-2 input-text">
@@ -22,111 +27,74 @@
 </template>
 <script>
 import clientes from "../../../services/clientes";
-import vSelect from "vue-select";
 export default {
-    components: {
-        "v-select": vSelect,
-    },
-    // Name of the component (optional)
     name: "InfoOperacion",
-    // Props: data passed from parent
     props: {
-        filters: {
-            type: Object,
-            required: true,
-            default: {
-                cliente_id: null,
-                tipo_cliente_id: null,
-                operacion_id: null,
-            },
-        },
+        filters: { type: Object, required: true },
+        soloConsulta: { type: Boolean, default: false },
     },
-    // Computed properties: derived reactive data
-    computed: {},
-    watch: {
-        "filters.cliente_id": {
-            immediate: true, // runs when component is mounted too
-            async handler(newVal) {
-                if (newVal) {
-                    //Cargo los datos del cliente
-                    const data = await this._fetchData();
-                }
-            },
-        },
-    },
-    // Data function returns the component's reactive state
     data() {
-        return {
-            cliente: {},
-            operacion_descripcion: null,
-        };
+        return { cliente: {}, operacion_descripcion: null, aviso: "", errorRecuperable: false, cargando: false, solicitudActual: 0 };
     },
-    // Methods: functions you can call in template or other hooks
+    watch: {
+        filters: { deep: true, immediate: true, handler(valor) { if (valor && valor.cliente_id) this._fetchData(); } },
+        soloConsulta() { if (this.filters.cliente_id) this._fetchData(); },
+    },
     methods: {
+        // Normalizar como texto evita diferencias número/string y pérdida de precisión en BIGINT.
+        normalizarId(valor) {
+            if (valor === null || valor === undefined || typeof valor === "boolean") return null;
+            const texto = String(valor).trim();
+            if (!/^\d+$/.test(texto)) return null;
+            const id = texto.replace(/^0+(?=\d)/, "");
+            return id === "0" ? null : id;
+        },
         async _fetchData() {
-            const params = {
-                id: this.filters.cliente_id,
-                tipo_cliente_id: this.filters.tipo_cliente_id,
-                filtrar_x_operaciones: 1,
-            };
-            this.$log("🚀 ~ params InfoOperacion:", params)
-            this.$log("🚀 ~ Filters:", this.filters)
-            //this.$vs.loading();
+            const solicitud = ++this.solicitudActual;
+            this.cargando = true; this.aviso = ""; this.errorRecuperable = false;
+            this.cliente = {}; this.operacion_descripcion = null;
             try {
-                // Call the API from clientes service
+                const params = { id: this.filters.cliente_id, tipo_cliente_id: this.filters.tipo_cliente_id, filtrar_x_operaciones: 1 };
+                if (this.soloConsulta && this.normalizarId(this.filters.seguimiento_id)) {
+                    params.seguimiento_historico_id = this.normalizarId(this.filters.seguimiento_id);
+                }
                 const result = await clientes.fetchClientes(params);
-                if (!result || typeof result !== "object") {
-                    throw new Error("Respuesta inválida al consultar cliente");
-                }
-                const data = result.length ? result[0] : result;
-                this.$log("🚀 ~ InfoOperacion:", data)
-                if (data) {
-                    this.cliente.id = data.id;
-                    this.cliente.nombre = data.nombre;
-                    this.cliente.direccion_completa = data.direccion_completa;
-                    if (this.filters.operacion_id) {
-                        //buscar la operacion del id correspondiente
-                        const match = data.operaciones.find(
-                            (operacion) =>
-                                operacion.operacion_id ===
-                                this.filters.operacion_id
-                        );
-                        if (match) {
-                            this.operacion_descripcion =
-                                match.descripcion + " Saldo: " + match.saldo;
-                        } else {
-                            throw new Error("Error, Operación no válida.");
+                if (solicitud !== this.solicitudActual) return;
+                const data = Array.isArray(result) ? result[0] : result;
+                if (!data || typeof data !== "object" || !this.normalizarId(data.id)) throw new Error("No se recibieron los datos del cliente.");
+                this.cliente = { id: data.id, nombre: data.nombre, direccion_completa: data.direccion_completa };
+                const operacionId = this.normalizarId(this.filters.operacion_id);
+                if (operacionId) {
+                    const lista = Array.isArray(data.operaciones) ? data.operaciones : [];
+                    const match = lista.find(op => this.normalizarId(op.operacion_id) === operacionId);
+                    if (match) {
+                        this.operacion_descripcion = match.descripcion + (match.saldo ? " Saldo: " + match.saldo : "");
+                        if (this.soloConsulta && Number(match.status) === 0) {
+                            this.aviso = "La operación relacionada está cancelada. Se muestra únicamente para consultar este seguimiento.";
                         }
+                    } else if (this.soloConsulta) {
+                        this.operacion_descripcion = "Operación relacionada no disponible";
+                        this.aviso = "La operación relacionada ya no está disponible para este cliente. Puedes consultar los datos del seguimiento.";
                     } else {
-                        this.operacion_descripcion =
-                            "No se seleccionó ninguna operación";
+                        throw new Error("Error, Operación no válida.");
                     }
+                } else {
+                    this.operacion_descripcion = "No se seleccionó ninguna operación";
                 }
+                if (data.cliente_disponible === false) this.aviso = "Los datos del cliente ya no están disponibles. Se conservan los datos del seguimiento.";
                 this.$emit("resultado", true, data.email);
             } catch (error) {
-                this.$vs.notify({
-                    title: "Datos del Cliente",
-                    text: error,
-                    iconPack: "feather",
-                    icon: "icon-alert-circle",
-                    color: "danger",
-                });
-                this.$emit("resultado", false, "");
+                if (solicitud !== this.solicitudActual) return;
+                const status = Number((error.response && error.response.status) || error.status || 0);
+                this.errorRecuperable = this.soloConsulta && ![401,403,404,422].includes(status);
+                this.aviso = this.errorRecuperable ? "No fue posible cargar los datos del cliente. Puedes reintentar sin cerrar esta consulta." : (error.message || "No fue posible consultar los datos.");
+                if (!this.errorRecuperable) this.$vs.notify({ title: "Datos del Cliente", text: this.aviso, iconPack: "feather", icon: "icon-alert-circle", color: "danger" });
+                this.$emit("resultado", false, "", { recuperable: this.errorRecuperable });
             } finally {
-                //this.$vs.loading.close();
+                if (solicitud === this.solicitudActual) this.cargando = false;
             }
         },
     },
-    // Lifecycle hooks
-    created() {
-        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
-    },
-    mounted() {
-        this.$log("Component mounted! " + this.$options.name); // DOM is ready
-    },
-    beforeDestroy() { },
-    destroyed() {
-        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
-    },
+    beforeDestroy() { this.solicitudActual++; },
 };
 </script>

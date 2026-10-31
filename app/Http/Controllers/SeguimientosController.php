@@ -14,6 +14,250 @@ use Illuminate\Support\Facades\Mail;
 
 class SeguimientosController extends ApiController
 {
+    /** Regla común de reportes: excluir solo vínculos de cliente a operaciones canceladas. */
+    private function sinOperacionesCanceladas($consulta)
+    {
+        return $consulta->where(function ($q) {
+            // En tipo2 operaciones_id puede referir a cotización: nunca cruzar sus IDs.
+            $q->where('s.tipo_cliente_id','<>',1)->orWhereNull('s.tipo_cliente_id')
+                ->orWhereNotExists(function ($op) {
+                    $op->select(DB::raw(1))->from('operaciones as oc')
+                        ->whereColumn('oc.id','s.operaciones_id')->where('oc.status',0);
+                });
+        });
+    }
+
+    /** Estado común de agenda e histórico: programados vigentes todavía sin atención. */
+    private function consultaProgramadosPendientes()
+    {
+        return $this->sinOperacionesCanceladas(DB::table('seguimientos as s')
+            ->where('s.programado_b',1)->where('s.status',1)
+            ->whereNull('s.fechahora_registro_seguimiento'));
+    }
+
+    /** Atraso legible al día del corte, sin alterar las fechas ni las reglas de vencimiento. */
+    private function atrasoSeguimientoTexto(\Carbon\Carbon $fecha, \Carbon\Carbon $corte)
+    {
+        $desde=$fecha->copy()->startOfDay();$hasta=$corte->copy()->startOfDay();
+        $dias=(int)$desde->diffInDays($hasta);
+        if($dias===0)return 'Hoy';
+        if($dias<7)return $dias.($dias===1?' día':' días');
+        $anios=(int)$desde->diffInYears($hasta);
+        if($anios>0)return $anios.($anios===1?' año':' años');
+        $meses=(int)$desde->diffInMonths($hasta);
+        if($meses>0)return $meses.($meses===1?' mes':' meses');
+        $semanas=intdiv($dias,7);
+        return $semanas.($semanas===1?' semana':' semanas');
+    }
+
+    /** Histórico pendiente: vence al día siguiente, sin límite inferior de antigüedad. */
+    private function consultaSeguimientosVencidosHistorico(\Carbon\Carbon $corte)
+    {
+        return $this->consultaProgramadosPendientes()
+            // Excluir fechas cero heredadas; 1000-01-01 es el mínimo válido de DATETIME.
+            ->where('s.fechahora_programada','>=','1000-01-01 00:00:00')
+            ->where('s.fechahora_programada','<',$corte->toDateString());
+    }
+
+    public function getSeguimientosVencidosHistoricoDashboard(\Carbon\Carbon $fechaCorte = null)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        return (int) $this->consultaSeguimientosVencidosHistorico($corte)->count();
+    }
+
+    /** Resumen y detalle histórico: no contar atendidos, cancelados ni pendientes de hoy. */
+    public function getReporteSeguimientosVencidosHistorico(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        $fila = $this->consultaSeguimientosVencidosHistorico($corte)->selectRaw('COUNT(*) AS total,
+            SUM(CASE WHEN s.tipo_cliente_id=1 THEN 1 ELSE 0 END) AS clientes,
+            SUM(CASE WHEN s.tipo_cliente_id=2 THEN 1 ELSE 0 END) AS cotizaciones,
+            SUM(CASE WHEN s.fechahora_programada < ? THEN 1 ELSE 0 END) AS antiguos',[$corte->copy()->subDays(7)->toDateString()])->first();
+        $resumen=[]; foreach(['total','clientes','cotizaciones','antiguos'] as $k)$resumen[$k]=(int)$fila->$k;
+        $fechaCorta=function($f){return $f->format('d').'/'.ucfirst(rtrim($f->locale('es')->translatedFormat('M'),'.')).'/'.$f->format('Y');};
+        $periodo='Histórico acumulado al '.$fechaCorta($corte);
+        $datos=['tipo_operacion'=>'seguimientos_vencidos_historico','titulo'=>'Reporte de Seguimientos Vencidos — Histórico',
+            'modulo'=>'Seguimientos vencidos','periodo'=>$periodo,'fecha'=>$fechaCorta($corte).' '.$corte->format('H:i'),
+            'corte'=>$corte->toDateTimeString(),'hasta'=>$corte->copy()->subDay()->toDateString(),
+            'resumen'=>$resumen,'totalRegistros'=>$resumen['total'],'resumenTexto'=>$resumen['total'].' seguimientos vencidos pendientes de atención',
+            'encabezadoPeriodo'=>$periodo.' | Consultado al '.$corte->format('H:i'),
+            'avisoSaldos'=>'Pendientes con fecha programada anterior a hoy. Vencen desde el día siguiente; no incluye atendidos, cancelados ni vínculos a operaciones canceladas.'];
+        if($soloResumen)return $datos;
+        $motivos=$this->getMotivos();$medios=$this->getMedios();
+        $datos['seguimientos']=$this->consultaSeguimientosVencidosHistorico($corte)
+            ->leftJoin('clientes as c',function($j){$j->on('c.id','=','s.clientes_id')->where('s.tipo_cliente_id',1);})
+            ->leftJoin('cotizaciones as cot',function($j){$j->on('cot.id','=','s.clientes_id')->where('s.tipo_cliente_id',2);})
+            ->leftJoin('usuarios as u','u.id','=','s.registro_programado_id')
+            ->select('s.id','s.tipo_cliente_id','s.fechahora_programada','s.motivo_id','s.medio_preferido_programado_id','s.email_programado','s.comentario_programado','u.nombre as programo')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.nombre WHEN 2 THEN cot.cliente_nombre END AS nombre_cliente')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.telefono WHEN 2 THEN cot.cliente_telefono END AS telefono')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.celular END AS celular')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.email WHEN 2 THEN cot.cliente_email END AS email_cliente')
+            ->orderBy('s.fechahora_programada','asc')->orderBy('s.id','asc')
+            ->get()->map(function($f)use($corte,$fechaCorta,$motivos,$medios){
+                $fecha=\Carbon\Carbon::parse($f->fechahora_programada,'America/Mazatlan');
+                $f->fecha_texto=$fechaCorta($fecha).' '.$fecha->format('H:i');
+                $f->tipo_cliente=[1=>'Cliente registrado',2=>'Bajo cotización'][(int)$f->tipo_cliente_id]??'No disponible';
+                $f->contacto=implode(' / ',array_unique(array_filter([$f->telefono,$f->celular])));
+                $f->email=mb_strtolower(trim($f->email_programado??'')?:trim($f->email_cliente??''),'UTF-8');
+                $f->motivo=$motivos[(int)$f->motivo_id]??'No disponible';
+                $f->medio=$medios[(int)$f->medio_preferido_programado_id]??'No disponible';
+                $f->dias_atraso=(int)$fecha->copy()->startOfDay()->diffInDays($corte->copy()->startOfDay());
+                $f->atraso_texto=$this->atrasoSeguimientoTexto($fecha,$corte);
+                $f->estado='Vencido';
+                $f->comentario=trim(html_entity_decode(strip_tags((string)$f->comentario_programado),ENT_QUOTES|ENT_HTML5,'UTF-8'));
+                return(array)$f;
+            })->all();
+        return $datos;
+    }
+
+    public function previewReporteSeguimientosVencidosHistorico(Request $request)
+    {
+        return app(OperacionesController::class)->previewSeguimientosVencidosHistorico($request);
+    }
+
+    /** Agenda pendiente: hoy y seis días más; rango indexable y sin cargar contactos. */
+    private function consultaProgramadosProximosSieteDias(\Carbon\Carbon $corte)
+    {
+        return $this->consultaProgramadosPendientes()
+            ->where('s.fechahora_programada','>=',$corte->toDateString())
+            ->where('s.fechahora_programada','<',$corte->copy()->addDays(7)->toDateString());
+    }
+
+    public function getProgramadosProximosSieteDiasDashboard(\Carbon\Carbon $fechaCorte = null)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        return (int) $this->consultaProgramadosProximosSieteDias($corte)->count();
+    }
+
+    /** Detalle de agenda, separado de realizados; los pendientes no tienen resultado de contacto. */
+    public function getReporteProgramadosProximosSieteDias(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        $fila = $this->consultaProgramadosProximosSieteDias($corte)->selectRaw('COUNT(*) AS total,
+            SUM(CASE WHEN s.tipo_cliente_id=1 THEN 1 ELSE 0 END) AS clientes,
+            SUM(CASE WHEN s.tipo_cliente_id=2 THEN 1 ELSE 0 END) AS cotizaciones,
+            SUM(CASE WHEN s.fechahora_programada < ? THEN 1 ELSE 0 END) AS hoy',[$corte->copy()->addDay()->toDateString()])->first();
+        $resumen=[]; foreach(['total','clientes','cotizaciones','hoy'] as $k)$resumen[$k]=(int)$fila->$k;
+        $fechaCorta=function($f){return $f->format('d').'/'.ucfirst(rtrim($f->locale('es')->translatedFormat('M'),'.')).'/'.$f->format('Y');};
+        $fin=$corte->copy()->addDays(6);$periodo=$fechaCorta($corte).' al '.$fechaCorta($fin).' (incluye hoy)';
+        $datos=['tipo_operacion'=>'seguimientos_programados_proximos','titulo'=>'Reporte de Seguimientos Programados — Próximos 7 Días',
+            'modulo'=>'Seguimientos programados','periodo'=>$periodo,'fecha'=>$fechaCorta($corte).' '.$corte->format('H:i'),
+            'corte'=>$corte->toDateTimeString(),'desde'=>$corte->toDateString(),'hasta'=>$fin->toDateString(),
+            'resumen'=>$resumen,'totalRegistros'=>$resumen['total'],'resumenTexto'=>$resumen['total'].' seguimientos pendientes | '.$resumen['hoy'].' para hoy',
+            'encabezadoPeriodo'=>$periodo.' | Consultado al '.$corte->format('H:i'),
+            'avisoSaldos'=>'Agenda pendiente de atención. No incluye seguimientos cancelados o atendidos ni los ligados a operaciones canceladas.'];
+        if($soloResumen)return $datos;
+        $motivos=$this->getMotivos();$medios=$this->getMedios();
+        $datos['seguimientos']=$this->consultaProgramadosProximosSieteDias($corte)
+            ->leftJoin('clientes as c',function($j){$j->on('c.id','=','s.clientes_id')->where('s.tipo_cliente_id',1);})
+            ->leftJoin('cotizaciones as cot',function($j){$j->on('cot.id','=','s.clientes_id')->where('s.tipo_cliente_id',2);})
+            ->leftJoin('usuarios as u','u.id','=','s.registro_programado_id')
+            ->select('s.id','s.tipo_cliente_id','s.fechahora_programada','s.motivo_id','s.medio_preferido_programado_id','s.email_programado','s.comentario_programado','u.nombre as programo')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.nombre WHEN 2 THEN cot.cliente_nombre END AS nombre_cliente')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.telefono WHEN 2 THEN cot.cliente_telefono END AS telefono')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.celular END AS celular')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.email WHEN 2 THEN cot.cliente_email END AS email_cliente')
+            ->orderBy('s.fechahora_programada','asc')->orderBy('s.id','asc')
+            ->get()->map(function($f)use($corte,$fechaCorta,$motivos,$medios){
+                $fecha=\Carbon\Carbon::parse($f->fechahora_programada,'America/Mazatlan');
+                $f->fecha_texto=$fechaCorta($fecha).' '.$fecha->format('H:i');
+                $f->tipo_cliente=[1=>'Cliente registrado',2=>'Bajo cotización'][(int)$f->tipo_cliente_id]??'No disponible';
+                $f->contacto=implode(' / ',array_unique(array_filter([$f->telefono,$f->celular])));
+                $f->email=mb_strtolower(trim($f->email_programado??'')?:trim($f->email_cliente??''),'UTF-8');
+                $f->motivo=$motivos[(int)$f->motivo_id]??'No disponible';
+                $f->medio=$medios[(int)$f->medio_preferido_programado_id]??'No disponible';
+                $f->estado=$fecha->toDateString()===$corte->toDateString()?'Para hoy':'Pendiente';
+                $f->comentario=trim(html_entity_decode(strip_tags((string)$f->comentario_programado),ENT_QUOTES|ENT_HTML5,'UTF-8'));
+                return(array)$f;
+            })->all();
+        return $datos;
+    }
+
+    public function previewReporteProgramadosProximosSieteDias(Request $request)
+    {
+        return app(OperacionesController::class)->previewProgramadosProximosSieteDias($request);
+    }
+
+    /** Realizados del mes: fecha efectiva, excluyendo operaciones canceladas según criterio vigente. */
+    private function consultaRealizadosMes(\Carbon\Carbon $corte)
+    {
+        $inicio = $corte->copy()->startOfMonth()->startOfDay();
+        $consulta = DB::table('seguimientos as s')
+            ->where('s.fechahora_seguimiento', '>=', $inicio)
+            ->where('s.fechahora_seguimiento', '<', $inicio->copy()->addMonth())
+            ->where('s.fechahora_seguimiento', '<=', $corte)
+            ->where(function ($q) {
+                $q->where(function ($x) { $x->where('s.programado_b', 0)->where('s.status', 1); })
+                    ->orWhere(function ($x) { $x->where('s.programado_b', 1)->where('s.status', 2); });
+            });
+        return $this->sinOperacionesCanceladas($consulta);
+    }
+
+    /** Una consulta agregada; no carga clientes, cotizaciones ni comentarios para el dashboard. */
+    public function getSeguimientosRealizadosMesDashboard(\Carbon\Carbon $fechaCorte = null)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        return (int) $this->consultaRealizadosMes($corte)->count();
+    }
+
+    /** Reporte mensual de actividad: clientes registrados y prospectos bajo cotización. */
+    public function getReporteSeguimientosRealizadosMes(\Carbon\Carbon $fechaCorte = null, $soloResumen = false)
+    {
+        $corte = $fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : \Carbon\Carbon::now('America/Mazatlan');
+        $fila = $this->consultaRealizadosMes($corte)->selectRaw('COUNT(*) AS total,
+            SUM(CASE WHEN s.tipo_cliente_id = 1 THEN 1 ELSE 0 END) AS clientes,
+            SUM(CASE WHEN s.tipo_cliente_id = 2 THEN 1 ELSE 0 END) AS cotizaciones,
+            SUM(CASE WHEN s.resultado_id = 6 THEN 1 ELSE 0 END) AS sin_contacto,
+            SUM(CASE WHEN s.programado_b = 0 THEN 1 ELSE 0 END) AS directos,
+            SUM(CASE WHEN s.programado_b = 1 THEN 1 ELSE 0 END) AS programados')->first();
+        $resumen = [];
+        foreach (['total','clientes','cotizaciones','sin_contacto','directos','programados'] as $campo) $resumen[$campo] = (int) $fila->$campo;
+        $fecha = $corte->format('d').'/'.ucfirst(rtrim($corte->locale('es')->translatedFormat('M'), '.')).'/'.$corte->format('Y H:i');
+        $periodo = $corte->locale('es')->translatedFormat('F \\d\\e Y');
+        $datos = ['tipo_operacion'=>'seguimientos_realizados_mes', 'titulo'=>'Reporte de Seguimientos Realizados del Mes',
+            'modulo'=>'Seguimientos realizados', 'periodo'=>$periodo, 'fecha'=>$fecha, 'corte'=>$corte->toDateTimeString(),
+            'resumen'=>$resumen, 'totalRegistros'=>$resumen['total'],
+            'resumenTexto'=>$resumen['total'].' seguimientos realizados | '.$resumen['directos'].' directos | '.$resumen['programados'].' programados atendidos',
+            'encabezadoPeriodo'=>ucfirst($periodo).' | Consultado al '.$fecha,
+            'avisoSaldos'=>'No incluye operaciones canceladas. Los intentos en los que no fue posible contactar también cuentan como gestión realizada.'];
+        if ($soloResumen) return $datos;
+        $motivos = $this->getMotivos(); $medios = $this->getMedios(); $resultados = $this->getResultadosContacto();
+        $datos['seguimientos'] = $this->consultaRealizadosMes($corte)
+            // Condicionar cada unión evita confundir clientes y cotizaciones con el mismo ID.
+            ->leftJoin('clientes as c', function ($j) { $j->on('c.id','=','s.clientes_id')->where('s.tipo_cliente_id',1); })
+            ->leftJoin('cotizaciones as cot', function ($j) { $j->on('cot.id','=','s.clientes_id')->where('s.tipo_cliente_id',2); })
+            ->leftJoin('usuarios as u','u.id','=','s.realizo_seguimiento_id')
+            ->select('s.id','s.tipo_cliente_id','s.programado_b','s.fechahora_seguimiento','s.motivo_id',
+                's.medio_seguimiento_id','s.resultado_id','s.comentario_seguimiento','u.nombre as realizo')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.nombre WHEN 2 THEN cot.cliente_nombre END AS nombre_cliente')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.telefono WHEN 2 THEN cot.cliente_telefono END AS telefono')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.celular ELSE NULL END AS celular')
+            ->selectRaw('CASE s.tipo_cliente_id WHEN 1 THEN c.email WHEN 2 THEN cot.cliente_email END AS email')
+            ->orderBy('s.fechahora_seguimiento','desc')->orderBy('s.id','desc')
+            ->get()->map(function ($f) use ($motivos,$medios,$resultados) {
+                $fecha = \Carbon\Carbon::parse($f->fechahora_seguimiento,'America/Mazatlan');
+                $f->fecha_texto = $fecha->format('d').'/'.ucfirst(rtrim($fecha->locale('es')->translatedFormat('M'),'.')).'/'.$fecha->format('Y H:i');
+                $f->tipo_cliente = [1=>'Cliente registrado',2=>'Bajo cotización'][(int)$f->tipo_cliente_id] ?? 'No disponible';
+                $f->motivo = $motivos[(int)$f->motivo_id] ?? 'No disponible';
+                $f->medio = $medios[(int)$f->medio_seguimiento_id] ?? 'No disponible';
+                $f->resultado = $resultados[(int)$f->resultado_id] ?? 'No disponible';
+                $f->origen = (int)$f->programado_b === 1 ? 'Programado atendido' : 'Directo';
+                $f->email = mb_strtolower(trim($f->email ?? ''),'UTF-8');
+                $f->contacto = implode(' / ',array_unique(array_filter([$f->telefono,$f->celular])));
+                $f->comentario = trim(html_entity_decode(strip_tags((string)$f->comentario_seguimiento),ENT_QUOTES | ENT_HTML5,'UTF-8'));
+                return (array)$f;
+            })->all();
+        return $datos;
+    }
+
+    /** El módulo aporta reglas y datos; el transporte usa el visor compartido ya protegido. */
+    public function previewReporteSeguimientosRealizadosMes(Request $request)
+    {
+        return app(OperacionesController::class)->previewSeguimientosRealizadosMes($request);
+    }
+
+
     /**
      * Get motivos de seguimiento.
      *
@@ -653,6 +897,7 @@ class SeguimientosController extends ApiController
     {
         $validaciones = [
             'programado_b' => 'required|in:0,1|integer',
+            'consulta_historica' => 'sometimes|boolean',
             'id' => 'sometimes|integer',
             'cliente_id' => 'sometimes|integer',
             'tipo_cliente_id' => 'sometimes|in:1,2|integer',
@@ -671,6 +916,9 @@ class SeguimientosController extends ApiController
             'status.in' => 'El status solo puede ser 0, 1 o 2.'
         ];
         $request->validate($validaciones, $mensajes);
+        if ($request->boolean('consulta_historica') && (!$request->filled('id') || filter_var($request->id,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]) === false)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['id'=>'La consulta histórica requiere un seguimiento específico.']);
+        }
         // Load lookups once
         $motivos = $this->getMotivos();
         $medios = $this->getMedios();
@@ -707,11 +955,11 @@ class SeguimientosController extends ApiController
                         }
                     });
                 })
-                ->where(function ($q) {
-                    $q->whereHas('operacion', function ($sub) {
-                        $sub->where('status', '>', 0);
-                    })
-                        ->orWhereDoesntHave('operacion');
+                ->when(!$request->boolean('consulta_historica'), function ($q) {
+                    $q->where(function ($x) {
+                        $x->whereHas('operacion', function ($sub) { $sub->where('status', '>', 0); })
+                            ->orWhereDoesntHave('operacion');
+                    });
                 });
             if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
                 if ((int)$request->programado_b === 1) {
@@ -762,6 +1010,8 @@ class SeguimientosController extends ApiController
                 $select[] = 'comentario_cancelacion';
             }
             $query->select($select);
+            // Por ID histórico se consulta el registro guardado, sin filtros de captura activa.
+            if (!$request->boolean('consulta_historica')) {
             if ((int)$request->programado_b === 1) {
                 //son programados
                 $query->where('programado_b', 1);
@@ -800,6 +1050,7 @@ class SeguimientosController extends ApiController
                             });
                     });
                 }
+            }
             }
             if ($request->has('cliente_id')) {
                 $query->where('clientes_id', $request->cliente_id);

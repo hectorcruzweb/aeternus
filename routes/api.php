@@ -33,6 +33,22 @@ Route::middleware(['client'])->group(function () {
 /**RUTAS PARA EL SISTEMA DE LOGUEADO*/
 Route::middleware(['auth:api'])->group(function () {
     // Reportes del dashboard. Admin/Gerencia se validan además en cada controlador.
+    Route::get('/operaciones/reportes/clientes-pagos-vencidos', 'OperacionesController@previewClientesPagosVencidos');
+    Route::get('/operaciones/reportes/clientes-pagos-vencidos/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/operaciones/reportes/clientes-pagos-vencidos/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/operaciones/reportes/clientes-pagos-vencidos/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/seguimientos/reportes/vencidos-historico', 'SeguimientosController@previewReporteSeguimientosVencidosHistorico');
+    Route::get('/seguimientos/reportes/vencidos-historico/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/seguimientos/reportes/vencidos-historico/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/seguimientos/reportes/vencidos-historico/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/seguimientos/reportes/programados-proximos', 'SeguimientosController@previewReporteProgramadosProximosSieteDias');
+    Route::get('/seguimientos/reportes/programados-proximos/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/seguimientos/reportes/programados-proximos/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/seguimientos/reportes/programados-proximos/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    Route::get('/seguimientos/reportes/realizados-mes', 'SeguimientosController@previewReporteSeguimientosRealizadosMes');
+    Route::get('/seguimientos/reportes/realizados-mes/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/seguimientos/reportes/realizados-mes/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/seguimientos/reportes/realizados-mes/{token}/correo', 'OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
     Route::get('/funeraria/reportes/solicitudes-sin-contrato', 'FunerariaController@previewReporteSolicitudesSinContrato');
     Route::get('/funeraria/reportes/solicitudes-sin-contrato/{token}/excel', 'OperacionesController@descargarVentasCementerioExcel');
     Route::get('/funeraria/reportes/solicitudes-sin-contrato/{token}/pdf', 'OperacionesController@descargarVentasCementerioPdf');

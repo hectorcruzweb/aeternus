@@ -24,7 +24,7 @@ class PagosVenceHoyExport implements WithMultipleSheets
                 (float) $f['monto_programado'], (float) $f['capital_cubierto'], (float) $f['pendiente'], $f['estado_pago'] ?? 'Vence hoy'];
         }
         return [new VentasCementerioHoja($this->datos, [
-            'nombre' => 'Resumen general', 'nota' => $proximos ? 'Pagos pendientes de hoy y los siguientes seis días, agrupados por tipo de operación.' : 'Pagos pendientes que vencen en el día consultado, agrupados por tipo de operación. Cada cantidad corresponde a pagos programados.',
+            'nombre' => 'Resumen general', 'nota' => $this->datos['notaResumen'] ?? ($proximos ? 'Pagos pendientes de hoy y los siguientes seis días, agrupados por tipo de operación.' : 'Pagos pendientes que vencen en el día consultado, agrupados por tipo de operación. Cada cantidad corresponde a pagos programados.'),
             'columnas' => ['Tipo de operación', 'Pagos pendientes', 'Programado', 'Aplicado a capital', $etiquetaImporte],
             'filas' => $resumen, 'moneda' => [2, 3, 4], 'sumar' => [1],
         ]), new VentasCementerioHoja($this->datos, [

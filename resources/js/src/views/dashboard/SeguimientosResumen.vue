@@ -73,7 +73,7 @@ export default {
     UsersIcon,
     ArrowUpRightIcon,
   },
-  // Datos provisionales de diseño: la integración se decidirá con el backend.
+  // Los cuatro indicadores usan agregados reales; los detalles se consultan bajo demanda.
   props: {
     // Ocultar importes/acciones mientras el padre espera datos.
     cargando: { type: Boolean, default: false },
@@ -92,20 +92,20 @@ export default {
           periodo: this.periodoResumen,
         },
         {
-          id: "hoy",
-          titulo: "Seguimientos programados para hoy",
-          valor: this.seguimientos.programadosHoy,
+          id: "programados",
+          titulo: "Seguimientos programados · próximos 7 días",
+          valor: this.seguimientos.programadosProximosSieteDias,
           icono: "CalendarIcon",
-          descripcion: "Agenda del día",
-          periodo: "Hoy",
+          descripcion: "Pendientes · incluye hoy",
+          periodo: "Hoy y los siguientes 6 días",
         },
         {
           id: "vencidos",
-          titulo: "Seguimientos vencidos",
+          titulo: "Seguimientos vencidos históricos",
           valor: this.seguimientos.vencidos,
           icono: "AlertCircleIcon",
           descripcion: "Pendientes de atención",
-          periodo: "Estado actual",
+          periodo: "Acumulado hasta ayer",
         },
         {
           id: "sugeridos",
@@ -113,7 +113,7 @@ export default {
           valor: this.seguimientos.clientesConPagosVencidos,
           icono: "UsersIcon",
           descripcion: "Se recomienda dar seguimiento",
-          periodo: "Estado actual",
+          periodo: "Acumulado hasta ayer",
           unidad: "clientes",
         },
       ];

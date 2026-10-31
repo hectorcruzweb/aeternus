@@ -9,6 +9,96 @@ use App\Http\Controllers\ApiController;
 
 class OperacionesController extends ApiController
 {
+    /** Histórico de seguimientos vencidos: consultas en SeguimientosController, transporte compartido. */
+    public function previewSeguimientosVencidosHistorico(Request $request)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        $corte = Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($corte) {
+            $modulo = app(SeguimientosController::class);
+            $datos = $modulo->getReporteSeguimientosVencidosHistorico($corte, true);
+            return $datos['totalRegistros'] <= 3500 ? $modulo->getReporteSeguimientosVencidosHistorico($corte) : $datos;
+        });
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $visualizable = isset($datos['seguimientos']);
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'Seguimientos Vencidos Historicos '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
+            'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
+            'modo' => $visualizable ? 'instantanea' : 'seguimientos_vencidos_filtro',
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => 3500, 'totalRegistros' => $datos['totalRegistros'],
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargarlo completo. Los datos se actualizarán al generar el archivo.',
+            'hojas' => $visualizable ? [['nombre' => 'Seguimientos vencidos', 'html' => $this->htmlReporteCementerio($datos)]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Agenda de próximos siete días: consultas en SeguimientosController, transporte compartido. */
+    public function previewProgramadosProximosSieteDias(Request $request)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        $corte = Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($corte) {
+            $modulo = app(SeguimientosController::class);
+            $datos = $modulo->getReporteProgramadosProximosSieteDias($corte, true);
+            return $datos['totalRegistros'] <= 3500 ? $modulo->getReporteProgramadosProximosSieteDias($corte) : $datos;
+        });
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $visualizable = isset($datos['seguimientos']);
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'Seguimientos Programados Proximos 7 Dias '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
+            'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
+            'modo' => $visualizable ? 'instantanea' : 'seguimientos_programados_filtro',
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => 3500, 'totalRegistros' => $datos['totalRegistros'],
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargarlo completo. Los datos se actualizarán al generar el archivo.',
+            'hojas' => $visualizable ? [['nombre' => 'Seguimientos programados', 'html' => $this->htmlReporteCementerio($datos)]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Transporte mensual de seguimientos: reglas y datos en SeguimientosController. */
+    public function previewSeguimientosRealizadosMes(Request $request)
+    {
+        $usuario = $this->usuarioReporteCementerio($request);
+        $corte = Carbon::now('America/Mazatlan');
+        $datos = DB::transaction(function () use ($corte) {
+            $modulo = app(SeguimientosController::class);
+            $datos = $modulo->getReporteSeguimientosRealizadosMes($corte, true);
+            return $datos['totalRegistros'] <= 3500 ? $modulo->getReporteSeguimientosRealizadosMes($corte) : $datos;
+        });
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
+            'nombre_comercial', 'razon_social', 'rfc', 'telefono', 'email', 'calle', 'num_ext', 'colonia', 'ciudad', 'estado'
+        ])) : [];
+        $visualizable = isset($datos['seguimientos']);
+        $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
+        $nombre = 'Seguimientos Realizados del Mes '.$corte->format('Y-m-d H-i-s').'.xlsx';
+        \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
+            'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
+            'modo' => $visualizable ? 'instantanea' : 'seguimientos_realizados_filtro',
+        ], $vence);
+        return response()->json([
+            'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
+            'limiteVisualizacion' => 3500, 'totalRegistros' => $datos['totalRegistros'],
+            'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargarlo completo. Los datos se actualizarán al generar el archivo.',
+            'hojas' => $visualizable ? [['nombre' => 'Seguimientos realizados', 'html' => $this->htmlReporteCementerio($datos)]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
     /** Transporte de solicitudes: las consultas y sus reglas permanecen en FunerariaController. */
     public function previewSolicitudesSinContrato(Request $request)
     {
@@ -60,19 +150,44 @@ class OperacionesController extends ApiController
             ->select('ppp.pagos_programados_id')->selectRaw('SUM(ppp.monto) AS capital_cubierto')
             ->groupBy('ppp.pagos_programados_id');
         $pendiente = 'ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2)';
-        return DB::table('pagos_programados as pp')
+        $consulta = DB::table('pagos_programados as pp')
             ->join('operaciones as o', 'o.id', '=', 'pp.operaciones_id')
             ->leftJoinSub($capital, 'a', function ($j) { $j->on('a.pagos_programados_id', '=', 'pp.id'); })
             ->whereIn('o.empresa_operaciones_id', array_keys($this->getTiposOperacionesDashboard()))
             ->whereIn('o.status', [1, 2])->where('o.fecha_operacion', '<=', $corte)
             ->where('pp.status', 1)
-            ->where('pp.fecha_programada', '>=', $corte->toDateString())
-            ->where('pp.fecha_programada', '<', $corte->copy()->addDays($dias)->toDateString())
             ->whereRaw($pendiente.' > 0')
             ->select('pp.id as pago_programado_id', 'pp.referencia_pago', 'pp.fecha_programada', 'pp.monto_programado',
                 'o.id as operacion_id', 'o.empresa_operaciones_id', 'o.fecha_operacion', 'o.clientes_id')
             ->selectRaw('COALESCE(a.capital_cubierto, 0) AS capital_cubierto, '.$pendiente.' AS pendiente')
             ->selectRaw('CASE o.empresa_operaciones_id WHEN 1 THEN o.ventas_terrenos_id WHEN 2 THEN o.ventas_terrenos_id WHEN 3 THEN o.servicios_funerarios_id WHEN 4 THEN o.ventas_planes_id WHEN 5 THEN o.ventas_generales_id END AS numero_venta');
+        // dias=0: histórico vencido. Los demás valores conservan la agenda vigente.
+        if ($dias === 0) {
+            $consulta->where('pp.fecha_programada', '>=', '1000-01-01')
+                ->where('pp.fecha_programada', '<', $corte->toDateString());
+        } else {
+            $consulta->where('pp.fecha_programada', '>=', $corte->toDateString())
+                ->where('pp.fecha_programada', '<', $corte->copy()->addDays($dias)->toDateString());
+        }
+        return $consulta;
+    }
+
+    /** Clientes únicos del histórico vencido; no cargar contactos ni filas en el dashboard. */
+    public function getClientesPagosVencidosDashboard(Carbon $fechaCorte = null)
+    {
+        $corte=$fechaCorte ? $fechaCorte->copy()->setTimezone('America/Mazatlan') : Carbon::now('America/Mazatlan');
+        return (int) DB::query()->fromSub($this->consultaPagosPorVencer($corte,0),'q')
+            ->selectRaw('COUNT(DISTINCT COALESCE(q.clientes_id,0)) AS cantidad')->value('cantidad');
+    }
+
+    public function getReporteClientesPagosVencidos(Carbon $fechaCorte = null, $soloResumen = false)
+    {
+        return $this->getReportePagosPorVencer(0,$fechaCorte,$soloResumen);
+    }
+
+    public function previewClientesPagosVencidos(Request $request)
+    {
+        return $this->previewPagosPorVencer($request,0);
     }
 
     /** Solo agregados: el dashboard no consulta contactos ni carga pagos individuales. */
@@ -139,11 +254,24 @@ class OperacionesController extends ApiController
             'resumen' => $resumen, 'totalRegistros' => $resumen['cantidad'],
             'resumenTexto' => $resumen['cantidad'].' pagos programados pendientes | '.$etiquetaImporte.': $ '.number_format($resumen['pendiente'], 2).' MXN',
             'avisoSaldos' => 'Importes pendientes de capital. No incluyen intereses. Los pagos que vencen hoy todavía no se consideran vencidos.'];
+        if ($dias === 0) {
+            $datos['tipo_operacion']='clientes_pagos_vencidos';
+            $datos['titulo']='Reporte de Clientes con Pagos Vencidos';
+            $datos['modulo']=$datos['etiquetaDetalle']='Pagos vencidos históricos';
+            $datos['etiquetaImporte']='Pendiente vencido';
+            $datos['notaResumen']='Histórico de pagos vencidos pendientes, agrupados por tipo de operación. No incluye intereses.';
+            $datos['periodo']='Histórico acumulado al '.$fecha;
+            $datos['encabezadoPeriodo']=$datos['periodo'].' | Consultado a las '.$corte->format('H:i');
+            $datos['hasta']=$corte->copy()->subDay()->toDateString();
+            $datos['resumen']['clientes']=$this->getClientesPagosVencidosDashboard($corte);
+            $datos['resumenTexto']=$datos['resumen']['clientes'].' clientes | '.$resumen['cantidad'].' pagos vencidos | Pendiente: $ '.number_format($resumen['pendiente'],2).' MXN';
+            $datos['avisoSaldos']='Importes pendientes de capital. NO INCLUYEN INTERESES. Solo pagos con fecha anterior a hoy; los que vencen hoy todavía no están vencidos.';
+        }
         if ($soloResumen) return $datos;
         $tipos = $this->getTiposOperacionesDashboard();
         // Próximos pagos: primero lo más cercano. Vence hoy conserva su orden anterior.
         $direccion = $dias === 7 ? 'asc' : 'desc';
-        $datos['pagos'] = $this->consultaPagosPorVencer($corte, $dias)
+        $consultaDetalle = $this->consultaPagosPorVencer($corte, $dias)
             ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
             // Fallecido solo para tipo 3; una unión en bloque, sin consultas por servicio.
             ->leftJoin('servicios_funerarios as sf', function ($j) {
@@ -152,15 +280,20 @@ class OperacionesController extends ApiController
             ->leftJoin('ventas_terrenos as vt', function ($j) {
                 $j->on('vt.id', '=', 'o.ventas_terrenos_id')->whereIn('o.empresa_operaciones_id', [1, 2]);
             })
-            ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email', 'sf.nombre_afectado as fallecido', 'vt.ubicacion', 'pp.conceptos_pagos_id')
-            ->orderBy('pp.fecha_programada', $direccion)->orderBy('o.fecha_operacion', $direccion)->orderBy('pp.id', $direccion)
-            ->get()->map(function ($f) use ($tipos, $corte) {
+            ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email', 'sf.nombre_afectado as fallecido', 'vt.ubicacion', 'pp.conceptos_pagos_id');
+        // Agrupar visualmente cada cliente, manteniendo los pagos antiguos primero.
+        if ($dias === 0) {
+            $consultaDetalle->orderBy('c.nombre')->orderBy('o.clientes_id')->orderBy('pp.fecha_programada')->orderBy('pp.id');
+        } else {
+            $consultaDetalle->orderBy('pp.fecha_programada',$direccion)->orderBy('o.fecha_operacion',$direccion)->orderBy('pp.id',$direccion);
+        }
+        $datos['pagos']=$consultaDetalle->get()->map(function ($f) use ($tipos, $corte, $dias) {
                 // Catálogo simbólico confirmado: no requiere una tabla adicional.
                 $f->concepto_pago = [1 => 'Enganche', 2 => 'Abono', 3 => 'Pago único'][(int) $f->conceptos_pagos_id] ?? 'No disponible';
                 $f->tipo_operacion = $tipos[(int) $f->empresa_operaciones_id];
                 $programada = Carbon::parse($f->fecha_programada, 'America/Mazatlan');
                 $f->fecha_programada_texto = $programada->format('d').'/'.ucfirst(rtrim($programada->locale('es')->translatedFormat('M'), '.')).'/'.$programada->format('Y');
-                $f->estado_pago = $programada->toDateString() === $corte->toDateString() ? 'Vence hoy' : 'Por vencer';
+                $f->estado_pago = $dias === 0 ? 'Vencido' : ($programada->toDateString() === $corte->toDateString() ? 'Vence hoy' : 'Por vencer');
                 $f->email = mb_strtolower(trim($f->email ?? ''), 'UTF-8');
                 return (array) $f;
             })->all();
@@ -171,6 +304,23 @@ class OperacionesController extends ApiController
                 ? ($ubicaciones[trim((string) $pago['ubicacion'])] ?? 'No disponible') : '—';
         }
         unset($pago);
+        if ($dias === 0) {
+            // Una fila por cliente: no repetir su saldo por cada operación o pago.
+            $clientes=[];
+            foreach ($datos['pagos'] as $indice => $p) {
+                $id=(string)($p['clientes_id']??0);
+                if(!isset($clientes[$id])) $clientes[$id]=['cliente'=>$p['cliente']?:'No disponible',
+                    'telefono'=>$p['telefono'],'celular'=>$p['celular'],'email'=>$p['email'],
+                    'cantidad'=>0,'operaciones'=>[],'pendiente'=>0,'pagos_indices'=>[]];
+                // Índices: agrupar sin duplicar cada pago en memoria y en caché.
+                $clientes[$id]['pagos_indices'][]=$indice;
+                $clientes[$id]['cantidad']++;
+                $clientes[$id]['operaciones'][(string)$p['operacion_id']]=true;
+                $clientes[$id]['pendiente']+=(float)$p['pendiente'];
+            }
+            foreach($clientes as &$c){$c['operaciones']=count($c['operaciones']);$c['pendiente']=round($c['pendiente'],2);}unset($c);
+            $datos['clientes']=array_values($clientes);
+        }
         return $datos;
     }
 
@@ -189,9 +339,10 @@ class OperacionesController extends ApiController
     {
         $usuario = $this->usuarioReporteCementerio($request);
         $corte = Carbon::now('America/Mazatlan');
-        $datos = DB::transaction(function () use ($corte, $dias) {
+        $limite = $dias === 0 ? 5000 : 3500; // Pagos, no cabeceras o subtotales de clientes.
+        $datos = DB::transaction(function () use ($corte, $dias, $limite) {
             $resumen = $this->getReportePagosPorVencer($dias, $corte, true);
-            return $resumen['totalRegistros'] <= 3500 ? $this->getReportePagosPorVencer($dias, $corte) : $resumen;
+            return $resumen['totalRegistros'] <= $limite ? $this->getReportePagosPorVencer($dias, $corte) : $resumen;
         });
         $empresa = app(EmpresaController::class)->get_empresa_data();
         $datos['empresa'] = $empresa ? array_intersect_key($empresa->toArray(), array_flip([
@@ -199,15 +350,15 @@ class OperacionesController extends ApiController
         ])) : [];
         $visualizable = isset($datos['pagos']);
         $token = bin2hex(random_bytes(32)); $vence = $corte->copy()->addMinutes(15);
-        $nombre = ($dias === 1 ? 'Pagos que Vencen Hoy ' : 'Pagos Proximos 7 Dias ').$corte->format('Y-m-d H-i-s').'.xlsx';
+        $nombre = ($dias === 0 ? 'Clientes con Pagos Vencidos ' : ($dias === 1 ? 'Pagos que Vencen Hoy ' : 'Pagos Proximos 7 Dias ')).$corte->format('Y-m-d H-i-s').'.xlsx';
         \Illuminate\Support\Facades\Cache::put('cementerio_reporte_'.$token, [
             'usuario_id' => (int) $usuario->id, 'datos' => $datos, 'nombre' => $nombre,
-            'modo' => $visualizable ? 'instantanea' : ($dias === 1 ? 'vence_hoy_filtro' : 'proximos_pagos_filtro'),
+            'modo' => $visualizable ? 'instantanea' : ($dias === 0 ? 'clientes_vencidos_filtro' : ($dias === 1 ? 'vence_hoy_filtro' : 'proximos_pagos_filtro')),
         ], $vence);
         return response()->json([
             'titulo' => $datos['titulo'], 'nombreArchivo' => $nombre, 'tokenDescarga' => $token,
             'venceEn' => $vence->toIso8601String(), 'vistaPreviaDisponible' => $visualizable,
-            'limiteVisualizacion' => 3500, 'totalRegistros' => $datos['totalRegistros'],
+            'limiteVisualizacion' => $limite, 'totalRegistros' => $datos['totalRegistros'],
             'mensaje' => $visualizable ? null : 'No se puede visualizar este reporte por su tamaño. Puede descargarlo. Los datos se actualizarán al generar el archivo, conservando el periodo consultado.',
             'hojas' => $visualizable ? [['nombre' => $datos['modulo'], 'html' => $this->htmlReporteCementerio($datos)]] : [],
         ])->header('Cache-Control', 'no-store, private');
@@ -616,6 +767,10 @@ class OperacionesController extends ApiController
     /** El mismo selector se usa para descarga y correo: el general exporta solo su resumen. */
     private function exportadorReporteVentas(array $datos)
     {
+        if (($datos['tipo_operacion'] ?? null) === 'clientes_pagos_vencidos') return new \App\Exports\ClientesPagosVencidosExport($datos);
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_vencidos_historico') return new \App\Exports\SeguimientosVencidosExport($datos);
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_programados_proximos') return new \App\Exports\SeguimientosProgramadosExport($datos);
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_realizados_mes') return new \App\Exports\SeguimientosRealizadosExport($datos);
         if (($datos['tipo_operacion'] ?? null) === 'solicitudes_sin_contrato') return new \App\Exports\SolicitudesSinContratoExport($datos);
         if (in_array($datos['tipo_operacion'] ?? null, ['vence_hoy', 'proximos_siete_dias'], true)) return new \App\Exports\PagosVenceHoyExport($datos);
         if (!empty($datos['resumen_cuotas'])) return new \App\Exports\CuotasMantenimientoExport($datos, !empty($datos['detalles_cuotas']));
@@ -750,6 +905,27 @@ class OperacionesController extends ApiController
         $reporte = \Illuminate\Support\Facades\Cache::get('cementerio_reporte_' . $token);
         abort_unless($reporte, 410, 'La consulta venció. Actualice el reporte.');
         abort_unless((int) $reporte['usuario_id'] === (int) $usuario->id, 403);
+        if ($reporte['modo'] === 'seguimientos_vencidos_filtro') {
+            $anterior = $reporte['datos'];
+            $reporte['datos'] = DB::transaction(function () use ($anterior) {
+                return app(SeguimientosController::class)->getReporteSeguimientosVencidosHistorico(Carbon::parse($anterior['corte'], 'America/Mazatlan'));
+            });
+            $reporte['datos']['empresa'] = $anterior['empresa'];
+        }
+        if ($reporte['modo'] === 'seguimientos_programados_filtro') {
+            $anterior = $reporte['datos'];
+            $reporte['datos'] = DB::transaction(function () use ($anterior) {
+                return app(SeguimientosController::class)->getReporteProgramadosProximosSieteDias(Carbon::parse($anterior['corte'], 'America/Mazatlan'));
+            });
+            $reporte['datos']['empresa'] = $anterior['empresa'];
+        }
+        if ($reporte['modo'] === 'seguimientos_realizados_filtro') {
+            $anterior = $reporte['datos'];
+            $reporte['datos'] = DB::transaction(function () use ($anterior) {
+                return app(SeguimientosController::class)->getReporteSeguimientosRealizadosMes(Carbon::parse($anterior['corte'], 'America/Mazatlan'));
+            });
+            $reporte['datos']['empresa'] = $anterior['empresa'];
+        }
         if ($reporte['modo'] === 'solicitudes_sin_contrato_filtro') {
             $anterior = $reporte['datos'];
             $reporte['datos'] = DB::transaction(function () use ($anterior) {
@@ -757,7 +933,7 @@ class OperacionesController extends ApiController
             });
             $reporte['datos']['empresa'] = $anterior['empresa'];
         }
-        if (in_array($reporte['modo'], ['vence_hoy_filtro', 'proximos_pagos_filtro'], true)) {
+        if (in_array($reporte['modo'], ['vence_hoy_filtro', 'proximos_pagos_filtro', 'clientes_vencidos_filtro'], true)) {
             $anterior = $reporte['datos'];
             $reporte['datos'] = DB::transaction(function () use ($anterior) {
                 return $this->getReportePagosPorVencer((int) ($anterior['dias'] ?? 1), Carbon::parse($anterior['corte'], 'America/Mazatlan'));
@@ -779,6 +955,18 @@ class OperacionesController extends ApiController
 
     private function htmlReporteCementerio(array $datos, $modoPdf = false)
     {
+        if (($datos['tipo_operacion'] ?? null) === 'clientes_pagos_vencidos') {
+            return view('reportes.temporales_visor_excel.pagos.clientes_vencidos', ['datos'=>$datos,'modoPdf'=>$modoPdf])->render();
+        }
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_vencidos_historico') {
+            return view('reportes.temporales_visor_excel.seguimientos.vencidos_historico', ['datos'=>$datos,'modoPdf'=>$modoPdf])->render();
+        }
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_programados_proximos') {
+            return view('reportes.temporales_visor_excel.seguimientos.programados_proximos', ['datos'=>$datos,'modoPdf'=>$modoPdf])->render();
+        }
+        if (($datos['tipo_operacion'] ?? null) === 'seguimientos_realizados_mes') {
+            return view('reportes.temporales_visor_excel.seguimientos.realizados_mes', ['datos' => $datos, 'modoPdf' => $modoPdf])->render();
+        }
         if (($datos['tipo_operacion'] ?? null) === 'solicitudes_sin_contrato') {
             return view('reportes.temporales_visor_excel.funeraria.solicitudes_sin_contrato', ['datos' => $datos, 'modoPdf' => $modoPdf])->render();
         }

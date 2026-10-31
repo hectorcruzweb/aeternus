@@ -104,6 +104,22 @@
         :data="serviciosFunerarios"
       />
     </VistaLimitada>
+    <VisorReportes v-if="mostrarReporteClientesPagosVencidos" :show="mostrarReporteClientesPagosVencidos"
+      :cargar="cargarReporteClientesPagosVencidos" :descargar-archivo="descargarClientesPagosVencidosExcel"
+      :descargar-pdf="descargarClientesPagosVencidosPdf" :enviar-correo="enviarClientesPagosVencidosCorreo"
+      @close="mostrarReporteClientesPagosVencidos = false" />
+    <VisorReportes v-if="mostrarReporteSeguimientosVencidos" :show="mostrarReporteSeguimientosVencidos"
+      :cargar="cargarReporteSeguimientosVencidos" :descargar-archivo="descargarSeguimientosVencidosExcel"
+      :descargar-pdf="descargarSeguimientosVencidosPdf" :enviar-correo="enviarSeguimientosVencidosCorreo"
+      @close="mostrarReporteSeguimientosVencidos = false" />
+    <VisorReportes v-if="mostrarReporteSeguimientosProgramados" :show="mostrarReporteSeguimientosProgramados"
+      :cargar="cargarReporteSeguimientosProgramados" :descargar-archivo="descargarSeguimientosProgramadosExcel"
+      :descargar-pdf="descargarSeguimientosProgramadosPdf" :enviar-correo="enviarSeguimientosProgramadosCorreo"
+      @close="mostrarReporteSeguimientosProgramados = false" />
+    <VisorReportes v-if="mostrarReporteSeguimientosRealizados" :show="mostrarReporteSeguimientosRealizados"
+      :cargar="cargarReporteSeguimientosRealizados" :descargar-archivo="descargarSeguimientosRealizadosExcel"
+      :descargar-pdf="descargarSeguimientosRealizadosPdf" :enviar-correo="enviarSeguimientosRealizadosCorreo"
+      @close="mostrarReporteSeguimientosRealizados = false" />
     <VisorReportes v-if="mostrarReporteSolicitudes" :show="mostrarReporteSolicitudes"
       :cargar="cargarReporteSolicitudes" :descargar-archivo="descargarSolicitudesExcel"
       :descargar-pdf="descargarSolicitudesPdf" :enviar-correo="enviarSolicitudesCorreo"
@@ -177,6 +193,10 @@ import reportesVentas from "../services/reportesVentas";
 import reportesVenceHoy from "../services/reportesVenceHoy";
 import reportesProximosPagos from "../services/reportesProximosPagos";
 import reportesSolicitudesSinContrato from "../services/reportesSolicitudesSinContrato";
+import reportesSeguimientosRealizados from "../services/reportesSeguimientosRealizados";
+import reportesClientesPagosVencidos from "../services/reportesClientesPagosVencidos";
+import reportesSeguimientosVencidos from "../services/reportesSeguimientosVencidos";
+import reportesSeguimientosProgramados from "../services/reportesSeguimientosProgramados";
 import reportesTimbres from "../services/reportesTimbres";
 import reportesCfdisAdeudos from "../services/reportesCfdisAdeudos";
 import reportesCfdisMes from "../services/reportesCfdisMes";
@@ -216,6 +236,10 @@ export default {
       pendientes: {},
       seguimientos: {},
       operacionesGraficaEjemplo: [],
+      mostrarReporteClientesPagosVencidos: false,
+      mostrarReporteSeguimientosVencidos: false,
+      mostrarReporteSeguimientosProgramados: false,
+      mostrarReporteSeguimientosRealizados: false,
       mostrarReporteSolicitudes: false,
       mostrarReporteProximosPagos: false,
       mostrarReporteVenceHoy: false,
@@ -373,6 +397,14 @@ export default {
       this.ventasSaldos = incluye("ventasSaldos") ? datos.ventasSaldos : [];
       if (completa) {
         this.cargarEjemplosPendientes();
+        this.seguimientos.realizadosMes = incluye("seguimientos") && datos.seguimientos && Object.prototype.hasOwnProperty.call(datos.seguimientos, "realizadosMes")
+          ? datos.seguimientos.realizadosMes : null;
+        this.seguimientos.clientesConPagosVencidos = incluye("seguimientos") && datos.seguimientos && Object.prototype.hasOwnProperty.call(datos.seguimientos, "clientesConPagosVencidos")
+          ? datos.seguimientos.clientesConPagosVencidos : null;
+        this.seguimientos.vencidos = incluye("seguimientos") && datos.seguimientos && Object.prototype.hasOwnProperty.call(datos.seguimientos, "vencidos")
+          ? datos.seguimientos.vencidos : null;
+        this.seguimientos.programadosProximosSieteDias = incluye("seguimientos") && datos.seguimientos && Object.prototype.hasOwnProperty.call(datos.seguimientos, "programadosProximosSieteDias")
+          ? datos.seguimientos.programadosProximosSieteDias : null;
         // Vence hoy ya es real: no conservar valores de ejemplo si falta el bloque.
         this.pendientes.venceHoy = incluye("pendientes") && datos.pendientes && datos.pendientes.venceHoy
           ? datos.pendientes.venceHoy : { cantidad: null, importe: null };
@@ -403,10 +435,10 @@ export default {
         ventasFacturadas: 425000,
       };
       this.seguimientos = {
-        realizadosMes: 124,
-        programadosHoy: 9,
-        vencidos: 7,
-        clientesConPagosVencidos: 23,
+        realizadosMes: null,
+        programadosProximosSieteDias: null,
+        vencidos: null,
+        clientesConPagosVencidos: null,
       };
       this.pendientes = {
         venceHoy: { cantidad: null, importe: null },
@@ -507,6 +539,22 @@ export default {
         fechaCorte: this.meta.fechaCorte,
         periodoResumen: Object.assign({}, this.meta.periodoResumen),
       });
+      if (contexto.tipo === "seguimientos-sugeridos") {
+        this.mostrarReporteClientesPagosVencidos = true;
+        return;
+      }
+      if (contexto.tipo === "seguimientos-vencidos") {
+        this.mostrarReporteSeguimientosVencidos = true;
+        return;
+      }
+      if (contexto.tipo === "seguimientos-programados") {
+        this.mostrarReporteSeguimientosProgramados = true;
+        return;
+      }
+      if (contexto.tipo === "seguimientos-realizados") {
+        this.mostrarReporteSeguimientosRealizados = true;
+        return;
+      }
       if (contexto.tipo === "solicitudes-sin-contrato") {
         this.mostrarReporteSolicitudes = true;
         return;
@@ -571,6 +619,22 @@ export default {
     async descargarTimbresCompleto(token) { return (await reportesTimbres.excel(token, true)).data; },
     async descargarTimbresPdf(token) { return (await reportesTimbres.pdf(token)).data; },
     async enviarTimbresCorreo(token, datos) { return (await reportesTimbres.correo(token, datos)).data; },
+    async cargarReporteClientesPagosVencidos() { return (await reportesClientesPagosVencidos.visualizar()).data; },
+    async descargarClientesPagosVencidosExcel(token) { return (await reportesClientesPagosVencidos.excel(token)).data; },
+    async descargarClientesPagosVencidosPdf(token) { return (await reportesClientesPagosVencidos.pdf(token)).data; },
+    async enviarClientesPagosVencidosCorreo(token, datos) { return (await reportesClientesPagosVencidos.correo(token, datos)).data; },
+    async cargarReporteSeguimientosVencidos() { return (await reportesSeguimientosVencidos.visualizar()).data; },
+    async descargarSeguimientosVencidosExcel(token) { return (await reportesSeguimientosVencidos.excel(token)).data; },
+    async descargarSeguimientosVencidosPdf(token) { return (await reportesSeguimientosVencidos.pdf(token)).data; },
+    async enviarSeguimientosVencidosCorreo(token, datos) { return (await reportesSeguimientosVencidos.correo(token, datos)).data; },
+    async cargarReporteSeguimientosProgramados() { return (await reportesSeguimientosProgramados.visualizar()).data; },
+    async descargarSeguimientosProgramadosExcel(token) { return (await reportesSeguimientosProgramados.excel(token)).data; },
+    async descargarSeguimientosProgramadosPdf(token) { return (await reportesSeguimientosProgramados.pdf(token)).data; },
+    async enviarSeguimientosProgramadosCorreo(token, datos) { return (await reportesSeguimientosProgramados.correo(token, datos)).data; },
+    async cargarReporteSeguimientosRealizados() { return (await reportesSeguimientosRealizados.visualizar()).data; },
+    async descargarSeguimientosRealizadosExcel(token) { return (await reportesSeguimientosRealizados.excel(token)).data; },
+    async descargarSeguimientosRealizadosPdf(token) { return (await reportesSeguimientosRealizados.pdf(token)).data; },
+    async enviarSeguimientosRealizadosCorreo(token, datos) { return (await reportesSeguimientosRealizados.correo(token, datos)).data; },
     async cargarReporteSolicitudes() { return (await reportesSolicitudesSinContrato.visualizar()).data; },
     async descargarSolicitudesExcel(token) { return (await reportesSolicitudesSinContrato.excel(token)).data; },
     async descargarSolicitudesPdf(token) { return (await reportesSolicitudesSinContrato.pdf(token)).data; },

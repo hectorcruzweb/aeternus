@@ -96,6 +96,14 @@ class DashboardController extends ApiController
                 'diasSolicitudesRecientes' => $solicitudes['dias'],
             ];
             $dashboard['acceso']['secciones'][] = 'pendientes';
+            // Conteos de realizados, agenda e histórico; no cargar el detalle en el dashboard.
+            $dashboard['seguimientos'] = [
+                'clientesConPagosVencidos' => $this->operaciones->getClientesPagosVencidosDashboard($fechaCorte),
+                'realizadosMes' => app(SeguimientosController::class)->getSeguimientosRealizadosMesDashboard($fechaCorte),
+                'vencidos' => app(SeguimientosController::class)->getSeguimientosVencidosHistoricoDashboard($fechaCorte),
+                'programadosProximosSieteDias' => app(SeguimientosController::class)->getProgramadosProximosSieteDiasDashboard($fechaCorte),
+            ];
+            $dashboard['acceso']['secciones'][] = 'seguimientos';
         }
 
         // Agregaremos otros bloques aquí cuando sus reglas y consultas estén listas.
