@@ -90,6 +90,7 @@
             }}
           </button>
           <button
+            v-if="!reporte || !reporte.soloPdf"
             ref="descarga"
             type="button"
             class="visor-reportes__boton visor-reportes__boton--principal visor-reportes__boton--excel"
@@ -201,6 +202,7 @@
         :token="reporte.tokenDescarga"
         :titulo="reporte.titulo"
         :enviar="enviarCorreo"
+        :solo-pdf="!!reporte.soloPdf"
         :detalle-completo-disponible="
           !!descargarCompleto && reporte.excelCompletoDisponible
         "
@@ -409,6 +411,7 @@ export default {
         // No se transporta ni decodifica un Excel al consultar.
         this.reporte = {
           vistaPreviaDisponible: datos.vistaPreviaDisponible !== false,
+          soloPdf: !!datos.soloPdf,
           limiteVisualizacion: datos.limiteVisualizacion || 3500,
           mensaje:
             datos.mensaje ||

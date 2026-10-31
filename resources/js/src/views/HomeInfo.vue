@@ -8,25 +8,19 @@
       :duracion="4000"
     />
 
-    <div class="dashboard__acciones" aria-label="Acciones del dashboard">
-      <button
-        type="button"
-        class="dashboard-enlace"
-        :disabled="isLoading || !dashboardDisponible"
-        @click="solicitarResumenDia"
-      >
-        <DownloadIcon size="16" aria-hidden="true" /> Descargar reporte del día
-      </button>
-      <button
-        type="button"
-        class="dashboard-enlace"
-        :disabled="isLoading"
-        ref="botonRecargar"
-        @click="recargarDashboard"
-      >
-        <RefreshCwIcon size="16" aria-hidden="true" />
-        {{ isLoading ? "Actualizando…" : "Recargar dashboard" }}
-      </button>
+    <div ref="accionesDashboard" class="dashboard__acciones dashboard__acciones--superiores"
+      :class="{ 'dashboard__acciones--fijadas': accionesDashboardFijadas }" aria-label="Acciones del dashboard">
+      <div class="dashboard-acciones-superiores__grupo">
+        <button type="button" class="dashboard-accion dashboard-accion--reporte"
+          :disabled="isLoading || !dashboardDisponible" @click="solicitarResumenDia()">
+          <FileTextIcon size="16" aria-hidden="true" /> Resumen del día · PDF
+        </button>
+        <button type="button" class="dashboard-accion dashboard-accion--actualizar"
+          :disabled="isLoading" @click="recargarDashboard()">
+          <RefreshCwIcon size="16" aria-hidden="true" :class="{ 'dashboard-accion__recargando': isLoading }" />
+          {{ isLoading ? "Actualizando…" : "Actualizar datos" }}
+        </button>
+      </div>
     </div>
 
     <p v-if="errorDashboard" class="dashboard__error" role="alert">
@@ -86,13 +80,14 @@
         @ver-reporte="prepararReporte"
       />
       <VentasCobrosGrafica
-        :cargando="isLoading"
+        :cargando="isLoading || cargandoGrafica"
+        :error="errorGrafica"
         :datos="datosGrafica"
         :periodo="periodoGrafica"
-        :anios="aniosGrafica"
         :anio-actual="fechaReferencia.anio"
         :mes-actual="fechaReferencia.mes"
         @cambiar-periodo="cambiarPeriodoGrafica"
+        @reintentar="cargarGrafica"
         @ver-reporte="prepararReporte"
       />
     </template>
@@ -104,6 +99,7 @@
         :data="serviciosFunerarios"
       />
     </VistaLimitada>
+    <VisorReportes v-if="mostrarReporteDia" :show="mostrarReporteDia" :cargar="cargarReporteDia" :descargar-archivo="descargarDiaExcel" :descargar-pdf="descargarDiaPdf" :enviar-correo="enviarDiaCorreo" @close="mostrarReporteDia=false" />
     <VisorReportes v-if="mostrarReporteClientesPagosVencidos" :show="mostrarReporteClientesPagosVencidos"
       :cargar="cargarReporteClientesPagosVencidos" :descargar-archivo="descargarClientesPagosVencidosExcel"
       :descargar-pdf="descargarClientesPagosVencidosPdf" :enviar-correo="enviarClientesPagosVencidosCorreo"
@@ -177,7 +173,7 @@
 </template>
 
 <script>
-import { DownloadIcon, RefreshCwIcon } from "vue-feather-icons";
+import { DownloadIcon, RefreshCwIcon, FileTextIcon } from "vue-feather-icons";
 import VistaLimitada from "./dashboard/VistaLimitada.vue";
 import MensajeTemporada from "./dashboard/MensajeTemporada.vue";
 import VentasSaldos from "./dashboard/VentasSaldos.vue";
@@ -187,6 +183,7 @@ import PendientesResumen from "./dashboard/PendientesResumen.vue";
 import VentasCobrosGrafica from "./dashboard/VentasCobrosGrafica.vue";
 import ServiciosFunerarios from "./dashboard/ServiciosFunerarios.vue";
 import Inventario from "./dashboard/Inventario.vue";
+import reportesResumenDia from "../services/reportesResumenDia";
 import dashboard from "../services/dashboard";
 import VisorReportes from "./pages/VisorReportes.vue";
 import reportesVentas from "../services/reportesVentas";
@@ -206,7 +203,7 @@ export default {
   components: {
     VisorReportes,
     VistaLimitada,
-    DownloadIcon,
+    FileTextIcon, DownloadIcon,
     RefreshCwIcon,
     SeguimientosResumen,
     MensajeTemporada,
@@ -235,7 +232,11 @@ export default {
       facturacion: {},
       pendientes: {},
       seguimientos: {},
-      operacionesGraficaEjemplo: [],
+      operacionesGrafica: [],
+      cargandoGrafica: false,
+      errorGrafica: "",
+      accionesDashboardFijadas: false,
+      mostrarReporteDia: false,
       mostrarReporteClientesPagosVencidos: false,
       mostrarReporteSeguimientosVencidos: false,
       mostrarReporteSeguimientosProgramados: false,
@@ -266,48 +267,28 @@ export default {
     puedeVerDashboardCompleto() {
       return this.dashboardDisponible && this.acceso.vista === "gerencial";
     },
-    aniosGrafica() {
-      return Number.isInteger(this.fechaReferencia.anio)
-        ? Array.from({ length: 7 }, (_, i) => this.fechaReferencia.anio - i)
-        : [];
-    },
-    // Gráfica ficticia: independiente de ventasSaldos y de los importes reales.
-    datosGrafica() {
-      const p = this.periodoGrafica;
-      const ultimoMes =
-        p.mes === null
-          ? p.anio === this.fechaReferencia.anio
-            ? this.fechaReferencia.mes
-            : 12
-          : p.mes;
-      const primerMes = p.mes === null ? 1 : p.mes;
-      const factorAnio = 1 - (this.fechaReferencia.anio - p.anio) * 0.06;
-      return this.operacionesGraficaEjemplo.map((operacion) => {
-        let ventas = 0;
-        let cobrado = 0;
-        let vencido = 0;
-        for (let mes = primerMes; mes <= ultimoMes; mes++) {
-          const factorMes =
-            (0.8 + mes * 0.02) / (0.8 + this.fechaReferencia.mes * 0.02);
-          const ventaMes = Math.round(
-            operacion.ventas * factorAnio * factorMes
-          );
-          const cobradoMes = Math.round(ventaMes * operacion.proporcionCobro);
-          ventas += ventaMes;
-          cobrado += cobradoMes;
-          vencido += Math.round((ventaMes - cobradoMes) * 0.4);
-        }
-        return {
-          id: operacion.id,
-          nombre: operacion.nombre,
-          ventas,
-          cobrado,
-          vencido,
-        };
-      });
-    },
+    // Fuente real; el filtro mensual nunca modifica las cards del resumen inicial.
+    datosGrafica() { return this.operacionesGrafica; },
   },
   methods: {
+    // Cinco minutos sin interacción: actualizar y volver a contar mientras siga inactivo.
+    programarActualizacionInactiva() {
+      clearTimeout(this._temporizadorInactividad);
+      if(this._dashboardDestruido)return;
+      this._temporizadorInactividad=setTimeout(()=>this.actualizarPorInactividad(),5*60*1000);
+    },
+    async actualizarPorInactividad() {
+      const reporteAbierto=Object.keys(this.$data).some(k=>k.indexOf("mostrarReporte")===0 && this[k]===true);
+      if(this.isLoading || this.cargandoGrafica || reporteAbierto || !this.dashboardDisponible){
+        this.programarActualizacionInactiva();return;
+      }
+      const periodo=Object.assign({},this.periodoGrafica);
+      try {
+        await this._fetchDashboard();
+        if(!this._dashboardDestruido && this.puedeVerDashboardCompleto && this.periodoGraficaValido(periodo) &&
+          (periodo.anio!==this.periodoGrafica.anio || periodo.mes!==this.periodoGrafica.mes)) await this.cambiarPeriodoGrafica(periodo);
+      } finally { this.programarActualizacionInactiva(); }
+    },
     tieneSeccion(nombre) {
       return (
         this.dashboardDisponible && this.acceso.secciones.indexOf(nombre) !== -1
@@ -327,7 +308,10 @@ export default {
       this.facturacion = {};
       this.pendientes = {};
       this.seguimientos = {};
-      this.operacionesGraficaEjemplo = [];
+      this.operacionesGrafica = [];
+      this.cargandoGrafica = false;
+      this.errorGrafica = "";
+      this._graficaSolicitud = (this._graficaSolicitud || 0) + 1;
       this.reportePendiente = null;
     },
     // Validar la respuesta completa antes de publicar el estado del dashboard.
@@ -395,6 +379,8 @@ export default {
         : [];
       this.inventario = incluye("inventario") ? datos.inventario : {};
       this.ventasSaldos = incluye("ventasSaldos") ? datos.ventasSaldos : [];
+      // Mes actual: reutilizar el resumen ya recibido sin otra petición ni consulta SQL.
+      this.operacionesGrafica = this.ventasSaldos.filter(f => f.id !== "todas").map(f => Object.assign({}, f));
       if (completa) {
         this.cargarEjemplosPendientes();
         this.seguimientos.realizadosMes = incluye("seguimientos") && datos.seguimientos && Object.prototype.hasOwnProperty.call(datos.seguimientos, "realizadosMes")
@@ -448,57 +434,19 @@ export default {
         solicitudesSinContratoAcumuladas: null,
         diasSolicitudesRecientes: null,
       };
-      this.operacionesGraficaEjemplo = [
-        {
-          id: 1,
-          nombre: "Ventas en cementerio",
-          ventas: 210000,
-          proporcionCobro: 0.68,
-        },
-        {
-          id: 2,
-          nombre: "Cuotas de Mantenimiento",
-          ventas: 35000,
-          proporcionCobro: 0.8,
-        },
-        {
-          id: 3,
-          nombre: "Servicios funerarios",
-          ventas: 540000,
-          proporcionCobro: 0.9,
-        },
-        {
-          id: 4,
-          nombre: "Venta de planes funerarios",
-          ventas: 360000,
-          proporcionCobro: 0.48,
-        },
-        {
-          id: 5,
-          nombre: "Ventas en general",
-          ventas: 70000,
-          proporcionCobro: 0.85,
-        },
-      ];
+
     },
     recargarDashboard() {
       return this._fetchDashboard();
     },
-    // Conservar el indicador de carga de Vuesax ya utilizado por el proyecto.
+    // Actualizar datos mostrando los skeletons propios del dashboard.
     async _fetchDashboard() {
       if (this.isLoading) return;
       this.vistaCarga = this.acceso.vista;
       this.isLoading = true;
       this.errorDashboard = "";
       this.limpiarDashboard();
-      // Carga Vuesax local en el botón: no cubrir los skeletons con una capa global.
-      const contenedorCarga = this.$refs.botonRecargar;
-      this.$vs.loading({
-        container: contenedorCarga,
-        scale: 0.35,
-        background: "transparent",
-        color: "#b69a3a",
-      });
+      // Los skeletons indican la carga sin insertar capas sobre el menú flotante.
       try {
         const response = await dashboard._fetchDashboard();
         if (this._dashboardDestruido) return;
@@ -513,25 +461,13 @@ export default {
           this.$error("Error al obtener el dashboard:", error);
       } finally {
         this.isLoading = false;
-        this.$vs.loading.close(contenedorCarga);
       }
     },
-    solicitarResumenDia() {
-      if (this.isLoading || !this.dashboardDisponible) return;
-      const contexto = {
-        tipo: "dashboard-resumen-dia",
-        titulo: this.puedeVerDashboardCompleto
-          ? "Resumen general del día"
-          : "Servicios funerarios del día",
-        vista: this.acceso.vista,
-        fecha: this.meta.fechaCorte,
-        anio: this.fechaReferencia.anio,
-        mes: this.fechaReferencia.mes,
-      };
-      this.reportePendiente = contexto;
-      this.$emit("solicitar-reporte-dia", contexto);
-      // Solo intención: el endpoint de descarga se implementará con los reportes.
-    },
+    solicitarResumenDia() { if(!this.isLoading && this.puedeVerDashboardCompleto)this.mostrarReporteDia=true; },
+    async cargarReporteDia(){return (await reportesResumenDia.visualizar()).data;},
+    async descargarDiaExcel(t){return (await reportesResumenDia.excel(t)).data;},
+    async descargarDiaPdf(t){return (await reportesResumenDia.pdf(t)).data;},
+    async enviarDiaCorreo(t,d){return (await reportesResumenDia.correo(t,d)).data;},
     prepararReporte(contexto) {
       if (this.isLoading || !this.puedeVerDashboardCompleto || !contexto)
         return;
@@ -578,6 +514,17 @@ export default {
       if (contexto.tipo === "facturacion-timbres") {
         this.recargaReporteTimbres = null;
         this.mostrarReporteTimbres = true;
+        return;
+      }
+      if (contexto.tipo === "ventas-saldos-periodo") {
+        const esGeneral=contexto.empresa_operaciones_id === "todas";
+        const tipo=esGeneral ? "todas" : Number(contexto.empresa_operaciones_id);
+        if (this.cargandoGrafica || this.errorGrafica || !this.periodoGraficaValido(contexto) ||
+            (!esGeneral && !this.datosGrafica.some(f => Number(f.id) === tipo)) ||
+            Number(contexto.anio) !== this.periodoGrafica.anio || Number(contexto.mes) !== this.periodoGrafica.mes) return;
+        this.parametrosReporteVentas={empresa_operaciones_id:tipo,anio:this.periodoGrafica.anio,mes:this.periodoGrafica.mes,vencido_hasta_periodo:1};
+        this.reporteDesdeGeneral=esGeneral;
+        this.mostrarReporteVentas=true;
         return;
       }
       if (contexto.tipo === "ventas-saldos") {
@@ -670,10 +617,38 @@ export default {
     async descargarVentasExcel(token) { return (await reportesVentas.excel(token, this.esReporteGeneral)).data; },
     async descargarVentasPdf(token) { return (await reportesVentas.pdf(token, this.esReporteGeneral)).data; },
     async enviarVentasCorreo(token, datos) { return (await reportesVentas.correo(token, datos, this.esReporteGeneral)).data; },
+    periodoGraficaValido(periodo) {
+      const anio=Number(periodo && periodo.anio),mes=Number(periodo && periodo.mes);
+      return Number.isInteger(anio) && anio>=1000 && anio<=this.fechaReferencia.anio &&
+        Number.isInteger(mes) && mes>=1 && mes<=12 &&
+        (anio<this.fechaReferencia.anio || mes<=this.fechaReferencia.mes);
+    },
     cambiarPeriodoGrafica(periodo) {
-      if (this.isLoading || !this.puedeVerDashboardCompleto) return;
-      this.periodoGrafica = { anio: periodo.anio, mes: periodo.mes };
-      // Por ahora solo cambia la gráfica de ejemplo; el endpoint real está pendiente.
+      if (this.isLoading || !this.puedeVerDashboardCompleto || !this.periodoGraficaValido(periodo)) return;
+      this.periodoGrafica={anio:Number(periodo.anio),mes:Number(periodo.mes)};
+      return this.cargarGrafica();
+    },
+    async cargarGrafica() {
+      if (this.isLoading || !this.puedeVerDashboardCompleto || !this.periodoGraficaValido(this.periodoGrafica)) return;
+      const periodo=Object.assign({},this.periodoGrafica);
+      const solicitud=this._graficaSolicitud=(this._graficaSolicitud||0)+1;
+      this.cargandoGrafica=true;this.errorGrafica="";this.operacionesGrafica=[];
+      try {
+        const respuesta=(await dashboard.graficaVentasSaldos(periodo)).data;
+        if(this._dashboardDestruido || solicitud!==this._graficaSolicitud) return;
+        const filas=respuesta && respuesta.operaciones;
+        if(!respuesta.periodo || Number(respuesta.periodo.anio)!==periodo.anio || Number(respuesta.periodo.mes)!==periodo.mes ||
+          !Array.isArray(filas) || !filas.length || filas.some(f => !Number.isInteger(Number(f.id)) || Number(f.id)<1 ||
+            ["ventas","porCobrar","vencido"].some(k => f[k]===null || f[k]===undefined || f[k]==="" || !Number.isFinite(Number(f[k]))))) {
+          throw new Error("No se recibió un resumen válido de la gráfica.");
+        }
+        this.operacionesGrafica=filas.map(f => Object.assign({},f));
+      } catch(error) {
+        if(this._dashboardDestruido || solicitud!==this._graficaSolicitud) return;
+        this.errorGrafica="No fue posible cargar el periodo. Intenta nuevamente.";
+      } finally {
+        if(solicitud===this._graficaSolicitud) this.cargandoGrafica=false;
+      }
     },
   },
   created() {
@@ -681,12 +656,30 @@ export default {
     this.isLoading = true;
   },
   mounted() {
-    // El botón ya existe para alojar la carga Vuesax sin bloquear el dashboard.
+    // Capturar también el scroll de contenedores interiores del layout.
+    this._posicionarAccionesDashboard=()=>{
+      const barra=this.$refs.accionesDashboard;
+      if (!barra) return;
+      const limite=parseFloat(window.getComputedStyle(barra).top) || 0;
+      this.accionesDashboardFijadas=barra.getBoundingClientRect().top<=limite+1;
+    };
+    window.addEventListener("scroll",this._posicionarAccionesDashboard,{passive:true,capture:true});
+    window.addEventListener("resize",this._posicionarAccionesDashboard,{passive:true});
+    this.$nextTick(this._posicionarAccionesDashboard);
+    this._eventosActividadDashboard=["pointerdown","pointermove","keydown","scroll","touchstart"];
+    this._reiniciarInactividadDashboard=()=>this.programarActualizacionInactiva();
+    this._eventosActividadDashboard.forEach(evento=>window.addEventListener(evento,this._reiniciarInactividadDashboard,{passive:true,capture:true}));
+    this.programarActualizacionInactiva();
+    // Los skeletons acompañan la primera consulta del dashboard.
     this.isLoading = false;
     this._fetchDashboard();
   },
   beforeDestroy() {
+    window.removeEventListener("scroll",this._posicionarAccionesDashboard,true);
+    window.removeEventListener("resize",this._posicionarAccionesDashboard);
     this._dashboardDestruido = true;
+    clearTimeout(this._temporizadorInactividad);
+    (this._eventosActividadDashboard||[]).forEach(evento=>window.removeEventListener(evento,this._reiniciarInactividadDashboard,true));
   },
 };
 </script>

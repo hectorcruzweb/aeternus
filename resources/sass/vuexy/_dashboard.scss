@@ -1002,7 +1002,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
         gap: 0.8rem;
 
         label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
-        select {
+        select, input[type="number"] {
             max-width: 100%;
             padding: 0.45rem 0.6rem;
             border: 1px solid #d5d5d5;
@@ -1011,8 +1011,33 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
             color: #666;
             font: inherit;
         }
-        select:focus-visible, button:focus-visible { outline: 2px solid #a58722; outline-offset: 3px; }
-        select:disabled, button:disabled { opacity: 0.6; cursor: default; }
+        input[type="number"] { width: 6rem; }
+        select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid #a58722; outline-offset: 3px; }
+        select:disabled, input:disabled, button:disabled { opacity: 0.6; cursor: default; }
+    }
+
+    .dashboard-grafica__filtros {
+        min-width: 0; margin: 0 0 .7rem; padding: .65rem .8rem; border: 1px solid #e6e6e6;
+        legend { width: auto; margin: 0; padding: 0 .3rem; font-size: .8rem; color: #777; }
+    }
+    .dashboard-grafica__opciones {
+        display: flex; flex-wrap: wrap; gap: .6rem 1rem; align-items: center;
+        label { display: inline-flex; align-items: center; gap: .4rem; margin: 0; font-size: .82rem; cursor: pointer; }
+        input { accent-color: #ac8b26; margin: 0; }
+        .dashboard-enlace:disabled { opacity: .5; cursor: default; }
+    }
+    .dashboard-grafica__alcance { margin: 0 0 .5rem; font-size: .8rem; color: #777; }
+    .dashboard-grafica__tabla {
+        width: 100%; overflow-x: auto; margin-top: .7rem;
+        table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+        caption { caption-side: top; text-align: left; color: #777; padding: .4rem 0; }
+        th, td { padding: .5rem .6rem; border-bottom: 1px solid #eee; }
+        thead th { background: #f3f4f5; color: #666; font-weight: 600; }
+        th { text-align: left; font-weight: 400; }
+        td, thead th:not(:first-child) { text-align: right; }
+        td { white-space: nowrap; }
+        tfoot { background: #f6f4ee; font-weight: 600; }
+        tfoot th { font-weight: 600; }
     }
 
     .dashboard-grafica__totales {
@@ -1037,7 +1062,7 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 }
 
 @media (pointer: coarse) {
-    .dashboard .dashboard-grafica__controles select { min-height: 44px; font-size: 16px; }
+    .dashboard .dashboard-grafica__controles select, .dashboard .dashboard-grafica__controles input { min-height: 44px; font-size: 16px; }
 }
 
 /* Modal de temporada: amplio, con decoración propia de cada fecha. */
@@ -1671,3 +1696,107 @@ flex-basis: 0%; → its initial size before growing/shrinking is 0.
 
 // Verde reservado al importe recibido/cubierto; facturado usa el dorado de ventas.
 .dashboard .dashboard-facturacion__saldado strong { color: #34785d; }
+
+/* Comparación en una fila: barras y cuotas con escala independiente. */
+.dashboard .dashboard-grafica__comparacion { display: grid; grid-template-columns: minmax(0,1fr) minmax(230px,280px); gap: 1.2rem; align-items: stretch; }
+.dashboard .dashboard-grafica__barras { min-width: 0; }
+.dashboard .dashboard-grafica__cuotas {
+    min-width: 0; padding: .9rem; border-left: 1px solid #e6e6e6; background: #faf9f6;
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem; }
+    h3 { margin: 0; font-size: .95rem; color: #777; }
+    p { margin: .5rem 0; font-size: .75rem; color: #888; line-height: 1.4; }
+}
+.dashboard .dashboard-grafica__cuota-indicador {
+    padding: .65rem 0; border-bottom: 1px solid #eae7df;
+    span { display: block; font-size: .8rem; color: #777; }
+    strong { display: block; margin-top: .2rem; font-size: 1.15rem; color: #967316; overflow-wrap: anywhere; }
+    small { font-size: .65em; font-weight: 400; }
+    .dashboard-grafica__cuota-vencido { color: #ae5748; }
+}
+@media (max-width: 639px) {
+    .dashboard .dashboard-grafica__comparacion { grid-template-columns: minmax(0,1fr); }
+    .dashboard .dashboard-grafica__cuotas { border-left: 0; border-top: 1px solid #e6e6e6; }
+}
+
+/* Periodo de cuotas sincronizado con el selector de la gráfica. */
+.dashboard .dashboard-grafica__cuotas .dashboard-grafica__cuotas-periodo {
+    margin: .65rem 0; padding-bottom: .55rem; border-bottom: 1px solid #e6e0d1;
+    span { display: block; font-size: .72rem; color: #888; }
+    strong { display: block; margin-top: .15rem; font-size: .95rem; font-weight: 600; color: #967316; }
+}
+
+/* Periodo del resultado: identificación discreta con calendario y fecha legible. */
+.dashboard .dashboard-grafica__periodo-destacado {
+    order: 1; margin-left: 0; padding: .65rem .9rem; align-self: stretch;
+    flex: 1 1 240px; min-width: 0; justify-content: center; text-align: center;
+    display: inline-flex; align-items: center; gap: .75rem;
+    background: #fff; border: 1px solid #e8e2d4; border-radius: 6px;
+    svg { color: #a88a32; flex-shrink: 0; }
+    span { display: block; color: #858585; font-size: .72rem; line-height: 1.4; }
+    strong { display: block; margin-top: .15rem; color: #555; font-size: 1.18rem; line-height: 1.4; font-weight: 600; }
+    small { margin-left: .35rem; color: #967316; font-size: 1em; font-weight: 500; }
+}
+@media (max-width: 639px) {
+    .dashboard .dashboard-grafica__periodo-destacado { margin-left: 0; }
+}
+
+/* Calendario, etiqueta y fecha en una misma línea; el periodo es común a ambos paneles. */
+.dashboard .dashboard-grafica__periodo-destacado {
+    > div { display: inline-flex; align-items: baseline; justify-content: center; gap: .65rem; flex-wrap: wrap; }
+    span, strong { display: inline; margin-top: 0; }
+}
+
+/* Periodo compacto en el extremo derecho de los filtros. */
+.dashboard .dashboard-grafica__opciones .dashboard-grafica__periodo-destacado {
+    flex: 0 1 auto; order: 0; margin-left: auto; align-self: center;
+    padding: .35rem .7rem; gap: .5rem; border: 0; border-left: 1px solid #e8e2d4; border-radius: 0;
+    strong { font-size: 1.05rem; }
+    > div { gap: .5rem; }
+}
+@media (max-width: 639px) {
+    .dashboard .dashboard-grafica__opciones .dashboard-grafica__periodo-destacado { margin-left: 0; }
+}
+
+/* Acciones superiores: acompañan el scroll sin cubrir la navegación principal. */
+.dashboard .dashboard__acciones--superiores {
+    position: sticky; top: 80px; z-index: 900;
+    display: flex; justify-content: flex-end; align-items: center;
+    margin: 0 0 -.65rem; padding: 0; pointer-events: none;
+    .dashboard-acciones-superiores__grupo {
+        display: inline-flex; align-items: center; gap: .35rem;
+        padding: .1rem .25rem; border: 1px solid transparent; border-radius: 5px;
+        background: transparent; pointer-events: auto;
+        transition: background-color .2s,border-color .2s,box-shadow .2s;
+    }
+    .dashboard-accion {
+        display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+        padding: .3rem .5rem; border: 0; border-radius: 3px; background: transparent;
+        color: #8b7025; font: inherit; font-size: .8rem; cursor: pointer;
+        svg { display: block; flex-shrink: 0; }
+        &:hover:not(:disabled) { background: #f2ecdc; }
+        &:focus-visible { outline: 2px solid #967b2e; outline-offset: 1px; }
+        &:disabled { opacity: .55; cursor: default; }
+    }
+    .dashboard-accion--actualizar { color: #56756a; }
+    &.dashboard__acciones--fijadas .dashboard-acciones-superiores__grupo {
+        background: #faf7ef; border-color: #e7dec5;
+        box-shadow: 0 2px 8px rgba(80,65,30,.1);
+    }
+}
+.dashboard-accion__recargando { animation: dashboard-recargando 1s linear infinite; }
+@keyframes dashboard-recargando { to { transform: rotate(360deg); } }
+@media (max-width: 639px) {
+    .dashboard .dashboard__acciones--superiores {
+        top: 70px;
+        .dashboard-accion { padding: .4rem; font-size: .75rem; }
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-accion__recargando { animation: none; }
+    .dashboard .dashboard__acciones--superiores .dashboard-acciones-superiores__grupo { transition: none; }
+}
+@media print { .dashboard .dashboard__acciones--superiores { display: none; } }
+
+/* Recuperar parte del espacio del layout sin cambiar los demás módulos. */
+.dashboard { margin-top: -2rem; }
+@media print { .dashboard { margin-top: 0; } }

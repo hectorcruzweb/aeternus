@@ -27,24 +27,24 @@ use PDF;
 class CementerioController extends ApiController
 {
     /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido. */
-    public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    public function getReporteVentasCementerio($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
-        return $this->getReporteCementerioPorTipo(1, $anio, $mes, $corte, $soloConteo);
+        return $this->getReporteCementerioPorTipo(1, $anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
     /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio. */
-    public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    public function getReporteCuotasMantenimiento($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
-        return $this->getReporteCementerioPorTipo(2, $anio, $mes, $corte, $soloConteo);
+        return $this->getReporteCementerioPorTipo(2, $anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
-    private function getReporteCementerioPorTipo($tipo, $anio, $mes, Carbon $corte = null, $soloConteo = false)
+    private function getReporteCementerioPorTipo($tipo, $anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             $tipo, $anio, $mes, $corte, $soloConteo,
             function (array $consultas, array $resultado) use ($tipo) {
                 return $this->completarDetalleReporteCementerio($consultas, $resultado, $tipo === 2);
-            }
+            }, null, $vencidoHastaPeriodo
         );
     }
 
@@ -104,7 +104,7 @@ class CementerioController extends ApiController
     }
 
     /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. */
-    public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null)
+    public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             2, $anio, $mes, $corte, false,
@@ -137,17 +137,17 @@ class CementerioController extends ApiController
                 $resultado['cuotas'] = array_values($cuotas);
                 $resultado['resumen']['cantidad'] = array_sum(array_column($cuotas, 'cantidad'));
                 return $resultado;
-            }
+            }, null, $vencidoHastaPeriodo
         );
     }
 
     /** Una cuota del catálogo, con los tres apartados y sus totales propios. */
-    public function getDetalleCuotaMantenimiento($anio, $mes, $cuotaId, Carbon $corte = null, $soloConteo = false)
+    public function getDetalleCuotaMantenimiento($anio, $mes, $cuotaId, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         $datos = app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             2, $anio, $mes, $corte, $soloConteo,
             function (array $consultas, array $resultado) { return $this->completarDetalleReporteCementerio($consultas, $resultado, true); },
-            (int) $cuotaId
+            (int) $cuotaId, $vencidoHastaPeriodo
         );
         $descripcion = DB::table('cuotas_cementerio')->where('id', (int) $cuotaId)->value('descripcion');
         $datos['cuota_id'] = (int) $cuotaId;

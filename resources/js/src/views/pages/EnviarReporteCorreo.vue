@@ -101,7 +101,7 @@
           <p v-if="datos.completo" class="reporte-correo__ayuda">El detalle completo se genera al enviar y puede tardar más. Disponible en Excel.</p>
           <fieldset class="reporte-correo__formatos" :disabled="isLoading">
             <legend>Formato del adjunto</legend>
-            <label :class="['reporte-correo__formato', 'reporte-correo__formato--excel', { 'es-activo': datos.formato === 'excel' }]">
+            <label v-if="!soloPdf" :class="['reporte-correo__formato', 'reporte-correo__formato--excel', { 'es-activo': datos.formato === 'excel' }]">
               <input type="radio" v-model="datos.formato" value="excel" name="formatoAdjunto" />
               <GridIcon size="22" aria-hidden="true" /><span><strong>Excel</strong><small>XLSX · Consultar y filtrar datos</small></span>
             </label>
@@ -136,7 +136,7 @@ import clientes from "../../services/clientes";
 export default {
   name: "EnviarReporteCorreo",
   components: { MailIcon, GridIcon, PaperclipIcon, FileTextIcon, SendIcon, PlusIcon, XIcon, Edit2Icon, CheckIcon, AlertCircleIcon, ConfirmarAceptar, VueEditor },
-  props: {
+  props: { soloPdf: {type:Boolean,default:false},
     show: { type: Boolean, required: true },
     token: { type: String, required: true },
     titulo: { type: String, default: "Reporte" },
@@ -151,7 +151,7 @@ export default {
       buscandoCorreo: false, errorBusquedaCorreo: "", temporizadorCorreo: null, secuenciaCorreo: 0, correoElegido: "",
       barraMensaje: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link', 'clean']],
       opcionesMensaje: { formats: ['bold', 'italic', 'underline', 'list', 'bullet', 'link'] },
-      datos: { destinatario: "", email_address: "", asunto: this.titulo || "Reporte", formato: "excel", completo: false, mensaje: "" }, isLoading: false, error: "", pendiente: null, openConfirmarAceptar: false };
+      datos: { destinatario: "", email_address: "", asunto: this.titulo || "Reporte", formato: this.soloPdf ? "pdf" : "excel", completo: false, mensaje: "" }, isLoading: false, error: "", pendiente: null, openConfirmarAceptar: false };
   },
   computed: {
     longitudMensaje() {

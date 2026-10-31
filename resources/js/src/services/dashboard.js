@@ -2,6 +2,7 @@ import axios from "@/axios.js";
 import { error } from "@/plugins/logger";
 
 export default {
+    graficaVentasSaldos(periodo) { return axios.get("/dashboard/ventas-saldos/grafica", { params: periodo }); },
     async _fetchDashboard() {
         try {
             return await axios.get("/dashboard/build"); // return only the data

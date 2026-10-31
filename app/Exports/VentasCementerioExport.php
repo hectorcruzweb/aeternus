@@ -121,6 +121,7 @@ class VentasCementerioExport implements WithMultipleSheets
             }
             unset($seccion);
         }
+        if(!empty($datos['alcance_vencido']))$secciones[2]['nota']=$datos['alcance_vencido'];
         return $secciones;
     }
 
@@ -133,7 +134,7 @@ class VentasCementerioExport implements WithMultipleSheets
             'filas' => [
                 [$d['etiqueta_periodo'] ?? 'Ventas del mes', (float) $d['resumen']['ventas'], (int) ($d['tipo_operacion'] ?? 1) === 2 ? 'Total de cuotas del mes consultado.' : 'Total vendido de las operaciones del mes.'],
                 ['Por cobrar del mes', (float) $d['resumen']['porCobrar'], 'Pendiente de pagos programados con fecha en el mes, incluidas ventas anteriores.'],
-                ['Vencido Acumulado Histórico', (float) $d['resumen']['vencido'], 'Pendiente vencido de ventas históricas hasta el corte.'],
+                ['Vencido Acumulado Histórico', (float) $d['resumen']['vencido'], $d['alcance_vencido'] ?? 'Pendiente vencido de ventas históricas hasta el corte.'],
             ], 'moneda' => [1], 'sinTotal' => true,
         ];
         $hojas = [];

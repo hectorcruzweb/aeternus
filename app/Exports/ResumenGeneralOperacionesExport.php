@@ -13,7 +13,7 @@ class ResumenGeneralOperacionesExport implements WithMultipleSheets
         $d = $this->datos;
         $filas = [];
         foreach ($d['tipos'] as $f) $filas[] = [$f['nombre'], (int) $f['cantidad'], (float) $f['ventas'], (float) $f['porCobrar'], (float) $f['vencido']];
-        $resumen = ['nombre' => 'Resumen general', 'nota' => 'Ventas y por cobrar del mes consultado. Vencido Acumulado Histórico a la fecha de consulta.',
+        $resumen = ['nombre' => 'Resumen general', 'nota' => $d['alcance_vencido'] ?? 'Ventas y por cobrar del mes consultado. Vencido Acumulado Histórico a la fecha de consulta.',
             'columnas' => ['Tipo de operación', 'Cantidad del mes', 'Ventas del mes', 'Por cobrar del mes', 'Vencido Acumulado Histórico'],
             'filas' => $filas, 'moneda' => [2, 3, 4], 'sumar' => [1]];
         $hojas = [new VentasCementerioHoja($d, $resumen)];

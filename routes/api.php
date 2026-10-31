@@ -95,7 +95,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('/inventario/dashboard/reporte-preview/{token}/pdf', 'InventarioController@descargarInventarioPreviewPdf');
     Route::post('/inventario/dashboard/reporte-preview/{token}/correo', 'InventarioController@enviarInventarioPreviewCorreo')->middleware('throttle:5,1,dashboard-correo:');
     Route::get('/listar_inventario/{filtro?}/{export_excel?}', 'InventarioController@listar_inventario');
+    Route::get('/dashboard/reporte-dia','OperacionesController@previewResumenDashboard');
+    Route::get('/dashboard/reporte-dia/{token}/excel','OperacionesController@descargarVentasCementerioExcel');
+    Route::get('/dashboard/reporte-dia/{token}/pdf','OperacionesController@descargarVentasCementerioPdf');
+    Route::post('/dashboard/reporte-dia/{token}/correo','OperacionesController@enviarVentasCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
     Route::get('/dashboard/build', 'DashboardController@buildDashboard');
+    Route::get('/dashboard/ventas-saldos/grafica', 'OperacionesController@getGraficaVentasSaldosDashboard');
 
 
 

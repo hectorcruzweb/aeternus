@@ -137,7 +137,7 @@ class FunerariaController extends ApiController
      * No condiciona los saldos a entregado_b: entrega y situación de pago son independientes.
      * Los LEFT JOIN y el motor compartido preservan las cantidades del resumen financiero.
      */
-    public function getReporteVentasGenerales($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    public function getReporteVentasGenerales($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             5, $anio, $mes, $corte, $soloConteo,
@@ -151,7 +151,7 @@ class FunerariaController extends ApiController
                     $resultado[$clave] = $filas->get()->map(function ($fila) { return (array) $fila; })->all();
                 }
                 return $resultado;
-            }
+            }, null, $vencidoHastaPeriodo
         );
     }
 
@@ -169,7 +169,7 @@ class FunerariaController extends ApiController
      * los importes históricos y los saldos proceden de la operación y sus programados.
      * Conserva modalidades del módulo: 1 Uso Inmediato / 2 A Futuro.
      */
-    public function getReporteVentasPlanesFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    public function getReporteVentasPlanesFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             4, $anio, $mes, $corte, $soloConteo,
@@ -191,7 +191,7 @@ class FunerariaController extends ApiController
                     })->all();
                 }
                 return $resultado;
-            }
+            }, null, $vencidoHastaPeriodo
         );
     }
 
@@ -209,7 +209,7 @@ class FunerariaController extends ApiController
      * El detalle no consulta propiedades, cuotas, planes ni conceptos del servicio.
      * LEFT JOIN conserva el importe aunque falten datos descriptivos.
      */
-    public function getReporteServiciosFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false)
+    public function getReporteServiciosFunerarios($anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
             3, $anio, $mes, $corte, $soloConteo,
@@ -226,7 +226,7 @@ class FunerariaController extends ApiController
                     $resultado[$clave] = $filas->get()->map(function ($fila) { return (array) $fila; })->all();
                 }
                 return $resultado;
-            }
+            }, null, $vencidoHastaPeriodo
         );
     }
 

@@ -6,20 +6,31 @@
 </style></head><body><main class="reporte">
 @php($e = $datos['empresa'] ?? [])
 <table class="cabecera"><tr><td>@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }}</b><br>{{ $e['razon_social'] ?? '' }} · {{ $e['rfc'] ?? '' }}<br>{{ \App\Exports\DireccionReportes::formatear($e) }}<br>{{ $e['telefono'] ?? '' }} · {{ mb_strtolower(trim($e['email'] ?? ''), 'UTF-8') }}</td></tr></table>
-<h1>{{ $datos['titulo'] }}</h1><p class="nota">{{ ucfirst($datos['periodo']) }} · Datos consultados al {{ $datos['fecha'] }} · Moneda: MXN</p>
+<h1>{{ $datos['titulo'] }}</h1><table style="width:100%;margin:10px 0;table-layout:fixed;border-collapse:collapse;background:#f6f4ee;page-break-inside:avoid"><tr><td style="padding:9px 12px;border-left:3px solid #b18b1e;vertical-align:middle;text-align:center;width:33.333%;white-space:normal"><span style="font-size:10px;color:#777">PERIODO DEL REPORTE</span><strong style="margin-left:10px;font-size:17px;color:#80672c">{{ ucfirst($datos['periodo']) }}</strong></td><td style="padding:9px 16px;border-left:1px solid #ddd6c7;vertical-align:middle;text-align:center;width:33.333%;font-size:11px;color:#70757b">Datos consultados al {{ $datos['fecha'] }} · Moneda: MXN</td>@if(!empty($datos['alcance_vencido']))<td style="padding:9px 16px;border-left:1px solid #ddd6c7;vertical-align:middle;text-align:center;width:33.333%;font-size:11px;color:#70757b">{{ $datos['alcance_vencido'] }}</td>@endif</tr></table>
 <table class="indicadores"><tr>@foreach(['ventas'=>'Ventas del mes','porCobrar'=>'Por cobrar del mes','vencido'=>'Vencido Acumulado Histórico'] as $clave=>$titulo)<td>{{ $titulo }}<strong>$ {{ number_format($datos['resumen'][$clave],2,'.',',') }} MXN</strong></td>@endforeach</tr></table>
 <div class="aviso-intereses" role="note"><span class="aviso-intereses__icono" aria-hidden="true">i</span><strong>Por cobrar del mes y Vencido Acumulado Histórico no incluyen intereses.</strong></div>
 <div class="tabla"><table class="datos"><thead><tr><th>Tipo de operación</th><th>Cantidad del mes</th><th>Ventas del mes</th><th>Por cobrar del mes</th><th>Vencido Acumulado Histórico</th>@if(!$modoPdf)<th class="no-imprimir">Reporte individual</th>@endif</tr></thead><tbody>
 @foreach($datos['tipos'] as $f)<tr><td>{{ $f['nombre'] }}</td><td>{{ number_format($f['cantidad']) }}</td>@foreach(['ventas','porCobrar','vencido'] as $k)<td>$ {{ number_format($f[$k],2,'.',',') }}</td>@endforeach @if(!$modoPdf)<td class="no-imprimir"><a href="#" data-tipo-operacion="{{ $f['id'] }}">Ver reporte</a></td>@endif</tr>@endforeach
 <tr class="total"><td>TOTAL</td><td>{{ number_format($datos['resumen']['cantidad']) }}</td>@foreach(['ventas','porCobrar','vencido'] as $k)<td>$ {{ number_format($datos['resumen'][$k],2,'.',',') }}</td>@endforeach @if(!$modoPdf)<td class="no-imprimir"></td>@endif</tr></tbody></table></div>
-<h2>Comparativo por tipo de operación</h2><p class="nota">Ventas y por cobrar del mes · Vencido histórico a la fecha de consulta.</p>
-@php($maximo = max(1, max(array_column($datos['tipos'],'ventas')), max(array_column($datos['tipos'],'porCobrar')), max(array_column($datos['tipos'],'vencido'))))
+<h2>Comparativo por tipo de operación</h2><p class="nota">{{ $datos['alcance_vencido'] ?? 'Ventas y por cobrar del mes · Vencido histórico a la fecha de consulta.' }}</p>
+<?php
+$barras=array_values(array_filter($datos['tipos'],function($f){return (int)$f['id']!==2;}));
+$cuotas=array_values(array_filter($datos['tipos'],function($f){return (int)$f['id']===2;}));
+$maximo=1; foreach($barras as $f)foreach(['ventas','porCobrar','vencido'] as $k)$maximo=max($maximo,$f[$k]);
+?>
+<p class="nota">Comparativo sin Cuotas de Mantenimiento; sus importes se muestran por separado.</p>
 <p class="leyenda"><span style="color:#967b36">■ Ventas del mes</span> &nbsp; <span style="color:#61788c">■ Por cobrar del mes</span> &nbsp; <span style="color:#a55b5b">■ Vencido histórico</span></p>
 <table class="comparativo" aria-label="Comparativo por tipo de operación"><colgroup><col style="width:25%"><col style="width:60%"><col style="width:15%"></colgroup><tbody>
-@foreach($datos['tipos'] as $f)
+@foreach($barras as $f)
 @foreach(['ventas'=>'#b49b50','porCobrar'=>'#61788c','vencido'=>'#b96969'] as $k=>$color)
 <tr>@if($loop->first)<td class="nombre-tipo" rowspan="3">{{ $f['nombre'] }}</td>@endif
 <td class="pista"><div class="barra" style="width:{{ max(0,$f[$k])/$maximo*100 }}%;background:{{ $color }}"></div></td><td class="importe">$ {{ number_format($f[$k],2,'.',',') }}</td></tr>
 @endforeach @endforeach</tbody></table>
+@foreach($cuotas as $cuota)
+<div style="margin-top:16px;padding:12px;background:#f6f4ee;border-left:3px solid #b49b50;page-break-inside:avoid">
+<h2 style="margin:0 0 8px">Cuotas de Mantenimiento</h2><p class="nota">{{ ucfirst($datos['periodo']) }}</p>
+<table class="indicadores"><tr>@foreach(['ventas'=>'Cuotas generadas del mes','porCobrar'=>'Por cobrar del mes','vencido'=>'Vencido Acumulado Histórico'] as $k=>$titulo)<td>{{ $titulo }}<strong>$ {{ number_format($cuota[$k],2,'.',',') }} MXN</strong></td>@endforeach</tr></table>
+</div>
+@endforeach
 <footer class="pie">{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }} · Resumen general · {{ $datos['fecha'] }}</footer>
 </main></body></html>
