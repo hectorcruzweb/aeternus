@@ -128,7 +128,14 @@
 
 .forms-popup .vs-popup {
     border-radius: 0px !important;
-    @include break-points-content;
+    // Reservar el margen fuera del área que desplaza: también separa el final
+    // de la barra de scroll del borde inferior en todos los forms-popup.
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 32px) !important;
+    padding-bottom: 21px !important;
+    overflow: hidden;
 }
 
 /* Franja de título y cierre separados, alineados y de la misma altura. */
@@ -190,8 +197,16 @@
 .forms-popup .vs-popup--close:focus-visible { outline: 2px solid #a53c3c; outline-offset: 2px; }
 
 /* Espacio de cierre común: evita botones pegados al borde sin aumentar la altura del modal. */
-.forms-popup .vs-popup--content {
+.forms-popup .vs-popup > .vs-popup--content {
     box-sizing: border-box;
+    // El header ocupa su altura real; el cuerpo se reduce sin desbordar.
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    overflow-y: auto;
     padding: 0 1.5rem 1.25rem 1.5rem !important;
 }
 
