@@ -67,9 +67,11 @@
         }
 
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cuotas', 'altoMarcaAgua' => 850])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
 
 
@@ -199,6 +201,7 @@
         </div>
 
 
+</div>
 </body>
 
 </html>

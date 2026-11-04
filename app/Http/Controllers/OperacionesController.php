@@ -608,6 +608,23 @@ class OperacionesController extends ApiController
     }
 
     /**
+     * Limita consultas con alias o: para tipo 2 exige cuota relacionada status = 1.
+     * Los otros tipos conservan sus reglas. EXISTS evita duplicar importes; se usa
+     * tanto en el resumen como en los desgloses para que concilien entre sí.
+     */
+    private function filtrarCuotasActivasDashboard(\Illuminate\Database\Query\Builder $consulta)
+    {
+        return $consulta->where(function ($operaciones) {
+            $operaciones->where('o.empresa_operaciones_id', '<>', 2)
+                ->orWhereExists(function ($cuota) {
+                    $cuota->selectRaw('1')->from('cuotas_cementerio as cuota_vigente')
+                        ->whereColumn('cuota_vigente.id', 'o.cuotas_cementerio_id')
+                        ->where('cuota_vigente.status', 1);
+                });
+        });
+    }
+
+    /**
      * Resumen por tipo: ventas/saldo del periodo y vencido acumulado al corte.
      * tipoOperacion null: total general seguido de los tipos del catálogo; con ID: solo ese tipo.
      * Sin año/mes: mes actual; año y mes: mes; solo año: acumulado anual.
@@ -704,6 +721,10 @@ class OperacionesController extends ApiController
             ->whereIn('o.empresa_operaciones_id', array_keys($tipos))
             ->whereIn('o.status', [1, 2])
             ->where('o.fecha_operacion', '<=', $corte);
+
+        // Tipo 2: la operación y sus pagos dejan de aportar si la cuota está
+        // cancelada, en otro estado o sin registro relacionado en el catálogo.
+        if (isset($tipos[2])) $this->filtrarCuotasActivasDashboard($operacionesVigentes);
 
         // Solo ventas se filtra por fecha_operacion; por cobrar usa fecha_programada.
         $operacionesPeriodo = (clone $operacionesVigentes)
@@ -881,6 +902,8 @@ class OperacionesController extends ApiController
             ? $fin->toDateString() : $corte->toDateString();
         $base = DB::table('operaciones as o')->where('o.empresa_operaciones_id', $tipoOperacion)
             ->whereIn('o.status', [1, 2])->where('o.fecha_operacion', '<=', $corte);
+        // Mantener el mismo alcance de cuotas activas que el resumen del dashboard.
+        if ($tipoOperacion === 2) $this->filtrarCuotasActivasDashboard($base);
         // El filtro de cuota conserva los mismos criterios financieros del reporte tipo 2.
         if ($cuotaId !== null) {
             if ($tipoOperacion !== 2) throw new \InvalidArgumentException('El filtro de cuota solo aplica al tipo 2.');

@@ -7,6 +7,22 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Reportes</title>
     <style>
+        /* La cláusula puede continuar en otra hoja; sus líneas y el bloque
+           final de firmas deben conservar una lectura ordenada al paginar. */
+        p { orphans: 3; widows: 3; }
+        .convenio-firmas { break-inside: avoid; page-break-inside: avoid !important; }
+        /* Evitar una hoja solo para firmas: no usar mt-50 (16.67em).
+           Conservar ambas firmas y sus nombres juntos, con imágenes proporcionadas.
+           La altura compartida alinea las líneas aunque las firmas sean distintas.
+           Si el bloque completo no cabe, continúa íntegro en la hoja siguiente. */
+        .convenio-firmas { margin-top: 12px; }
+        .convenio-firma-imagen { height: 68px; }
+        .convenio-firmas .firma {
+            width: auto; height: auto; max-width: 160px; max-height: 64px;
+            display: block; margin: 0 auto;
+        }
+        .convenio-firmas::after { content: ""; display: table; clear: both; }
+
         #header,
         #header section table {
             width: 100% !important;
@@ -65,9 +81,11 @@
 
         /*fin de parrafos*/
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cementerio'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -907,9 +925,9 @@
             </p>
         @endif
 
-        <div class="w-100 center">
-            <div class="w-50 float-left mt-50">
-                <img src="{{ $firmas['gerente'] }}" class="firma">
+        <div class="convenio-firmas w-100 center">
+            <div class="w-50 float-left">
+                <div class="convenio-firma-imagen"><img src="{{ $firmas['gerente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $empresa->razon_social }}</span>
@@ -917,8 +935,8 @@
                     <span class="uppercase bold texto-sm">"la empresa"</span>
                 </div>
             </div>
-            <div class="w-50 float-right mt-50">
-                <img src="{{ $firmas['cliente'] }}" class="firma">
+            <div class="w-50 float-right">
+                <div class="convenio-firma-imagen"><img src="{{ $firmas['cliente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">El (La) C. {{ $datos['nombre'] }}</span>
@@ -930,6 +948,7 @@
     </div>
 
 
+</div>
 </body>
 
 </html>

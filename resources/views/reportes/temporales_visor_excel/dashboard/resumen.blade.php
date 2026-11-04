@@ -19,7 +19,9 @@
 /* El borde vive en la celda: ambas fichas comparten la altura real de la fila. */
 .servicios-filas{border-spacing:7px 8px}.servicios-filas .servicios-columna{padding:8px;border:1px solid #e3dfd5;background:#fff;vertical-align:top}.servicios-filas .servicios-columna .servicio{border:0;padding:0;margin:0;min-height:0}.servicios-columna .servicio-cabecera{min-height:48px;box-sizing:border-box;padding:8px}.servicios-columna .servicio table{table-layout:fixed}.servicios-columna .servicio td{vertical-align:middle;overflow-wrap:break-word}.servicios-columna .servicio h3{margin:0 0 6px;line-height:1.35}.servicios-columna .servicio-meta{line-height:1.45}
 .resumen-secciones{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:7px 0}.resumen-seccion-columna{width:50%;vertical-align:top;padding:0;border:0}.resumen-secciones>tbody>tr{page-break-inside:avoid}.resumen-secciones .resumen-cards{border-spacing:4px}.resumen-secciones .resumen-card{padding:7px 8px}.resumen-secciones .resumen-card-valor{font-size:13px}@media print{.resumen-secciones{border-spacing:4px 0}.resumen-secciones .resumen-card{padding:4px 5px}.resumen-secciones .resumen-card-valor{font-size:9px}.resumen-secciones .resumen-card-titulo{font-size:8px}}
-</style></head><body><main class="reporte">
+</style>@include('reportes.temporales_visor_excel.compartidos.paginacion')
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'resumen_dia', 'altoMarcaAgua' => 850])
+</head><body><div class="marca-agua-contenido" @if(empty($modoPdf)) data-marca-visor @endif><main class="reporte">
 @php
 $e = $datos['empresa'] ?? [];
 $ruta = public_path(env('LOGOJPG'));
@@ -116,7 +118,7 @@ $ordenResumen=['Inventario','Facturación','Seguimientos','Pendientes','Ventas y
 @endforeach
 </tbody></table>
 <footer class="pie">{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }} · Resumen del día · {{ $fechaHumana($generado,true) }}</footer>
-</main></body></html>
+</main></div></body></html>
 <style>@media print{@page{size:letter portrait;margin:7mm}.reporte{padding:0}body{font-size:9px}.cabecera{margin-bottom:5px}.cabecera td{padding-bottom:5px}.logo{width:115px}h1{font-size:15px;margin:0}.empresa,.nota,.nota-alcance{font-size:8px}.seccion-titulo{margin:6px 0 3px;padding:4px 7px;font-size:11px}.servicios-columna .servicio td{font-size:8px;padding:3px}.servicios-columna .servicio h3{font-size:10px}.servicios-columna .servicio-meta{font-size:8px}.servicios-columna .servicio-cabecera{min-height:0;padding:5px}.resumen-card{padding:5px 7px;min-height:0}.resumen-card-icono{display:none}.resumen-card-titulo{font-size:8px;margin-bottom:2px}.resumen-card-valor{font-size:10px}.resumen-cards{border-spacing:3px}.seccion-bloque{margin-bottom:4px}.aviso{padding:5px 7px;font-size:8px}.pie{font-size:8px;margin-top:5px}}</style><style>
 .ventas-impresion-compacta{display:none}
 @media print{

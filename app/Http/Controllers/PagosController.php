@@ -1273,6 +1273,7 @@ class PagosController extends ApiController
         }
     }
 
+    /** Genera el recibo heredado; el visor del expediente puede capturar su HTML/A4 y firmas sin ejecutar el PDF. */
     public function recibo_de_pago(Request $request, $id_pago = '')
     {
         try {
@@ -1343,6 +1344,25 @@ class PagosController extends ApiController
         $pdf->setOption('margin-top', 13.4);
         $pdf->setOption('margin-bottom', 13.4);
         $pdf->setOption('page-size', 'A4');
+
+        // Captura interna solicitada por el visor del expediente de cementerio.
+        // Preserva la plantilla A4, firmas y opciones; no ejecutar PDF ni correo aquí.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'recibo') {
+            return ['html' => (string) $pdf->html, 'opciones' => array_intersect_key(
+                $pdf->snappy()->getOptions(),
+                array_flip([
+                    'title',
+                    'footer-html',
+                    'header-html',
+                    'margin-left',
+                    'margin-right',
+                    'margin-top',
+                    'margin-bottom',
+                    'page-size',
+                    'orientation',
+                ])
+            )];
+        }
 
         if ($email == true) {
             /**email */

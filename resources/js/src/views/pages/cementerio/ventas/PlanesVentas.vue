@@ -3,15 +3,9 @@
         <vs-popup class="forms-popup popup-90" fullscreen title="listado de precios para propiedades en cementerio"
             :active="localShow" :ref="this.$options.name">
             <div class="w-full text-right">
-                <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="primary"
-                    type="border" @click="
-                        openReporte(
-                            'Precios x Propiedad (Español)',
-                            '/cementerio/lista_precios_pdf/es',
-                            ''
-                        )
-                        ">
-                    <span>Imprimir lista de precios</span>
+                <IdiomaReporte v-model="idiomaReporte" />
+                <vs-button color="primary" type="border" @click="openReporte()">
+                    <span>Ver lista de precios</span>
                 </vs-button>
                 <vs-button class="w-full sm:w-full sm:w-auto md:w-auto md:ml-2 my-2 md:mt-0" color="success"
                     @click="agregar()">
@@ -116,15 +110,18 @@
                 :show="verFormularioPrecios" @closeVentana="verFormularioPrecios = false" @retornar_id="retorno_id">
             </FormularioPrecios>
 
-            <Reporteador v-if="openReportesLista" :header="'Consultar precios x propiedad'" :show="openReportesLista"
-                :listadereportes="ListaReportes" :request="request" @closeReportes="openReportesLista = false">
-            </Reporteador>
             <!--fin de compornentes-->
         </vs-popup>
+        <!-- Visor compartido: consulta HTML; PDF y correo bajo demanda. -->
+        <VisorReportes v-if="mostrarReportePlanes" :show="mostrarReportePlanes"
+            :cargar="cargarReportePlanes" :descargar-pdf="descargarReportePlanes"
+            :enviar-correo="enviarReportePlanes" @close="mostrarReportePlanes = false" />
     </div>
 </template>
 <script>
-import Reporteador from "@pages/Reporteador";
+import IdiomaReporte from "@pages/IdiomaReporte.vue";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosCementerio from "@services/reportesDocumentosCementerio";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 import Password from "@pages/confirmar_password";
 import cementerio from "@services/cementerio";
@@ -161,20 +158,15 @@ export default {
         Password,
         "v-select": vSelect,
         FormularioPrecios,
-        Reporteador,
+        VisorReportes,
+        IdiomaReporte,
     },
     data() {
         return {
             localShow: false,
-            /**reporteador */
-            openReportesLista: false,
-            ListaReportes: [],
-            request: {
-                destinatario: "",
-                id_tipo_propiedad: "",
-                email: "",
-            },
-            /**reportrador */
+            mostrarReportePlanes: false,
+            idiomaReporte: "es",
+            filtroReportePlanes: "",
             selected: [],
             propiedades: [],
             propiedades_tipos: [],
@@ -194,22 +186,25 @@ export default {
     computed: {
     },
     methods: {
-        openReporte(nombre_reporte = "", link = "", parametro = "") {
-            this.ListaReportes = [];
-            /**agrego los reportes de manera manual */
-            this.ListaReportes.push({
-                nombre: "Precios x Propiedad (Español)",
-                url: "/cementerio/lista_precios_pdf/es",
-            });
-            this.ListaReportes.push({
-                nombre: "Precios x Propiedad (Inglés)",
-                url: "/cementerio/lista_precios_pdf/en",
-            });
-            //estado de cuenta
-            this.request.email = "";
-            this.request.id_tipo_propiedad = this.propiedad_tipo.value;
-            this.openReportesLista = true;
-            this.$vs.loading.close();
+        /** Congela idioma y filtro al abrir para que Actualizar conserve el alcance elegido. */
+        openReporte() {
+            this.filtroReportePlanes = this.propiedad_tipo.value || "";
+            this.mostrarReportePlanes = true;
+        },
+        /** Solicita el comparativo HTML sin generar un archivo PDF. */
+        async cargarReportePlanes() {
+            return (await reportesDocumentosCementerio.visualizar("planes-venta", {
+                idioma: this.idiomaReporte,
+                id_tipo_propiedad: this.filtroReportePlanes || null,
+            })).data;
+        },
+        /** Descarga la misma instantánea presentada en el visor. */
+        async descargarReportePlanes(token) {
+            return (await reportesDocumentosCementerio.pdf("planes-venta", token)).data;
+        },
+        /** Reutiliza destinatarios, mensaje y validación del formulario de correo compartido. */
+        async enviarReportePlanes(token, datos) {
+            return (await reportesDocumentosCementerio.correo("planes-venta", token, datos)).data;
         },
         openModificar(id_precio) {
             this.tipoFormulario = "modificar";

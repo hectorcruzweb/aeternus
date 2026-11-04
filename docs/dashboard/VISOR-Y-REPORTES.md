@@ -74,3 +74,36 @@ Los envíos tienen `throttle:5,1,dashboard-correo:`. Ante 429 no repetir automá
 En esta revisión se compararon tokens PHP ignorando comentarios, JavaScript/Vue normalizado, templates y Blade compilado con las copias previas; además se compiló app.scss. Esto verifica que la documentación no cambia comportamiento. Para cambios de cálculos, usar fixtures con operaciones/pagos pequeños en SQLite :memory: y contrastar resumen/detalle; no usar producción como prueba. El correo se sustituye por un emisor falso en las pruebas.
 
 Los scripts de comprobación utilizados están en el workspace de trabajo, no se instalaron como suite del repositorio: work/verificar-documentacion-dashboard.php, work/verificar-documentacion-dashboard.cjs y work/check-dashboard-with-viewer.cjs. No ejecutar seeder, mantenimiento ni envíos reales para verificar comentarios.
+
+
+## Expediente de ventas en cementerio: visor HTML (3 de noviembre de 2026)
+
+`ReportesVentas.vue` usa exclusivamente `VisorReportes.vue` para sus PDF. Se retiró de este componente el Reporteador anterior y su estado de envío. Los botones de documentos, la apertura del acuse y los recibos posteriores a pagos usan el mismo `openReporte`.
+
+### Catálogo y responsabilidades
+
+`CementerioController::DOCUMENTOS_VISOR` permite únicamente: solicitud, convenio, titulo, estado-cuenta, referencias, reglamento, acuse-cancelacion, servicios-propiedad y recibo.
+
+Se conservan las tres rutas parametrizadas de cementerio ya protegidas por auth:api; no se agregaron rutas. La consulta recibe venta_id; recibo exige además id_pago y comprueba con pagos_pagos_programados → pagos_programados → operaciones que corresponda a esa venta o sus cuotas (tipos 1/2). La generación del recibo permanece en PagosController::recibo_de_pago, invocado internamente; CementerioController coordina únicamente el contexto del expediente.
+
+Los métodos heredados conservan sus datos, firmas, correos y salida PDF para los otros módulos que todavía los consumen. Con el atributo interno `_documento_cementerio_visor` devuelven HTML y opciones originales antes de output/inline. Un parámetro HTTP del mismo nombre no activa esta captura. `capturarDocumentoCementerioVisor` evita repetir la captura de Snappy.
+
+El estado de cuenta conserva su consulta heredada de movimientos mediante el servicio backend; no se cambió el cálculo financiero. En pruebas esa comunicación se sustituye por respuestas ficticias.
+
+### Vista, impresión y PDF
+
+- La vista inicial es HTML con Open Sans, imágenes y CSS locales incrustados. No genera PDF ni descarga un Blob.
+- Descarga/correo generan el PDF con las opciones capturadas y una instantánea privada del usuario/tipo de documento; al vencer responde 410, sin cerrar la sesión.
+- El navegador toma tamaño y orientación del original: referencias en carta horizontal, recibo en A4, demás documentos en carta vertical. Conserva los márgenes individuales y el zoom de pantalla configurado por REPORTES_VISOR_ZOOM; imprimir vuelve a escala normal.
+- Las cajas superiores de @page se dejan vacías para ocultar fecha y título automáticos en Chromium. El pie propio se conserva en las cajas inferiores; para otros navegadores que no soporten estas cajas puede ser necesario desactivar Encabezados y pies de página en su diálogo.
+- Se respeta el aviso de cancelación/no validez propio de cada plantilla. No se presenta un acuse vigente como una operación cancelada.
+- Firmas de reglamento, acuse y recibo agrupadas y compactas; primero se reduce el espacio vacío, sin deformar imágenes ni quitar nombres. Solicitud/Convenio conservan su tratamiento anterior. Se corrigió el logo del título para usar LOGOJPG. El pie del acuse se ajusta al margen corto para no cortar sus contactos.
+- Chromium y wkhtmltopdf pueden distribuir las líneas de forma diferente: se verificaron contenido y legibilidad con datos ficticios, no una identidad de píxeles entre motores.
+
+### Archivos y comprobaciones
+
+Controladores: CementerioController.php y PagosController.php. Frontend: ReportesVentas.vue y reportesDocumentosCementerio.js. Plantillas ajustadas: titulo/titulo, reglamento_pago/reglamento, acuse_cancelacion/acuse y pagos/recibo_pago. Las otras plantillas se reutilizan sin modificar su contenido.
+
+Se verificaron PHP, compilación de plantillas Vue2, los nueve llamados del frontend, acceso por usuario/tipo, recibos ajenos rechazados, PDF solo bajo demanda y correo simulado. Los siete documentos incorporados se renderizaron con sus Blade reales; se generaron PDF e impresión de navegador, revisando todas las páginas y comprobando que los encabezados automáticos estuvieran ausentes sin desactivarlos por la línea de comandos de Chrome. SQLite en memoria, datos y firmas ficticios; sin datos reales ni SMTP.
+
+Para probar en el sistema: recompilar frontend con el comando habitual, recargar la aplicación y abrir cada documento. En un visor ya abierto, Actualizar renueva el HTML. Validar venta activa/cancelada, recibos de venta/cuotas y un expediente con muchos pagos. No se ejecutó Git.

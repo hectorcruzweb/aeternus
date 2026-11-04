@@ -66,9 +66,19 @@
             text-transform: uppercase;
         }
     </style>
+<style>
+        /* Firmas compactas y agrupadas: evitar una hoja adicional por espacio vacío. */
+        .reporte-firmas { margin-top:12px!important; break-inside:avoid; page-break-inside:avoid; }
+        .reporte-firmas::after { content:""; display:table; clear:both; }
+        .reporte-firmas > div { margin-top:0!important; }
+        .reporte-firma-imagen { height:68px; }
+        .reporte-firmas .firma { width:auto; height:auto; max-width:160px; max-height:64px; margin:0 auto; }
+    </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'pagos'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
 
 
@@ -370,9 +380,9 @@
 
 
         @if ($datos['cancelo_id'] != null)
-            <div class="w-100 center mt-20">
+            <div class="reporte-firmas w-100 center">
                 <div class="w-50 float-left">
-                    <img src="{{ $firmas['cobrador'] }}" class="firma">
+                    <div class="reporte-firma-imagen"><img src="{{ $firmas['cobrador'] }}" class="firma"></div>
                     <div class="w-90 mr-auto ml-auto border-top">
                         <div class="pt-3 pb-1"><span
                                 class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
@@ -380,7 +390,7 @@
                     </div>
                 </div>
                 <div class="w-50 float-right">
-                    <img src="{{ $firmas['cancelo'] }}" class="firma">
+                    <div class="reporte-firma-imagen"><img src="{{ $firmas['cancelo'] }}" class="firma"></div>
                     <div class="w-90 mr-auto ml-auto border-top">
                         <div class="pt-3 pb-1"><span
                                 class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
@@ -389,9 +399,9 @@
                 </div>
             </div>
         @else
-            <div class="w-100 center mt-20">
+            <div class="reporte-firmas w-100 center">
                 <div class="w-50 mr-auto ml-auto">
-                    <img src="{{ $firmas['cobrador'] }}" class="firma">
+                    <div class="reporte-firma-imagen"><img src="{{ $firmas['cobrador'] }}" class="firma"></div>
                     <div class="w-90 mr-auto ml-auto border-top">
                         <div class="pt-3 pb-1"><span
                                 class="uppercase  texto-sm">{{ $datos['cobrador']['nombre'] }}</span></div>
@@ -404,6 +414,7 @@
 
 
 
+</div>
 </body>
 
 </html>

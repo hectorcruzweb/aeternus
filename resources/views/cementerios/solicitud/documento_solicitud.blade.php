@@ -7,6 +7,15 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Reportes</title>
     <style>
+        /* Cada sección es una unidad de paginación. Si no cabe en el espacio
+           restante, Chromium y wkhtmltopdf la comienzan en la hoja siguiente.
+           Se declaran ambas variantes para el motor moderno y el PDF heredado. */
+        .solicitud-bloque {
+            break-inside: avoid;
+            page-break-inside: avoid !important;
+        }
+
+
         #header,
         #header section table {
             width: 100% !important;
@@ -63,9 +72,11 @@
 
         /*fin de parrafos*/
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cementerio'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -113,7 +124,7 @@
         </section>
     </header>
     <h1 class="left">formato de solicitud de servicios(archivo digital)</h1>
-    <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1">
             información del titular
         </div>
@@ -265,7 +276,7 @@
             </tr>
         </table>
     </div>
-    <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1">
             información del titular Sustituto
         </div>
@@ -318,7 +329,7 @@
 
 
 
-    <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1">
             información de la propiedad
         </div>
@@ -460,12 +471,12 @@
             </tr>
         </table>
     </div>
-    <div class="border-black-1 radius-5 texto-xs2  px-3 py-2 justificar">
+    <div class="solicitud-bloque border-black-1 radius-5 texto-xs2  px-3 py-2 justificar">
         El contratante, dentro de un plazo de 5 días hábiles, contados a partir del siguiente día hábil de la firma del
         contrato, puede cancelar la contratación de los servicios funerarios, sin que sufra menoscabo de los pagos que
         haya realizado a la fecha, sin perjuicio de que el prestador de los servicios pueda ampliar este plazo.
     </div>
-    <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1">
             programación de pagos
         </div>
@@ -557,7 +568,7 @@
         @endif
     </div>
 
-    <div class="border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 uppercase texto-sm  px-3 py-2">
         <div class="uppercase bg-header text-white py-1 px-2 bold mb-1">
             beneficiarios
         </div>
@@ -610,7 +621,7 @@
             @endif
         </table>
     </div>
-    <div class="border-black-1 radius-5 texto-sm  px-3 py-2">
+    <div class="solicitud-bloque border-black-1 radius-5 texto-sm  px-3 py-2">
         <p class="texto-xs justificar line-base">
             <span class="- bold texto-sm pr-2 uppercase">Nota.- </span>
             Debo y pagaré incondicionalmente por este pagaré a la orden de <span
@@ -740,6 +751,7 @@
         */
         @endphp
     </div>
+</div>
 </body>
 
 </html>

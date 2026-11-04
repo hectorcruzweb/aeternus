@@ -228,21 +228,18 @@
             >
             </FormularioCuotas>
 
-            <Reporteador
-                v-if="openReportesLista"
-                :header="'Consultar cuotas x propiedad'"
-                :show="openReportesLista"
-                :listadereportes="ListaReportes"
-                :request="request"
-                @closeReportes="openReportesLista = false"
-            >
-            </Reporteador>
+
             <!--fin de compornentes-->
         </vs-popup>
+        <!-- Lista de cuotas: HTML y PDF/correo bajo demanda. -->
+        <VisorReportes v-if="mostrarReporteCuotas" :show="mostrarReporteCuotas"
+            :cargar="cargarReporteCuotas" :descargar-pdf="descargarReporteCuotas"
+            :enviar-correo="enviarReporteCuotas" @close="mostrarReporteCuotas = false" />
     </div>
 </template>
 <script>
-import Reporteador from "@pages/Reporteador";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosCementerio from "@services/reportesDocumentosCementerio";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
 import Password from "@pages/confirmar_password";
 import cementerio from "@services/cementerio";
@@ -275,7 +272,7 @@ export default {
         Password,
         "v-select": vSelect,
         FormularioCuotas,
-        Reporteador,
+        VisorReportes,
     },
     data() {
         return {
@@ -287,15 +284,7 @@ export default {
                     tipo: "pdf",
                 },
             ],
-            /**reporteador */
-            openReportesLista: false,
-            ListaReportes: [],
-            request: {
-                destinatario: "",
-                id_cuota: "",
-                email: "",
-            },
-            /**reportrador */
+            mostrarReporteCuotas: false,
             selected: [],
 
             cuotas: [],
@@ -313,21 +302,24 @@ export default {
     },
     computed: {},
     methods: {
+        /** Abre el listado completo de cuotas en el visor; la consulta no genera PDF. */
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
-            this.ListaReportes = [];
-            this.ListaReportes.push({
-                nombre: nombre_reporte,
-                url: link,
-            });
-            //estado de cuenta
-            this.request.email = "";
-
-            this.request.id_cuota = parametro;
-
-            this.request.destinatario = "";
-            this.openReportesLista = true;
+            this.mostrarReporteCuotas = true;
             this.$vs.loading.close();
         },
+        /** Conserva el alcance original: todas las cuotas, sin exigir una venta individual. */
+        async cargarReporteCuotas() {
+            return (await reportesDocumentosCementerio.visualizar("cuotas", {})).data;
+        },
+        /** Descarga el PDF horizontal de la instantánea consultada. */
+        async descargarReporteCuotas(token) {
+            return (await reportesDocumentosCementerio.pdf("cuotas", token)).data;
+        },
+        /** Envía el PDF mediante el formulario compartido de destinatarios y mensaje. */
+        async enviarReporteCuotas(token, datos) {
+            return (await reportesDocumentosCementerio.correo("cuotas", token, datos)).data;
+        },
+
         openModificar(id_cuotas) {
             this.tipoFormulario = "modificar";
             this.id_cuotas_modificar = id_cuotas;

@@ -13,8 +13,7 @@
         <div class="visor-reportes__titulo">
           <strong>{{ reporte ? reporte.titulo : "Preparando reporte" }}</strong>
           <span v-if="reporte"
-            >{{ reporte.totalRegistros }} registros · Vista previa del
-            reporte</span
+            >{{ reporte.subtitulo || (reporte.totalRegistros + " registros · Vista previa del reporte") }}</span
           >
         </div>
         <div class="visor-reportes__acciones">
@@ -90,7 +89,7 @@
             }}
           </button>
           <button
-            v-if="!reporte || !reporte.soloPdf"
+            v-if="descargarArchivo && (!reporte || !reporte.soloPdf)"
             ref="descarga"
             type="button"
             class="visor-reportes__boton visor-reportes__boton--principal visor-reportes__boton--excel"
@@ -140,6 +139,7 @@
           {{ reporte.limiteVisualizacion }}
         </p>
         <button
+          v-if="descargarArchivo && !reporte.soloPdf"
           type="button"
           class="visor-reportes__boton visor-reportes__boton--principal visor-reportes__boton--excel"
           :disabled="descargando || enviando"
@@ -185,7 +185,8 @@
           :srcdoc="documentoHtml"
         />
         <p class="visor-reportes__nota">
-          <span v-if="reporte.excelCompletoDisponible"
+          <span v-if="reporte.nota">{{ reporte.nota }}</span>
+          <span v-else-if="reporte.excelCompletoDisponible"
             >El Excel y PDF del resumen contienen los totales mostrados. El
             Excel detallado completo actualiza los datos al generarse.</span
           >
@@ -245,7 +246,7 @@ export default {
     show: { type: Boolean, default: false },
     // Vista HTML directa y token privado de la instantánea de datos.
     cargar: { type: Function, required: true },
-    descargarArchivo: { type: Function, required: true },
+    descargarArchivo: { type: Function, default: null },
     descargarPdf: { type: Function, default: null },
     enviarCorreo: { type: Function, default: null },
     descargarCompleto: { type: Function, default: null },
@@ -283,7 +284,7 @@ export default {
     documentoHtml() {
       if (!this.reporte || !this.reporte.hojas.length) return "";
       const cabecera =
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; style-src 'unsafe-inline'\">" +
+        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'\">" +
         "";
       return this.reporte.hojas[this.hojaActiva].html.replace(
         /<head[^>]*>/i,
@@ -480,6 +481,8 @@ export default {
         this.reporte = {
           vistaPreviaDisponible: datos.vistaPreviaDisponible !== false,
           soloPdf: !!datos.soloPdf,
+          subtitulo: typeof datos.subtitulo === "string" ? datos.subtitulo : "",
+          nota: typeof datos.nota === "string" ? datos.nota : "",
           limiteVisualizacion: datos.limiteVisualizacion || 3500,
           mensaje:
             datos.mensaje ||
@@ -528,11 +531,19 @@ export default {
      * impresión; no descarga Excel.
      * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
      */
-    imprimir() {
+    async imprimir() {
       if (this.isLoading || !this.documentoListo || !this.reporte) return;
       const marco = this.$refs.documento;
-      if (!marco || !marco.contentWindow) return;
-      // Imprime la hoja visible, nunca el dashboard ni una nueva consulta al servidor.
+      if (!marco || !marco.contentWindow || !marco.contentDocument) return;
+      const peticion = this.peticion;
+      const documento = marco.contentDocument;
+      // Mantener CSS y recursos del documento original; nunca imprimir una copia
+      // solo de su texto ni generar/descargar un PDF para abrir el diálogo.
+      if (documento.fonts && documento.fonts.ready) await documento.fonts.ready;
+      await Promise.all(Array.from(documento.images).map(imagen =>
+        typeof imagen.decode === "function" ? imagen.decode().catch(() => {}) : Promise.resolve()
+      ));
+      if (!this.show || peticion !== this.peticion || documento !== marco.contentDocument) return;
       marco.contentWindow.focus();
       marco.contentWindow.print();
     },
@@ -558,6 +569,7 @@ export default {
      */
     async descargarFormato(formato) {
       if (!this.reporte || this.isLoading || this.descargando) return;
+      if (this.reporte.soloPdf && formato !== "pdf") return;
       const id = this.peticion;
       this.descargando = true;
       this.formatoDescarga = formato;

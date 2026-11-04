@@ -66,9 +66,11 @@
             text-transform: uppercase;
         }
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'pagos', 'altoMarcaAgua' => 850])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <div class="pagos relative">
         <table class="w-100">
@@ -288,6 +290,7 @@
 
             </div>
         </div>
+</div>
 </body>
 
 </html>

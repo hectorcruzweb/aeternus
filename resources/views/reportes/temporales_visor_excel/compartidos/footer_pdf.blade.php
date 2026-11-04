@@ -23,6 +23,7 @@ function completarPaginas(){
   document.getElementById('total').textContent=valores.topage||'';
 }
 </script>
+@include('reportes.temporales_visor_excel.compartidos.paginacion')
 </head>
 <body onload="completarPaginas()"><table><tr>
 <td>{{ $dominio }} · Generado: {{ $fechaImpresion }}</td>

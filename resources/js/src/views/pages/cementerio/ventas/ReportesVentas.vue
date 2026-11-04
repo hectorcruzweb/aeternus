@@ -483,11 +483,7 @@ programados, index_programado
                     </vs-table>
                 </div>
             </div>
-            <Reporteador v-if="openReportesLista" :header="'consultar documentos de venta de propiedad'"
-                :show="openReportesLista" :listadereportes="ListaReportes" :request="request"
-                @closeReportes="openReportesLista = false">
-            </Reporteador>
-            <Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
+<Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
                 :operacion_id="operacion_id" :tipo="'operacion'" @closeFirmas="openFirmas = false"></Firmas>
             <CancelarPago v-if="openCancelar" :z_index="'z-index59k'" :show="openCancelar"
                 @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
@@ -498,12 +494,17 @@ programados, index_programado
                 @closeVentana="openSeguimientos = false" :z_index="'z-index59k'">
             </FormularioSeguimientos>
         </vs-popup>
+        <!-- Todos los documentos y recibos del expediente comparten el visor HTML. -->
+        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+            :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
     </div>
 </template>
 <script>
 import FormularioSeguimientos from "../../seguimientos/FormularioSeguimientos.vue";
 import CancelarPago from "@pages/pagos/CancelarPago";
-import Reporteador from "@pages/Reporteador";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosCementerio from "@services/reportesDocumentosCementerio";
 import Firmas from "@pages/Firmas";
 import cementerio from "@services/cementerio";
 import pagos from "@services/pagos";
@@ -511,7 +512,7 @@ import FormularioPagos from "@pages/pagos/FormularioPagos";
 export default {
     name: "ReportesVentasCementerio",
     components: {
-        Reporteador,
+        VisorReportes,
         FormularioPagos,
         Firmas,
         CancelarPago,
@@ -677,14 +678,10 @@ export default {
             total: 0 /**rows que se van a remplazar el click en el evento de las tablas para modificar el expand */,
             funcion_reemplazada: [],
             datosVenta: [],
-            ListaReportes: [],
-            request: {
-                id_pago: "",
-                venta_id: "",
-                email: "",
-                destinatario: "",
-            },
-            openReportesLista: false,
+            mostrarDocumentoVisor: false,
+            ventaDocumentoId: null,
+            pagoDocumentoId: null,
+            documentoVisor: "solicitud",
             openFirmas: false,
             verFormularioPagos: false,
             tipoFormularioPagos: "",
@@ -695,6 +692,19 @@ export default {
         };
     },
     methods: {
+        /** Obtiene HTML del documento seleccionado de la venta; no genera PDF. */
+        async cargarDocumentoVisor() {
+            return (await reportesDocumentosCementerio.visualizar(this.documentoVisor, { venta_id: this.ventaDocumentoId, id_pago: this.pagoDocumentoId || undefined })).data;
+        },
+        /** Devuelve el Blob PDF al visor; el backend usa la instantánea del token. */
+        async descargarDocumentoPdf(token) {
+            return (await reportesDocumentosCementerio.pdf(this.documentoVisor, token)).data;
+        },
+        /** Delega los datos confirmados del modal de correo; estos documentos solo admiten PDF. */
+        async enviarDocumentoCorreo(token, datos) {
+            return (await reportesDocumentosCementerio.correo(this.documentoVisor, token, datos)).data;
+        },
+
         OpenFormSeguimientos(cuota) {
             this.filtersSeguimientos.cliente_id = this.datosVenta.cliente_id;
             this.filtersSeguimientos.tipo_cliente_id = 1;
@@ -785,27 +795,31 @@ export default {
             return;
         },
 
+        /** Abre el documento o recibo de esta venta en el visor HTML; el PDF se genera bajo demanda. */
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
-            this.ListaReportes = [];
-            this.ListaReportes.push({
-                nombre: nombre_reporte,
-                url: link,
-            });
-            //estado de cuenta
-            this.request.email = this.datosVenta.email;
-
-            if (tipo == "pago") {
-                this.request.id_pago = parametro;
-            } else {
-                this.request.venta_id = this.datosVenta.ventas_terrenos_id;
-            }
-
-            this.request.destinatario = this.datosVenta.nombre;
-            this.openReportesLista = true;
+            const documentosVisor = {
+                "/cementerio/documento_solicitud": "solicitud",
+                "/cementerio/documento_convenio": "convenio",
+                "/cementerio/documento_titulo": "titulo",
+                "/cementerio/documento_estado_de_cuenta_cementerio": "estado-cuenta",
+                "/cementerio/referencias_de_pago": "referencias",
+                "/cementerio/reglamento_pago": "reglamento",
+                "/cementerio/acuse_cancelacion": "acuse-cancelacion",
+                "/cementerio/servicios_propiedad": "servicios-propiedad",
+                "/pagos/recibo_de_pago": "recibo",
+            };
+            const documento = documentosVisor[link.replace(/\/$/, "")];
             this.$vs.loading.close();
+            if (!documento) {
+                this.$vs.notify({ title: "Reporte no disponible", text: "No se reconoce el documento seleccionado.", color: "warning" });
+                return;
+            }
+            this.documentoVisor = documento;
+            this.ventaDocumentoId = Number(this.datosVenta.ventas_terrenos_id);
+            this.pagoDocumentoId = documento === "recibo" ? Number(parametro) : null;
+            this.mostrarDocumentoVisor = true;
         },
         async consultar_venta_id() {
-            this.ListaReportes = [];
             this.$vs.loading();
             try {
                 this.operacion_id = "";

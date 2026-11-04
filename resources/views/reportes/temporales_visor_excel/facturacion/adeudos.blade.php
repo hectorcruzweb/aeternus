@@ -17,7 +17,9 @@
 @media print{.datos.facturas .pago-fila td,.datos.facturas .operaciones-fila td,.datos.facturas .sin-pagos{font-size:8px;padding:4px 5px}.datos.facturas .pago-descripcion{padding-left:10px}.publico-general{font-size:10px}}
 .datos.facturas .factura-pendiente td{background:#fff8ed}.datos.facturas .factura-pendiente td:first-child{border-left:3px solid #b98236;font-weight:bold}.datos.facturas .factura-pendiente .saldo-factura{color:#a53c3c;font-weight:bold}.estado-pendiente{display:block;font-size:9px;font-weight:normal;margin-top:2px}
 @media print{.estado-pendiente{font-size:7px}}
-</style></head><body><main class="reporte">
+</style>@include('reportes.temporales_visor_excel.compartidos.paginacion')
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'facturacion', 'altoMarcaAgua' => 850])
+</head><body><div class="marca-agua-contenido" @if(empty($modoPdf)) data-marca-visor @endif><main class="reporte">
 <table class="cabecera"><tr><td>@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td><h1>{{ $datos['titulo'] }}</h1><div class="empresa">{{ \App\Exports\NombreEmpresaReportes::formatear($datos['empresa']['nombre_comercial'] ?? null) }}</div><div class="meta">{{ $datos['empresa']['razon_social'] ?? '' }} · {{ $datos['empresa']['rfc'] ?? '' }}</div><div class="meta">{{ \App\Exports\DireccionReportes::formatear($datos['empresa']) }}</div><div class="meta">{{ $datos['empresa']['telefono'] ?? '' }} · {{ mb_strtolower($datos['empresa']['email'] ?? '', 'UTF-8') }}</div><div class="meta">Datos consultados: {{ $datos['fecha'] }}</div><div class="meta">Vigencia de la Firma Electrónica: {{ !empty($datos['fechaCaducidadFiel']) ? explode(' ', \App\Exports\TimbresRecargasExport::fecha($datos['fechaCaducidadFiel']))[0] : 'No disponible' }}</div></td></tr></table>
 @php($esMes = !empty($datos['modo_mes']))
 @if($esMes)<p class="alerta"><strong>Facturación de {{ $datos['periodo'] }}.</strong> Importe facturado y saldado de las facturas emitidas en el mes, incluidos pagos parciales y PUE. Los egresos se muestran por separado.</p>
@@ -51,4 +53,4 @@
 </tbody>
 @empty<tbody><tr><td colspan="10">{{ $esMes ? 'No hay facturas emitidas en el mes al corte de esta consulta.' : 'No hay CFDI con adeudo al corte de esta consulta.' }}</td></tr></tbody>@endforelse
 </table></div>
-<div class="pie">Aeternus Funerales · Facturación</div></main></body></html>
+<div class="pie">Aeternus Funerales · Facturación</div></main></div></body></html>

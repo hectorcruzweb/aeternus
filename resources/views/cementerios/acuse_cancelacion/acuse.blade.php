@@ -69,9 +69,19 @@
             text-transform: uppercase;
         }
     </style>
+<style>
+        /* Firmas compactas y agrupadas: evitar una hoja adicional por espacio vacío. */
+        .reporte-firmas { margin-top:12px!important; break-inside:avoid; page-break-inside:avoid; }
+        .reporte-firmas::after { content:""; display:table; clear:both; }
+        .reporte-firmas > div { margin-top:0!important; }
+        .reporte-firma-imagen { height:68px; }
+        .reporte-firmas .firma { width:auto; height:auto; max-width:160px; max-height:64px; margin:0 auto; }
+    </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cementerio'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <div class="pagos relative">
         <table class="w-100">
@@ -163,9 +173,9 @@
             </p>
         </div>
 
-        <div class="w-100 center">
+        <div class="reporte-firmas w-100 center">
             <div class="w-50 float-left mt-20">
-                <img src="{{ $firmas['gerente'] }}" class="firma">
+                <div class="reporte-firma-imagen"><img src="{{ $firmas['gerente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $empresa->razon_social }}</span>
@@ -174,7 +184,7 @@
                 </div>
             </div>
             <div class="w-50 float-right mt-20">
-                  <img src="{{ $firmas['cliente'] }}" class="firma">
+                  <div class="reporte-firma-imagen"><img src="{{ $firmas['cliente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $datos['nombre'] }}</span>
@@ -184,6 +194,7 @@
             </div>
         </div>
     </div>
+</div>
 </body>
 
 </html>

@@ -33,7 +33,7 @@
   <table class="italic">
     <tr>
       <td align="left" class="texto-sm">
- Impresión, {{fechahora_completa()}}. 
+ Impresión, {{fechahora_completa()}}.
       </td>
       <td style="text-align:right">
        Pág. <span class="page"></span> de <span class="topage"></span>

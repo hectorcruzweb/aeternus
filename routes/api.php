@@ -217,6 +217,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('titulos/{operacion_id?}', 'CementerioController@generarNumeroTitulo');
     Route::get('cementerio/documento_estado_de_cuenta_cementerio', 'CementerioController@documento_estado_de_cuenta_cementerio');
     Route::get('cementerio/acuse_cancelacion', 'CementerioController@acuse_cancelacion');
+    // Tres rutas para todos los documentos migrados de cementerio. El controlador
+    // valida el catálogo permitido; futuros módulos tendrán su propio controlador.
+    Route::get('cementerio/reportes/{documento}', 'CementerioController@previewDocumentoCementerio');
+    Route::get('cementerio/reportes/{documento}/{token}/pdf', 'CementerioController@descargarDocumentoCementerio');
+    Route::post('cementerio/reportes/{documento}/{token}/correo', 'CementerioController@enviarDocumentoCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    // Compatibilidad con los llamados heredados mientras continúa la migración.
     Route::get('cementerio/documento_solicitud', 'CementerioController@documento_solicitud');
     Route::get('cementerio/documento_convenio', 'CementerioController@documento_convenio');
     Route::get('cementerio/documento_titulo', 'CementerioController@documento_titulo');

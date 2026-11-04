@@ -11,7 +11,9 @@
 @media print{@page{size:A4 landscape;margin:10mm}.reporte{padding:0}body{font-size:10px;print-color-adjust:exact;-webkit-print-color-adjust:exact}.logo{width:145px}h1{font-size:17px}.empresa,.nota{font-size:9px}.indicadores td{padding:7px}.indicadores strong{font-size:16px}table.datos{font-size:10px}table.datos td,table.datos th{padding:7px}.grafica{max-height:270px}.no-imprimir{display:none}.tabla{overflow:visible}thead{display:table-header-group}tr{page-break-inside:avoid}}
 .aviso-intereses{margin:10px 0;padding:10px 12px;background:#fff4d6;color:#70530f;border-left:4px solid #b18b1e;font:600 12px/1.45 Arial,sans-serif;page-break-inside:avoid}.aviso-intereses__icono{display:inline-block;width:18px;height:18px;margin-right:7px;border:1px solid #997418;border-radius:50%;text-align:center;font:bold 13px/16px Arial,sans-serif;vertical-align:middle}@media print{.aviso-intereses{padding:7px 10px;font-size:10px}}
 @media print{.comparativo td{padding:2px 8px;font-size:10px}.leyenda{margin:6px 0}.pie{margin-top:6px;padding-top:6px}}
-</style></head><body><main class="reporte">
+</style>@include('reportes.temporales_visor_excel.compartidos.paginacion')
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'ventas_saldos', 'altoMarcaAgua' => 850])
+</head><body><div class="marca-agua-contenido" @if(empty($modoPdf)) data-marca-visor @endif><main class="reporte">
 @php($e = $datos['empresa'] ?? [])
 <table class="cabecera"><tr><td>@if($logo)<img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">@endif</td><td class="empresa"><b>{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }}</b><br>{{ $e['razon_social'] ?? '' }} · {{ $e['rfc'] ?? '' }}<br>{{ \App\Exports\DireccionReportes::formatear($e) }}<br>{{ $e['telefono'] ?? '' }} · {{ mb_strtolower(trim($e['email'] ?? ''), 'UTF-8') }}</td></tr></table>
 <h1>{{ $datos['titulo'] }}</h1><table style="width:100%;margin:10px 0;table-layout:fixed;border-collapse:collapse;background:#f6f4ee;page-break-inside:avoid"><tr><td style="padding:9px 12px;border-left:3px solid #b18b1e;vertical-align:middle;text-align:center;width:33.333%;white-space:normal"><span style="font-size:10px;color:#777">PERIODO DEL REPORTE</span><strong style="margin-left:10px;font-size:17px;color:#80672c">{{ ucfirst($datos['periodo']) }}</strong></td><td style="padding:9px 16px;border-left:1px solid #ddd6c7;vertical-align:middle;text-align:center;width:33.333%;font-size:11px;color:#70757b">Datos consultados al {{ $datos['fecha'] }} · Moneda: MXN</td>@if(!empty($datos['alcance_vencido']))<td style="padding:9px 16px;border-left:1px solid #ddd6c7;vertical-align:middle;text-align:center;width:33.333%;font-size:11px;color:#70757b">{{ $datos['alcance_vencido'] }}</td>@endif</tr></table>
@@ -41,4 +43,4 @@ $maximo=1; foreach($barras as $f)foreach(['ventas','porCobrar','vencido'] as $k)
 </div>
 @endforeach
 <footer class="pie">{{ \App\Exports\NombreEmpresaReportes::formatear($e['nombre_comercial'] ?? null) }} · Resumen general · {{ $datos['fecha'] }}</footer>
-</main></body></html>
+</main></div></body></html>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * DOCUMENTACIÓN DE MANTENIMIENTO — DASHBOARD
  * Completa los reportes de operaciones 1 (ventas) y 2 (cuotas) con sus datos de cementerio.
@@ -36,7 +37,418 @@ use PDF;
 
 class CementerioController extends ApiController
 {
-    /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido. 
+    /** Catálogo cerrado: agregar aquí cada documento migrado, nunca invocar métodos de la URL directamente. */
+    private const DOCUMENTOS_VISOR = [
+        'solicitud' => ['metodo' => 'documento_solicitud', 'titulo' => 'Solicitud de Venta en Cementerio'],
+        'convenio' => ['metodo' => 'documento_convenio', 'titulo' => 'Convenio de Venta en Cementerio'],
+        'titulo' => ['metodo' => 'documento_titulo', 'titulo' => 'Título de Propiedad'],
+        'estado-cuenta' => ['metodo' => 'documento_estado_de_cuenta_cementerio', 'titulo' => 'Estado de Cuenta de Cementerio'],
+        'referencias' => ['metodo' => 'referencias_de_pago', 'titulo' => 'Talonario de Pagos'],
+        'reglamento' => ['metodo' => 'reglamento_pago', 'titulo' => 'Reglamento de Pago'],
+        'acuse-cancelacion' => ['metodo' => 'acuse_cancelacion', 'titulo' => 'Acuse de Cancelación'],
+        'servicios-propiedad' => ['metodo' => 'servicios_propiedad', 'titulo' => 'Servicios en la Propiedad'],
+        'recibo' => ['metodo' => 'recibo_de_pago', 'titulo' => 'Recibo de Pago'],
+        'cuotas' => ['metodo' => 'get_cuota_pdf_todas', 'titulo' => 'Cuotas de Mantenimiento en Cementerio'],
+        'planes-venta' => ['metodo' => 'lista_precios_pdf', 'titulo' => 'Planes de Venta en Cementerio'],
+    ];
+
+    /** Recibe el documento de la ruta y venta_id; prepara HTML sin generar el PDF. */
+    public function previewDocumentoCementerio(Request $request, $documento)
+    {
+        return $this->previewDocumentoCementerioVisor($request, $documento);
+    }
+
+    /**
+     * Prepara un documento del catálogo interno, reutilizando su método original.
+     * Cada documento aporta HTML, firmas y opciones de página; se guarda una
+     * instantánea privada por usuario/tipo durante 15 minutos. No modifica ventas.
+     */
+    private function previewDocumentoCementerioVisor(Request $request, $documento)
+    {
+        $catalogo = self::DOCUMENTOS_VISOR;
+        abort_unless(isset($catalogo[$documento]), 404);
+        $definicion = $catalogo[$documento];
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401, 'Es necesario iniciar sesión.');
+        // Los catálogos de cuotas y planes no pertenecen a una venta individual.
+        $esCatalogoCuotas = in_array($documento, ['cuotas', 'planes-venta'], true);
+        $request->validate(['venta_id' => ($esCatalogoCuotas ? 'nullable' : 'required').'|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable') . '|integer|min:1']);
+        // Validar idioma y filtro del catálogo sin permitir invocar métodos arbitrarios.
+        if ($documento === 'planes-venta') $request->validate(['idioma' => 'nullable|in:es,en', 'id_tipo_propiedad' => 'nullable|integer|min:1']);
+        $ventaId = $esCatalogoCuotas ? null : (int) $request->input('venta_id');
+        if (!$esCatalogoCuotas) {
+            abort_unless(DB::table('operaciones')->where('empresa_operaciones_id', 1)
+                ->where('ventas_terrenos_id', $ventaId)->exists(), 404, 'No se encontró la venta en cementerio.');
+        }
+
+        // Un recibo de este expediente debe aplicar a la venta o a sus cuotas;
+        // no aceptar un id de pago ajeno aunque exista en el sistema.
+        if ($documento === 'recibo') {
+            abort_unless(DB::table('pagos_pagos_programados as aplicaciones')
+                ->join('pagos_programados as programados', 'programados.id', '=', 'aplicaciones.pagos_programados_id')
+                ->join('operaciones as operacion', 'operacion.id', '=', 'programados.operaciones_id')
+                ->where('aplicaciones.pagos_id', (int) $request->input('id_pago'))
+                ->whereIn('operacion.empresa_operaciones_id', [1, 2])
+                ->where('operacion.ventas_terrenos_id', $ventaId)->exists(), 404, 'El recibo no pertenece a esta venta.');
+        }
+
+        // El atributo es interno: un parámetro de la URL no puede activar esta captura.
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['venta_id' => $ventaId, 'id_pago' => (int) $request->input('id_pago'), 'id_tipo_propiedad' => $request->input('id_tipo_propiedad', '')])]]);
+        $interno->attributes->set('_documento_cementerio_visor', $documento);
+        // El recibo conserva su lógica en PagosController; aquí solo se coordina
+        // el visor del expediente, sin duplicar cálculo de pagos ni crear más rutas.
+        $emisor = $documento === 'recibo' ? app(PagosController::class) : $this;
+        // La firma heredada del catálogo recibe idioma antes del Request.
+        // El idioma solo afecta esta captura: restaurarlo aun si falla el render.
+        $idiomaAnterior = App::getLocale();
+        try {
+            $captura = $esCatalogoCuotas
+                ? $this->{$definicion['metodo']}($documento === 'planes-venta' ? $request->input('idioma', 'es') : 'es', $interno)
+                : $emisor->{$definicion['metodo']}($interno);
+        } finally {
+            App::setLocale($idiomaAnterior);
+        }
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        abort_unless(
+            is_array($captura) && isset($captura['html'], $captura['opciones']),
+            409,
+            'No se pudo preparar el documento.'
+        );
+
+        $html = $this->recursosDocumentoCementerioVisor($captura['html']);
+        $opciones = $captura['opciones'];
+        foreach (['header-html', 'footer-html'] as $clave) {
+            if (!empty($opciones[$clave])) {
+                $valor = $opciones[$clave];
+                $opciones[$clave] = $this->recursosDocumentoCementerioVisor(
+                    $valor instanceof \Illuminate\Contracts\Support\Renderable ? $valor->render() : (string) $valor
+                );
+                // El acuse reserva un margen corto: ajustar solo su pie para
+                // mantener visibles las cinco líneas de contacto en el PDF.
+                if ($clave === 'footer-html' && $documento === 'acuse-cancelacion') {
+                    $opciones[$clave] = str_replace('</head>', '<style>html body table td.texto-sm{font-size:10px!important;line-height:12px!important}</style></head>', $opciones[$clave]);
+                }
+            }
+        }
+        $fecha = Carbon::now('America/Mazatlan');
+        $vence = $fecha->copy()->addMinutes(15);
+        $token = bin2hex(random_bytes(32));
+        $nombre = $definicion['titulo'] . ($ventaId ? ' '.$ventaId : '') . ' ' . $fecha->format('Y-m-d H-i-s') . '.pdf';
+        \Illuminate\Support\Facades\Cache::put('cementerio_solicitud_' . $token, [
+            'usuario_id' => (int) $usuario->id,
+            'html' => $html,
+            'opciones' => $opciones,
+            'nombre' => $nombre,
+            'venta_id' => $ventaId,
+            'documento' => $documento,
+        ], $vence);
+
+        // La impresión del navegador incluye el pie dentro del documento; el PDF
+        // conserva el footer/header de Snappy y los márgenes originales del contrato.
+        $vista = $html;
+        $margenes = [];
+        foreach (['top' => 5.4, 'right' => 5.4, 'bottom' => 35.4, 'left' => 5.4] as $lado => $defecto) {
+            $valor = (float) ($opciones['margin-' . $lado] ?? $defecto);
+            $margenes[$lado] = number_format($valor, 2, '.', '');
+        }
+        $horizontal = strtolower($opciones['orientation'] ?? 'portrait') === 'landscape';
+        $a4 = strtoupper($opciones['page-size'] ?? 'LETTER') === 'A4';
+        $ancho = $horizontal ? ($a4 ? 297 : 279.4) : ($a4 ? 210 : 215.9);
+        $alto = $horizontal ? ($a4 ? 210 : 215.9) : ($a4 ? 297 : 279.4);
+        $tamanoPagina = ($a4 ? 'A4' : 'letter') . ' ' . ($horizontal ? 'landscape' : 'portrait');
+        $margenPagina = $margenes['top'] . 'mm ' . $margenes['right'] . 'mm ' . $margenes['bottom'] . 'mm ' . $margenes['left'] . 'mm';
+        // Adaptación solo del navegador: WebKit/PDF y Chromium distribuyen de
+        // forma diferente las tablas con floats. 12px y columnas fijas reproducen
+        // la escala del original (prueba comparativa: misma paginación y filas).
+        // No forzar 12pt, desactivar smart-shrinking ni cambiar las opciones PDF.
+        // Zoom de pantalla en porcentaje desde config/reportes.php (.env). Mantiene
+        // el ancho interno carta; impresión al 100% y PDF sin estos estilos.
+        $zoomPantalla = number_format(config('reportes.visor_zoom_porcentaje', 135) / 100, 2, '.', '');
+        // Recibos y talonarios pueden crecer por firmas o filas. En pantalla,
+        // un contenedor flexible ocupa el espacio libre y empuja el pie al fondo.
+        // Se limita a estos documentos y a @media screen: PDF/impresión conservan su pie.
+        $pieEnFlujo = in_array($documento, ['recibo', 'referencias', 'cuotas', 'planes-venta'], true)
+            ? 'html body{display:flex;flex-direction:column;padding-bottom:5mm!important}.solicitud-visor-contenido{display:flow-root;flex:1 0 auto}.solicitud-visor-pie{position:static;flex:0 0 auto;clear:both;margin-top:24px;left:auto;right:auto;bottom:auto}'
+            : '';
+        $estiloNavegador = '<style id="solicitud-formato-navegador">'
+            // Cajas superiores vacías: suprimir fecha y título automáticos de Chromium.
+            . '@page{size:' . $tamanoPagina . ';margin:' . $margenPagina . ';@top-left{content:" "}@top-center{content:" "}@top-right{content:" "}}'
+            . 'html body{font-size:12px!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+            . (in_array($documento, ['solicitud', 'convenio'], true) ? 'table{table-layout:fixed!important;width:100%}.float-left>span{white-space:nowrap}' : '')
+            . '.solicitud-visor-pie{border-top:0.5pt solid #000;padding-top:8px}'
+            . '.solicitud-visor-pie table{width:100%;table-layout:fixed;border-collapse:collapse;padding:0}.solicitud-visor-pie td{width:50%;vertical-align:top;padding:0}'
+            . '@media screen{html{background:#eceff1}html body{zoom:' . $zoomPantalla . ';position:relative;box-sizing:border-box;'
+            . 'width:' . $ancho . 'mm!important;min-height:' . $alto . 'mm;margin:16px auto!important;'
+            . 'padding:calc(' . $margenes['top'] . 'mm + 6px) calc(' . $margenes['right'] . 'mm + 6px) calc(' . $margenes['bottom'] . 'mm + 6px) calc(' . $margenes['left'] . 'mm + 6px)!important;background:#fff;box-shadow:0 1px 8px #0002}'
+            . '.solicitud-visor-pie{position:absolute;left:calc(' . $margenes['left'] . 'mm + 6px);right:calc(' . $margenes['right'] . 'mm + 6px);bottom:5mm}' . $pieEnFlujo . '}'
+            . '@media print{html{background:#fff}html body{zoom:1!important;width:auto!important;min-height:0!important;'
+            . 'margin:6px!important;padding:0!important;background:#fff;box-shadow:none}'
+            . '.solicitud-visor-pie{display:none!important}}'
+            . '</style>';
+        $vista = preg_replace_callback('/<\/head>/i', function () use ($estiloNavegador) {
+            return $estiloNavegador . '</head>';
+        }, $vista, 1);
+        if (!empty($opciones['header-html'])) {
+            $aviso = trim(preg_replace('/\s+/u', ' ', strip_tags(preg_replace('/<head\b[^>]*>.*?<\/head>/is', '', $opciones['header-html']))));
+            $vista = preg_replace_callback('/(<body\b[^>]*>)/i', function ($m) use ($aviso) {
+                return $m[1] . '<div style="color:#b34343;text-align:center;font-weight:bold">' . e(mb_strtoupper($aviso, 'UTF-8')) . '</div>';
+            }, $vista, 1);
+        }
+        if (!empty($opciones['footer-html'])) {
+            $pie = new \DOMDocument();
+            $anterior = libxml_use_internal_errors(true);
+            $pie->loadHTML('<?xml encoding="UTF-8">' . $opciones['footer-html']);
+            libxml_clear_errors();
+            libxml_use_internal_errors($anterior);
+            $xpath = new \DOMXPath($pie);
+            foreach ($xpath->query('//td[.//span[contains(concat(" ",normalize-space(@class)," ")," page ")]]') as $nodo) {
+                $nodo->parentNode->removeChild($nodo);
+            }
+            // El footer original tiene una línea con colspan=3. Tras quitar
+            // la paginación central para pantalla esa fila seguía creando tres
+            // columnas, dejando el contacto derecho en el centro del documento.
+            // En el visor la línea ya la dibuja el contenedor: conservar dos columnas.
+            foreach ($xpath->query('//tr[count(td)=1 and td[@colspan]]') as $fila) {
+                $fila->parentNode->removeChild($fila);
+            }
+            // Cada página reserva el margen inferior original. Las cajas de
+            // margen de Chromium repiten el pie sin posicionarlo sobre los pagos.
+            $textoColumna = function ($alineacion) use ($xpath) {
+                $celda = $xpath->query('//td[@align="' . $alineacion . '"]')->item(0);
+                if (!$celda) return '';
+                $lineas = [];
+                foreach ($celda->getElementsByTagName('span') as $span) $lineas[] = trim($span->textContent);
+                return $lineas ? implode("\n", $lineas) : trim($celda->textContent);
+            };
+            $literalCss = function ($texto) {
+                $literal = '"' . str_replace(
+                    ['\\', '"', "\r", "\n", '<', '>'],
+                    ['\\\\', '\\"', '', '\\A ', '\\3C ', '\\3E '],
+                    $texto
+                ) . '"';
+                // Escapes CSS Unicode: DOMDocument no debe convertir los acentos
+                // de content en entidades HTML que el navegador imprimiría literalmente.
+                return preg_replace_callback('/[^\x00-\x7F]/u', function ($m) {
+                    return '\\'.dechex(mb_ord($m[0], 'UTF-8')).' ';
+                }, $literal);
+            };
+            // Los pies de cinco líneas deben caber incluso con margen inferior corto.
+            $letraPie = (float) $margenes['bottom'] < 25 ? 'font-size:7.5pt;line-height:9pt;' : 'font-size:8.5pt;line-height:11pt;';
+            $basePie = 'font-family:"Open Sans",sans-serif;' . $letraPie
+                . 'white-space:pre-line;vertical-align:top;padding-top:5pt;border-top:0.5pt solid #000;';
+            $reglasPie = '<style>@page{'
+                . '@bottom-left{width:45%;' . $basePie . 'text-align:left;content:' . $literalCss($textoColumna('left')) . '}'
+                . '@bottom-center{width:10%;' . $basePie . 'text-align:center;vertical-align:middle;content:"P\e1 g. " counter(page) " De " counter(pages)}'
+                . '@bottom-right{width:45%;' . $basePie . 'text-align:right;content:' . $literalCss($textoColumna('right')) . '}'
+                . '}</style>';
+            $vista = preg_replace_callback('/<\/head>/i', function () use ($reglasPie) {
+                return $reglasPie . '</head>';
+            }, $vista, 1);
+            $cuerpo = $pie->getElementsByTagName('body')->item(0);
+            $fragmento = '';
+            if ($cuerpo) foreach ($cuerpo->childNodes as $nodo) $fragmento .= $pie->saveHTML($nodo);
+            $vista = preg_replace('/<\/body>/i', '<div class="solicitud-visor-pie">' . $fragmento . '</div></body>', $vista, 1);
+        }
+        // Normalizar el HTML heredado antes de separar contenido y pie: algunos
+        // Blade dejan contenedores abiertos. El pie debe ser hermano del contenido
+        // para que el flex de pantalla lo mantenga abajo sin superponer las firmas.
+        // La instantánea del PDF ya se guardó; este envoltorio solo afecta al visor.
+        if (in_array($documento, ['recibo', 'referencias', 'cuotas', 'planes-venta'], true)) {
+            $domVista = new \DOMDocument();
+            $erroresPrevios = libxml_use_internal_errors(true);
+            $domVista->loadHTML('<?xml encoding="UTF-8">'.$vista);
+            // Mantener UTF-8 al normalizar el HTML heredado.
+            $domVista->encoding = 'UTF-8';
+            libxml_clear_errors(); libxml_use_internal_errors($erroresPrevios);
+            $cuerpoVista = $domVista->getElementsByTagName('body')->item(0);
+            $consultaVista = new \DOMXPath($domVista);
+            $pieVista = $consultaVista->query('//div[contains(concat(" ",normalize-space(@class)," ")," solicitud-visor-pie ")]')->item(0);
+            if ($cuerpoVista && $pieVista) {
+                $pieVista->parentNode->removeChild($pieVista);
+                $contenidoVista = $domVista->createElement('div');
+                $contenidoVista->setAttribute('class', 'solicitud-visor-contenido');
+                while ($cuerpoVista->firstChild) $contenidoVista->appendChild($cuerpoVista->firstChild);
+                $cuerpoVista->appendChild($contenidoVista);
+                $cuerpoVista->appendChild($pieVista);
+                $vista = preg_replace('/<\?xml[^>]*>/', '', $domVista->saveHTML(), 1);
+            }
+        }
+        return response()->json([
+            'titulo' => $definicion['titulo'],
+            'nombreArchivo' => $nombre,
+            'subtitulo' => $esCatalogoCuotas ? ($documento === 'planes-venta' ? 'Lista de precios · '.($request->input('idioma', 'es') === 'en' ? 'Inglés' : 'Español').' · Documento PDF' : 'Listado de cuotas de mantenimiento · Documento PDF') : 'Venta núm. ' . $ventaId . ($documento === 'recibo' ? ' · Recibo núm. ' . (int) $request->input('id_pago') : '') . ' · Documento PDF',
+            'nota' => 'Vista previa del documento. El PDF se genera al descargarlo o enviarlo. La consulta es válida por 15 minutos; Actualizar obtiene los datos y firmas vigentes.',
+            'soloPdf' => true,
+            'tokenDescarga' => $token,
+            'venceEn' => $vence->toIso8601String(),
+            'vistaPreviaDisponible' => true,
+            'totalRegistros' => (int) ($captura['total_registros'] ?? 1),
+            'hojas' => [['nombre' => $definicion['titulo'], 'html' => $vista]],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Captura el Blade ya renderizado y las opciones originales de Snappy sin ejecutar output/inline. */
+    private function capturarDocumentoCementerioVisor($pdf)
+    {
+        $opciones = array_intersect_key($pdf->snappy()->getOptions(), array_flip([
+            'title',
+            'footer-html',
+            'header-html',
+            'margin-left',
+            'margin-right',
+            'margin-top',
+            'margin-bottom',
+            'page-size',
+            'orientation',
+        ]));
+        return ['html' => (string) $pdf->html, 'opciones' => $opciones];
+    }
+
+    /**
+     * Recupera la instantánea del token solo para su propietario autenticado.
+     * Devuelve datos del documento; 410 indica reporte vencido, no sesión vencida.
+     */
+    private function datosDocumentoCementerioVisor(Request $request, $token, $documento)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401, 'Es necesario iniciar sesión.');
+        abort_unless(is_string($token) && preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $datos = \Illuminate\Support\Facades\Cache::get('cementerio_solicitud_' . $token);
+        abort_unless($datos, 410, 'La consulta del reporte venció. Actualice el reporte para continuar.');
+        abort_unless((int) $datos['usuario_id'] === (int) $usuario->id, 403);
+        abort_unless(($datos['documento'] ?? 'solicitud') === $documento, 404, 'El documento no corresponde al reporte solicitado.');
+        return $datos;
+    }
+
+    /** Genera el PDF desde la instantánea, con márgenes, pie y firmas originales. */
+    private function pdfDocumentoCementerioVisor(array $datos)
+    {
+        return PDF::loadHTML($datos['html'])->setOptions($datos['opciones']);
+    }
+
+    /** Descarga el tipo indicado en la ruta; exige token privado del mismo documento y usuario. */
+    public function descargarDocumentoCementerio(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return $this->descargarDocumentoCementerioVisor($request, $token, $documento);
+    }
+
+    /** Genera bajo demanda el PDF del tipo esperado; nunca se invoca al visualizar HTML. */
+    private function descargarDocumentoCementerioVisor(Request $request, $token, $documento)
+    {
+        $datos = $this->datosDocumentoCementerioVisor($request, $token, $documento);
+        return response($this->pdfDocumentoCementerioVisor($datos)->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $datos['nombre'] . '"',
+            'Cache-Control' => 'no-store, private',
+        ]);
+    }
+
+    /** Envía el documento permitido de la ruta mediante el modal de correo; solo admite su token privado. */
+    public function enviarDocumentoCementerioCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return $this->enviarDocumentoCementerioVisor($request, $token, $documento);
+    }
+
+    /** Valida destinatarios/mensaje y envía la instantánea del tipo esperado, solo PDF. */
+    private function enviarDocumentoCementerioVisor(Request $request, $token, $documento)
+    {
+        $datos = $this->datosDocumentoCementerioVisor($request, $token, $documento);
+        $request->validate([
+            'destinatarios' => 'required|array|min:1|max:20',
+            'destinatarios.*.email' => 'required|email|max:75',
+            'destinatarios.*.nombre' => 'nullable|string|max:75',
+            'asunto' => 'required|string|max:150',
+            'mensaje' => 'nullable|string|max:30000',
+            'formato' => 'required|in:pdf',
+            'completo' => 'sometimes|boolean',
+        ]);
+        $destinatarios = [];
+        $vistos = [];
+        foreach ($request->input('destinatarios') as $persona) {
+            $correo = mb_strtolower(trim($persona['email']), 'UTF-8');
+            if (isset($vistos[$correo])) throw \Illuminate\Validation\ValidationException::withMessages([
+                'destinatarios' => 'Hay correos duplicados en la lista.',
+            ]);
+            $vistos[$correo] = true;
+            $destinatarios[] = ['email' => $correo, 'nombre' => trim($persona['nombre'] ?? '')];
+        }
+        $mensaje = $request->input('mensaje', '');
+        $texto = html_entity_decode(strip_tags($mensaje), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (mb_strlen(trim($texto), 'UTF-8') > 5000) throw \Illuminate\Validation\ValidationException::withMessages([
+            'mensaje' => 'El mensaje no debe superar 5000 caracteres.',
+        ]);
+        abort_if($request->boolean('completo'), 422, 'Este documento no tiene una variante de detalle completo.');
+        return app(EmailController::class)->reporte_email([
+            'destinatarios' => $destinatarios,
+            'asunto' => trim($request->input('asunto')),
+            'mensaje' => $mensaje,
+        ], $this->pdfDocumentoCementerioVisor($datos)->output(), $datos['nombre'], 'application/pdf');
+    }
+
+    /**
+     * Hace autocontenido el Blade original: CSS de reportes e imágenes locales
+     * se incrustan para funcionar en el iframe sin permitir recursos externos.
+     * No modifica el Blade. No descarga URLs ni permite leer fuera de public.
+     */
+    private function recursosDocumentoCementerioVisor($html)
+    {
+        $html = preg_replace_callback('/<link\b[^>]*>/i', function ($m) {
+            if (!preg_match('/\bhref\s*=\s*([\'"])(.*?)\1/i', $m[0], $enlace)) return '';
+            $ruta = parse_url(html_entity_decode($enlace[2], ENT_QUOTES, 'UTF-8'), PHP_URL_PATH);
+            $esperada = parse_url(asset('css/blade_css.css'), PHP_URL_PATH);
+            if ($ruta !== '/css/blade_css.css' && $ruta !== $esperada) return '';
+            $css = public_path('css/blade_css.css');
+            return is_file($css) ? '<style>' . file_get_contents($css) . '</style>' : '';
+        }, (string) $html);
+        $html = preg_replace_callback('/\bsrc\s*=\s*([\'"])(.*?)\1/i', function ($m) {
+            return 'src="' . $this->imagenDocumentoCementerioVisor(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8')) . '"';
+        }, $html);
+        $html = preg_replace_callback('/url\(\s*([\'"]?)(.*?)\1\s*\)/i', function ($m) {
+            $imagen = $this->imagenDocumentoCementerioVisor($m[2]);
+            // El data URI no lleva comillas: puede estar dentro de style="...".
+            // Introducir comillas dobles aquí cortaba el atributo y ocultaba el fondo.
+            return $imagen ? 'url(' . $imagen . ')' : 'none';
+        }, $html);
+        // Conservar la tipografía de los documentos originales. Las variantes se
+        // incrustan: el iframe/PDF no depende de fuentes instaladas ni de Google.
+        $fuentes = '';
+        foreach ([400 => 'OpenSans-Regular.ttf', 700 => 'OpenSans-Bold.ttf'] as $peso => $archivo) {
+            $ruta = public_path('fonts/reportes-open-sans/' . $archivo);
+            abort_unless(is_file($ruta), 422, 'Falta la fuente Open Sans del reporte.');
+            $fuentes .= '@font-face{font-family:"Open Sans";font-style:normal;font-weight:' . $peso . ';'
+                . 'src:url(data:font/ttf;base64,' . base64_encode(file_get_contents($ruta)) . ') format("truetype");}';
+        }
+        return preg_replace_callback('/<\/head>/i', function () use ($fuentes) {
+            return '<style>' . $fuentes . 'html body{font-family:"Open Sans",sans-serif!important}</style></head>';
+        }, $html, 1);
+    }
+
+    /** Devuelve un data URI de imagen pública local o vacío para recursos no permitidos. */
+    private function imagenDocumentoCementerioVisor($ruta)
+    {
+        if (preg_match('#^data:image/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=\r\n]+$#i', $ruta)) return $ruta;
+        if (preg_match('#^https?://#i', $ruta)) {
+            if (parse_url($ruta, PHP_URL_HOST) !== parse_url(config('app.url'), PHP_URL_HOST)) return '';
+            $ruta = public_path(ltrim(parse_url($ruta, PHP_URL_PATH) ?: '', '/'));
+        } elseif (!preg_match('#^(?:[a-z]:[\\\\/]|/)#i', $ruta)) {
+            $ruta = public_path($ruta);
+        }
+        $real = realpath($ruta);
+        $publico = realpath(public_path());
+        if (!$real || !$publico || !is_file($real)) return '';
+        $normal = str_replace('\\', '/', $real);
+        $raiz = rtrim(str_replace('\\', '/', $publico), '/') . '/';
+        if (strncasecmp($normal, $raiz, strlen($raiz)) !== 0) return '';
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($real);
+        if (!in_array($mime, ['image/png', 'image/jpeg', 'image/gif', 'image/webp'], true)) return '';
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($real));
+    }
+
+
+    /** Reporte tipo 1: datos de la venta/ubicación en su módulo, cálculo financiero compartido.
      * Detalle del método: Obtiene el reporte individual de ventas en cementerio (tipo 1) mediante el motor
      * financiero compartido.
      * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
@@ -49,7 +461,7 @@ class CementerioController extends ApiController
         return $this->getReporteCementerioPorTipo(1, $anio, $mes, $corte, $soloConteo, $vencidoHastaPeriodo);
     }
 
-    /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio. 
+    /** Reporte tipo 2: cuotas asignadas a propiedades del cementerio.
      * Detalle del método: Obtiene el reporte de cuotas de mantenimiento (tipo 2) conservando el alcance y
      * reglas financieras compartidas.
      * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
@@ -75,14 +487,20 @@ class CementerioController extends ApiController
     private function getReporteCementerioPorTipo($tipo, $anio, $mes, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
-            $tipo, $anio, $mes, $corte, $soloConteo,
+            $tipo,
+            $anio,
+            $mes,
+            $corte,
+            $soloConteo,
             function (array $consultas, array $resultado) use ($tipo) {
                 return $this->completarDetalleReporteCementerio($consultas, $resultado, $tipo === 2);
-            }, null, $vencidoHastaPeriodo
+            },
+            null,
+            $vencidoHastaPeriodo
         );
     }
 
-    /** Carga mínima del catálogo una vez; memoiza cada ubicación entre los tres apartados. 
+    /** Carga mínima del catálogo una vez; memoiza cada ubicación entre los tres apartados.
      * Detalle del método: Añade cliente, venta, cuota y ubicación traducida a las consultas compartidas de
      * capital.
      * Entradas: $consultas (consultas base de las secciones a enriquecer); $resultado (estructura de
@@ -101,8 +519,7 @@ class CementerioController extends ApiController
         foreach ($consultas as $clave => $consulta) {
             $filas = $consulta->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
                 ->leftJoin('ventas_terrenos as vt', 'vt.id', '=', 'o.ventas_terrenos_id')
-                ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email', 'vt.ubicacion')
-                ;
+                ->addSelect('c.nombre as cliente', 'c.telefono', 'c.celular', 'c.email', 'vt.ubicacion');
             if ($esCuota) {
                 // La cuota es compartida entre propiedades; la asignación individual es operaciones.
                 // No filtrar status del catálogo: conservar la misma base que el resumen financiero.
@@ -110,7 +527,7 @@ class CementerioController extends ApiController
                     ->addSelect('o.cuotas_cementerio_id as cuota_id', 'cc.descripcion as descripcion_cuota', 'cc.fecha_inicio as inicio_cuota', 'cc.fecha_fin as fin_cuota');
             }
             if ($clave === 'ventas') $filas->orderBy('o.fecha_operacion', 'desc')->orderBy('o.id', 'desc');
-                    else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
+            else $filas->orderBy('pp.fecha_programada', 'desc')->orderBy('pp.id', 'desc');
             $resultado[$clave] = $filas->get()->map(function ($f) use ($cementerio, $datosCementerio, &$ubicaciones) {
                 $codigo = trim((string) $f->ubicacion);
                 if (!array_key_exists($codigo, $ubicaciones)) {
@@ -128,10 +545,10 @@ class CementerioController extends ApiController
         return $resultado;
     }
 
-    /** Traducciones en bloque para reportes: una carga del catálogo y una por código único. 
+    /** Traducciones en bloque para reportes: una carga del catálogo y una por código único.
      * Mantenimiento: Traduce códigos distintos de ubicación con ubicacion_texto y reutiliza el resultado
      * dentro del reporte, evitando consultar/traducir de nuevo para cada fila de pago.
-     
+
      * Detalle del método: Traduce códigos distintos usando ubicacion_texto y datos del cementerio,
      * reutilizando cada traducción.
      * Entradas: $codigos (códigos de ubicación que necesitan traducción).
@@ -141,7 +558,9 @@ class CementerioController extends ApiController
     {
         $ubicaciones = [];
         foreach ($codigos as $codigo) $ubicaciones[trim((string) $codigo)] = 'No disponible';
-        $validos = array_filter(array_keys($ubicaciones), function ($codigo) { return preg_match('/^[0-9]+-[0-9]+-[0-9]+-[0-9]+$/D', $codigo); });
+        $validos = array_filter(array_keys($ubicaciones), function ($codigo) {
+            return preg_match('/^[0-9]+-[0-9]+-[0-9]+-[0-9]+$/D', $codigo);
+        });
         if (!$validos) return $ubicaciones;
         $catalogo = Propiedades::select('id', 'tipo_propiedades_id', 'propiedad_indicador')->get()->toArray();
         foreach ($validos as $codigo) {
@@ -152,10 +571,10 @@ class CementerioController extends ApiController
         return $ubicaciones;
     }
 
-    /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes. 
+    /** Resumen ligero por cuota: agrupa las tres consultas financieras sin cargar clientes.
      * Mantenimiento: Agrupa operaciones tipo 2 por cuota; permite abrir cada desglose y generar el Excel con
      * sus hojas. La descripción visible procede de cuotas_cementerio.descripcion.
-     
+
      * Detalle del método: Agrupa importes y conteos del tipo 2 por cuota para permitir revisión general y
      * navegación al detalle.
      * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $corte (fecha de
@@ -166,14 +585,18 @@ class CementerioController extends ApiController
     public function getResumenCuotasMantenimiento($anio, $mes, Carbon $corte = null, $vencidoHastaPeriodo = false)
     {
         return app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
-            2, $anio, $mes, $corte, false,
+            2,
+            $anio,
+            $mes,
+            $corte,
+            false,
             function (array $consultas, array $resultado) {
                 $cuotas = [];
                 foreach ($consultas as $clave => $consulta) {
                     $consulta->addSelect('o.cuotas_cementerio_id as cuota_id');
                     $campo = $clave === 'ventas' ? 'total' : 'pendiente';
                     $filas = DB::query()->fromSub($consulta, 'q')->selectRaw('COALESCE(q.cuota_id, 0) as cuota_id')
-                        ->selectRaw('COUNT(*) as cantidad, SUM(q.'.$campo.') as importe')
+                        ->selectRaw('COUNT(*) as cantidad, SUM(q.' . $campo . ') as importe')
                         ->groupBy(DB::raw('COALESCE(q.cuota_id, 0)'))->get();
                     foreach ($filas as $fila) {
                         $id = (int) $fila->cuota_id;
@@ -191,16 +614,20 @@ class CementerioController extends ApiController
                     $cuota['fecha_inicio'] = $registro ? $registro->fecha_inicio : null;
                 }
                 unset($cuota);
-                usort($cuotas, function ($a, $b) { return strcmp($b['fecha_inicio'] ?? '', $a['fecha_inicio'] ?? '') ?: ($b['id'] <=> $a['id']); });
+                usort($cuotas, function ($a, $b) {
+                    return strcmp($b['fecha_inicio'] ?? '', $a['fecha_inicio'] ?? '') ?: ($b['id'] <=> $a['id']);
+                });
                 $resultado['resumen_cuotas'] = true;
                 $resultado['cuotas'] = array_values($cuotas);
                 $resultado['resumen']['cantidad'] = array_sum(array_column($cuotas, 'cantidad'));
                 return $resultado;
-            }, null, $vencidoHastaPeriodo
+            },
+            null,
+            $vencidoHastaPeriodo
         );
     }
 
-    /** Una cuota del catálogo, con los tres apartados y sus totales propios. 
+    /** Una cuota del catálogo, con los tres apartados y sus totales propios.
      * Detalle del método: Consulta solo la cuota seleccionada y completa el contexto de venta/propiedad y
      * contacto.
      * Entradas: $anio (año del periodo solicitado); $mes (mes del periodo solicitado); $cuotaId (cuota
@@ -212,14 +639,21 @@ class CementerioController extends ApiController
     public function getDetalleCuotaMantenimiento($anio, $mes, $cuotaId, Carbon $corte = null, $soloConteo = false, $vencidoHastaPeriodo = false)
     {
         $datos = app(OperacionesController::class)->getReporteVentasSaldosOperacionesDetallado(
-            2, $anio, $mes, $corte, $soloConteo,
-            function (array $consultas, array $resultado) { return $this->completarDetalleReporteCementerio($consultas, $resultado, true); },
-            (int) $cuotaId, $vencidoHastaPeriodo
+            2,
+            $anio,
+            $mes,
+            $corte,
+            $soloConteo,
+            function (array $consultas, array $resultado) {
+                return $this->completarDetalleReporteCementerio($consultas, $resultado, true);
+            },
+            (int) $cuotaId,
+            $vencidoHastaPeriodo
         );
         $descripcion = DB::table('cuotas_cementerio')->where('id', (int) $cuotaId)->value('descripcion');
         $datos['cuota_id'] = (int) $cuotaId;
         $datos['descripcion_cuota'] = trim($descripcion ?? '') ?: 'No disponible';
-        $datos['titulo'] = 'Cuotas de Mantenimiento · '.$datos['descripcion_cuota'];
+        $datos['titulo'] = 'Cuotas de Mantenimiento · ' . $datos['descripcion_cuota'];
         return $datos;
     }
 
@@ -451,6 +885,29 @@ class CementerioController extends ApiController
             ->get();
     }
 
+    /**
+     * Filtra los datos de una cuota activa antes del cálculo heredado: operaciones
+     * tipo 2 status 1/2 hasta el corte y programados status 1. No filtra por vencimiento:
+     * saldo neto incluye también pendientes futuros; el dashboard vencido los excluye.
+     * Devuelve las mismas filas/campos originales, evitando sumar cancelaciones.
+     */
+    private function propiedadesVigentesCuota(array $propiedades, Carbon $corte)
+    {
+        $vigentes = [];
+        foreach ($propiedades as $propiedad) {
+            if ((int) ($propiedad['empresa_operaciones_id'] ?? 0) !== 2
+                || !in_array((int) ($propiedad['status'] ?? 0), [1, 2], true)
+                || empty($propiedad['fecha_operacion'])
+                || Carbon::parse($propiedad['fecha_operacion'], 'America/Mazatlan')->greaterThan($corte)) continue;
+            $propiedad['get_pagos_pagos_programados'] = array_values(array_filter(
+                $propiedad['get_pagos_pagos_programados'] ?? [],
+                function ($programado) { return (int) ($programado['status'] ?? 0) === 1; }
+            ));
+            $vigentes[] = $propiedad;
+        }
+        return $vigentes;
+    }
+
     /**obtiene todas cuotas de mantenimiento en el cementerio */
     public function get_cuotas(Request $request, $id_cuota = 'all', $paginated = false)
     {
@@ -467,7 +924,7 @@ class CementerioController extends ApiController
             ->with('propiedades.get_pagos_pagos_programados.pagados')
             ->with('propiedades.venta_terreno:id,ubicacion')
             ->with('propiedades.cliente:id,nombre,celular,telefono,status')
-            ->with('propiedades:id,ventas_terrenos_id,cuotas_cementerio_id,clientes_id,subtotal,descuento,impuestos,tasa_iva,total,costo_neto_pronto_pago,financiamiento,fecha_cancelacion as fecha_cancelacion_operacion,status')
+            ->with('propiedades:id,empresa_operaciones_id,fecha_operacion,ventas_terrenos_id,cuotas_cementerio_id,clientes_id,subtotal,descuento,impuestos,tasa_iva,total,costo_neto_pronto_pago,financiamiento,fecha_cancelacion as fecha_cancelacion_operacion,status')
             ->select(
                 '*',
                 DB::raw(
@@ -557,7 +1014,13 @@ class CementerioController extends ApiController
         /**datos del cmeenterio para actualizar los valores de la ubicacion */
         $datos_cementerio = $this->get_cementerio();
 
+        $corteCuotas = Carbon::now('America/Mazatlan');
         foreach ($resultado as $index_cuota => &$cuota) {
+            // Para cuotas activas, usar la misma vigencia de capital del dashboard.
+            // Las cuotas canceladas conservan su desglose histórico heredado.
+            if ((int) $cuota['status'] === 1) {
+                $cuota['propiedades'] = $this->propiedadesVigentesCuota($cuota['propiedades'], $corteCuotas);
+            }
             if ($cuota['status'] == 0) {
                 $cuota['status_texto'] = "Cancelada";
             } else {
@@ -696,6 +1159,10 @@ class CementerioController extends ApiController
                         $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
 
                         $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
+                        // Un sobrepago no debe compensar la deuda de otro programado.
+                        if ((int) $cuota['status'] === 1) {
+                            $saldo_pago_programado = max(0, round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP));
+                        }
 
                         /**sumo al total x cuota */
                         $cuota['total_x_cuota'] += $programado['monto_programado'];
@@ -1341,6 +1808,7 @@ class CementerioController extends ApiController
         }
     }
 
+    /** Lista todas las cuotas con la consulta heredada; el visor captura HTML/opciones sin generar PDF ni correo. */
     public function get_cuota_pdf_todas($idioma = 'es', Request $request)
     {
 
@@ -1386,12 +1854,18 @@ class CementerioController extends ApiController
             'header-html' => view('cementerios.cuotas_todas.header'),
         ]);
 
-        $pdf->setOption('orientation', 'landscape');
+        // Carta vertical compartida por visor, impresión, descarga y correo.
+        $pdf->setOption('orientation', 'portrait');
         $pdf->setOption('margin-left', 12.4);
         $pdf->setOption('margin-right', 12.4);
         $pdf->setOption('margin-top', 12.4);
         $pdf->setOption('margin-bottom', 12.4);
         $pdf->setOption('page-size', 'letter');
+
+        // Captura interna para las tres rutas compartidas del visor de cementerio.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'cuotas') {
+            return array_merge($this->capturarDocumentoCementerioVisor($pdf), ['total_registros' => count($cuotas)]);
+        }
 
         if ($email == true) {
             /**email */
@@ -2941,13 +3415,18 @@ class CementerioController extends ApiController
             'header-html' => view('cementerios.planes_venta.header'),
         ]);
 
-        $pdf->setOption('orientation', 'landscape');
+        // Carta vertical para la vista previa, descarga, impresión y correo.
+        $pdf->setOption('orientation', 'portrait');
         $pdf->setOption('margin-left', 12.4);
         $pdf->setOption('margin-right', 12.4);
         $pdf->setOption('margin-top', 12.4);
         $pdf->setOption('margin-bottom', 12.4);
         $pdf->setOption('page-size', 'letter');
 
+        // El visor recibe HTML y opciones; el PDF se genera solo al descargar o enviar.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'planes-venta') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
         if ($email == true) {
             /**email */
             /**
@@ -3998,6 +4477,7 @@ class CementerioController extends ApiController
         return $datos;
     }
 
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function acuse_cancelacion(Request $request)
     {
         try {
@@ -4057,6 +4537,11 @@ class CementerioController extends ApiController
             $pdf->setOption('margin-bottom', 19.4);
             $pdf->setOption('page-size', 'Letter');
 
+            // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+            if ($request->attributes->get('_documento_cementerio_visor') === 'acuse-cancelacion') {
+                return $this->capturarDocumentoCementerioVisor($pdf);
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -4086,6 +4571,7 @@ class CementerioController extends ApiController
         }
     }
 
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function documento_titulo(Request $request)
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
@@ -4137,10 +4623,17 @@ class CementerioController extends ApiController
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('header-right', 'dddd');
         $pdf->setOption('margin-left', 14.4);
-        $pdf->setOption('margin-right', 14.4);
-        $pdf->setOption('margin-top', 24.4);
+        // Permitir el fondo fuera del área del texto sin recortar su borde.
+        // titulo-contenido compensa estos márgenes para conservar la composición.
+        $pdf->setOption('margin-right', 8.5);
+        $pdf->setOption('margin-top', 16.9);
         $pdf->setOption('margin-bottom', 30.4);
         $pdf->setOption('page-size', 'Letter');
+
+        // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'titulo') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
 
         if ($email == true) {
             /**email */
@@ -4168,6 +4661,7 @@ class CementerioController extends ApiController
         }
     }
 
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function referencias_de_pago(Request $request, $id_pago = '')
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
@@ -4214,6 +4708,11 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-top', 9.4);
         $pdf->setOption('margin-bottom', 13.4);
         $pdf->setOption('page-size', 'Letter');
+
+        // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'referencias') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
 
         if ($email == true) {
             /**email */
@@ -4306,6 +4805,12 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-bottom', 30.4);
         $pdf->setOption('page-size', 'letter');
 
+        // Captura interna del convenio para el visor: conservar plantilla,
+        // firmas y opciones originales sin ejecutar output/inline ni SMTP.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'convenio') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
+
         if ($email == true) {
             /**email */
             /**
@@ -4395,6 +4900,12 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-bottom', 35.4);
         $pdf->setOption('page-size', 'letter');
 
+        // Solo el nuevo transporte interno solicita HTML/opciones: no genera PDF ni envía correo.
+        // Es un atributo de Request configurado por el servidor, no un parámetro de URL.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'solicitud') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
+
         if ($email == true) {
             /**email */
             /**
@@ -4422,6 +4933,7 @@ class CementerioController extends ApiController
     }
 
     /**pdf de los servicios que han usado esta propiedad */
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function servicios_propiedad(Request $request)
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
@@ -4484,6 +4996,11 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-bottom', 32.4);
         $pdf->setOption('page-size', 'letter');
 
+        // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'servicios-propiedad') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
+
         if ($email == true) {
             /**email */
             /**
@@ -4511,6 +5028,7 @@ class CementerioController extends ApiController
     }
 
     /**pdf del estado de cuenta del cementerio */
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function documento_estado_de_cuenta_cementerio(Request $request)
     {
         try {
@@ -4590,6 +5108,11 @@ class CementerioController extends ApiController
             $pdf->setOption('margin-bottom', 30.4);
             $pdf->setOption('page-size', 'letter');
 
+            // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+            if ($request->attributes->get('_documento_cementerio_visor') === 'estado-cuenta') {
+                return $this->capturarDocumentoCementerioVisor($pdf);
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -4620,6 +5143,7 @@ class CementerioController extends ApiController
     }
 
     /**pdf del convenio plan de cementerio */
+    /** Reutiliza los datos y el PDF heredados; el atributo interno del visor captura HTML/opciones antes de descargar o enviar. */
     public function reglamento_pago(Request $request)
     {
 
@@ -4681,6 +5205,11 @@ class CementerioController extends ApiController
         $pdf->setOption('margin-top', 10.4);
         $pdf->setOption('margin-bottom', 35.4);
         $pdf->setOption('page-size', 'Letter');
+
+        // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
+        if ($request->attributes->get('_documento_cementerio_visor') === 'reglamento') {
+            return $this->capturarDocumentoCementerioVisor($pdf);
+        }
         if ($email == true) {
             /**email */
             /**

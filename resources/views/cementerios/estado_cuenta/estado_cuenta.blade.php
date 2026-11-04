@@ -64,9 +64,11 @@
 
         /*fin de parrafos*/
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'pagos'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -511,6 +513,7 @@
             @endif
         @endforeach
     </div>
+</div>
 </body>
 
 </html>

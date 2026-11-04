@@ -31,8 +31,10 @@
 .modo-pdf .pie{display:block}
 .modo-pdf .pie span:last-child{float:right}
 </style>
+@include('reportes.temporales_visor_excel.compartidos.paginacion')
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'inventario', 'altoMarcaAgua' => 850])
 </head>
-<body class="{{ !empty($modoPdf) ? 'modo-pdf' : '' }}"><main class="reporte">
+<body class="{{ !empty($modoPdf) ? 'modo-pdf' : '' }}"><div class="marca-agua-contenido" @if(empty($modoPdf)) data-marca-visor @endif><main class="reporte">
 <header class="cabecera"><div class="logo-contenedor"><img class="logo" src="{{ $logo }}" alt="Aeternus Funerales"></div><div class="titulo"><h1>{{ $resumen['reporte'] }}</h1><p class="fecha">Datos consultados: {{ $fecha }} · Moneda: MXN</p></div></header>
 <section class="resumen" aria-label="Resumen del inventario">
 @foreach ([['Conceptos','total_articulos',''],['Artículos','tipo_articulo','articulos'],['Servicios','tipo_servicio','servicios'],['Bajo mínimo','bajo_minimo','bajo'],['Sobre máximo','sobre_maximo','sobre']] as $indicador)
@@ -58,4 +60,4 @@
 @endforelse
 </tbody></table></div>
 <footer class="pie"><span>Aeternus Funerales · Control de inventario</span><span>{{ count($filas) }} registros</span></footer>
-</main></body></html>
+</main></div></body></html>

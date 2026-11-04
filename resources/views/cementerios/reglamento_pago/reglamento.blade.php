@@ -70,9 +70,18 @@
 
         /*fin de parrafos*/
     </style>
+<style>
+        /* Firmas legibles y juntas; evitar una página extra por el margen mt-50. */
+        .reglamento-firmas { margin-top:12px; break-inside:avoid; page-break-inside:avoid; }
+        .reglamento-firmas::after { content:""; display:table; clear:both; }
+        .reglamento-firma-imagen { height:68px; }
+        .reglamento-firmas .firma { width:auto; height:auto; max-width:160px; max-height:64px; margin:0 auto; }
+    </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cementerio'])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -270,9 +279,9 @@
     </div>
 
 
-    <div class="w-100 center">
-            <div class="w-50 float-left mt-50">
-                <img src="{{ $firmas['gerente'] }}" class="firma">
+    <div class="reglamento-firmas w-100 center">
+            <div class="w-50 float-left">
+                <div class="reglamento-firma-imagen"><img src="{{ $firmas['gerente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $empresa->razon_social }}</span>
@@ -280,8 +289,8 @@
                     <span class="uppercase bold texto-sm">"la empresa"</span>
                 </div>
             </div>
-            <div class="w-50 float-right mt-50">
-                  <img src="{{ $firmas['cliente'] }}" class="firma">
+            <div class="w-50 float-right">
+                  <div class="reglamento-firma-imagen"><img src="{{ $firmas['cliente'] }}" class="firma"></div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $datos['nombre'] }}</span>
@@ -290,6 +299,7 @@
                 </div>
             </div>
         </div>
+</div>
 </body>
 
 </html>

@@ -61,24 +61,38 @@
             margin: 0 !important;
         }
 
-        body {
-            background-repeat: no-repeat !important;
-            background-position-x: 300px !important;
-            background-size: cover !important;
+        /* Usar la opacidad propia del PNG, sin transformarlo al generar el reporte. */
+        body { position:relative; background-image:none!important; }
+        .titulo-marca { position:absolute; left:318px; top:-8px; width:585px; z-index:0; pointer-events:none; }
+        .titulo-marca svg { width:100%; height:884.5px; display:block; }
+        .titulo-contenido { position:relative; z-index:1; padding-top:35px; padding-right:28px; }
+        /* Medidas físicas tomadas del PDF de referencia. */
+        @media screen {
+            body:has(.solicitud-visor-pie) .titulo-marca svg { height:187.21mm; }
+            body:has(.solicitud-visor-pie) .titulo-marca { left:83.329mm; top:16.952mm; width:123.825mm; }
+            body:has(.solicitud-visor-pie) .titulo-contenido { padding-top:7.5mm; padding-right:5.9mm; }
         }
-
+        @media print {
+            .titulo-marca svg { height:187.21mm; }
+            .titulo-marca { left:calc(83.329mm - 14.4mm); top:calc(16.952mm - 16.9mm); width:123.825mm; }
+            html body:has(.titulo-contenido) { margin:0!important;  -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+            .titulo-contenido { padding-top:7.5mm; padding-left:6px; padding-right:calc(5.9mm + 6px); }
+        }
         /*fin de parrafos*/
     </style>
 </head>
 
-<body style="background-image:url('{{ public_path('/images/watermark.jpg') }}')">
+<body>
+    {{-- Qt dibuja el alfa de las rutas sin oscurecer los colores del PNG. --}}
+    <div class="titulo-marca" aria-hidden="true">{!! \App\Exports\MarcaTituloReportes::svg() !!}</div>
+    <div class="titulo-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
             <table class="w-100">
                 <tr>
                     <td width="70%">
-                        <img src="{{ public_path('/images/logopng.png') }}" class="w-60 mr-8">
+                        <img src="{{ public_path(env('LOGOJPG')) }}" class="w-60 mr-8">
                     </td>
                     <td width="30%">
                         <div class="numeros-contrato">
@@ -239,6 +253,7 @@
 
 
 
+    </div>
 </body>
 
 </html>

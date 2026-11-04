@@ -63,9 +63,13 @@
 
         /*fin de parrafos*/
     </style>
+{{-- Altura reservada compatible con carta y los márgenes de este documento.
+     La altura genérica de 1190px desborda la hoja y crea una página sin datos. --}}
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'cementerio', 'altoMarcaAgua' => 1050])
 </head>
 
 <body>
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -152,6 +156,7 @@
             @endif
         </table>
     </div>
+</div>
 </body>
 
 </html>
