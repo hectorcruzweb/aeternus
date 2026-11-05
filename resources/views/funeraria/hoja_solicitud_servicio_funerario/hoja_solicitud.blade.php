@@ -75,10 +75,28 @@
             border: 1px solid #ddd;
         }
 
+        /* Mantener ambas firmas juntas cuando quepan en una página; limitar
+           la imagen evita una hoja adicional dedicada solo a las firmas. */
+        .firmas-solicitud { display: table; page-break-inside: avoid; break-inside: avoid; }
+        .firmas-solicitud .firma { max-width: 150px; max-height: 48px; width: auto; height: auto; }
+        /* Tamaño compacto sin suprimir información; las observaciones extensas
+           pueden continuar y las dos firmas se mantienen juntas. */
+        .solicitud-servicio-documento .datos_tabla .size-15px { font-size: 14px !important; line-height: 1.5; }
+        .solicitud-servicio-documento .datos_tabla td { padding-top: 6px !important; padding-bottom: 6px !important; }
+        .solicitud-servicio-documento .datos_tabla .pb-60 { padding-bottom: 24px !important; }
+        .solicitud-servicio-documento .datos_tabla { margin-top: 14px !important; }
+        .firmas-solicitud > div { margin-top: 14px !important; }
+        /* Altura útil para observaciones, incluso cuando no hay texto.
+           Puede crecer con su contenido; no limita ni recorta lo capturado. */
+        .solicitud-observaciones { min-height: 3cm; box-sizing: border-box; }
+
     </style>
+{{-- Altura carta con márgenes de 12.4mm; no forzar otra hoja vacía. --}}
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'servicios_funerarios', 'altoMarcaAgua' => 1170])
 </head>
 
-<body>
+<body class="solicitud-servicio-documento">
+    <div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -168,17 +186,19 @@
             }
             ?>
             " colspan="2">
+                <div class="solicitud-observaciones">
                 <div class="bold">
                     observaciones al recoger el cuerpo (pertenencias, documentos, etc.)
                 </div>
                 <div class="pt-2">
                     {{ $datos['nota_al_recoger'] }}
                 </div>
+                </div>
             </td>
         </tr>
     </table>
 
-    <div class="w-100 center mt-2">
+    <div class="w-100 center mt-2 firmas-solicitud">
         <div class="w-50 float-left mt-5">
              <img src="{{ $firmas['entrega_pertenencias'] }}" class="firma">
             <div class="w-90 mr-auto ml-auto border-top">
@@ -194,7 +214,7 @@
             </div>
         </div>
     </div>
+    </div>
 </body>
 
 </html>
-<span class="uppercase bold texto-sm"></span>

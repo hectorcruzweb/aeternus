@@ -351,7 +351,7 @@ export default {
      * visor.
      * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
      */
-    documentoCargado() {
+    async documentoCargado() {
       this.documentoListo = !!this.reporte;
       this.desvincularDocumento();
       const marco = this.$refs.documento;
@@ -361,6 +361,12 @@ export default {
           "click",
           this.interceptarReporteIndividual
         );
+        const documento = marco.contentDocument;
+        if (documento.fonts && documento.fonts.ready) await documento.fonts.ready;
+        await Promise.all(Array.from(documento.images).map(imagen =>
+          typeof imagen.decode === "function" ? imagen.decode().catch(() => {}) : Promise.resolve()
+        ));
+        if (documento === marco.contentDocument) this.ajustarUnaPagina(documento);
       }
     },
     // El iframe no ejecuta scripts: el padre atiende solo los enlaces autorizados del resumen.
@@ -531,6 +537,25 @@ export default {
      * impresión; no descarga Excel.
      * Entradas: no recibe parámetros; usa datos/configuración de la instancia o del módulo.
      */
+    /** Reduce solo documentos que solicitan una hoja; no modifica otros reportes.
+     * Mide la altura completa sin recortar campos y reserva su área de impresión. */
+    ajustarUnaPagina(documento) {
+      const hoja = documento.querySelector("[data-ajuste-una-pagina]");
+      if (!hoja) return;
+      const contenido = hoja.querySelector("[data-contenido-ajustable]");
+      if (!contenido) return;
+      contenido.style.transform = "none";
+      let bajo = 0.000001, alto = 1, escala = bajo;
+      for (let i = 0; i < 22; i++) {
+        const prueba = (bajo + alto) / 2;
+        contenido.style.width = hoja.clientWidth / prueba + "px";
+        const cabe = Math.max(contenido.scrollHeight, contenido.offsetHeight) * prueba <= hoja.clientHeight - 4;
+        if (cabe) { escala = prueba; bajo = prueba; }
+        else alto = prueba;
+      }
+      contenido.style.width = hoja.clientWidth / escala + "px";
+      contenido.style.transform = "scale(" + escala + ")";
+    },
     async imprimir() {
       if (this.isLoading || !this.documentoListo || !this.reporte) return;
       const marco = this.$refs.documento;
@@ -544,6 +569,7 @@ export default {
         typeof imagen.decode === "function" ? imagen.decode().catch(() => {}) : Promise.resolve()
       ));
       if (!this.show || peticion !== this.peticion || documento !== marco.contentDocument) return;
+      this.ajustarUnaPagina(documento);
       marco.contentWindow.focus();
       marco.contentWindow.print();
     },

@@ -46,6 +46,75 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+    /** Catálogo de documentos del expediente tipo 3. Las rutas reciben una
+     * clave permitida; nunca se ejecuta un método recibido directamente de la URL. */
+    private const DOCUMENTOS_SERVICIO_VISOR = [
+        'contrato' => ['metodo' => 'contrato_servicio_funerario', 'titulo' => 'Contrato de Servicio Funerario'],
+        'recibo' => ['metodo' => 'recibo_de_pago', 'titulo' => 'Comprobante de Pago'],
+        'solicitud' => ['metodo' => 'get_hoja_solicitud', 'titulo' => 'Solicitud de Servicio Funerario'],
+        'autorizacion' => ['metodo' => 'hoja_preautorizacion', 'titulo' => 'Autorización de Servicio Funerario'],
+        'certificado' => ['metodo' => 'certificado_defuncion', 'titulo' => 'Certificado de Defunción'],
+        'orden' => ['metodo' => 'orden_servicio', 'titulo' => 'Orden de Servicio'],
+        'embalsamiento' => ['metodo' => 'contancia_de_embalsamiento', 'titulo' => 'Constancia de Embalsamiento'],
+        'cremacion' => ['metodo' => 'autorizacion_cremacion', 'titulo' => 'Autorización de Cremación'],
+        'constancia-cremacion' => ['metodo' => 'constancia_cremacion', 'titulo' => 'Constancia de Cremación'],
+        'entrega-acta' => ['metodo' => 'entrega_acta_defuncion', 'titulo' => 'Entrega de acta de defunción'],
+        'entrega-cenizas' => ['metodo' => 'entrega_cenizas', 'titulo' => 'Entrega de Cenizas'],
+        'no-embalsamiento' => ['metodo' => 'contancia_de_no_embalsamiento', 'titulo' => 'Constancia de No Embalsamiento'],
+        'guia' => ['metodo' => 'instrucciones_servicio_funerario', 'titulo' => 'Guía del Cliente'],
+    ];
+
+    /** Prepara HTML de la solicitud, aun sin contrato, reutilizando datos y
+     * firmas originales. No genera PDF ni altera el servicio o sus pagos. */
+    public function previewDocumentoServicio(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $request->validate(['id_servicio' => 'required|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable').'|integer|min:1']);
+        $id = (int) $request->input('id_servicio');
+        abort_unless(ServiciosFunerarios::where('id', $id)->exists(), 404, 'No se encontró el servicio funerario.');
+        // Un recibo solo puede consultarse dentro del servicio al que se aplicó.
+        // Incluye cancelados para conservar la consulta histórica del comprobante.
+        if ($documento === 'recibo') {
+            abort_unless(DB::table('pagos_pagos_programados as aplicaciones')
+                ->join('pagos_programados as programados', 'programados.id', '=', 'aplicaciones.pagos_programados_id')
+                ->join('operaciones as operacion', 'operacion.id', '=', 'programados.operaciones_id')
+                ->where('aplicaciones.pagos_id', (int) $request->input('id_pago'))
+                ->where('operacion.empresa_operaciones_id', 3)
+                ->where('operacion.servicios_funerarios_id', $id)->exists(), 404, 'El recibo no pertenece a este servicio funerario.');
+        }
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['id_servicio' => $id, 'id_pago' => (int) $request->input('id_pago')])]]);
+        $interno->attributes->set('_documento_servicio_visor', $documento);
+        $definicion = self::DOCUMENTOS_SERVICIO_VISOR[$documento];
+        // El comprobante conserva cálculo y firmas en PagosController. Reutiliza
+        // su captura interna existente sin añadir rutas ni descargar PDF inicial.
+        if ($documento === 'recibo') $interno->attributes->set('_documento_cementerio_visor', 'recibo');
+        $emisor = $documento === 'recibo' ? app(PagosController::class) : $this;
+        $captura = $emisor->{$definicion['metodo']}($interno);
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        abort_unless(is_array($captura) && isset($captura['html'], $captura['opciones']), 409, 'No se pudo preparar el documento.');
+        return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->preparar(
+            $captura, $documento, $definicion['titulo'], $id, $usuario,
+            'Servicio núm. '.$id.' · Documento PDF'
+        );
+    }
+
+    /** Genera el PDF solo al descargar; token privado por usuario/documento.
+     * Un token vencido devuelve 410 sin cerrar la sesión del sistema. */
+    public function descargarDocumentoServicio(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->descargar($request, $token, $documento);
+    }
+
+    /** Comparte validaciones y envío del visor; el documento solo admite PDF. */
+    public function enviarDocumentoServicioCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->enviarCorreo($request, $token, $documento);
+    }
     // Ventana acordada para priorizar seguimiento: hoy y los seis días anteriores.
     private const DIAS_SOLICITUDES_RECIENTES = 7;
 
@@ -5183,6 +5252,8 @@ class FunerariaController extends ApiController
         }
     }
 
+    /** Solicitud heredada: mantiene su PDF/correo original. El atributo interno
+     * del visor captura HTML y opciones antes de ejecutar output o inline. */
     public function get_hoja_solicitud(Request $request)
     {
         try {
@@ -5246,6 +5317,14 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 12.4);
             $pdf->setOption('page-size', 'letter');
 
+            if ($request->attributes->get('_documento_servicio_visor') === 'solicitud') {
+                $captura = (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+                // El original usa 15px con smart shrinking de Qt. Reproducir
+                // esa escala en el navegador sin alterar la descarga heredada.
+                $captura['css_navegador'] = 'html body.solicitud-servicio-documento .datos_tabla .size-15px{font-size:11.2px!important}.firmas-solicitud span{font-size:12px!important}';
+                return $captura;
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -5275,6 +5354,8 @@ class FunerariaController extends ApiController
         }
     }
 
+    /** Autorización original con firmas de áreas 17 a 20. El visor captura
+     * HTML/opciones antes de generar el PDF; los llamados heredados se conservan. */
     public function hoja_preautorizacion(Request $request)
     {
         try {
@@ -5341,6 +5422,13 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 24.4);
             $pdf->setOption('page-size', 'letter');
+
+            if ($request->attributes->get('_documento_servicio_visor') === 'autorizacion') {
+                $captura = (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+                // Equivalencia visual de la escala Qt en pantalla/impresión Chrome.
+                $captura['css_navegador'] = 'html body.autorizacion-documento .contenido .size-19px{font-size:13.6px!important}html body .size-22px{font-size:17.6px!important}';
+                return $captura;
+            }
 
             if ($email == true) {
                 /**email */
@@ -5428,6 +5516,19 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 3.4);
             $pdf->setOption('margin-bottom', 1);
             $pdf->setOption('page-size', 'letter');
+            // Permite medir y escalar la ficha antes de paginar.
+            $pdf->setOption('javascript-delay', 500);
+            $pdf->setOption('disable-smart-shrinking', true);
+
+            // El visor recibe HTML; el motor compartido genera el PDF únicamente
+            // al descargar o enviar por correo, con los márgenes originales.
+            if ($request->attributes->get('_documento_servicio_visor') === 'certificado') {
+                $captura = (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+                // Qt reduce el HTML al 80 % aproximadamente. Chrome utiliza
+                // dimensiones físicas equivalentes sin modificar la estructura.
+                $captura['css_navegador'] = 'html body.certificado-defuncion-documento{font-size:11.2px!important}html body .ficha-identidad .ficha-campos,html body .ficha-antecedentes .ficha-campos{height:392px}html body .ficha-contacto .ficha-campos,html body .ficha-defuncion .ficha-campos{height:344px}html body .ficha-identidad,html body .ficha-antecedentes{min-height:408px}html body .ficha-contacto,html body .ficha-defuncion{min-height:392px}html body .ficha-bloque{padding:9.6px;margin-top:9.6px}html body .ficha-bloque h2{font-size:12px;margin:-9.6px -9.6px 6.4px;padding:7.2px 9.6px}html body .ficha-bloque h2 small,html body .ficha-etiqueta .w-normal,html body .ficha-valor table{font-size:8px}html body .ficha-etiqueta{font-size:9.6px}html body .ficha-valor{font-size:8px;min-height:14.4px}';
+                return $captura;
+            }
 
             if ($email == true) {
                 /**email */
@@ -5505,6 +5606,12 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 24.4);
             $pdf->setOption('page-size', 'letter');
+
+            // HTML inicial para el visor compartido; conserva el pie original.
+            // La generación binaria se difiere hasta descargar o enviar correo.
+            if ($request->attributes->get('_documento_servicio_visor') === 'guia') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
 
             if ($email == true) {
                 /**email */
@@ -5594,6 +5701,10 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
+            // La vista previa captura el HTML original; el PDF queda bajo demanda.
+            if ($request->attributes->get('_documento_servicio_visor') === 'contrato') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -5685,6 +5796,11 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Solo captura HTML: el visor genera PDF al descargar o enviar correo.
+            if ($request->attributes->get('_documento_servicio_visor') === 'embalsamiento') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -5743,7 +5859,7 @@ class FunerariaController extends ApiController
             $empresa = $get_funeraria->get_empresa_data();
 
             //return view('lista_usuarios', ['usuarios' => $res, 'empresa' => $empresa]);
-            $name_pdf = "CONSTANCIA DE EMBALSAMIENTO " . strtoupper($datos_solicitud['nombre_afectado']) . '.pdf';
+            $name_pdf = "CONSTANCIA DE NO EMBALSAMIENTO " . strtoupper($datos_solicitud['nombre_afectado']) . '.pdf';
             //aqui estoy
             $FirmasController = new FirmasController();
             $contratante = $FirmasController->get_firma_documento($datos_solicitud['id'], 30, 'por_area_firma', "solicitud");
@@ -5770,6 +5886,12 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
+
+            // El catálogo comparte las tres rutas del expediente. HTML inicial;
+            // PDF solo al descargar o enviar, conservando firma del área 30.
+            if ($request->attributes->get('_documento_servicio_visor') === 'no-embalsamiento') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
 
             if ($email == true) {
                 /**email */
@@ -5850,6 +5972,11 @@ class FunerariaController extends ApiController
         $pdf->setOption('margin-top', 12.4);
         $pdf->setOption('margin-bottom', 33.4);
         $pdf->setOption('page-size', 'letter');
+
+        // HTML inicial para el visor; PDF únicamente al descargar o enviar correo.
+        if ($request->attributes->get('_documento_servicio_visor') === 'cremacion') {
+            return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+        }
 
         if ($email == true) {
             /**email */
@@ -6027,6 +6154,12 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Reutiliza datos, firma y avisos originales para la vista HTML.
+            // El visor genera el PDF únicamente al descargar o enviar por correo.
+            if ($request->attributes->get('_documento_servicio_visor') === 'entrega-acta') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -6119,6 +6252,11 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
+
+            // Captura HTML; el visor compartido genera PDF al descargar o enviar.
+            if ($request->attributes->get('_documento_servicio_visor') === 'entrega-cenizas') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
 
             if ($email == true) {
                 /**email */
@@ -6213,6 +6351,11 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Captura HTML y opciones originales; genera el PDF solo al descargar o enviar.
+            if ($request->attributes->get('_documento_servicio_visor') === 'constancia-cremacion') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
+
             if ($email == true) {
                 /**email */
                 /**
@@ -6288,6 +6431,13 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-top', 12.4);
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
+            // Esperar a que fuentes, imágenes y escala de una hoja estén calculadas.
+            $pdf->setOption('javascript-delay', 500);
+
+            // Captura HTML para el visor; descarga y correo generan el PDF después.
+            if ($request->attributes->get('_documento_servicio_visor') === 'orden') {
+                return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->capturar($pdf);
+            }
 
             if ($email == true) {
                 /**email */

@@ -16,6 +16,7 @@ return [
     // Solo PDF/impresión. Leer con config() en Blade para soportar config:cache.
     'marca_agua' => [
         'cementerio' => filter_var(env('REPORTES_MARCA_AGUA_CEMENTERIO', true), FILTER_VALIDATE_BOOLEAN),
+        'servicios_funerarios' => filter_var(env('REPORTES_MARCA_AGUA_SERVICIOS_FUNERARIOS', true), FILTER_VALIDATE_BOOLEAN),
         'planes_venta' => filter_var(env('REPORTES_MARCA_AGUA_PLANES_VENTA', true), FILTER_VALIDATE_BOOLEAN),
         'cuotas' => filter_var(env('REPORTES_MARCA_AGUA_CUOTAS', true), FILTER_VALIDATE_BOOLEAN),
         'pagos' => filter_var(env('REPORTES_MARCA_AGUA_PAGOS', true), FILTER_VALIDATE_BOOLEAN),

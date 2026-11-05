@@ -1,504 +1,559 @@
 <template>
-    <div class="centerx">
-        <vs-popup :class="['forms-popup popup-80', z_index]" title="expediente de venta en cementerio"
-            :active="localShow" :ref="this.$options.name">
-            <div class="pb-6">
-                <div class="flex flex-wrap">
-                    <div class="w-full" v-if="datosVenta.operacion_id">
-                        <vs-table class="tabla-datos" :data="documentos" noDataText="0 Resultados">
-                            <template slot="header">
-                                <h3>Documentos del contrato</h3>
-                            </template>
-                            <template slot="thead">
-                                <vs-th class="w-1/5"> #</vs-th>
+  <div class="centerx">
+    <vs-popup
+      :class="['forms-popup popup-80 expediente-cementerio-popup', z_index]"
+      title="EXPEDIENTE DE VENTA EN CEMENTERIO:"
+      :active="localShow"
+      :ref="this.$options.name"
+    >
+      <!-- La ubicación ya viene traducida por CementerioController;
+                 este encabezado no consulta ni transforma el código interno. -->
+      <span
+        slot="subtitle"
+        class="expediente-cementerio-ubicacion"
+        v-if="
+          datosVenta.venta_terreno && datosVenta.venta_terreno.ubicacion_texto
+        "
+      >
+        <span>{{ String(datosVenta.venta_terreno.ubicacion_texto).toLocaleUpperCase('es-MX') }}</span>
+        <img
+          src="@assets/images/dashboard/accesos/ventas_cementerio.svg"
+          alt=""
+          aria-hidden="true"
+        />
+      </span>
+      <div class="pb-6">
+        <div class="flex flex-wrap">
+          <div class="w-full" v-if="datosVenta.operacion_id">
+            <vs-table
+              class="tabla-datos"
+              :data="documentos"
+              noDataText="0 Resultados"
+            >
+              <template slot="header">
+                <h3>Documentos del contrato</h3>
+              </template>
+              <template slot="thead">
+                <vs-th class="w-1/5"> #</vs-th>
 
-                                <vs-th class="w-3/5">Documento</vs-th>
+                <vs-th class="w-3/5">Documento</vs-th>
 
-                                <vs-th class="w-1/5">Seleccionar Documento</vs-th>
-                            </template>
-                            <template>
-                                <vs-tr v-show="mostrarDocumento(documento.documento)
-                                    " v-for="(
-documento, index_documento
-                                    ) in documentos" v-bind:key="documento.id">
-                                    <vs-td>
-                                        <span class="font-medium">
-                                            {{ index_documento + 1 }}</span>
-                                    </vs-td>
+                <vs-th class="w-1/5">Seleccionar Documento</vs-th>
+              </template>
+              <template>
+                <vs-tr
+                  v-show="mostrarDocumento(documento.documento)"
+                  v-for="(documento, index_documento) in documentos"
+                  v-bind:key="documento.id"
+                >
+                  <vs-td>
+                    <span class="font-medium"> {{ index_documento + 1 }}</span>
+                  </vs-td>
 
-                                    <vs-td>
-                                        <span class="">{{
-                                            documento.documento
-                                        }}</span>
-                                    </vs-td>
+                  <vs-td>
+                    <span class="">{{ documento.documento }}</span>
+                  </vs-td>
 
-                                    <vs-td>
-                                        <div class="flex justify-center">
-                                            <img class="cursor-pointer img-btn-25 mx-4"
-                                                src="@assets/images/signature.svg" title="Firmar Documento" @click="
-                                                    openFirmador(
-                                                        documento.documento_id
-                                                    )
-                                                    " v-show="documento.firma" />
+                  <vs-td>
+                    <div class="flex justify-center">
+                      <img
+                        class="cursor-pointer img-btn-25 mx-4"
+                        src="@assets/images/signature.svg"
+                        title="Firmar Documento"
+                        @click="openFirmador(documento.documento_id)"
+                        v-show="documento.firma"
+                      />
 
-                                            <img v-if="documento.tipo == 'pdf'" class="cursor-pointer img-btn-24 mx-2"
-                                                src="@assets/images/pdf.svg" title="Consultar Documento" @click="
-                                                    openReporte(
-                                                        documento.documento,
+                      <img
+                        v-if="documento.tipo == 'pdf'"
+                        class="cursor-pointer img-btn-24 mx-2"
+                        src="@assets/images/pdf.svg"
+                        title="Consultar Documento"
+                        @click="
+                          openReporte(
+                            documento.documento,
 
-                                                        documento.url,
+                            documento.url,
 
-                                                        '',
+                            '',
 
-                                                        ''
-                                                    )
-                                                    " />
+                            ''
+                          )
+                        "
+                      />
 
-                                            <img v-else class="cursor-pointer img-btn-24 mx-2"
-                                                src="@assets/images/excel.svg" title="Consultar Documento" @click="
-                                                    openReporte(
-                                                        documento.documento,
+                      <img
+                        v-else
+                        class="cursor-pointer img-btn-24 mx-2"
+                        src="@assets/images/excel.svg"
+                        title="Consultar Documento"
+                        @click="
+                          openReporte(
+                            documento.documento,
 
-                                                        documento.url,
+                            documento.url,
 
-                                                        '',
+                            '',
 
-                                                        ''
-                                                    )
-                                                    " />
-                                        </div>
-                                    </vs-td>
-                                </vs-tr>
-                            </template>
-                        </vs-table>
+                            ''
+                          )
+                        "
+                      />
                     </div>
-                </div>
+                  </vs-td>
+                </vs-tr>
+              </template>
+            </vs-table>
+          </div>
+        </div>
 
-                <div class="w-full mt-6" v-if="datosVenta.operacion_id">
-                    <vs-table class="tabla-datos" :data="datosVenta.pagos_programados" noDataText="0 Resultados"
-                        ref="tabla_pagos_programados">
-                        <template slot="header">
-                            <h3>Listado de Pagos programados</h3>
-                        </template>
-                        <template slot="thead">
-                            <vs-th> #</vs-th>
+        <div class="w-full mt-6" v-if="datosVenta.operacion_id">
+          <vs-table
+            class="tabla-datos"
+            :data="datosVenta.pagos_programados"
+            noDataText="0 Resultados"
+            ref="tabla_pagos_programados"
+          >
+            <template slot="header">
+              <h3>Listado de Pagos programados</h3>
+            </template>
+            <template slot="thead">
+              <vs-th> #</vs-th>
 
-                            <vs-th>Referencia</vs-th>
+              <vs-th>Referencia</vs-th>
 
-                            <vs-th>Fecha Programada</vs-th>
+              <vs-th>Fecha Programada</vs-th>
 
-                            <vs-th>Nueva Fecha de Pago</vs-th>
+              <vs-th>Nueva Fecha de Pago</vs-th>
 
-                            <vs-th>Monto Pago</vs-th>
+              <vs-th>Monto Pago</vs-th>
 
-                            <vs-th>Intereses Generados</vs-th>
+              <vs-th>Intereses Generados</vs-th>
 
-                            <vs-th>Restante a Pagar</vs-th>
+              <vs-th>Restante a Pagar</vs-th>
 
-                            <vs-th>Concepto</vs-th>
+              <vs-th>Concepto</vs-th>
 
-                            <vs-th>Estatus</vs-th>
+              <vs-th>Estatus</vs-th>
 
-                            <vs-th>Pagar Recibo</vs-th>
-                        </template>
-                        <template>
-                            <vs-tr v-show="programados.status == 1" v-for="(
-programados, index_programado
-                                ) in datosVenta.pagos_programados" v-bind:key="programados.id" ref="row">
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{
-                                        programados.num_pago
-                                    }}</span>
-                                </vs-td>
+              <vs-th>Pagar Recibo</vs-th>
+            </template>
+            <template>
+              <vs-tr
+                v-show="programados.status == 1"
+                v-for="(
+                  programados, index_programado
+                ) in datosVenta.pagos_programados"
+                v-bind:key="programados.id"
+                ref="row"
+              >
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  <span class="">{{ programados.num_pago }}</span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    {{ programados.referencia_pago }}
-                                </vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  {{ programados.referencia_pago }}
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">{{
-                                    programados.fecha_programada_abr
-                                }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >{{ programados.fecha_programada_abr }}</vs-td
+                >
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span v-if="programados.saldo_neto > 0">
-                                        {{ programados.fecha_a_pagar_abr }}
-                                    </span>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  <span v-if="programados.saldo_neto > 0">
+                    {{ programados.fecha_a_pagar_abr }}
+                  </span>
 
-                                    <span v-else>{{ programados.fecha_ultimo_pago_abr }}
-                                    </span>
-                                </vs-td>
+                  <span v-else>{{ programados.fecha_ultimo_pago_abr }} </span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">$
-                                    {{
-                                        programados.monto_programado
-                                        | numFormat("0,000.00")
-                                    }}
-                                </vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >$
+                  {{ programados.monto_programado | numFormat("0,000.00") }}
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">$
-                                    {{
-                                        programados.intereses
-                                        | numFormat("0,000.00")
-                                    }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >$ {{ programados.intereses | numFormat("0,000.00") }}</vs-td
+                >
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">$
-                                    {{
-                                        programados.saldo_neto
-                                        | numFormat("0,000.00")
-                                    }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >$ {{ programados.saldo_neto | numFormat("0,000.00") }}</vs-td
+                >
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">{{ programados.concepto_texto }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >{{ programados.concepto_texto }}</vs-td
+                >
 
-                                <vs-td>
-                                    <p v-if="programados.status_pago == 0">
-                                        {{ programados.status_pago_texto }}
+                <vs-td>
+                  <p v-if="programados.status_pago == 0">
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-danger"></span>
-                                    </p>
+                    <span class="dot-danger"></span>
+                  </p>
 
-                                    <p v-else-if="programados.status_pago == 1">
-                                        {{ programados.status_pago_texto }}
+                  <p v-else-if="programados.status_pago == 1">
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-warning"></span>
-                                    </p>
+                    <span class="dot-warning"></span>
+                  </p>
 
-                                    <p v-else>
-                                        {{ programados.status_pago_texto }}
+                  <p v-else>
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-success"></span>
-                                    </p>
-                                </vs-td>
+                    <span class="dot-success"></span>
+                  </p>
+                </vs-td>
 
-                                <vs-td>
-                                    <div class="flex justify-center">
-                                        <img v-if="programados.saldo_neto > 0" class="cursor-pointer img-btn-24 mx-2"
-                                            src="@assets/images/dollar_bill.svg" title="Pagar Ficha" @click="
-                                                pagar(
-                                                    programados.referencia_pago
-                                                )
-                                                " />
+                <vs-td>
+                  <div class="flex justify-center">
+                    <img
+                      v-if="programados.saldo_neto > 0"
+                      class="cursor-pointer img-btn-24 mx-2"
+                      src="@assets/images/dollar_bill.svg"
+                      title="Pagar Ficha"
+                      @click="pagar(programados.referencia_pago)"
+                    />
 
-                                        <img v-else class="cursor-pointer img-btn-20 mx-2"
-                                            src="@assets/images/right.svg" title="ficha cubierta" />
-                                    </div>
-                                </vs-td>
+                    <img
+                      v-else
+                      class="cursor-pointer img-btn-20 mx-2"
+                      src="@assets/images/right.svg"
+                      title="ficha cubierta"
+                    />
+                  </div>
+                </vs-td>
 
-                                <!-- <template class="expand-user" slot="expand">
-    
+                <!-- <template class="expand-user" slot="expand">
+
                     d
 </template>
         -->
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                </div>
+              </vs-tr>
+            </template>
+          </vs-table>
+        </div>
 
-                <div class="w-full mt-6" v-if="pagos_programados_cuotas.length > 0">
-                    <vs-table class="tabla-datos" :data="pagos_programados_cuotas" noDataText="0 Resultados">
-                        <template slot="header">
-                            <h3>Cuotas de Mantenimiento</h3>
-                        </template>
-                        <template slot="thead">
-                            <vs-th> #</vs-th>
+        <div class="w-full mt-6" v-if="pagos_programados_cuotas.length > 0">
+          <vs-table
+            class="tabla-datos"
+            :data="pagos_programados_cuotas"
+            noDataText="0 Resultados"
+          >
+            <template slot="header">
+              <h3>Cuotas de Mantenimiento</h3>
+            </template>
+            <template slot="thead">
+              <vs-th> #</vs-th>
 
-                            <vs-th>Referencia</vs-th>
+              <vs-th>Referencia</vs-th>
 
-                            <vs-th>Periodo</vs-th>
+              <vs-th>Periodo</vs-th>
 
-                            <vs-th>Fecha Programada</vs-th>
+              <vs-th>Fecha Programada</vs-th>
 
-                            <vs-th>Nueva Fecha de Pago</vs-th>
+              <vs-th>Nueva Fecha de Pago</vs-th>
 
-                            <vs-th>Monto Pago</vs-th>
+              <vs-th>Monto Pago</vs-th>
 
-                            <vs-th>Restante a Pagar</vs-th>
+              <vs-th>Restante a Pagar</vs-th>
 
-                            <vs-th>Estatus</vs-th>
-                            <vs-th>Seguimientos</vs-th>
+              <vs-th>Estatus</vs-th>
+              <vs-th>Seguimientos</vs-th>
 
-                            <vs-th>Pagar Recibo</vs-th>
-                        </template>
-                        <template>
-                            <vs-tr v-show="programados.status == 1" v-for="(
-programados, index_programado
-                                ) in pagos_programados_cuotas" v-bind:key="programados.id" ref="row">
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{
-                                        index_programado + 1
-                                    }}</span>
-                                </vs-td>
+              <vs-th>Pagar Recibo</vs-th>
+            </template>
+            <template>
+              <vs-tr
+                v-show="programados.status == 1"
+                v-for="(
+                  programados, index_programado
+                ) in pagos_programados_cuotas"
+                v-bind:key="programados.id"
+                ref="row"
+              >
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  <span class="">{{ index_programado + 1 }}</span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    {{ programados.referencia_pago }}
-                                </vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  {{ programados.referencia_pago }}
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    {{ programados.concepto_texto }}
-                                </vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  {{ programados.concepto_texto }}
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">{{
-                                    programados.fecha_programada_abr
-                                }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >{{ programados.fecha_programada_abr }}</vs-td
+                >
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span v-if="programados.saldo_neto > 0">
-                                        {{ programados.fecha_a_pagar_abr }}
-                                    </span>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                >
+                  <span v-if="programados.saldo_neto > 0">
+                    {{ programados.fecha_a_pagar_abr }}
+                  </span>
 
-                                    <span v-else>{{ programados.fecha_ultimo_pago_abr }}
-                                    </span>
-                                </vs-td>
+                  <span v-else>{{ programados.fecha_ultimo_pago_abr }} </span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">$
-                                    {{
-                                        programados.monto_programado
-                                        | numFormat("0,000.00")
-                                    }}
-                                </vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >$
+                  {{ programados.monto_programado | numFormat("0,000.00") }}
+                </vs-td>
 
-                                <vs-td :class="[
-                                    programados.status_pago == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">$
-                                    {{
-                                        programados.saldo_neto
-                                        | numFormat("0,000.00")
-                                    }}</vs-td>
+                <vs-td
+                  :class="[
+                    programados.status_pago == 0 ? 'text-danger-900' : '',
+                  ]"
+                  >$ {{ programados.saldo_neto | numFormat("0,000.00") }}</vs-td
+                >
 
-                                <vs-td>
-                                    <p v-if="programados.status_pago == 0">
-                                        {{ programados.status_pago_texto }}
+                <vs-td>
+                  <p v-if="programados.status_pago == 0">
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-danger"></span>
-                                    </p>
+                    <span class="dot-danger"></span>
+                  </p>
 
-                                    <p v-else-if="programados.status_pago == 1">
-                                        {{ programados.status_pago_texto }}
+                  <p v-else-if="programados.status_pago == 1">
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-warning"></span>
-                                    </p>
+                    <span class="dot-warning"></span>
+                  </p>
 
-                                    <p v-else>
-                                        {{ programados.status_pago_texto }}
+                  <p v-else>
+                    {{ programados.status_pago_texto }}
 
-                                        <span class="dot-success"></span>
-                                    </p>
-                                </vs-td>
+                    <span class="dot-success"></span>
+                  </p>
+                </vs-td>
 
-                                <vs-td>
-                                    <div class="flex justify-center">
-                                        <img class="img-btn-24 mx-3" src="@assets/images/seguimientos.svg"
-                                            title="Control de Seguimientos" @click="
-                                                OpenFormSeguimientos(
-                                                    programados
-                                                )
-                                                " />
-                                    </div>
-                                </vs-td>
+                <vs-td>
+                  <div class="flex justify-center">
+                    <img
+                      class="img-btn-24 mx-3"
+                      src="@assets/images/seguimientos.svg"
+                      title="Control de Seguimientos"
+                      @click="OpenFormSeguimientos(programados)"
+                    />
+                  </div>
+                </vs-td>
 
-                                <vs-td>
-                                    <div class="flex justify-center" v-if="programados.status != 0">
-                                        <img v-if="programados.saldo_neto > 0" class="cursor-pointer img-btn-24 mx-2"
-                                            src="@assets/images/dollar_bill.svg" title="Pagar Ficha" @click="
-                                                pagar(
-                                                    programados.referencia_pago
-                                                )
-                                                " />
+                <vs-td>
+                  <div
+                    class="flex justify-center"
+                    v-if="programados.status != 0"
+                  >
+                    <img
+                      v-if="programados.saldo_neto > 0"
+                      class="cursor-pointer img-btn-24 mx-2"
+                      src="@assets/images/dollar_bill.svg"
+                      title="Pagar Ficha"
+                      @click="pagar(programados.referencia_pago)"
+                    />
 
-                                        <img v-else class="cursor-pointer img-btn-20 mx-2"
-                                            src="@assets/images/right.svg" title="ficha cubierta" />
-                                    </div>
-                                </vs-td>
+                    <img
+                      v-else
+                      class="cursor-pointer img-btn-20 mx-2"
+                      src="@assets/images/right.svg"
+                      title="ficha cubierta"
+                    />
+                  </div>
+                </vs-td>
 
-                                <!-- <template class="expand-user" slot="expand">
-    
+                <!-- <template class="expand-user" slot="expand">
+
                     d
 </template>
         -->
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                </div>
-                <div class="w-full mt-6" v-if="datosVenta.operacion_id">
-                    <vs-table class="tabla-datos" :data="pagos" noDataText="0 Resultados">
-                        <template slot="header">
-                            <h3>Listado de Abonos Recibidos</h3>
-                        </template>
-                        <template slot="thead">
-                            <vs-th> Clave</vs-th>
+              </vs-tr>
+            </template>
+          </vs-table>
+        </div>
+        <div class="w-full mt-6" v-if="datosVenta.operacion_id">
+          <vs-table class="tabla-datos" :data="pagos" noDataText="0 Resultados">
+            <template slot="header">
+              <h3>Listado de Abonos Recibidos</h3>
+            </template>
+            <template slot="thead">
+              <vs-th> Clave</vs-th>
 
-                            <vs-th>Fecha Pago</vs-th>
+              <vs-th>Fecha Pago</vs-th>
 
-                            <vs-th>Total Pago</vs-th>
+              <vs-th>Total Pago</vs-th>
 
-                            <vs-th>Concepto</vs-th>
+              <vs-th>Concepto</vs-th>
 
-                            <vs-th>Cobrador</vs-th>
+              <vs-th>Cobrador</vs-th>
 
-                            <vs-th>Estatus</vs-th>
+              <vs-th>Estatus</vs-th>
 
-                            <vs-th>Consultar</vs-th>
-                        </template>
-                        <template>
-                            <vs-tr v-for="(pago, index_pago) in pagos" v-bind:key="pago.id" ref="row">
-                                <vs-td :class="[
-                                    pago.status == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{ pago.id }}</span>
-                                </vs-td>
+              <vs-th>Consultar</vs-th>
+            </template>
+            <template>
+              <vs-tr
+                v-for="(pago, index_pago) in pagos"
+                v-bind:key="pago.id"
+                ref="row"
+              >
+                <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
+                  <span class="">{{ pago.id }}</span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    pago.status == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{
-                                        pago.fecha_pago_texto
-                                    }}</span>
-                                </vs-td>
+                <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
+                  <span class="">{{ pago.fecha_pago_texto }}</span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    pago.status == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">$
-                                        {{
-                                            pago.total_pago
-                                            | numFormat("0,000.00")
-                                        }}</span>
-                                </vs-td>
+                <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
+                  <span class=""
+                    >$ {{ pago.total_pago | numFormat("0,000.00") }}</span
+                  >
+                </vs-td>
 
-                                <vs-td :class="[
-                                    pago.status == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{
-                                        pago.movimientos_pagos_texto
-                                    }}</span>
-                                </vs-td>
+                <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
+                  <span class="">{{ pago.movimientos_pagos_texto }}</span>
+                </vs-td>
 
-                                <vs-td :class="[
-                                    pago.status == 0
-                                        ? 'text-danger-900'
-                                        : '',
-                                ]">
-                                    <span class="">{{
-                                        pago.cobrador.nombre
-                                    }}</span>
-                                </vs-td>
+                <vs-td :class="[pago.status == 0 ? 'text-danger-900' : '']">
+                  <span class="">{{ pago.cobrador.nombre }}</span>
+                </vs-td>
 
-                                <vs-td>
-                                    <p v-if="pago.status == 0">
-                                        {{ pago.status_texto }}
+                <vs-td>
+                  <p v-if="pago.status == 0">
+                    {{ pago.status_texto }}
 
-                                        <span class="dot-danger"></span>
-                                    </p>
+                    <span class="dot-danger"></span>
+                  </p>
 
-                                    <p v-else>
-                                        {{ pago.status_texto }}
+                  <p v-else>
+                    {{ pago.status_texto }}
 
-                                        <span class="dot-success"></span>
-                                    </p>
-                                </vs-td>
+                    <span class="dot-success"></span>
+                  </p>
+                </vs-td>
 
-                                <vs-td>
-                                    <div class="flex justify-center py-1">
-                                        <img class="cursor-pointer img-btn-24 mx-2" src="@assets/images/pdf.svg"
-                                            title="Ver Nota de Pago" @click="
-                                                openReporte(
-                                                    'reporte de pago',
-                                                    '/pagos/recibo_de_pago/',
-                                                    pago.id,
-                                                    'pago'
-                                                )
-                                                " />
-                                        <img v-if="pago.status == 1" class="img-btn-20 mx-2"
-                                            src="@assets/images/cancel.svg" title="Cancelar Movimiento"
-                                            @click="cancelarPago(pago.id)" />
-                                    </div>
-                                </vs-td>
-                            </vs-tr>
-                        </template>
-                    </vs-table>
-                </div>
-            </div>
-<Firmas v-if="openFirmas" :header="'Venta de Terrenos'" :show="openFirmas" :id_documento="id_documento"
-                :operacion_id="operacion_id" :tipo="'operacion'" @closeFirmas="openFirmas = false"></Firmas>
-            <CancelarPago v-if="openCancelar" :z_index="'z-index59k'" :show="openCancelar"
-                @closeCancelarPago="closeCancelarPago" @retorno_pago="retorno_pago" :id_pago="id_pago"></CancelarPago>
-            <FormularioPagos v-if="verFormularioPagos" :z_index="'z-index59k'" :referencia="referencia"
-                :show="verFormularioPagos" @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos">
-            </FormularioPagos>
-            <FormularioSeguimientos v-if="openSeguimientos" :show="openSeguimientos" :filters="filtersSeguimientos"
-                @closeVentana="openSeguimientos = false" :z_index="'z-index59k'">
-            </FormularioSeguimientos>
-        </vs-popup>
-        <!-- Todos los documentos y recibos del expediente comparten el visor HTML. -->
-        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
-            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
-            :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
-    </div>
+                <vs-td>
+                  <div class="flex justify-center py-1">
+                    <img
+                      class="cursor-pointer img-btn-24 mx-2"
+                      src="@assets/images/pdf.svg"
+                      title="Ver Nota de Pago"
+                      @click="
+                        openReporte(
+                          'reporte de pago',
+                          '/pagos/recibo_de_pago/',
+                          pago.id,
+                          'pago'
+                        )
+                      "
+                    />
+                    <img
+                      v-if="pago.status == 1"
+                      class="img-btn-20 mx-2"
+                      src="@assets/images/cancel.svg"
+                      title="Cancelar Movimiento"
+                      @click="cancelarPago(pago.id)"
+                    />
+                  </div>
+                </vs-td>
+              </vs-tr>
+            </template>
+          </vs-table>
+        </div>
+      </div>
+      <Firmas
+        v-if="openFirmas"
+        :header="'Venta de Terrenos'"
+        :show="openFirmas"
+        :id_documento="id_documento"
+        :operacion_id="operacion_id"
+        :tipo="'operacion'"
+        @closeFirmas="openFirmas = false"
+      ></Firmas>
+      <CancelarPago
+        v-if="openCancelar"
+        :z_index="'z-index59k'"
+        :show="openCancelar"
+        @closeCancelarPago="closeCancelarPago"
+        @retorno_pago="retorno_pago"
+        :id_pago="id_pago"
+      ></CancelarPago>
+      <FormularioPagos
+        v-if="verFormularioPagos"
+        :z_index="'z-index59k'"
+        :referencia="referencia"
+        :show="verFormularioPagos"
+        @closeVentana="closeFormularioPagos"
+        @retorno_pagos="retorno_pagos"
+      >
+      </FormularioPagos>
+      <FormularioSeguimientos
+        v-if="openSeguimientos"
+        :show="openSeguimientos"
+        :filters="filtersSeguimientos"
+        @closeVentana="openSeguimientos = false"
+        :z_index="'z-index59k'"
+      >
+      </FormularioSeguimientos>
+    </vs-popup>
+    <!-- Todos los documentos y recibos del expediente comparten el visor HTML. -->
+    <VisorReportes
+      v-if="mostrarDocumentoVisor"
+      :show="mostrarDocumentoVisor"
+      :cargar="cargarDocumentoVisor"
+      :descargar-pdf="descargarDocumentoPdf"
+      :enviar-correo="enviarDocumentoCorreo"
+      @close="mostrarDocumentoVisor = false"
+    />
+  </div>
 </template>
 <script>
 import FormularioSeguimientos from "../../seguimientos/FormularioSeguimientos.vue";
@@ -510,339 +565,345 @@ import cementerio from "@services/cementerio";
 import pagos from "@services/pagos";
 import FormularioPagos from "@pages/pagos/FormularioPagos";
 export default {
-    name: "ReportesVentasCementerio",
-    components: {
-        VisorReportes,
-        FormularioPagos,
-        Firmas,
-        CancelarPago,
-        FormularioSeguimientos,
+  name: "ReportesVentasCementerio",
+  components: {
+    VisorReportes,
+    FormularioPagos,
+    Firmas,
+    CancelarPago,
+    FormularioSeguimientos,
+  },
+  props: {
+    verAcuse: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
-    props: {
-        verAcuse: {
-            type: Boolean,
-            required: false,
-            default: false,
-        },
-        show: {
-            type: Boolean,
-            required: true,
-        },
-        id_venta: {
-            type: Number,
-            required: true,
-        },
-        z_index: {
-            type: String,
-            required: false,
-            default: "z-index55k",
-        },
+    show: {
+      type: Boolean,
+      required: true,
     },
-    watch: {
-        show: function (newValue, oldValue) {
-            if (newValue == true) {
-
-            } else {
-                /**cerrar ventana */
-                this.datosVenta = [];
-                this.total = 0;
-            }
-        },
-
-
-        show: {
-            immediate: true, // runs when component is mounted too
-            async handler(newValue) {
-                if (newValue) {
-                    await this.consultar_venta_id();
-                    if (this.operacion_id != "") {
-                        await this.consultar_pagos_operacion_id();
-                    }
-                    /**checamos si esta ventana fue abierta con el fin de ver el acuse de cancelacion */
-                    if (this.getVerAcuse == true) {
-                        this.openReporte(
-                            "Acuse de cancelación",
-                            "/cementerio/acuse_cancelacion",
-                            "",
-                            ""
-                        );
-                    }
-                    this.$popupManager.register(this, this.cancelar, "input");
-                } else {
-                    this.$popupManager.unregister(this.$options.name);
-                }
-                this.localShow = newValue;
-            },
-        },
-
-
-
+    id_venta: {
+      type: Number,
+      required: true,
     },
-    computed: {
-        showVentana: {
-            get() {
-                return this.show;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
-        get_venta_id: {
-            get() {
-                return this.id_venta;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
-        getVerAcuse: {
-            get() {
-                return this.verAcuse;
-            },
-            set(newValue) {
-                return newValue;
-            },
-        },
+    z_index: {
+      type: String,
+      required: false,
+      default: "z-index55k",
     },
-    data() {
-        return {
-            localShow: false,
-            openSeguimientos: false,
-            filtersSeguimientos: {
-                cliente_id: null,
-                tipo_cliente_id: null,
-                operacion_id: null,
-                origen: 1, //Formulario de Origen. 1-seguim
-            },
-            openCancelar: false,
-            verFormularioPagos: false,
-            referencia: "",
-            documentos: [
-                {
-                    documento: "Formato de Solicitud",
-                    url: "/cementerio/documento_solicitud",
-                    tipo: "pdf",
-                    documento_id: 1,
-                    firma: true,
-                },
-                {
-                    documento: "Convenio",
-                    url: "/cementerio/documento_convenio",
-                    tipo: "pdf",
-                    documento_id: 2,
-                    firma: true,
-                },
-                {
-                    documento: "Título",
-                    url: "/cementerio/documento_titulo",
-                    tipo: "pdf",
-                    documento_id: 3,
-                    firma: false,
-                },
-                {
-                    documento: "Estado de cuenta",
-                    url: "/cementerio/documento_estado_de_cuenta_cementerio",
-                    tipo: "pdf",
-                    documento_id: 4,
-                    firma: false,
-                },
-                {
-                    documento: "Talonario de Pagos",
-                    url: "/cementerio/referencias_de_pago",
-                    tipo: "pdf",
-                    documento_id: 5,
-                    firma: false,
-                },
-                {
-                    documento: "Reglamento de Pago",
-                    url: "/cementerio/reglamento_pago",
-                    tipo: "pdf",
-                    documento_id: 6,
-                    firma: true,
-                },
-                {
-                    documento: "Acuse de cancelación",
-                    url: "/cementerio/acuse_cancelacion",
-                    tipo: "pdf",
-                    documento_id: 7,
-                    firma: true,
-                },
-                {
-                    documento: "Servicios en la propiedad",
-                    url: "/cementerio/servicios_propiedad",
-                    tipo: "pdf",
-                    documento_id: 8,
-                    firma: false,
-                },
-            ],
-            total: 0 /**rows que se van a remplazar el click en el evento de las tablas para modificar el expand */,
-            funcion_reemplazada: [],
-            datosVenta: [],
-            mostrarDocumentoVisor: false,
-            ventaDocumentoId: null,
-            pagoDocumentoId: null,
-            documentoVisor: "solicitud",
-            openFirmas: false,
-            verFormularioPagos: false,
-            tipoFormularioPagos: "",
-            operacion_id: "",
-            pagos: [],
-            pagos_programados_cuotas: [],
-            id_pago: "",
-        };
+  },
+  watch: {
+    show: function (newValue, oldValue) {
+      if (newValue == true) {
+      } else {
+        /**cerrar ventana */
+        this.datosVenta = [];
+        this.total = 0;
+      }
     },
-    methods: {
-        /** Obtiene HTML del documento seleccionado de la venta; no genera PDF. */
-        async cargarDocumentoVisor() {
-            return (await reportesDocumentosCementerio.visualizar(this.documentoVisor, { venta_id: this.ventaDocumentoId, id_pago: this.pagoDocumentoId || undefined })).data;
-        },
-        /** Devuelve el Blob PDF al visor; el backend usa la instantánea del token. */
-        async descargarDocumentoPdf(token) {
-            return (await reportesDocumentosCementerio.pdf(this.documentoVisor, token)).data;
-        },
-        /** Delega los datos confirmados del modal de correo; estos documentos solo admiten PDF. */
-        async enviarDocumentoCorreo(token, datos) {
-            return (await reportesDocumentosCementerio.correo(this.documentoVisor, token, datos)).data;
-        },
 
-        OpenFormSeguimientos(cuota) {
-            this.filtersSeguimientos.cliente_id = this.datosVenta.cliente_id;
-            this.filtersSeguimientos.tipo_cliente_id = 1;
-            this.filtersSeguimientos.operacion_id = cuota.operaciones_id;
-            this.filtersSeguimientos.origen = 2; //cuotas
-            this.openSeguimientos = true;
+    show: {
+      immediate: true, // runs when component is mounted too
+      async handler(newValue) {
+        if (newValue) {
+          await this.consultar_venta_id();
+          if (this.operacion_id != "") {
+            await this.consultar_pagos_operacion_id();
+          }
+          /**checamos si esta ventana fue abierta con el fin de ver el acuse de cancelacion */
+          if (this.getVerAcuse == true) {
+            this.openReporte(
+              "Acuse de cancelación",
+              "/cementerio/acuse_cancelacion",
+              "",
+              ""
+            );
+          }
+          this.$popupManager.register(this, this.cancelar, "input");
+        } else {
+          this.$popupManager.unregister(this.$options.name);
+        }
+        this.localShow = newValue;
+      },
+    },
+  },
+  computed: {
+    showVentana: {
+      get() {
+        return this.show;
+      },
+      set(newValue) {
+        return newValue;
+      },
+    },
+    get_venta_id: {
+      get() {
+        return this.id_venta;
+      },
+      set(newValue) {
+        return newValue;
+      },
+    },
+    getVerAcuse: {
+      get() {
+        return this.verAcuse;
+      },
+      set(newValue) {
+        return newValue;
+      },
+    },
+  },
+  data() {
+    return {
+      localShow: false,
+      openSeguimientos: false,
+      filtersSeguimientos: {
+        cliente_id: null,
+        tipo_cliente_id: null,
+        operacion_id: null,
+        origen: 1, //Formulario de Origen. 1-seguim
+      },
+      openCancelar: false,
+      verFormularioPagos: false,
+      referencia: "",
+      documentos: [
+        {
+          documento: "Formato de Solicitud",
+          url: "/cementerio/documento_solicitud",
+          tipo: "pdf",
+          documento_id: 1,
+          firma: true,
         },
-        cancelarPago(id_pago) {
-            this.id_pago = id_pago;
-            this.openCancelar = true;
+        {
+          documento: "Convenio",
+          url: "/cementerio/documento_convenio",
+          tipo: "pdf",
+          documento_id: 2,
+          firma: true,
         },
-        closeFormularioPagos() {
-            this.verFormularioPagos = false;
+        {
+          documento: "Título",
+          url: "/cementerio/documento_titulo",
+          tipo: "pdf",
+          documento_id: 3,
+          firma: false,
         },
-        retorno_pago(dato) {
-            this.openCancelar = false;
-            this.$vs.loading();
-            (async () => {
-                try {
-                    await this.consultar_venta_id();
-                    await this.consultar_pagos_operacion_id();
-                    this.openReporte(
-                        "reporte de pago",
-                        "/pagos/recibo_de_pago/",
-                        dato,
-                        "pago"
-                    );
-                    this.$vs.loading.close();
-                } catch (error) {
-                    this.$vs.loading.close();
-                    this.$vs.notify({
-                        title: "Error",
-                        text: "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
-                        iconPack: "feather",
-                        icon: "icon-alert-circle",
-                        color: "danger",
-                        position: "bottom-right",
-                        time: "9000",
-                    });
-                }
-            })();
+        {
+          documento: "Estado de cuenta",
+          url: "/cementerio/documento_estado_de_cuenta_cementerio",
+          tipo: "pdf",
+          documento_id: 4,
+          firma: false,
         },
-        closeCancelarPago(dato) {
-            this.openCancelar = false;
-            (async () => {
-                await this.consultar_pagos_operacion_id();
-            })();
+        {
+          documento: "Talonario de Pagos",
+          url: "/cementerio/referencias_de_pago",
+          tipo: "pdf",
+          documento_id: 5,
+          firma: false,
         },
-        openFirmador(id_documento) {
-            this.id_documento = id_documento;
-            this.openFirmas = true;
+        {
+          documento: "Reglamento de Pago",
+          url: "/cementerio/reglamento_pago",
+          tipo: "pdf",
+          documento_id: 6,
+          firma: true,
         },
+        {
+          documento: "Acuse de cancelación",
+          url: "/cementerio/acuse_cancelacion",
+          tipo: "pdf",
+          documento_id: 7,
+          firma: true,
+        },
+        {
+          documento: "Servicios en la propiedad",
+          url: "/cementerio/servicios_propiedad",
+          tipo: "pdf",
+          documento_id: 8,
+          firma: false,
+        },
+      ],
+      total: 0 /**rows que se van a remplazar el click en el evento de las tablas para modificar el expand */,
+      funcion_reemplazada: [],
+      datosVenta: [],
+      mostrarDocumentoVisor: false,
+      ventaDocumentoId: null,
+      pagoDocumentoId: null,
+      documentoVisor: "solicitud",
+      openFirmas: false,
+      verFormularioPagos: false,
+      tipoFormularioPagos: "",
+      operacion_id: "",
+      pagos: [],
+      pagos_programados_cuotas: [],
+      id_pago: "",
+    };
+  },
+  methods: {
+    /** Obtiene HTML del documento seleccionado de la venta; no genera PDF. */
+    async cargarDocumentoVisor() {
+      return (
+        await reportesDocumentosCementerio.visualizar(this.documentoVisor, {
+          venta_id: this.ventaDocumentoId,
+          id_pago: this.pagoDocumentoId || undefined,
+        })
+      ).data;
+    },
+    /** Devuelve el Blob PDF al visor; el backend usa la instantánea del token. */
+    async descargarDocumentoPdf(token) {
+      return (
+        await reportesDocumentosCementerio.pdf(this.documentoVisor, token)
+      ).data;
+    },
+    /** Delega los datos confirmados del modal de correo; estos documentos solo admiten PDF. */
+    async enviarDocumentoCorreo(token, datos) {
+      return (
+        await reportesDocumentosCementerio.correo(
+          this.documentoVisor,
+          token,
+          datos
+        )
+      ).data;
+    },
 
-        closeFormularioPagos() {
-            this.verFormularioPagos = false;
-        },
-        retorno_pagos(datos) {
-            (async () => {
-                await this.consultar_venta_id();
-                if (this.operacion_id != "") {
-                    await this.consultar_pagos_operacion_id();
-                    //llamando el pago recien hecho
-                    this.openReporte(
-                        "reporte de pago",
-                        "/pagos/recibo_de_pago/",
-                        datos.id_pago,
-                        "pago"
-                    );
-                }
-            })();
-        },
-        pagar(referencia) {
-            this.referencia = referencia;
-            this.verFormularioPagos = true;
-        },
-        mostrarDocumento(documento) {
-            if (documento != "Acuse de cancelación") {
-                return true;
-            } else {
-                /**chenado si esta cancelada la venta para mostrar este archivo de acuse de cancelacion */
-                if (this.datosVenta.operacion_status == 0) {
-                    return true;
-                } else return false;
-            }
-        },
-        cancelar() {
-            this.$emit("closeListaReportes");
-            return;
-        },
+    OpenFormSeguimientos(cuota) {
+      this.filtersSeguimientos.cliente_id = this.datosVenta.cliente_id;
+      this.filtersSeguimientos.tipo_cliente_id = 1;
+      this.filtersSeguimientos.operacion_id = cuota.operaciones_id;
+      this.filtersSeguimientos.origen = 2; //cuotas
+      this.openSeguimientos = true;
+    },
+    cancelarPago(id_pago) {
+      this.id_pago = id_pago;
+      this.openCancelar = true;
+    },
+    closeFormularioPagos() {
+      this.verFormularioPagos = false;
+    },
+    retorno_pago(dato) {
+      this.openCancelar = false;
+      this.$vs.loading();
+      (async () => {
+        try {
+          await this.consultar_venta_id();
+          await this.consultar_pagos_operacion_id();
+          this.openReporte(
+            "reporte de pago",
+            "/pagos/recibo_de_pago/",
+            dato,
+            "pago"
+          );
+          this.$vs.loading.close();
+        } catch (error) {
+          this.$vs.loading.close();
+          this.$vs.notify({
+            title: "Error",
+            text: "Ha ocurrido un error al tratar de cargar el recibo de pago, por favor recargue la página.",
+            iconPack: "feather",
+            icon: "icon-alert-circle",
+            color: "danger",
+            position: "bottom-right",
+            time: "9000",
+          });
+        }
+      })();
+    },
+    closeCancelarPago(dato) {
+      this.openCancelar = false;
+      (async () => {
+        await this.consultar_pagos_operacion_id();
+      })();
+    },
+    openFirmador(id_documento) {
+      this.id_documento = id_documento;
+      this.openFirmas = true;
+    },
 
-        /** Abre el documento o recibo de esta venta en el visor HTML; el PDF se genera bajo demanda. */
-        openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
-            const documentosVisor = {
-                "/cementerio/documento_solicitud": "solicitud",
-                "/cementerio/documento_convenio": "convenio",
-                "/cementerio/documento_titulo": "titulo",
-                "/cementerio/documento_estado_de_cuenta_cementerio": "estado-cuenta",
-                "/cementerio/referencias_de_pago": "referencias",
-                "/cementerio/reglamento_pago": "reglamento",
-                "/cementerio/acuse_cancelacion": "acuse-cancelacion",
-                "/cementerio/servicios_propiedad": "servicios-propiedad",
-                "/pagos/recibo_de_pago": "recibo",
-            };
-            const documento = documentosVisor[link.replace(/\/$/, "")];
-            this.$vs.loading.close();
-            if (!documento) {
-                this.$vs.notify({ title: "Reporte no disponible", text: "No se reconoce el documento seleccionado.", color: "warning" });
-                return;
-            }
-            this.documentoVisor = documento;
-            this.ventaDocumentoId = Number(this.datosVenta.ventas_terrenos_id);
-            this.pagoDocumentoId = documento === "recibo" ? Number(parametro) : null;
-            this.mostrarDocumentoVisor = true;
-        },
-        async consultar_venta_id() {
-            this.$vs.loading();
-            try {
-                this.operacion_id = "";
-                let res = await cementerio.consultar_venta_id(
-                    this.get_venta_id
-                );
-                this.datosVenta = res.data[0];
-                this.operacion_id = this.datosVenta.operacion_id;
-                this.pagos_programados_cuotas = [];
-                if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
-                    this.datosVenta.cuota_cementerio_terreno.forEach(
-                        (element) => {
-                            this.pagos_programados_cuotas.push(
-                                element.pagos_programados[0]
-                            );
-                        }
-                    );
-                    //this.pagos_programados_cuotas =this.datosVenta.cuota_cementerio_terreno[0].pagos_programados;
-                }
+    closeFormularioPagos() {
+      this.verFormularioPagos = false;
+    },
+    retorno_pagos(datos) {
+      (async () => {
+        await this.consultar_venta_id();
+        if (this.operacion_id != "") {
+          await this.consultar_pagos_operacion_id();
+          //llamando el pago recien hecho
+          this.openReporte(
+            "reporte de pago",
+            "/pagos/recibo_de_pago/",
+            datos.id_pago,
+            "pago"
+          );
+        }
+      })();
+    },
+    pagar(referencia) {
+      this.referencia = referencia;
+      this.verFormularioPagos = true;
+    },
+    mostrarDocumento(documento) {
+      if (documento != "Acuse de cancelación") {
+        return true;
+      } else {
+        /**chenado si esta cancelada la venta para mostrar este archivo de acuse de cancelacion */
+        if (this.datosVenta.operacion_status == 0) {
+          return true;
+        } else return false;
+      }
+    },
+    cancelar() {
+      this.$emit("closeListaReportes");
+      return;
+    },
 
-                /**aqui voy */
+    /** Abre el documento o recibo de esta venta en el visor HTML; el PDF se genera bajo demanda. */
+    openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
+      const documentosVisor = {
+        "/cementerio/documento_solicitud": "solicitud",
+        "/cementerio/documento_convenio": "convenio",
+        "/cementerio/documento_titulo": "titulo",
+        "/cementerio/documento_estado_de_cuenta_cementerio": "estado-cuenta",
+        "/cementerio/referencias_de_pago": "referencias",
+        "/cementerio/reglamento_pago": "reglamento",
+        "/cementerio/acuse_cancelacion": "acuse-cancelacion",
+        "/cementerio/servicios_propiedad": "servicios-propiedad",
+        "/pagos/recibo_de_pago": "recibo",
+      };
+      const documento = documentosVisor[link.replace(/\/$/, "")];
+      this.$vs.loading.close();
+      if (!documento) {
+        this.$vs.notify({
+          title: "Reporte no disponible",
+          text: "No se reconoce el documento seleccionado.",
+          color: "warning",
+        });
+        return;
+      }
+      this.documentoVisor = documento;
+      this.ventaDocumentoId = Number(this.datosVenta.ventas_terrenos_id);
+      this.pagoDocumentoId = documento === "recibo" ? Number(parametro) : null;
+      this.mostrarDocumentoVisor = true;
+    },
+    async consultar_venta_id() {
+      this.$vs.loading();
+      try {
+        this.operacion_id = "";
+        let res = await cementerio.consultar_venta_id(this.get_venta_id);
+        this.datosVenta = res.data[0];
+        this.operacion_id = this.datosVenta.operacion_id;
+        this.pagos_programados_cuotas = [];
+        if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
+          this.datosVenta.cuota_cementerio_terreno.forEach((element) => {
+            this.pagos_programados_cuotas.push(element.pagos_programados[0]);
+          });
+          //this.pagos_programados_cuotas =this.datosVenta.cuota_cementerio_terreno[0].pagos_programados;
+        }
 
-                /*if (this.datosVenta.pagos_programados.length > 0) {
+        /**aqui voy */
+
+        /*if (this.datosVenta.pagos_programados.length > 0) {
   //calculando el total de rows
   this.funcion_reemplazada = [];
   for (
@@ -861,89 +922,124 @@ export default {
 }
 */
 
-                this.$vs.loading.close();
-            } catch (err) {
-                this.$vs.loading.close();
-                if (err.response) {
-                    if (err.response.status == 403) {
-                        this.$vs.notify({
-                            title: "Permiso denegado",
-                            text: "Verifique sus permisos con el administrador del sistema.",
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "warning",
-                            time: 4000,
-                        });
-                    }
-                }
-            }
-        },
-        async consultar_pagos_operacion_id() {
-            this.$vs.loading();
-            try {
-                this.pagos = [];
-                let datos_request = { operacion_id: this.operacion_id };
-                let res = await pagos.consultar_pagos_operacion_id(
-                    datos_request,
-                    false
-                );
-                this.pagos = res.data;
-                //agrego al arreglo de pagos los pagos realizados por concepto de mantenimiento.
-                datos_request = {};
-                datos_request = { operaciones_id: [] };
-                if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
-                    this.datosVenta.cuota_cementerio_terreno.forEach(
-                        (cuota) => {
-                            datos_request.operaciones_id.push(cuota.id);
-                        }
-                    );
-                    res = await pagos.consultar_pagos_operacion_id(
-                        datos_request,
-                        false
-                    );
-                    if (res.data.length > 0) {
-                        res.data.forEach((element) => {
-                            element.movimientos_pagos_texto =
-                                element.tipo_operacion_texto;
-                            this.pagos.push(element);
-                        });
-                    }
-                }
-                this.$vs.loading.close();
-            } catch (err) {
-                this.$vs.loading.close();
-                if (err.response) {
-                    if (err.response.status == 403) {
-                        this.$vs.notify({
-                            title: "Permiso denegado",
-                            text: "Verifique sus permisos con el administrador del sistema.",
-                            iconPack: "feather",
-                            icon: "icon-alert-circle",
-                            color: "warning",
-                            time: 4000,
-                        });
-                    }
-                }
-            }
-        },
+        this.$vs.loading.close();
+      } catch (err) {
+        this.$vs.loading.close();
+        if (err.response) {
+          if (err.response.status == 403) {
+            this.$vs.notify({
+              title: "Permiso denegado",
+              text: "Verifique sus permisos con el administrador del sistema.",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "warning",
+              time: 4000,
+            });
+          }
+        }
+      }
     },
-    // Lifecycle hooks
-    created() {
-        this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+    async consultar_pagos_operacion_id() {
+      this.$vs.loading();
+      try {
+        this.pagos = [];
+        let datos_request = { operacion_id: this.operacion_id };
+        let res = await pagos.consultar_pagos_operacion_id(
+          datos_request,
+          false
+        );
+        this.pagos = res.data;
+        //agrego al arreglo de pagos los pagos realizados por concepto de mantenimiento.
+        datos_request = {};
+        datos_request = { operaciones_id: [] };
+        if (this.datosVenta.cuota_cementerio_terreno.length > 0) {
+          this.datosVenta.cuota_cementerio_terreno.forEach((cuota) => {
+            datos_request.operaciones_id.push(cuota.id);
+          });
+          res = await pagos.consultar_pagos_operacion_id(datos_request, false);
+          if (res.data.length > 0) {
+            res.data.forEach((element) => {
+              element.movimientos_pagos_texto = element.tipo_operacion_texto;
+              this.pagos.push(element);
+            });
+          }
+        }
+        this.$vs.loading.close();
+      } catch (err) {
+        this.$vs.loading.close();
+        if (err.response) {
+          if (err.response.status == 403) {
+            this.$vs.notify({
+              title: "Permiso denegado",
+              text: "Verifique sus permisos con el administrador del sistema.",
+              iconPack: "feather",
+              icon: "icon-alert-circle",
+              color: "warning",
+              time: 4000,
+            });
+          }
+        }
+      }
     },
-    mounted() {
-        this.$log("Component mounted! " + this.$options.name);
-    },
-    beforeDestroy() {
-        this.$popupManager.unregister(this.$options.name);
-    },
-    destroyed() {
-        this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
-    },
+  },
+  // Lifecycle hooks
+  created() {
+    this.$log("Component created! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
+  mounted() {
+    this.$log("Component mounted! " + this.$options.name);
+  },
+  beforeDestroy() {
+    this.$popupManager.unregister(this.$options.name);
+  },
+  destroyed() {
+    this.$log("Component destroyed! " + this.$options.name); // reactive data is ready, DOM not yet
+  },
 };
 </script>
 
 <style lang="stylus">
+.forms-popup.expediente-cementerio-popup .vs-popup--title {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  width: 100%;
+  min-height: 36px;
+  background-color: #e9e9e9;
+  padding: 8px 12px !important;
+  box-sizing: border-box;
+}
+
+.forms-popup.expediente-cementerio-popup .vs-popup--title h3 {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
+  background: transparent !important;
+  width: auto !important;
+}
+
+.expediente-cementerio-ubicacion {
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.expediente-cementerio-ubicacion img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .con-expand-users {
   width: 100%;
 

@@ -72,10 +72,22 @@
         }
 
         /*fin de parrafos*/
+        /* Firmas compactas y agrupadas por pareja; mantenerlas fuera del pie. */
+        .autorizacion-firmas { display: table; clear: both; width: 100%; page-break-inside: avoid; break-inside: avoid; }
+        .autorizacion-firmas .firma { max-width: 150px; max-height: 48px; width: auto; height: auto; }
+        /* Escala compacta del cuerpo legal: conserva todo el texto y deja
+           espacio para otorgante, aceptante y los dos testigos en carta. */
+        .autorizacion-documento .contenido .size-19px { font-size: 17px !important; }
+        .autorizacion-documento .contenido .line-lg { line-height: 1.65em !important; }
+        .autorizacion-documento .contenido { margin-top: 14px !important; }
+        .autorizacion-documento .contenido .mt-8 { margin-top: 16px !important; }
+        .autorizacion-firmas-grupo { clear: both; page-break-inside: avoid; break-inside: avoid; }
     </style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'servicios_funerarios', 'altoMarcaAgua' => 1100])
 </head>
 
-<body>
+<body class="autorizacion-documento">
+    <div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -275,7 +287,8 @@
             </tr>
         </table>
 
-        <div class="w-100 center">
+        <div class="autorizacion-firmas-grupo">
+        <div class="w-100 center autorizacion-firmas">
             <div class="w-50 float-left">
                 <img src="{{ $firmas['otorgante'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
@@ -293,7 +306,7 @@
             </div>
         </div>
 
-        <div class="w-100 center">
+        <div class="w-100 center autorizacion-firmas">
             <div class="w-50 float-left">
                 <img src="{{ $firmas['testigo1'] }}" class="firma">
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
@@ -310,8 +323,9 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
     </div>
 </body>
 
 </html>
-<span class="uppercase bold texto-sm"></span>

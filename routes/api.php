@@ -256,6 +256,13 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/planes_funerarios/{idioma?}', 'FunerariaController@planes_funerarios');
     Route::post('funeraria/cancelar_venta', 'FunerariaController@cancelar_venta');
     Route::post('funeraria/cancelar_solicitud', 'FunerariaController@cancelar_solicitud');
+    // Expediente de servicios funerarios (tipo 3): tres rutas para todo su catálogo.
+    // Los documentos se incorporan al catálogo del controlador, no como rutas nuevas.
+    Route::prefix('funeraria/servicios/reportes')->group(function () {
+        Route::get('{documento}', 'FunerariaController@previewDocumentoServicio');
+        Route::get('{documento}/{token}/pdf', 'FunerariaController@descargarDocumentoServicio');
+        Route::post('{documento}/{token}/correo', 'FunerariaController@enviarDocumentoServicioCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
     Route::get('funeraria/documento_solicitud', 'FunerariaController@documento_solicitud');
     Route::get('funeraria/documento_convenio', 'FunerariaController@documento_convenio');
     Route::get('funeraria/documento_finiquitado', 'FunerariaController@documento_finiquitado');

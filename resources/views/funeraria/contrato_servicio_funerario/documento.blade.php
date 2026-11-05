@@ -85,8 +85,48 @@
     </style>
 </head>
 
-<body>
+<body class="contrato-funerario-original">
     @include('layouts.estilos')
+    <style>
+        /* Paginación del contrato original: mantiene texto y orden documental.
+           Evita dividir párrafos y filas; el encabezado del anexo se repite.
+           Un párrafo mayor que una hoja podrá dividirse sin ocultar contenido. */
+        .contrato-funerario-original p{page-break-inside:avoid;break-inside:avoid;orphans:3;widows:3}
+        .contrato-funerario-original tr{page-break-inside:avoid;break-inside:avoid}
+        .contrato-funerario-original thead{display:table-header-group}
+        .contrato-funerario-original p.bold,
+        .contrato-funerario-original p:has(>span.bold:only-child){page-break-after:avoid;break-after:avoid}
+        /* Sustituye los grandes espacios de firmas por un cierre compacto.
+           Se conserva cada imagen y su autorización independiente. Si el bloque
+           no cabe completo, pasa junto a la siguiente hoja, sin recortar firmas. */
+        .contrato-final-documental{page-break-inside:avoid;break-inside:avoid}
+        .contrato-cierre{page-break-inside:avoid;break-inside:avoid;clear:both}
+        .contrato-firmas{display:table;width:100%;margin-top:12px!important}
+        .contrato-firmas>div{display:table-cell;float:none!important;width:50%;vertical-align:bottom;margin-top:0!important}
+        .contrato-cierre .firma{display:block;width:auto!important;height:auto!important;max-width:210px!important;max-height:78px!important;margin:0 auto 4px!important}
+        .contrato-publicidad{padding-top:8px!important;clear:both}
+        .contrato-publicidad>p{margin-top:0!important;margin-bottom:6px!important}
+        .contrato-publicidad>div{float:none!important;margin-top:6px!important}
+        .contrato-publicidad .firma{max-height:28px!important}
+        .contrato-cierre p{margin-top:2px!important;margin-bottom:2px!important}
+
+        /* Anexo ejecutivo: mismos campos y cálculos; importes alineados.
+           Estilos locales para no modificar las demás tablas del contrato. */
+        .contrato-anexo-titulo{font-family:Arial,sans-serif;font-size:16px;font-weight:bold;margin:15px 0 2px!important;page-break-after:avoid}
+        .contrato-anexo-nota{font-size:11px;color:#777;margin:0 0 10px!important;page-break-after:avoid}
+        .contrato-anexo-tabla{font-family:Arial,sans-serif;width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+        .contrato-anexo-tabla th{background:#41494c!important;color:#fff!important;font-weight:normal;text-align:center;padding:8px 3px;font-size:10px}
+        .contrato-anexo-tabla td{border:0;border-bottom:1px solid #ddd;padding:8px 3px!important;font-size:11px;text-align:center;vertical-align:middle;word-wrap:break-word}
+        .contrato-anexo-tabla tbody tr:nth-child(even){background:#f6f6f5}
+        .contrato-anexo-tabla th:nth-child(1){width:4%}.contrato-anexo-tabla th:nth-child(2){width:5%}.contrato-anexo-tabla th:nth-child(3){width:22%}
+        .contrato-anexo-tabla th:nth-child(4){width:6%}.contrato-anexo-tabla th:nth-child(9){width:9%}.contrato-anexo-tabla th:nth-child(10){width:5%}
+        .contrato-anexo-tabla td:nth-child(3){text-align:left}
+        .contrato-anexo-tabla td:nth-child(n+4):nth-child(-n+8){text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+        .contrato-anexo-totales{font-family:Arial,sans-serif;width:38%!important;margin:12px 0 12px auto!important;border-collapse:collapse;page-break-inside:avoid}
+        .contrato-anexo-totales td{border:0!important;padding:4px 6px!important;font-size:12px!important;white-space:nowrap;text-align:right!important}
+        .contrato-anexo-totales td:first-child{width:auto!important;font-weight:normal}
+        .contrato-anexo-totales tr:last-child td{border-top:2px solid #ac8a27!important;background:#f6f4ed;font-size:15px!important;font-weight:bold;padding-top:8px!important;padding-bottom:8px!important}
+    </style>
     <header id="header">
         <section>
             <table>
@@ -494,6 +534,8 @@
             tratamiento de sus
             datos personales en adelante, derechos ARCO.
         </p>
+        <!-- Mantiene la última cláusula, anexos y firmas juntos cuando caben en una hoja. -->
+        <div class="contrato-final-documental">
         <p class="justificar line-17 size-13px -mt-3">
             <span class="bold">NOVENA SEGUNDA. JURISDICCION.- </span>
         </p>
@@ -568,24 +610,25 @@
         @endif
 
 
-        <p class="center line-17 size-13px bold uppercase">
-            anexos (artículos y servicios del contrato)
+        <p class="contrato-anexo-titulo">
+            Artículos y servicios contratados
         </p>
+        <p class="contrato-anexo-nota">Anexo del contrato · Importes en MXN</p>
 
         <div>
-            <table class="w-100 size-13px mt-5 datos_tabla uppercase">
+            <table class="contrato-anexo-tabla">
                 <thead>
                     <tr class="center">
-                        <td class="bg-gray bold">No.</td>
-                        <td class="bg-gray bold">Cantidad</td>
-                        <td class="bg-gray bold">Concepto</td>
-                        <td class="bg-gray bold">$ Des.</td>
-                        <td class="bg-gray bold">$ Base</td>
-                        <td class="bg-gray bold">$ IVA</td>
-                        <td class="bg-gray bold">$ Total</td>
-                        <td class="bg-gray bold">$ Imp.</td>
-                        <td class="bg-gray bold">Facturable</td>
-                        <td class="bg-gray bold">P. Funerario</td>
+                        <th>Núm.</th>
+                        <th>Cant.</th>
+                        <th>Concepto</th>
+                        <th>Desc.</th>
+                        <th>Base</th>
+                        <th>IVA</th>
+                        <th>Total</th>
+                        <th>Importe</th>
+                        <th>Facturable</th>
+                        <th>Plan</th>
                     </tr>
                 </thead>
                 @if (count($datos['operacion']['movimientoinventario']['articulosserviciofunerario'] )>0)
@@ -620,7 +663,7 @@
                 </tr>
                 @endif
             </table>
-            <table class="w-100 size-13px mt-5 datos_tabla">
+            <table class="contrato-anexo-totales">
                 <tr class="size-15px">
                     <td class="py-1 w-85 right px-2 bold">Subtotal $</td>
                     <td class="py-1 center">{{number_format($datos['operacion']['subtotal'],2)}}</td>
@@ -630,23 +673,24 @@
                     <td class="py-1 center">{{number_format($datos['operacion']['descuento'],2)}}</td>
                 </tr>
                 <tr class="size-15px center">
-                    <td class="py-1 w-85 right px-2 bold">TASA IVA</td>
-                    <td class="py-1 center">{{$datos['operacion']['tasa_iva']/100}}</td>
+                    <td class="py-1 w-85 right px-2 bold">Tasa de IVA</td>
+                    <td class="py-1 center">{{$datos['operacion']['tasa_iva']}} %</td>
                 </tr>
                 <tr class="size-15px center">
                     <td class="py-1 w-85 right px-2 bold">IVA $</td>
                     <td class="py-1 center">{{number_format($datos['operacion']['impuestos'],2)}}</td>
                 </tr>
                 <tr class="size-15px center">
-                    <td class="py-1 w-85 right px-2 bold">Total $</td>
+                    <td class="py-1 w-85 right px-2 bold">Total MXN</td>
                     <td class="py-1 center">{{number_format($datos['operacion']['total'],2)}}</td>
                 </tr>
             </table>
         </div>
 
-        <div class="w-100 center mt-50">
+        <div class="contrato-cierre">
+        <div class="w-100 center mt-50 contrato-firmas">
             <div class="w-50 float-left mt-20">
-                 <img src="{{ $firmas['gerente'] }}" class="firma">
+                 <div class="contrato-espacio-firma">@if(!empty($firmas['gerente']))<img src="{{ $firmas['gerente'] }}" class="firma">@endif</div>
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class=" pb-1"><span class="texto-base bold uppercase center">
                             <p class=" line-17 size-13px">
@@ -660,7 +704,7 @@
                 </div>
             </div>
             <div class="w-50 float-right mt-20">
-                 <img src="{{ $firmas['contratante'] }}" class="firma">
+                 <div class="contrato-espacio-firma">@if(!empty($firmas['contratante']))<img src="{{ $firmas['contratante'] }}" class="firma">@endif</div>
                 <div class="w-90 mr-auto ml-auto border-top pt-1">
                     <div class=" pb-1"><span class="texto-base bold uppercase center">
                             <p class=" line-17 size-13px">
@@ -677,9 +721,11 @@
 
 
 
-        <div class="w-100 center pt-30">
-            <p class="justificar line-17 size-13px mt-30">
-                <span class="bold">Autorización con fines mercadotécnicos o publicitarios.-</span> “El consumidor” Si (
+        {{-- Autorización independiente: texto a la izquierda y firma a la derecha.
+             Área amplia de firma, sin reducir el texto ni mezclarla con el contrato. --}}
+        <section class="contrato-autorizacion-horizontal">
+            <h3>Autorización con fines mercadotécnicos o publicitarios</h3>
+            <table><tr><td class="contrato-autorizacion-texto"><p>“El consumidor” Si (
                 ) NO
                 ( ) acepta que “El
                 Proveedor” Ceda O
@@ -688,22 +734,63 @@
                 presente
                 Contrato y SI
                 acepta ( ) NO acepta
-                ( ) que “El proveedor” le envié publicidad sobre bienes y servicios.
-            </p>
-            <div class="w-50 float-left mt-10">
-                <img src="{{ $firmas['publicidad'] }}" class="firma">
-                <div class="w-90 mr-auto ml-auto border-top pt-1">
-                    <div class=" pb-1"><span class="texto-base bold uppercase center">
-                            <p class=" line-17 size-13px">
-                                Firma de autorización de"El Consumidor"
-                            </p>
-                        </span></div>
-                </div>
-            </div>
-        </div>
+                ( ) que “El proveedor” le envié publicidad sobre bienes y servicios.</p></td>
+            <td class="contrato-autorizacion-firma"><div class="contrato-espacio-firma">@if(!empty($firmas['publicidad']))<img src="{{ $firmas['publicidad'] }}" class="firma">@endif</div><div class="contrato-linea-autorizacion">Firma de autorización de “El consumidor”</div><p>{{ $datos['operacion']['cliente']['nombre'] }}</p></td></tr></table>
+        </section>
 
-
+        </div><!-- /contrato-cierre -->
+        </div><!-- /contrato-final-documental -->
     </div>
+{{-- Fondo compartido configurable. Aquí se cubre cada bloque real por separado:
+     una envoltura blanca única ocultaría también los huecos de salto de página. --}}
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'servicios_funerarios', 'altoMarcaAgua' => 1050])
+<style>
+
+.contrato-funerario-original p,
+.contrato-funerario-original #header,
+.contrato-funerario-original table,
+.contrato-funerario-original .contrato-cierre{background-color:#fff}
+.contrato-funerario-original p{box-shadow:0 7px 0 #fff,0 -3px 0 #fff,16px 0 0 #fff,-16px 0 0 #fff}
+/* Pantalla: la trama permanece oculta. Solo aparece al generar o imprimir. */
+@media screen{html:has(.contrato-funerario-original .solicitud-visor-pie){background-image:none!important}}
+</style>
+<style>
+/* Firma legible: reserva espacio incluso cuando se firma a mano. */
+.contrato-espacio-firma{height:85px;display:block;padding-top:5px;box-sizing:border-box}
+.contrato-autorizacion-horizontal{margin-top:18px;padding:14px 16px;background:#faf9f6;border:1px solid #ddd;border-top:2px solid #ab8a29;page-break-inside:avoid;box-sizing:border-box}
+.contrato-autorizacion-horizontal h3{font: bold 14px Arial,sans-serif;color:#786125;margin:0 0 12px}
+.contrato-autorizacion-horizontal table{width:100%;border-collapse:collapse;background:transparent!important;table-layout:fixed}
+.contrato-autorizacion-horizontal td{vertical-align:top;border:0}
+.contrato-autorizacion-texto{width:64%;padding-right:20px}
+.contrato-autorizacion-texto p{font-size:13px;line-height:1.6;text-align:justify;background:transparent!important;box-shadow:none!important}
+.contrato-autorizacion-firma{width:36%;border-left:1px solid #dedbd2!important;padding-left:18px;text-align:center}
+.contrato-autorizacion-firma .firma{max-width:180px!important;max-height:75px!important}
+.contrato-autorizacion-firma p{font:11px Arial,sans-serif;background:transparent!important;box-shadow:none!important;margin-top:7px!important}
+.contrato-linea-autorizacion{border-top:1px solid #555;padding-top:6px;font:11px Arial,sans-serif;text-align:center}
+</style>
+{{-- Completa el fondo hasta el área imprimible de la última página.
+     La proporción usa Carta y los márgenes originales del contrato (14.4,
+     12.4 y 33.4 mm). Solo amplía el fondo, sin desplazar contenido ni firmas. --}}
+<script>
+(function(){
+ function completarFondoContrato(){
+  if(document.querySelector('.solicitud-visor-pie'))return;
+  var cuerpo=document.body, raiz=document.documentElement;
+  var contenido=cuerpo.querySelector('.contenido');
+  if(!contenido)return;
+  var ancho=cuerpo.clientWidth;
+  // Qt puede informar ancho cero antes de paginar. Fija un ancho lógico
+  // proporcional a Carta para poder medir el área y completar el fondo.
+  if(!ancho){cuerpo.style.width='935px';ancho=935;}
+  var altoPagina=ancho*(233.6/187.1);
+  var fin=contenido.getBoundingClientRect().bottom+(window.pageYOffset||0);
+  if(!isFinite(fin)||!isFinite(altoPagina)||altoPagina<=0)return;
+  var alto=Math.ceil(fin/altoPagina)*altoPagina-6;
+  raiz.style.minHeight=alto+'px';cuerpo.style.minHeight=alto+'px';
+ }
+ window.addEventListener('load',function(){setTimeout(completarFondoContrato,100);});
+})();
+</script>
 </body>
 
 </html>

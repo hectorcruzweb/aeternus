@@ -1,214 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Autorización de cremación</title></head><body class="cremacion-secciones">
+<!-- Iconos Lucide v0.468.0 rasterizados para compatibilidad Qt.
+ISC License
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Reportes</title>
-    <style>
-        #header,
-        #header section table {
-            width: 100% !important;
-            padding-top: 0px;
-        }
+Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.
 
-        #header section table {
-            border-collapse: collapse !important;
-        }
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
 
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-
-        .logo {
-            max-width: 100% !important;
-        }
-
-
-        h1 {
-            font-size: 1em;
-            line-height: .8em !important;
-            text-transform: uppercase;
-            text-align: center;
-        }
-
-        .datos-header {
-            text-align: center !important;
-            font-size: .9em;
-            line-height: 1em !important;
-            text-transform: uppercase !important;
-        }
-
-        .numeros-contrato {
-            width: 100% !important;
-        }
-
-        .numeros-contrato .control {
-            text-align: center;
-            text-transform: uppercase !important;
-            font-size: .8em;
-            line-height: 1.9em !important;
-            font-weight: 600 !important;
-        }
-
-        .control-valor {
-            text-align: center;
-            font-size: .9em;
-            line-height: .3em !important;
-            text-transform: uppercase;
-        }
-
-        /*parrafos**/
-        .contenido {
-            padding: 10px 0 0 0 !important;
-            margin: 0 !important;
-        }
-
-        .tabla_dato {
-            border-collapse: collapse;
-        }
-
-        .tabla_dato .border-bottom {
-            border-bottom: 1px solid #ddd;
-        }
-
-        /*fin de parrafos*/
-    </style>
-</head>
-
-<body>
-    @include('layouts.estilos')
-    <header id="header">
-        <section>
-            <table>
-                <tr>
-                    <td style="width:23%;">
-                        <img src="{{ public_path(env('LOGOJPG')) }}" alt="" class="logo">
-                    </td>
-                    <td style="width:53%;">
-                        <h1>
-                            {{ $empresa->razon_social }}
-                        </h1>
-                        <p class="datos-header">
-                            {{ strtolower($empresa->calle) }} Núm. Ext {{ $empresa->num_ext }}
-                        </p>
-                        <p class="datos-header">
-                            Col. {{ strtolower($empresa->colonia) }}. cp. {{ $empresa->cp }}.
-                            {{ $empresa->ciudad }}
-                            {{ $empresa->estado }}
-                        </p>
-                        <p class="datos-header">
-                            Tel. {{ $empresa->telefono }}, fax {{ $empresa->fax }}
-                        </p>
-                    </td>
-                    <td style="width:25%;">
-                        <div class="numeros-contrato">
-                            <div class="control bg-gray">
-                                Número Servicio
-                            </div>
-                            <p class="control-valor">
-                                {{ $datos['servicio_id'] }}
-                            </p>
-
-                            <div style=""></div>
-                            <div class="control bg-gray">
-                                Tipo Servicio
-                            </div>
-                            <p class="control-valor">
-                                {{ $datos['tipo_solicitud_texto'] }}
-                            </p>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-        </section>
-    </header>
-    <p class="fecha  right">
-        <span class="bg-gray bold uppercase texto-sm  pl-2 pr-1">{{ $empresa->ciudad }}, {{ $empresa->estado }} a
-            {{ fecha_only(now()) }}.</span>
-    </p>
-    <h1 class="center mt-5 size-22px">AUTORIZACIÓN DE CREMACIÓN</h1>
-    <div class="contenido w-100 mt-5">
-        <p class="justificar line-lg size-18px">
-            Por medio del presente documento autorizo a la empresa <span class="bold"> Aeternus Funerales</span> para que se realice el siguiente servicio de cremación:
-        </p>
-        <div class="contenido w-100 mt-4">
-            <table class="w-100 texto-base datos_tabla uppercase">
-                <thead>
-                    <tr class="center">
-                        <td class="bg-gray bold w-100">Finado</td>
-                    </tr>
-                </thead>
-                <tr class="size-15px center">
-                    <td class="py-1 px-1">
-                        {{ $datos['nombre_afectado'] }}
-                    </td>
-                </tr>
-            </table>
-            <!--
-            <table class="w-100 texto-base datos_tabla uppercase">
-                <thead>
-                    <tr class="center">
-                        <td class="bg-gray bold w-50">Fecha de Cremación</td>
-                        <td class="bg-gray bold w-50">Fecha de Entrega de Cenizas</td>
-                    </tr>
-                </thead>
-                <tr class="size-15px center">
-                    <td class="py-1 px-1">
-                        {{ fechahora($datos['fechahora_cremacion']) }}
-                    </td>
-                    <td class="px-1">
-                        {{ fechahora($datos['fechahora_entrega_cenizas']) }}
-                    </td>
-                </tr>
-            </table>
 -->
-
-            <table class="w-100 texto-base datos_tabla uppercase">
-                <thead>
-                    <tr class="center">
-                        <td class="bg-gray bold w-50">Enfermedades Contagiosas</td>
-                        <td class="bg-gray bold w-50">Estado del Cuerpo a Cremar</td>
-                    </tr>
-                </thead>
-                <tr class="size-15px center">
-                    <td class="py-1 px-1">
-                        {{ $datos['contagioso_texto'] }}
-                    </td>
-                    <td class="px-1">
-                        
-                        {{ $datos['estado_cuerpo']["estado"] }}
-                    </td>
-                </tr>
-            </table>
-
-            <table class="w-100 texto-base datos_tabla uppercase">
-                <thead>
-                    <tr class="center">
-                        <td class="bg-gray bold">Causa de Muerte</td>
-                    </tr>
-                </thead>
-                <tr class="size-15px center">
-                    <td class="py-1 px-1">
-                        {{ $datos['causa_muerte'] }}
-                    </td>
-                </tr>
-            </table>
-
-
-            
-        </div>
-
-        <div class="w-100 center mt-20">
-            <div class="w-50 mr-auto ml-auto">
-                <img src="{{ $firmas['contratante'] }}" class="firma">
-                <div class="w-90 mr-auto ml-auto border-top pt-1">
-                    <span class="texto-base">{{ $datos['operacion']['cliente']['nombre'] }}</span> ({{ $datos['parentesco_contratante'] }})
-                </div>
-                Autoriza
-            </div>
-        </div>
-    </div>
-</body>
-
-</html>
-<span class="uppercase bold texto-sm"></span>
+@include('layouts.estilos')
+<style>
+/* Autorización por secciones: datos y firma provienen del documento original.
+   Tablas de presentación compatibles con Qt; estilos locales para no afectar
+   otros documentos. El pie se agrega fuera de .marca-agua-contenido. */
+html body.cremacion-secciones{font-family:Arial,sans-serif!important;font-size:16px;margin:0;color:#30383b!important}
+.cremacion-secciones header{display:table;width:100%;border-bottom:2px solid #aa8a29;padding-bottom:18px}
+.cremacion-secciones header>div{display:table-cell;vertical-align:middle}
+.cremacion-secciones .marca{width:34%}.cremacion-secciones .marca img{width:210px;max-width:100%}
+.cremacion-secciones .empresa{text-align:right;font-size:12px;line-height:1.65}.cremacion-secciones .empresa span{display:block}
+.cremacion-titulo{width:100%;border-collapse:collapse;margin:22px 0 12px}.cremacion-titulo h1{font-size:28px;margin:0;line-height:1.3}
+.cremacion-folio{text-align:right;width:22%;font-size:12px}.cremacion-folio strong{display:block;font-size:26px;color:#8c7229}
+.cremacion-fecha{text-align:right;font-size:12px;color:#777;margin-bottom:24px}
+.cremacion-secciones h2{font-size:17px;color:#796226;margin:0 0 12px}.cremacion-icono{width:18px;height:18px;vertical-align:middle;margin-right:8px;object-fit:contain}
+.cremacion-declaracion p{font-size:16px;line-height:1.8;margin:0}
+.cremacion-persona{padding:16px;background:#f7f5ee;border-left:3px solid #ad8b2a;margin:23px 0}.cremacion-persona small{display:block;color:#737373;font-size:12px;margin-bottom:6px}.cremacion-persona strong{font-size:19px}
+.cremacion-mono{width:14px;height:18px;vertical-align:middle;margin-right:6px}
+.cremacion-duo{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0}.cremacion-duo td{width:50%;vertical-align:top}.cremacion-duo td:first-child{padding-right:8px}.cremacion-duo td:last-child{padding-left:8px}
+.cremacion-campo{border:1px solid #dedede;padding:16px;word-wrap:break-word;box-sizing:border-box}.cremacion-campo label{display:block;font-size:12px;color:#737373;margin-bottom:9px}.cremacion-campo strong{font-size:16px;font-weight:normal;line-height:1.6}
+.cremacion-contagioso{color:#af4840;font-weight:bold!important}.cremacion-causa{margin-top:16px;background:#fafafa}
+.cremacion-firma{width:66%;margin:30px auto 20px;text-align:center;page-break-inside:avoid}.cremacion-firma h2{font-size:13px;color:#777}.cremacion-firma img.firma{width:auto;max-width:160px;max-height:65px;height:auto;margin:0 auto 7px;display:block}
+.cremacion-firma-linea{border-bottom:1px solid #666;min-height:65px;margin-bottom:9px}.cremacion-firma strong{font-size:14px}.cremacion-firma span{display:block;font-size:12px;color:#777}
+@media screen{html body.cremacion-secciones{min-height:279.4mm!important}.cremacion-secciones .solicitud-visor-pie{top:246mm!important;bottom:auto!important}}
+@supports(display:grid){
+.cremacion-secciones .marca img{width:168px}.cremacion-secciones .empresa{font-size:9.6px}.cremacion-titulo h1{font-size:22.4px}.cremacion-folio strong{font-size:20.8px}.cremacion-fecha{font-size:9.6px}
+.cremacion-secciones h2{font-size:13.6px}.cremacion-declaracion p{font-size:12.8px}.cremacion-persona strong{font-size:15.2px}.cremacion-persona small,.cremacion-campo label{font-size:9.6px}
+.cremacion-campo strong{font-size:12.8px}.cremacion-icono{width:14px;height:14px}.cremacion-firma strong{font-size:11.2px}.cremacion-firma span{font-size:9.6px}
+}
+</style><div class="marca-agua-contenido">
+{{-- Misma silueta y transparencia del título de propiedad y de la guía.
+     Capa decorativa sin espacio en el flujo: no mueve datos, firmas ni pie. --}}
+<div class="documento-marca-titulo" aria-hidden="true">{!! \App\Exports\MarcaTituloReportes::svg() !!}</div>
+<header><div class="marca"><img src="{{ public_path(env('LOGOJPG')) }}" alt="Aeternus Funerales"></div><div class="empresa"><strong>{{ $empresa->razon_social }}</strong><span>{{ mb_convert_case(mb_strtolower($empresa->calle, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') }} núm. ext. {{ $empresa->num_ext }}</span><span>@if(trim($empresa->colonia))Col. {{ mb_convert_case(mb_strtolower($empresa->colonia, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') }} · @endif C. P. {{ $empresa->cp }} · {{ $empresa->ciudad }}, {{ $empresa->estado }}</span><span>Tel. {{ $empresa->telefono }} · Fax {{ $empresa->fax }}</span></div></header>
+<table class="cremacion-titulo"><tr><td><h1>Autorización de cremación</h1></td><td class="cremacion-folio">{{ $datos['tipo_solicitud_texto'] }}<strong>{{ $datos['servicio_id'] }}</strong></td></tr></table>
+<div class="cremacion-fecha">{{ $empresa->ciudad }}, {{ $empresa->estado }}, a {{ \Carbon\Carbon::now('America/Mazatlan')->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}.</div>
+<section class="cremacion-declaracion"><h2><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAsCAYAAAAXb/p7AAAC8klEQVR4nO2ZTYhNYRjHf3fMAomQSWzHzBg2LEQWamqIoXxMzALpmo8YBsliykczKQtJxqB8hsSUz4h8ZmEnyYYZFlY+spGUFa6eei7H432dc2fOOXeUX53ufZ9z7jn/+b/Pc96PybRnKwiwClgMzAQmMDC+AI+Bh8A+4HN/blKqn+OBc0AN8TEcmKNHI5AF7hR6kxL9vBizOMtE4CbQQD8Eyl83m+QZApwHVhcqcJmJiZtTgMwAjzFAq+OZp7W7IwucZWK7gOcMnI/AYaAO+GrOHY/qpAgcZWJxiAviyr2MOrmCiEWSNJdU5HcT3xOmIS2BQg+wBsjxu5MMFoHCWaCJX2x1uFpUgcKJQKVfJoRiCCyI/wL/ZQdHAp3AA+AT0KtFVOuazaTNUuAIUGYEVwIrdbhtltGoGAKbgKMh19SreUvS7uINHnF9OsENIhPnhpKUxR10xNuAKqAceGXOtaQlsNUjbl0g/k6HwiDlaeRgG3DAEW/UUSXIC9MekbSDmz3imh3ihC2m/aw04Zzbb2I57cYznureYWJPk3Jwkyfnmj3i1juqW5apXUk4WONwTlgLnPQUULfH0ddJCOwyE9Gwbu32ON2TxFg8XVeEVkTUbs3Hj+UbcQtcaNpXPdW6ETjkeS/KGP2TuLu4zrQveKpb0oAoaRCng2XAjED7my45g2zzVHeLJw1idXCeaT/SV8VkYJEuO6c5ftekC3mSFrjAtMcCL4FJf/mNa7gruIuX62w3p0evxiyypxhkaoi4bJi4qAI7daabp1JjlmFE4726fSrKxXEWyd6/nHurL+Ra3Su8FfWmUXJwp3GxT2MW2eYdquPwON3+vQFcl0GffpJpz1bkbIx0qQd26/ftumAaVAv3Du2dSv2OFShJG6Q6PW1Um+eNdgm0+dER8nqIiyqHY09cRSIzh/kmJ+QoBt0uB68A9yk+14DbNpgvEtluuEfxuKuT1D/IC5RCkZeo/CtMHJUXa9K80b1reeZc4IProh/3DosAZASO0AAAAABJRU5ErkJggg==">Autorización</h2><p>Por medio del presente documento autorizo a la empresa Aeternus Funerales para que se realice el siguiente servicio de cremación:</p></section>
+<section class="cremacion-persona"><small><img class="cremacion-mono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAE1klEQVR4nJ2YeYxeYxTGfx1qmTFFE5GWjKi1iomiSsQSia1qKYaqvWqJhDaWiJ0/SFFCUJVp7FHLpKhtYsmIWmNvo00jZaIYMdVa0hE6UzmT523OnLz33m/mSb6Z77733ve573nPfc5zvmFNTU3UgF2Ao4HxwJ7ADsD2OtcF/AwsA74A2oHvqyYcVkE8GrgNuADYpJYnBNYD84FbgF+LLqormeBiYAVw0SBIDZsClwDfARcOhnhL4GVgHtDA0LGVVr5Qc5aGegTwJnBwZiLbw1bgB+1h2sed3ceitHvm3g+B44A/i4g/AA4JN/UANwFzalzptcCtmVW+BxyRC/WMDOnHwK6DIDXcpXs+DeOHA+fHFdsDrAJGuQvteD+gm6FhO+DrMGentmRDWvGx4YIevbeJdDNgCnAf8DmwFujTx75/BtwLnAgM1z2/AZM0V8JOmrc/9Q3TGYinlEwHAJcCpyvxctga2F+fWXqQF4C5wJfAAumA39L2FOoup0SGc6VSV9p2MDRYNO6WFsx347+YMCXivkCwouC1GAqWS2YTLPT1aY//ChdXkb4O7As063sZPKnhX/uTiH+kGCYYq8PY1cAS4BvgmnCuu2K+zlqIX9GqesN4Y0guj15F442COVd54o1S5vAccJLOdYRz17vvVoU8OpTZ9iq1Zeb92xPHUP4HnOOO7w/n7YEuA64DjgnnHtf/DVKqGK0l9idl9RZKsPReG44MK30WOJNymEwe5I5PVnXyGd3glesf4EkGYlbmuEw+bdJpYSwm3iOKxIAi8VC4yORvgjvu0or7b8xguoq/X60vOn3Ag+nAEye/5GHK4/EO8EmG9AFtRYI5ltnhmqeBlTliw+3h+LCwr6azE8M19irODGNXBRHqBW6sMnvtqYIIvwO7AXsB77rqY/hD4+YyvSP9VhUt4VH5sFLiscBX4cZXtV8jQzJZDiz182krDnRjVh73ANZUmT0rhzeEsRMCqSXYWYE0SaknRSVxTa329h75ryKYWr0Uxi6X7fF4DHgtN0GZoR8jlakP40Z4ShgbJfEfHpJuXKbyVRr6pgzp6oxI2L4+H0gN2wRzURPxaE1G2NfJwLowbvlwaGaORlW3+lqJTa9flEv0aAE+CmMT1FsVYaz8W03EczKdxGw9TAxlW5hjnToRjyky+aXEpwFXhLGOUH8TngF2zOj1qfJZHndKBbPE5o2eCDf8pBCbwHuYhz4+U4cXaNWTpGqeZ6ESdgCxdXaLQiKsV8E35fEYlymZnXqPE1Yqer6SjRT55p64Vf2Ox0x1DR4NobCX4e2MLRqfSqMJyMRMtlrIphbsq0llDq2qXhGLJLkezXXBW6HKElsaw3klpOiXA2t1IqYFg2A4uy5YVST8MZmsujyc2VdLvrhqa8wItXhZGNvWiBeHwRaVRSNLRrAto0AtMgn+IUdI8ZJpbFarOjncu9j2uFFJZMU+YoYSwqxsNHFWwZBy3RzO3yFdzzX0S82Jpuo0Rs4jZnYObwWHYni/QK8jlgNHmWOpc+9dc6YwRHQVJNhUdQ9lmKdfGPptUtTZM0p+m+qRKHQX9ENFGb9Wem0Nvvn3fuSKhLkGSywLaYKFyDxXmSuxJs3Cbd1lgiXl3jnRqfpJ0X6ztEyNr0MV9lFIY0+2Ef8DzwMQzZMMiV8AAAAASUVORK5CYII=">Nombre del fallecido</small><strong>{{ $datos['nombre_afectado'] }}</strong></section>
+<section><h2><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAsCAYAAAANUxr1AAABy0lEQVR4nO2Yu0oDQRSGvyz2FmkkvTGJpZXaKQreEKKkUpEgPoIQhIiF4gPYWdspKkRE1FKsxEpNHiDeioi+QGRkFsYh6+6GdXYj+8Gwczkz598zk8NmEqViGg/MAmtAP9CNPz6Ae2AbOHUztjwsOA0cA0NtiEHOEXMrwGQQgkoEx3oQgvqC0eJtLV3QInAI1IGmLEnNJuGzqCSVdevS14Jq0CWfPcA+MII5UkBeliUZjFc7QgeGxeiMyYB8b9kKMEz4jALLQtCcNiCilVXOQEMbb/osKg1l3az0pZIXgga1zg2gqrQfCQ51rar0pTJgtUh2D1p7J0BBWy6+Ul7yUAWYAW6AzzZEvAPXwBRw5mZs/+y9iKpgAC8RMkosyI04QkFEqCCTWFXWncbdMrbT/B8kSsW0nt71T4aq8h1TAzK/jLvRan6z489QWb5ZTdadxt1wmu97y/6azt8yo8SC/mWECnGmjhKWB5tynKmjhEXEsIgYFhHDIoKCXrS+nEH/Oa39LATdaZ2bQK8BMRnpS+VW/LffAyaUznlZwmBXROgIuCJ8ToBz+1CLm9DLEMVcAKuiYgsSB1tcPIqbUBGxJwMi7Gth4XMceBOdX5VagOdEbLwfAAAAAElFTkSuQmCC">Datos del servicio</h2><table class="cremacion-duo"><tr><td><div class="cremacion-campo"><label><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAAoCAYAAABq13MpAAACrElEQVR4nM2ZXYhOQRjHfztWigtXSmHJhXUjH1eUGy5WIlLsjRtcSLlZYS3lzSofWVsuxJYUbnzdaGXVq6TccEVKWb1ufG2R1IbatK2mZmp6Gu+eMzPnPedfU3OemWn+Z955f/Occ9qO71tGQs0F9gNbgVXAX+ANMAxcA36nmKSddFoEPAE6RXyDKXuALuBb7ESKNJoFPPIYdrUSeAzMrIrpU8CKDP3WAL1VML0E6BOxB8ACs/JPRdsJYH7ZpgfE9XdgN/AVeA/sAH467bOBc2WaXgvsFLFjwB/nehw4KfroP+XqMky3AVdE7DVww9N3CGiImBzbEtN7Pat1AJjy9J0EDnp+pe5Wmtb78ryI3QdeNhlTN1h0dcHgsiWm9R6d51xPAEcyjOsxq261OOO4aNN6osMiNgh8zDC2AVz2INBdgEJMXxSnmkbcGdFH79V3psh9W/MgUG+Twkz7ENcrEKd12hwsnaZOSgSqghDn5iC+fCQKgSoB4kI0GYNAFYG4e9MgbjrVQxGoIhCn8RWrnhAEqkDEaYKMEa9GCAJVIOLOkk61vAhUAYg76kFcjMbzIlAFIO4m6TWUB4GqIMSN/qeeBIEqB+Lu5kBczZgdNfWkCFQ5EHeI7NIMX26KridFoMqIuIFEiEuCQJUBcWOxD6KpEagyIK4vMeKiEagyIO4W+dUsn45GoCooi2uWTxOLQGt6jufp43ZkFherOvDQ92LImu72vKrSx3WoQjjtk8RdB7DLmt4iGvuBL4QrlNNS+rXaJRHbbE1vEg1XqY4GfaZnGHJYTYlTqWpqV8age+brG7gOLKR8LfVklcN2e4yIhm3AJ7PqZZYPwEbhbcSavmM+6FRdL9yVnjAEeUt19QrYrr+YuSfiZ2Cd4fNz4FeJBq1+AM9MWrzefhn7B9EFxcpKz/hKAAAAAElFTkSuQmCC">Enfermedades contagiosas</label><strong class="{{ in_array(mb_strtolower(trim($datos['contagioso_texto'] ?? ''), 'UTF-8'), ['si','sí']) ? 'cremacion-contagioso' : '' }}">{{ $datos['contagioso_texto'] }}</strong></div></td><td><div class="cremacion-campo"><label><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAoCAYAAACWwljjAAADNUlEQVR4nL2YbWhOYRjHf3u8ZSS0kln4wCZDo+a9JB+UVloYodSa94aIaMpreZnR0BCfiCRthKKopUbChw3DvOQDNk0pZHmdrrpWZ1fnnOec8zx7/rW2+zr3y+/c132u67qXtq04mwjqBxQBcwGZIFPtH4BXQA1wCfgeduLuIfsPArYCK4HeLs9z9KcAOAacBPYDrUEXiIWAKQDeABs8YKzSgY3Aa2B2soE2AdeAPkRz701gXbJctgQ45GK/D5wFngPP1JYLjAaWAZNM/0rgM3DBb7G0OIc6F2gwO/kbKAMqgH8e46T/ZmAP0MNh/wOMAV5Gddlu0+cvMBUo94FBnx0ApukYp0d2+i0Yi/NFFRrbDuARwfVQX8qphcDAKECLxKWO9mNgH+G1F6h3tNN07tBAC0z7eBw3eUnGVMWZOxBQnmm/iADjNTYvClAv036aRKD0KEA/TbtvAkB2nV9RgFqCbnMATTDt5ihAT7oQqD4K0G3TlgzfMwKMJOISY7uTDKDhwK4IQBIYh8WZOxCQ5JtbxrYFmBgCZrKWIE7d0JIkNJBojfnapP9dTZx+Y2NayNWafm3AqkTKj7fAci0znPHpoOY5sTdqjOqmpYdX+SEqBt4nAiQ6B2QAh+msKfoTVOuBi8mqGI8AJ4B2wqtd6+ujQToHAZqlVeFqk/2DSsaUqltnJAIkZ6JSP9FRJK5cPeQVfut6naH+QDUw0+N5rX6+94BPeh8TDdHCbjowx2NHJAyM03vdlyA19QDgATDSZbIqrZNtnvNSplaZK1yeNWmc6gTltnU1LjANwAhgbQgY0UdNOTku5Uu2roUf0HmXba7WN5FLYlQ1aVy6auyy1mkvILmZLjYDrgPzNcImqh8aTK8Ye4nzZhtz/JbTb91UFDH2eKldX9q6r9wCSah3nm65S81L0s5YtelVyPmiY4GlTiAJXE6d8svISZDkvzPGVtoBNBgY73jwDdhO16tMz1WHpKzJiLncTi+7BawuUKt+wU4VClC+MdaROtWZdr4AZbn4N1VqNO0sN6AwkThRtbgBDTVG34ouFUDvzBbKP6RSpa/Gbc0CJNlY7t5ShMnfqVan9f8DD9Kl2IDkp0gAAAAASUVORK5CYII=">Estado del cuerpo a cremar</label><strong>{{ $datos['estado_cuerpo']['estado'] }}</strong></div></td></tr></table>
+<div class="cremacion-campo cremacion-causa"><label><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAoCAYAAACFFRgXAAAEAElEQVR4nMWYWWgWVxTHf/koWotI0VZsSuqLiCuVGqnWSoq4EqWKC3lSrI0miuICoQErKmJFUbRq4l4X3HB5UWJQ6Yu4gU8qGNxasbZutSgV9EEjR87o9Xhn5ptvBvzD8DF35p75feeee8+5t6j2h87EqAswChgKlAAdgCLgHnAbOAH8BtyMsdMRmAwMBD4H2gPNwD/ALeA4sBf4I8pIUQSwgK5S0Hz0O/CL/gFXI4C5wHd52jkCzAGu+h7mQjotBi4ngEU9J146CXQFegJngcMJYIM/eAVY6Hv4gbmXYToADKBwfQuc17BplcLOfKAMGAs88AF/qMPRx9P5AtCoHjsD/A90Ar5Uz04w73/ksfEU2KchcxG4DrQG+uk1HOhh+pQpU19fDItnx5gOz4CfgRXAiwhvdNIJ0zvk+TmgAvgzwoaEZ42GQgvzbD8wPngJBbWwTUApsDwGVnRN3633PFutHoqCRb+xVO1IDLsaB4x0gRd4hu974BLJNA2Y6dxXA7MS2rio3xYGVwsC4P6e2Kn1/Mt8tUYnnFzrC7QhozvPtH0l80uAy82D0zqM71srgVOmrTynMePqV81A71vNwAbTVprTdGsnUJaaCDwC/gMGJexrWb7IaY535U2JKbQEaAN8DOxMCVyS88xGm/3SqBQodu47eJJMlGxoNgvwDdMYW74lULmnbXaC/lKAubrmAx5GdhruaesFfFNg/1fAUmG5mhpRxfkkWehfTTKvcz7QFvg6pM+MPOxKaFaZtmMCtht4YuJMMk0++hTYpnDdgYPOs6jSVOqKz/JwhNgN9BjYk1PYXeblQxrwcdc9U5kVO5PKFw6u/o6xLY50tUOKsWDoF2llloVqQoDXprD5VAuj17F62wxnGklo/AR84rTd17iVESlEu5Xxrck1Q7NRFpK9nauj+jtJN51J9FD3eFjgh7qDuOvpVOlUYL5L9nBRatTfBo1zn43pnn5/Ad00tb8DjG63h5hVQ7QxJkM1OVBWzQoaJXHIOtMmDIOtA3Mh+7fRwHOnrUiXrwkx5WDY9uhRDKw4xNVzPQsRR7ylsAQhyWSKaRPo7RqHYX3e+QBv4tenKg8s+m17vhEJLNqqJzW2ANkS4ellnraGCM/Wh8DKt72KS8HS8UcDHRUecmR1x8yJ8yGwYZ7dFAWUT82QFHqKrjiyS67IEjZJ7RsM0WaFdaGDtBlIjqbahdipTANLwqosqaetUsMmBU4DXZkFbKHboa3OakFMeGQKW4iHXWg55SHG05VZwqbdcAZraJ0nuYhaZg2bxQ7ZB40DbVWdBjZNSFhoX6VlNS3FWVvmZxB1unJYT2cSBll72PW0nYhkCSvKElgk0G6VJ6tEZrBi8CUQKPC3/3lKYwAAAABJRU5ErkJggg==">Causa de muerte</label><strong>{{ $datos['causa_muerte'] }}</strong></div></section>
+{{-- Firma del área 31: se mantiene cliente y parentesco originales, sin
+     paréntesis vacíos cuando el parentesco no ha sido capturado. --}}
+<section class="cremacion-firma"><h2><img class="cremacion-icono" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAqCAYAAADBNhlmAAADJElEQVR4nNWYW4hOURTHf/P5PIiJXHNJJppJkXIZMm5Fcik1xSSDMk15YB6Qy1AjcsnlQWOSZHiYPCjhwbgUDzIuY1ymqBmRKPfMCOPyotFifXUs+3y+M3Pm+OZfu87aZ+29/2fvtdZe62SUFmUTInoCS4C5wFggE6gDaoG9wMegE8ZDJLcUOAj0Mv0zta3QdinIpLGQyOUDVQ5yXgwELuqHREowEzgSQF8+ZESUBNcAfT3yN92lDGCAvv9ixqyN0gYXGnkjcEKf3wEHgB9AuUdnRlQ72AcYbXbvqEPvlJFHRkVwqpFvKkmLrkZujorgJCPf8NFbZeSnURGcYORbDp2twAbTdyEqJxln5HojH9Pg7IXcJoei2MHherV57eql0ZEbxKIQeBMFwfH/2D1Bg+e5BVgEVAdZJB7i8d5x6JQAu9SzNwGvgi4SD9FB7jl0HuuutRntOeKJRr5LB6CtBEcB3TzyZ+AJaURwupGv0UEIi+BN0oigpFGzoyIYN7JkxOuAXGCMBmIJwE3aPgCtJkBHRlAKneOaZHoxSJsfrgJfO/qI5wPnHeRStcdWbbVan4RKUJLOypDmywVOAzVadoZCsNDs3Gtgmfb1ALJ04Tm6uK0vXMjTwJ0fhg1ONn2rlUgCQuiZBmapyLp73p0DGpW8BG8LmWcxcLI9OzjF9F3x0S0G+nnk75rrrde6RNL/h45xFXoSLuwEXmhxtd+PYBfTZ2W0rJTM2Aux2/ceuUaJljjGbnHMeRjYDAzWD5fwdlt94g+C9SkkmZV2ILAPNyr0P0yy0jQROVwZUp23sBeC941SuRbe/YGhancLjM424Dn+sCm91zQSGOIzNkvD1S/fyCgtyh4GPEhiJzgSg2kp6DUBvWkfZsXUQ5enOEBsriBF3YYAROp9/u9UJW6SM8A84G2SSc5qHZJqwbM7AEFxlpVaFsiNlEBzzNSq8ktiB3BZE4NG/beSp0E3md1ZVKvtSiLx6a+3v+e/rs6SqJP36Am16NrFYoOkM2KkOWKkOWJ0AoIFapCtadYahZsQ3A7kkH7IEW6d4ojLgEf/m4gDwqnsJ0kcuLStE4KvAAAAAElFTkSuQmCC">Persona que autoriza</h2><div class="cremacion-firma-linea">@if(!empty($firmas['contratante']))<img src="{{ $firmas['contratante'] }}" class="firma" alt="">@endif</div><strong>{{ $datos['operacion']['cliente']['nombre'] }}@if(trim($datos['parentesco_contratante'] ?? '')) ({{ $datos['parentesco_contratante'] }})@endif</strong><span>Autoriza</span></section>
+</div>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'servicios_funerarios', 'altoMarcaAgua' => 1050])
+<style>
+body .marca-agua-contenido{position:relative}
+body .marca-agua-contenido>.documento-marca-titulo{position:absolute;top:30mm;right:0;width:58%;z-index:0;pointer-events:none}
+.documento-marca-titulo svg{display:block;width:100%;height:180mm}
+.marca-agua-contenido>header,.marca-agua-contenido>table,.marca-agua-contenido>section,.marca-agua-contenido>.constancia-fecha,.marca-agua-contenido>.cremacion-fecha,.marca-agua-contenido>.entrega-fecha{position:relative;z-index:1}
+</style>
+</body></html>
