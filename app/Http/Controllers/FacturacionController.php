@@ -1946,6 +1946,53 @@ class FacturacionController extends ApiController
         return $resultado_query;
     }
 
+    /** Visor de CFDI: captura HTML con los mismos datos/XML y validaciones del PDF
+     * anterior. Catálogo cerrado, ampliable sin crear rutas por cada documento. */
+    private const DOCUMENTOS_CFDI_VISOR = ['cfdi' => 'Comprobante Fiscal Digital'];
+
+    public function previewDocumentoCfdi(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_CFDI_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $request->validate(['folio_id' => 'required|integer|min:1']);
+        $id = (int) $request->input('folio_id');
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['folio_id' => $id])]]);
+        $interno->attributes->set('_cfdi_visor', true);
+        $captura = $this->get_cfdi_pdf($interno);
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        return (new \App\Services\VisorDocumentos('facturacion_cfdi_'))->preparar(
+            $captura, $documento, self::DOCUMENTOS_CFDI_VISOR[$documento], $id, $usuario, 'CFDI núm. '.$id.' · Documento PDF');
+    }
+
+    /** El PDF se produce desde la instantánea privada al descargar. */
+    public function descargarDocumentoCfdi(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_CFDI_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('facturacion_cfdi_'))->descargar($request, $token, $documento);
+    }
+
+    /** Adjuntar también el XML original, como el envío anterior. El id y la ruta
+     * se obtienen de la instantánea del servidor, nunca de campos del navegador. */
+    public function enviarDocumentoCfdiCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_CFDI_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        abort_unless(is_string($token) && preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $datos = \Illuminate\Support\Facades\Cache::get('facturacion_cfdi_'.$token);
+        abort_unless($datos, 410, 'La consulta del reporte venció. Actualice el reporte.');
+        abort_unless((int) $datos['usuario_id'] === (int) $usuario->id, 403);
+        abort_unless($datos['documento'] === $documento, 404);
+        $id = (int) $datos['venta_id'];
+        $disco = Storage::disk(env('STORAGE_DISK_XML', 'cfdis'));
+        abort_unless($disco->exists($id.'.xml'), 409, 'No se encontró el XML del CFDI para adjuntar.');
+        return (new \App\Services\VisorDocumentos('facturacion_cfdi_'))->enviarCorreo($request, $token, $documento, [
+            ['contenido' => $disco->get($id.'.xml'), 'nombre' => 'XML FOLIO '.$id.'.xml', 'mime' => 'application/xml'],
+        ]);
+    }
+
     public function get_cfdi_pdf(Request $request, $folio = '')
     {
         /**estos valores verifican si el usuario quiere mandar el pdf por correo */
@@ -1987,7 +2034,7 @@ class FacturacionController extends ApiController
 
         $myRequest = new Request();
         $myRequest->request->add(['test' => 'test']);
-        $cfdi = $this->get_cfdis_timbrados($myRequest, $folio_id)[0];
+        $cfdi = ($this->get_cfdis_timbrados($myRequest, $folio_id)[0] ?? null);
 
         if (empty($cfdi)) {
             /**datos no encontrados */
@@ -2023,6 +2070,7 @@ class FacturacionController extends ApiController
             'title'       => $name_pdf,
             'footer-html' => view('facturacion.cfdi.footer', ['empresa' => $empresa]),
         ]);
+        if (!in_array((int) $datos['Sistema']['tipo_comprobante_id'], [1, 2], true)) {
         if ($cfdi['status'] == 0) {
             $pdf->setOptions([
                 'header-html' => view('facturacion.cfdi.header'),
@@ -2038,6 +2086,8 @@ class FacturacionController extends ApiController
             }
         }
 
+        } // Ingreso/egreso muestran cancelación y pago en el encabezado comercial.
+
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('header-right', 'dddd');
         $pdf->setOption('margin-left', 12.4);
@@ -2045,6 +2095,14 @@ class FacturacionController extends ApiController
         $pdf->setOption('margin-top', 8.4);
         $pdf->setOption('margin-bottom', 12.4);
         $pdf->setOption('page-size', 'Letter');
+        // Los formatos comerciales I/E/P ajustan el cuerpo antes de generar el PDF.
+        if (in_array((int) $datos['Sistema']['tipo_comprobante_id'], [1, 2, 5], true)) {
+            $pdf->setOption('javascript-delay', 500);
+        }
+        // La vista inicial solo captura HTML/opciones; no ejecutar inline ni output.
+        if ($request->attributes->get('_cfdi_visor')) {
+            return (new \App\Services\VisorDocumentos('facturacion_cfdi_'))->capturar($pdf);
+        }
         if ($email == true) {
             /**email */
             /**

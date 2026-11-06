@@ -67,7 +67,7 @@
     </style>
 </head>
 
-<body>
+<body class="convenio-plan-documento">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -414,13 +414,13 @@ $mostrar=false;
             “El Cliente” designa como beneficiario(s) a las siguiente(s) persona(s):
         </p>
         @if(count($datos['beneficiarios'])>0)
-        <table class="w-100 center">
+        <table class="convenio-beneficiarios">
             <thead>
                 <tr>
-                    <th><span class="uppercase bold texto-sm bg-gray px-3">#</span></th>
-                    <th><span class="uppercase bold texto-sm bg-gray px-3">Nombre</span></th>
-                    <th><span class="uppercase bold texto-sm bg-gray px-3">Parentesco</span></th>
-                    <th><span class="uppercase bold texto-sm bg-gray px-3">teléfono</span></th>
+                    <th><span class="uppercase bold texto-sm  px-3">#</span></th>
+                    <th><span class="uppercase bold texto-sm  px-3">Nombre</span></th>
+                    <th><span class="uppercase bold texto-sm  px-3">Parentesco</span></th>
+                    <th><span class="uppercase bold texto-sm  px-3">teléfono</span></th>
                 </tr>
             </thead>
             @php
@@ -429,15 +429,15 @@ $mostrar=false;
             @foreach($datos['beneficiarios'] as $beneficiario)
             <tr>
                 <td class="pt-1 pb-1"><span
-                        class="uppercase bold texto-sm letter-spacing-3 bg-gray px-2">{{$num}}</span>
+                        class="uppercase bold texto-sm   px-2">{{$num}}</span>
                 </td>
                 <td class="pt-1 pb-1"><span
-                        class="uppercase bold texto-sm letter-spacing-3">{{$beneficiario['nombre']}}</span>
+                        class="uppercase bold texto-sm ">{{$beneficiario['nombre']}}</span>
                 </td>
                 <td class="pt-1 pb-1"><span
-                        class="uppercase bold texto-sm letter-spacing-3">{{$beneficiario['parentesco']}}</span></td>
+                        class="uppercase bold texto-sm ">{{$beneficiario['parentesco']}}</span></td>
                 <td class="pt-1 pb-1"><span
-                        class="uppercase bold texto-sm letter-spacing-3">{{$beneficiario['telefono']}}</span>
+                        class="uppercase bold texto-sm ">{{$beneficiario['telefono']}}</span>
                 </td>
             </tr>
             @php
@@ -561,7 +561,8 @@ $mostrar=false;
             constituirá un anexo del mismo, y, por lo tanto, formará parte integral del presente convenio.
         </p>
 
-        <p class="texto-base justificar line-base">
+        <div class="convenio-cierre">
+<p class="texto-base justificar line-base">
             <span class="uppercase bold texto-sm underline pr-2">Décima novena.- </span>
             Para la interpretación, cumplimiento cualquier controversia con motivo del presente convenio, las partes se
             someten a la jurisdicción y competencia de los tribunales del fuero común de <span
@@ -573,9 +574,9 @@ $mostrar=false;
 
 
 
-       <div class="w-100 center">
+       <div class="w-100 center convenio-firmas">
             <div class="w-50 float-left mt-50">
-                <img src="{{ $firmas['gerente'] }}" class="firma">
+                <div class="convenio-area-firma">@if(!empty($firmas['gerente']))<img src="{{ $firmas['gerente'] }}" class="firma">@endif</div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">{{ $empresa->razon_social }}</span>
@@ -584,7 +585,7 @@ $mostrar=false;
                 </div>
             </div>
             <div class="w-50 float-right mt-50">
-                  <img src="{{ $firmas['cliente'] }}" class="firma">
+                  <div class="convenio-area-firma">@if(!empty($firmas['cliente']))<img src="{{ $firmas['cliente'] }}" class="firma">@endif</div>
                 <div class="w-90 mr-auto ml-auto border-top">
                     <div class="">
                         <span class="uppercase  texto-sm">El (La) C. {{ $datos['nombre'] }}</span>
@@ -596,6 +597,30 @@ $mostrar=false;
     </div>
 
 
+</div><!-- /convenio-cierre -->
+<style>
+/* Convenio tipo 4: paginación y beneficiarios con el estilo del anexo ejecutivo.
+   Conserva todas las cláusulas, firmas y condiciones originales. */
+.convenio-plan-documento header,.convenio-plan-documento table,.convenio-cierre{background:#fff}
+.convenio-plan-documento p{box-shadow:0 8px 0 #fff,0 -5px 0 #fff,20px 0 0 #fff,-20px 0 0 #fff;page-break-inside:avoid;break-inside:avoid;orphans:3;widows:3;background:#fff}
+.convenio-plan-documento tr{page-break-inside:avoid;break-inside:avoid}
+.convenio-plan-documento thead{display:table-header-group}
+.convenio-beneficiarios{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;table-layout:fixed;margin:12px 0}
+.convenio-beneficiarios th{background:#41494c;color:white;padding:8px 6px;font-weight:normal;font-size:11px;text-align:center}
+.convenio-beneficiarios th span{background:transparent!important;color:inherit!important;padding:0!important;font-weight:normal!important}
+.convenio-beneficiarios th:first-child{width:6%}.convenio-beneficiarios th:nth-child(2){width:50%}
+.convenio-beneficiarios td{padding:8px 6px!important;border-bottom:1px solid #ddd;text-align:center;font-size:11px;word-wrap:break-word}
+.convenio-beneficiarios td:nth-child(2){text-align:left}
+.convenio-beneficiarios td span{font:normal 11px Arial,sans-serif!important;letter-spacing:normal!important;background:transparent!important;padding:0!important}
+.convenio-beneficiarios tbody tr:nth-child(even){background:#f6f6f5}
+.convenio-cierre{page-break-inside:avoid;break-inside:avoid}
+.convenio-firmas{display:table;width:100%;margin-top:12px}
+.convenio-firmas>div{display:table-cell;float:none!important;width:50%;vertical-align:bottom;margin-top:10px!important;padding-top:10px}
+.convenio-plan-documento .lista{background:#fff}
+.convenio-area-firma{height:85px}
+.convenio-firmas .firma{display:block;max-height:75px;max-width:210px;height:auto;width:auto;margin:0 auto 8px}
+</style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'planes_venta', 'altoMarcaAgua' => 1050])
 </body>
 
 </html>

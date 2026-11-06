@@ -261,8 +261,9 @@ class VisorDocumentos
         ]);
     }
 
-    /** Valida destinatarios/mensaje y envía la instantánea del tipo esperado, solo PDF. */
-    public function enviarCorreo(Request $request, $token, $documento)
+    /** Valida destinatarios/mensaje y envía el PDF. Los adjuntos opcionales (XML de CFDI)
+     * solo los prepara el controlador, nunca se extraen del request. */
+    public function enviarCorreo(Request $request, $token, $documento, array $adjuntosServidor = [])
     {
         $datos = $this->datosDocumentoCementerioVisor($request, $token, $documento);
         $request->validate([
@@ -294,7 +295,7 @@ class VisorDocumentos
             'destinatarios' => $destinatarios,
             'asunto' => trim($request->input('asunto')),
             'mensaje' => $mensaje,
-        ], $this->pdfDocumentoCementerioVisor($datos)->output(), $datos['nombre'], 'application/pdf');
+        ], $this->pdfDocumentoCementerioVisor($datos)->output(), $datos['nombre'], 'application/pdf', $adjuntosServidor);
     }
 
     /**
@@ -330,8 +331,9 @@ class VisorDocumentos
             $fuentes .= '@font-face{font-family:"Open Sans";font-style:normal;font-weight:' . $peso . ';'
                 . 'src:url(data:font/ttf;base64,' . base64_encode(file_get_contents($ruta)) . ') format("truetype");}';
         }
-        return preg_replace_callback('/<\/head>/i', function () use ($fuentes) {
-            return '<style>' . $fuentes . 'html body{font-family:"Open Sans",sans-serif!important}</style></head>';
+        $familia = $this->prefijo === 'facturacion_cfdi_' ? 'Arial,sans-serif' : '"Open Sans",sans-serif';
+        return preg_replace_callback('/<\/head>/i', function () use ($fuentes, $familia) {
+            return '<style>' . $fuentes . 'html body{font-family:'.$familia.'!important}</style></head>';
         }, $html, 1);
     }
 

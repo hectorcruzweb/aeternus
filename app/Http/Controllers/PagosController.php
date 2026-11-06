@@ -20,6 +20,45 @@ use PDF;
 class PagosController extends ApiController
 {
 
+    /** Catálogo general de cobranza: admite recibos de cualquier tipo de operación.
+     * Las tres rutas comparten validación, instantánea privada y formato heredado. */
+    private const DOCUMENTOS_VISOR = ['recibo' => 'Comprobante de Pago'];
+
+    public function previewDocumento(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $request->validate(['id_pago' => 'required|integer|min:1']);
+        $pago = DB::table('pagos')->select('id', 'parent_pago_id')->where('id', (int) $request->input('id_pago'))->first();
+        abort_unless($pago, 404, 'No se encontró el pago.');
+        // Un movimiento asociado (p. ej. interés) abre el recibo principal, como
+        // hacía el listado anterior. También se conservan comprobantes cancelados.
+        $id = $pago->parent_pago_id > 0 ? (int) $pago->parent_pago_id : (int) $pago->id;
+        abort_unless(DB::table('pagos')->where('id', $id)->exists(), 404, 'No se encontró el pago principal.');
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['id_pago' => $id])]]);
+        $interno->attributes->set('_documento_cementerio_visor', 'recibo');
+        $captura = $this->recibo_de_pago($interno);
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        return (new \App\Services\VisorDocumentos('pagos_'))->preparar(
+            $captura, $documento, self::DOCUMENTOS_VISOR[$documento], $id, $usuario, 'Pago núm. '.$id.' · Documento PDF');
+    }
+
+    /** Descarga bajo demanda, validada por propietario y token del visor. */
+    public function descargarDocumento(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('pagos_'))->descargar($request, $token, $documento);
+    }
+
+    /** Reutiliza destinatarios, adjuntos y envío del compositor común del visor. */
+    public function enviarDocumentoCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('pagos_'))->enviarCorreo($request, $token, $documento);
+    }
+
     public function get_cobradores()
     {
         //no super usuarios

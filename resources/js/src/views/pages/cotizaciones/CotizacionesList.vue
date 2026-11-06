@@ -279,15 +279,9 @@
             @ConsultarCotizacion="ConsultarCotizacion"
         >
         </Cancelar>
-        <Reporteador
-            v-if="openReportesLista"
-            :header="'consultar cotizaciones'"
-            :show="openReportesLista"
-            :listadereportes="ListaReportes"
-            :request="request"
-            @closeReportes="openReportesLista = false"
-        >
-        </Reporteador>
+        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+            :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
         <FormularioSeguimientos
             v-if="openSeguimientos"
             :show="openSeguimientos"
@@ -299,7 +293,8 @@
 </template>
 <script>
 import FormularioSeguimientos from "../seguimientos/FormularioSeguimientos.vue";
-import Reporteador from "@pages/Reporteador";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosCotizaciones from "@services/reportesDocumentosCotizaciones";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
@@ -316,7 +311,7 @@ export default {
         FormularioCotizaciones,
         flatPickr,
         Cancelar,
-        Reporteador,
+        VisorReportes,
         FormularioSeguimientos,
     },
     watch: {
@@ -347,7 +342,8 @@ export default {
     data() {
         return {
             openSeguimientos: false,
-            openReportesLista: false,
+            mostrarDocumentoVisor: false,
+            cotizacionDocumentoId: null,
             ListaReportes: [],
             request: {
                 id_cotizacion: "",
@@ -420,17 +416,14 @@ export default {
                 await this.openReporte(cotizacion);
             })();
         },
+        /** Fijar la cotización seleccionada para actualizar, descargar y enviar el mismo documento. */
+        async cargarDocumentoVisor() { return (await reportesDocumentosCotizaciones.visualizar({ id_cotizacion: this.cotizacionDocumentoId })).data; },
+        async descargarDocumentoPdf(token) { return (await reportesDocumentosCotizaciones.pdf(token)).data; },
+        async enviarDocumentoCorreo(token, datos) { return (await reportesDocumentosCotizaciones.correo(token, datos)).data; },
         async openReporte(cotizacion = null) {
-            this.ListaReportes = [];
-            this.ListaReportes.push({
-                nombre: "Cotización.",
-                url: "/cotizaciones/get_pdf",
-            });
-            //estado de cuenta
-            this.request.email = cotizacion.cliente_email;
-            this.request.id_cotizacion = cotizacion.id;
-            this.request.destinatario = cotizacion.cliente_nombre;
-            this.openReportesLista = true;
+            if (!cotizacion) return;
+            this.cotizacionDocumentoId = Number(cotizacion.id);
+            this.mostrarDocumentoVisor = true;
             this.$vs.loading.close();
         },
         cancelarCotizacion(cotizacion) {

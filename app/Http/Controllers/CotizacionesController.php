@@ -468,6 +468,40 @@ class CotizacionesController extends ApiController
         }
     }
 
+    /** Catálogo cerrado del módulo: tres rutas para HTML, descarga y correo.
+     * Se consulta la cotización original; no se recalculan precios o condiciones. */
+    private const DOCUMENTOS_VISOR = ['cotizacion' => 'Cotización'];
+
+    public function previewDocumento(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $request->validate(['id_cotizacion' => 'required|integer|min:1']);
+        $id = (int) $request->input('id_cotizacion');
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['id_cotizacion' => $id])]]);
+        $interno->attributes->set('_cotizacion_visor', true);
+        $captura = $this->get_pdf($interno);
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        return (new \App\Services\VisorDocumentos('cotizaciones_'))->preparar(
+            $captura, $documento, self::DOCUMENTOS_VISOR[$documento], $id, $usuario, 'Cotización núm. '.$id.' · Documento PDF');
+    }
+
+    /** PDF diferido; el motor comprueba propietario y vigencia de la instantánea. */
+    public function descargarDocumento(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('cotizaciones_'))->descargar($request, $token, $documento);
+    }
+
+    /** Reutiliza el compositor de correo del visor y sus formatos permitidos. */
+    public function enviarDocumentoCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('cotizaciones_'))->enviarCorreo($request, $token, $documento);
+    }
+
     public function get_pdf(Request $request)
     {
         try {
@@ -478,7 +512,7 @@ class CotizacionesController extends ApiController
             $id_cotizacion = isset($requestVentasList['id_cotizacion']) ? $requestVentasList['id_cotizacion'] : 1;
 
             //obtengo la informacion de esa venta
-            $datos_solicitud = $this->get_cotizaciones($request, $id_cotizacion, false)[0];
+            $datos_solicitud = ($this->get_cotizaciones($request, $id_cotizacion, false)[0] ?? null);
             if (empty($datos_solicitud)) {
                 /**datos no encontrados */
                 return $this->errorResponse('Error al cargar los datos.', 409);
@@ -493,17 +527,18 @@ class CotizacionesController extends ApiController
                 'title' => $name_pdf,
                 'footer-html' => view('cotizaciones.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
             ]);
-            $pdf->setOptions([
-                'header-html' => view('cotizaciones.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-            ]);
             //$pdf->setOption('grayscale', true);
             //$pdf->setOption('header-right', 'dddd');
             $pdf->setOption('margin-left', 12.4);
             $pdf->setOption('margin-right', 12.4);
-            $pdf->setOption('margin-top', 65.4);
-            $pdf->setOption('margin-bottom', 12.4);
+            $pdf->setOption('margin-top', 8.4);
+            $pdf->setOption('margin-bottom', 18.4);
             $pdf->setOption('page-size', 'letter');
 
+            // HTML inicial: no ejecutar inline/output hasta descargar o enviar.
+            if ($request->attributes->get('_cotizacion_visor')) {
+                return (new \App\Services\VisorDocumentos('cotizaciones_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**

@@ -237,10 +237,15 @@ programados, index_programado
       <FormularioPagos v-if="verFormularioPagos" :referencia="referencia" :show="verFormularioPagos"
         @closeVentana="closeFormularioPagos" @retorno_pagos="retorno_pagos"></FormularioPagos>
     </vs-popup>
+  <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+    :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+    :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
   </div>
 </template>
 <script>
 import CancelarPago from "@pages/pagos/CancelarPago";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosPlanes from "@services/reportesDocumentosPlanes";
 import Reporteador from "@pages/Reporteador";
 import planes from "@services/planes";
 import pagos from "@services/pagos";
@@ -251,6 +256,7 @@ export default {
   components: {
     CancelarPago,
     Reporteador,
+    VisorReportes,
     FormularioPagos,
     Firmas,
   },
@@ -384,6 +390,10 @@ export default {
         destinatario: "",
       },
       openReportesLista: false,
+      mostrarDocumentoVisor: false,
+      ventaDocumentoId: null,
+      pagoDocumentoVisorId: null,
+      documentoPlanVisor: "solicitud",
       openFirmas: false,
       verFormularioPagos: false,
       tipoFormularioPagos: "",
@@ -482,7 +492,29 @@ export default {
       return;
     },
 
+    /** Captura el id al abrir; actualizar, descargar y enviar usan el mismo expediente. */
+    async cargarDocumentoVisor() { return (await reportesDocumentosPlanes.visualizar(this.documentoPlanVisor, { venta_id: this.ventaDocumentoId, id_pago: this.pagoDocumentoVisorId })).data; },
+    async descargarDocumentoPdf(token) { return (await reportesDocumentosPlanes.pdf(this.documentoPlanVisor, token)).data; },
+    async enviarDocumentoCorreo(token, datos) { return (await reportesDocumentosPlanes.correo(this.documentoPlanVisor, token, datos)).data; },
     openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
+      const documentosVisor = {
+        "/pagos/recibo_de_pago": "recibo",
+        "/funeraria/documento_solicitud": "solicitud",
+        "/funeraria/documento_convenio": "convenio",
+        "/funeraria/documento_finiquitado": "finiquito",
+        "/funeraria/documento_estado_de_cuenta_planes": "estado-cuenta",
+        "/funeraria/referencias_de_pago": "talonario",
+        "/funeraria/reglamento_pago": "reglamento",
+      };
+      const documento = documentosVisor[link.replace(/\/$/, "")];
+      if (documento) {
+        this.documentoPlanVisor = documento;
+        this.pagoDocumentoVisorId = documento === "recibo" ? Number(parametro) : null;
+        this.ventaDocumentoId = Number(this.datosVenta.ventas_planes_id);
+        this.mostrarDocumentoVisor = true;
+        this.$vs.loading.close();
+        return;
+      }
       this.ListaReportes = [];
       this.ListaReportes.push({
         nombre: nombre_reporte,
@@ -611,3 +643,4 @@ export default {
   }
 }
 </style>
+

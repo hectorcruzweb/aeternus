@@ -36,15 +36,11 @@
  @include('layouts.estilos')
 
  <body class="m-0 p-0" onload="subst()">
-     <table class="italic">
-         <tr>
-             <td align="left" class="texto-sm">Cotización # {{ $datos['id'] }}
-                 Impresión, {{ fechahora_completa() }}.
-             </td>
-             <td style="text-align:right">
-                 Pág. <span class="page"></span> de <span class="topage"></span>
-             </td>
-         </tr>
+     <!-- Pie discreto del comprobante comercial; la paginación la completa Snappy. -->
+     <table style="border-top:1px solid #9aa3a9;font-family:Arial,sans-serif;color:#879198;font-size:10px;padding-top:8px">
+         <tr><td align="left">Aeternus Funerales · Cotización núm. {{ $datos['id'] }}<br>
+         Generado: {{ now('America/Mazatlan')->locale('es')->translatedFormat('d/M/Y H:i') }} · {{ parse_url(config('app.url'), PHP_URL_HOST) }}</td>
+         <td align="right" style="text-align:right;vertical-align:bottom">Pág. <span class="page"></span>/<span class="topage"></span></td></tr>
      </table>
  </body>
 

@@ -258,6 +258,18 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('funeraria/cancelar_solicitud', 'FunerariaController@cancelar_solicitud');
     // Expediente de servicios funerarios (tipo 3): tres rutas para todo su catálogo.
     // Los documentos se incorporan al catálogo del controlador, no como rutas nuevas.
+    // Expediente tipo 4: agregar documentos al catálogo, no nuevas rutas.
+    // Tipo 5: ampliar el catálogo sin crear rutas por documento.
+    Route::prefix('funeraria/ventas-generales/reportes')->group(function () {
+        Route::get('{documento}', 'FunerariaController@previewDocumentoGeneral');
+        Route::get('{documento}/{token}/pdf', 'FunerariaController@descargarDocumentoGeneral');
+        Route::post('{documento}/{token}/correo', 'FunerariaController@enviarDocumentoGeneralCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
+    Route::prefix('funeraria/planes/reportes')->group(function () {
+        Route::get('{documento}', 'FunerariaController@previewDocumentoPlan');
+        Route::get('{documento}/{token}/pdf', 'FunerariaController@descargarDocumentoPlan');
+        Route::post('{documento}/{token}/correo', 'FunerariaController@enviarDocumentoPlanCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
     Route::prefix('funeraria/servicios/reportes')->group(function () {
         Route::get('{documento}', 'FunerariaController@previewDocumentoServicio');
         Route::get('{documento}/{token}/pdf', 'FunerariaController@descargarDocumentoServicio');
@@ -283,6 +295,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('pagos/get_formas_pago_sat', 'PagosController@get_formas_pago_sat');
     Route::get('pagos/get_monedas_sat', 'PagosController@get_monedas_sat');
     Route::get('pagos/get_cobradores', 'PagosController@get_cobradores');
+    // Listado general de pagos: catálogo de documentos dentro de auth:api.
+    Route::prefix('pagos/reportes')->group(function () {
+        Route::get('{documento}', 'PagosController@previewDocumento');
+        Route::get('{documento}/{token}/pdf', 'PagosController@descargarDocumento');
+        Route::post('{documento}/{token}/correo', 'PagosController@enviarDocumentoCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
     Route::get('pagos/recibo_de_pago/{id_pago?}', 'PagosController@recibo_de_pago');
     Route::post('pagos/cancelar_pago', 'PagosController@cancelar_pago')->middleware('permiso:20,58');
     /**fin de rutas de pagos */
@@ -382,6 +400,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('facturacion/get_acuse_cancelacion_pdf/{folio_id?}', 'FacturacionController@get_acuse_cancelacion_pdf');
     Route::get('facturacion/get_cfdi_status_sat/{folio_id?}', 'FacturacionController@get_cfdi_status_sat');
     /**rutas de timbrado de cfdi */
+    // Visor de CFDI: mismo permiso que el PDF existente y catálogo por documento.
+    Route::prefix('facturacion/documentos')->middleware(['permiso:21,62'])->group(function () {
+        Route::get('{documento}', 'FacturacionController@previewDocumentoCfdi');
+        Route::get('{documento}/{token}/pdf', 'FacturacionController@descargarDocumentoCfdi');
+        Route::post('{documento}/{token}/correo', 'FacturacionController@enviarDocumentoCfdiCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
     Route::get('facturacion/get_cfdi_pdf/{folio_id?}', 'FacturacionController@get_cfdi_pdf')->middleware(['permiso:21,62']);
     Route::post('facturacion/timbrar_cfdi', 'FacturacionController@timbrar_cfdi')->middleware(['permiso:21,60']);
     Route::post('facturacion/cancelar_cfdi_folio', 'FacturacionController@cancelar_cfdi_folio')->middleware(['permiso:21,61']);
@@ -406,6 +430,12 @@ Route::middleware(['auth:api'])->group(function () {
     /*Rutas para cotizaciones */
     Route::post('cotizaciones/control_cotizaciones/{tipo_request}', 'CotizacionesController@control_cotizaciones')->middleware(['permiso:24,71']);
     Route::post('cotizaciones/cancelar_cotizacion', 'CotizacionesController@cancelar_cotizacion')->middleware(['permiso:24,72']);
+    // Cotizaciones: mismo permiso del PDF anterior, catálogo ampliable sin rutas por formato.
+    Route::prefix('cotizaciones/reportes')->middleware(['permiso:24,73'])->group(function () {
+        Route::get('{documento}', 'CotizacionesController@previewDocumento');
+        Route::get('{documento}/{token}/pdf', 'CotizacionesController@descargarDocumento');
+        Route::post('{documento}/{token}/correo', 'CotizacionesController@enviarDocumentoCorreo')->middleware('throttle:5,1,dashboard-correo:');
+    });
     Route::get('cotizaciones/get_pdf', 'CotizacionesController@get_pdf')->middleware(['permiso:24,73']);
     Route::get('cotizaciones/get_cotizaciones/{id_cotizacion?}/{paginated?}/', 'CotizacionesController@get_cotizaciones');
     Route::post('notas/upload_image', 'NotasController@upload_image');

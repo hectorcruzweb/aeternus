@@ -46,6 +46,131 @@ use App\Http\Controllers\CementerioController;
 
 class FunerariaController extends ApiController
 {
+    /** Documentos tipo 5: catálogo cerrado compartido por las tres rutas del módulo.
+     * HTML primero; descarga y correo reutilizan la instantánea privada del visor. */
+    private const DOCUMENTOS_GENERAL_VISOR = ['nota' => 'Nota de Venta en General', 'recibo' => 'Comprobante de Pago'];
+
+    public function previewDocumentoGeneral(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_GENERAL_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $request->validate(['venta_id' => 'required|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable').'|integer|min:1']);
+        $id = (int) $request->input('venta_id');
+        abort_unless(DB::table('operaciones')->where('empresa_operaciones_id', 5)
+            ->where('ventas_generales_id', $id)->exists(), 404, 'No se encontró la venta.');
+        // Comprobar la pertenencia por las aplicaciones reales del pago. Permite
+        // recibos cancelados del historial sin admitir pagos de otras ventas/módulos.
+        if ($documento === 'recibo') {
+            abort_unless(DB::table('pagos_pagos_programados as aplicaciones')
+                ->join('pagos_programados as programados', 'programados.id', '=', 'aplicaciones.pagos_programados_id')
+                ->join('operaciones as operacion', 'operacion.id', '=', 'programados.operaciones_id')
+                ->where('aplicaciones.pagos_id', (int) $request->input('id_pago'))
+                ->where('operacion.empresa_operaciones_id', 5)
+                ->where('operacion.ventas_generales_id', $id)->exists(), 404, 'El recibo no pertenece a esta venta.');
+        }
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['id_venta' => $id, 'id_pago' => (int) $request->input('id_pago')])]]);
+        $interno->attributes->set('_documento_general_visor', $documento);
+        // Usar la captura HTML ya implementada en PagosController: se conservan
+        // formato, firmas e importes del comprobante sin duplicar su cálculo.
+        if ($documento === 'recibo') $interno->attributes->set('_documento_cementerio_visor', 'recibo');
+        $captura = $documento === 'recibo'
+            ? app(PagosController::class)->recibo_de_pago($interno)
+            : $this->get_nota_venta_gral($interno);
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        return (new \App\Services\VisorDocumentos('funeraria_general_'))->preparar(
+            $captura, $documento, self::DOCUMENTOS_GENERAL_VISOR[$documento], $id, $usuario,
+            'Venta núm. '.$id.' · Documento PDF');
+    }
+
+    /** Generación bajo demanda, con validación de propietario y vencimiento del visor. */
+    public function descargarDocumentoGeneral(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_GENERAL_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_general_'))->descargar($request, $token, $documento);
+    }
+
+    /** Envío mediante el compositor común; no duplica lógica de destinatarios o adjuntos. */
+    public function enviarDocumentoGeneralCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_GENERAL_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_general_'))->enviarCorreo($request, $token, $documento);
+    }
+
+    /** Catálogo del expediente tipo 4. Ampliar aquí al migrar cada documento;
+     * comparte tres rutas, captura HTML y conserva PDF/correo bajo demanda. */
+    private const DOCUMENTOS_PLAN_VISOR = [
+        'plan' => ['metodo' => 'pdf_plan_funerario', 'titulo' => 'Plan Funerario'],
+        'catalogo' => ['metodo' => 'planes_funerarios', 'titulo' => 'Planes Funerarios'],
+        'recibo' => ['metodo' => 'recibo_de_pago', 'titulo' => 'Comprobante de Pago'],
+        'reglamento' => ['metodo' => 'reglamento_pago', 'titulo' => 'Reglamento de Pago'],
+        'talonario' => ['metodo' => 'referencias_de_pago', 'titulo' => 'Talonario de Pagos'],
+        'estado-cuenta' => ['metodo' => 'documento_estado_de_cuenta_planes', 'titulo' => 'Estado de Cuenta de Plan Funerario'],
+        'finiquito' => ['metodo' => 'documento_finiquitado', 'titulo' => 'Constancia de Finiquito'],
+        'convenio' => ['metodo' => 'documento_convenio', 'titulo' => 'Convenio de Plan Funerario'],
+        'solicitud' => ['metodo' => 'documento_solicitud', 'titulo' => 'Solicitud de Plan Funerario'],
+    ];
+    /** Prepara HTML de la venta de plan tipo 4, reutilizando datos y
+     * firmas originales. No genera PDF ni altera la venta o sus pagos. */
+    public function previewDocumentoPlan(Request $request, $documento)
+    {
+        abort_unless(isset(self::DOCUMENTOS_PLAN_VISOR[$documento]), 404);
+        $usuario = $request->user('api');
+        abort_unless($usuario, 401);
+        $esCatalogo = in_array($documento, ['catalogo', 'plan'], true);
+        $request->validate(['id_plan' => ($documento === 'plan' ? 'required' : 'nullable').'|integer|min:1', 'idioma' => 'nullable|in:es,en', 'venta_id' => ($esCatalogo ? 'nullable' : 'required').'|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable').'|integer|min:1']);
+        $id = $esCatalogo ? null : (int) $request->input('venta_id');
+        if (!$esCatalogo) abort_unless(DB::table('operaciones')->where('empresa_operaciones_id', 4)
+            ->where('ventas_planes_id', $id)->exists(), 404, 'No se encontró la venta de plan funerario.');
+        // Verificar la pertenencia del recibo por sus aplicaciones a la venta tipo 4.
+        // También permite consultar comprobantes cancelados como parte del historial.
+        if ($documento === 'recibo') {
+            abort_unless(DB::table('pagos_pagos_programados as aplicaciones')
+                ->join('pagos_programados as programados', 'programados.id', '=', 'aplicaciones.pagos_programados_id')
+                ->join('operaciones as operacion', 'operacion.id', '=', 'programados.operaciones_id')
+                ->where('aplicaciones.pagos_id', (int) $request->input('id_pago'))
+                ->where('operacion.empresa_operaciones_id', 4)
+                ->where('operacion.ventas_planes_id', $id)->exists(), 404, 'El recibo no pertenece a esta venta de plan funerario.');
+        }
+        $interno = clone $request;
+        $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['id_plan' => (int) $request->input('id_plan'), 'venta_id' => $id, 'id_pago' => (int) $request->input('id_pago')])]]);
+        $interno->attributes->set('_documento_plan_visor', $documento);
+        $definicion = self::DOCUMENTOS_PLAN_VISOR[$documento];
+        // Reutilizar el comprobante y sus firmas de PagosController; no duplicar cálculos.
+        if ($documento === 'recibo') $interno->attributes->set('_documento_cementerio_visor', 'recibo');
+        $emisor = $documento === 'recibo' ? app(PagosController::class) : $this;
+        // El catálogo no requiere una venta; conservar el idioma únicamente durante su render.
+        $idiomaAnterior = App::getLocale();
+        try {
+            $captura = $esCatalogo
+                ? ($documento === 'plan' ? $this->pdf_plan_funerario($interno, $request->input('idioma', 'es')) : $this->planes_funerarios($interno, $request->input('idioma', 'es')))
+                : $emisor->{$definicion['metodo']}($interno);
+        } finally {
+            App::setLocale($idiomaAnterior);
+        }
+        if ($captura instanceof \Symfony\Component\HttpFoundation\Response) return $captura;
+        abort_unless(is_array($captura) && isset($captura['html'], $captura['opciones']), 409, 'No se pudo preparar el documento.');
+        return (new \App\Services\VisorDocumentos('funeraria_planes_'))->preparar(
+            $captura, $documento, $definicion['titulo'], $id, $usuario,
+            $esCatalogo ? ($documento === 'plan' ? 'Plan núm. '.(int) $request->input('id_plan').' · ' : 'Catálogo de planes funerarios · ').($request->input('idioma', 'es') === 'en' ? 'Inglés' : 'Español').' · Documento PDF' : 'Venta de plan núm. '.$id.' · Documento PDF'
+        );
+    }
+
+    /** Genera el PDF solo al descargar; token privado por usuario/documento.
+     * Un token vencido devuelve 410 sin cerrar la sesión del sistema. */
+    public function descargarDocumentoPlan(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_PLAN_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_planes_'))->descargar($request, $token, $documento);
+    }
+
+    /** Comparte validaciones y envío del visor; el documento solo admite PDF. */
+    public function enviarDocumentoPlanCorreo(Request $request, $documento, $token)
+    {
+        abort_unless(isset(self::DOCUMENTOS_PLAN_VISOR[$documento]), 404);
+        return (new \App\Services\VisorDocumentos('funeraria_planes_'))->enviarCorreo($request, $token, $documento);
+    }
     /** Catálogo de documentos del expediente tipo 3. Las rutas reciben una
      * clave permitida; nunca se ejecuta un método recibido directamente de la URL. */
     private const DOCUMENTOS_SERVICIO_VISOR = [
@@ -1047,7 +1172,8 @@ class FunerariaController extends ApiController
         $id_plan = $requestVentasList['id_plan'];
 
         //obtengo la informacion de esa venta
-        $datos_plan = $this->get_planes(false, $id_plan)[0];
+        $planesEncontrados = $this->get_planes(false, $id_plan);
+        $datos_plan = $planesEncontrados[0] ?? null;
         if (empty($datos_plan)) {
             /**datos no encontrados */
             return $this->errorResponse('Error al cargar los datos.', 409);
@@ -1066,7 +1192,7 @@ class FunerariaController extends ApiController
 
         $pdf->setOptions([
             'title' => $name_pdf,
-            'footer-html' => view('funeraria.plan_funerario.footer'),
+            'footer-html' => view('funeraria.reglamento_pago.footer', ['empresa' => $empresa]),
         ]);
         if ($datos_plan['status'] == 0) {
             $pdf->setOptions([
@@ -1075,11 +1201,16 @@ class FunerariaController extends ApiController
         }
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('header-right', 'dddd');
-        $pdf->setOption('margin-left', 20.4);
-        $pdf->setOption('margin-right', 20.4);
+        $pdf->setOption('margin-left', 14.4);
+        $pdf->setOption('margin-right', 14.4);
         $pdf->setOption('margin-top', 10.4);
-        $pdf->setOption('margin-bottom', 25.4);
+        $pdf->setOption('margin-bottom', 30.4);
         $pdf->setOption('page-size', 'letter');
+        // Ajustar después de cargar imágenes y capturar HTML sin descargar el PDF.
+        $pdf->setOption('javascript-delay', 500);
+        if ($request->attributes->get('_documento_plan_visor') === 'plan') {
+            return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+        }
         if ($email == true) {
             /**email */
             /**
@@ -1146,15 +1277,19 @@ class FunerariaController extends ApiController
 
         $pdf->setOptions([
             'title' => $name_pdf,
-            'footer-html' => view('funeraria.planes_funerarios.footer'),
+            'footer-html' => view('funeraria.reglamento_pago.footer', ['empresa' => $empresa]),
         ]);
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('header-right', 'dddd');
         $pdf->setOption('margin-left', 20.4);
         $pdf->setOption('margin-right', 20.4);
         $pdf->setOption('margin-top', 10.4);
-        $pdf->setOption('margin-bottom', 25.4);
+        $pdf->setOption('margin-bottom', 30.4);
         $pdf->setOption('page-size', 'letter');
+        // Vista previa HTML: reutilizar el catálogo sin generar el PDF inicialmente.
+        if ($request->attributes->get('_documento_plan_visor') === 'catalogo') {
+            return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+        }
         if ($email == true) {
             /**email */
             /**
@@ -2327,6 +2462,10 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Mantiene consultas, firmas, márgenes y avisos del reporte original.
+            if ($request->attributes->get('_documento_plan_visor') === 'solicitud') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -2420,6 +2559,10 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Captura el formato original y sus firmas; PDF solo bajo demanda.
+            if ($request->attributes->get('_documento_plan_visor') === 'convenio') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -2506,10 +2649,14 @@ class FunerariaController extends ApiController
             //$pdf->setOption('header-right', 'dddd');
             $pdf->setOption('margin-left', 14.4);
             $pdf->setOption('margin-right', 14.4);
-            $pdf->setOption('margin-top', 24.4);
+            $pdf->setOption('margin-top', 10.4);
             $pdf->setOption('margin-bottom', 30.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Conserva los avisos de no finiquitado/cancelado y la firma original.
+            if ($request->attributes->get('_documento_plan_visor') === 'finiquito') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -2562,34 +2709,13 @@ class FunerariaController extends ApiController
                 /**datos no encontrados */
                 return $this->errorResponse('Error al cargar los datos.', 409);
             }
-            $pagos_operacion = [];
-            $client = new \GuzzleHttp\Client();
-            try {
-                /**TRAYENDO EL TOKEN PARA CONSUMIR EL SERVICE */
-                $response = $client->request('POST', config('services.passport.login_endpoint'), [
-                    'form_params' => [
-                        'grant_type' => 'client_credentials',
-                        'client_id' => config('services.passport.client_backend_id'),
-                        'client_secret' => config('services.passport.client_backend_secret'),
-                    ],
-                ]);
-                $token = json_decode((string) $response->getBody(), true)['access_token'];
-                if ($token == '') {
-                    return $this->errorResponse('Ocurrió un error durante la petición. Por favor reintente.', 409);
-                }
-                $pagos_operacion =
-                    json_decode($client->request(
-                        'GET',
-                        env('APP_URL') . 'pagos/get_pagos_backend/all/false/false?operacion_id=' . $datos_venta['operacion_id'],
-                        [
-                            'headers' => [
-                                'Authorization' => 'Bearer ' . $token,
-                            ],
-                        ]
-                    )->getBody(), true);
-            } catch (\GuzzleHttp\Exception\BadResponseException $e) {
-                return $this->errorResponse('Ocurrió un error durante la petición. Por favor reintente.', $e->getCode());
-            }
+            // Reutiliza el mismo método que atendía la petición HTTP interna.
+            // Se evitan el login técnico y la llamada al propio servidor; no se
+            // duplican cálculos ni se cambian filtros de pagos de esta operación.
+            $consultaPagos = Request::create('/', 'GET', ['operacion_id' => $datos_venta['operacion_id']]);
+            $pagos = app(PagosController::class)->get_pagos($consultaPagos, 'all', false, false);
+            if ($pagos instanceof \Symfony\Component\HttpFoundation\Response) return $pagos;
+            $pagos_operacion = $pagos instanceof \Illuminate\Support\Collection ? $pagos->toArray() : $pagos;
 
             /**verificando si el documento aplica para esta solictitud */
             /*if ($datos_venta['numero_solicitud_raw'] == null) {
@@ -2620,6 +2746,10 @@ class FunerariaController extends ApiController
             $pdf->setOption('margin-bottom', 33.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Misma captura del visor de cementerio: HTML inicial, PDF bajo demanda.
+            if ($request->attributes->get('_documento_plan_visor') === 'estado-cuenta') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -2689,13 +2819,17 @@ class FunerariaController extends ApiController
             }
 
             //$pdf->setOption('grayscale', true);
-            $pdf->setOption('orientation', 'landscape');
+            $pdf->setOption('orientation', 'portrait');
             $pdf->setOption('margin-left', 13.4);
             $pdf->setOption('margin-right', 13.4);
             $pdf->setOption('margin-top', 9.4);
             $pdf->setOption('margin-bottom', 13.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Misma consulta y cálculos, nueva presentación HTML en el visor tipo 4.
+            if ($request->attributes->get('_documento_plan_visor') === 'talonario') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -2780,11 +2914,17 @@ class FunerariaController extends ApiController
             }
             //$pdf->setOption('grayscale', true);
             //$pdf->setOption('header-right', 'dddd');
-            $pdf->setOption('margin-left', 20.4);
-            $pdf->setOption('margin-right', 20.4);
+            $pdf->setOption('margin-left', 14.4);
+            $pdf->setOption('margin-right', 14.4);
             $pdf->setOption('margin-top', 10.4);
-            $pdf->setOption('margin-bottom', 33.4);
+            $pdf->setOption('margin-bottom', 25.4);
             $pdf->setOption('page-size', 'letter');
+            // Esperar a que el ajuste de una página mida también las imágenes de firmas.
+            $pdf->setOption('javascript-delay', 500);
+            // Capturar HTML y opciones para las rutas compartidas de planes; PDF solo bajo demanda.
+            if ($request->attributes->get('_documento_plan_visor') === 'reglamento') {
+                return (new \App\Services\VisorDocumentos('funeraria_planes_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**
@@ -7861,7 +8001,7 @@ class FunerariaController extends ApiController
             $requestVentasList = isset($request->request_parent[0]) ? json_decode($request->request_parent[0], true) : null;
             $id_venta = isset($requestVentasList['id_venta']) ? $requestVentasList['id_venta'] : 4;
             //obtengo la informacion de esa venta
-            $datos_solicitud = $this->get_ventas_gral($request, $id_venta, '')[0];
+            $datos_solicitud = ($this->get_ventas_gral($request, $id_venta, '')[0] ?? null);
             if (empty($datos_solicitud)) {
                 /**datos no encontrados */
                 return $this->errorResponse('Error al cargar los datos.', 409);
@@ -7888,17 +8028,18 @@ class FunerariaController extends ApiController
                 'title' => $name_pdf,
                 'footer-html' => view('funeraria.ventas_gral.footer', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
             ]);
-            $pdf->setOptions([
-                'header-html' => view('funeraria.ventas_gral.header', ['datos' => $datos_solicitud, 'empresa' => $empresa]),
-            ]);
             //$pdf->setOption('grayscale', true);
             //$pdf->setOption('header-right', 'dddd');
             $pdf->setOption('margin-left', 12.4);
             $pdf->setOption('margin-right', 12.4);
-            $pdf->setOption('margin-top', 12.4);
-            $pdf->setOption('margin-bottom', 12.4);
+            $pdf->setOption('margin-top', 8.4);
+            $pdf->setOption('margin-bottom', 18.4);
             $pdf->setOption('page-size', 'letter');
 
+            // Capturar HTML y opciones sin construir todavía el archivo PDF.
+            if ($request->attributes->get('_documento_general_visor') === 'nota') {
+                return (new \App\Services\VisorDocumentos('funeraria_general_'))->capturar($pdf);
+            }
             if ($email == true) {
                 /**email */
                 /**

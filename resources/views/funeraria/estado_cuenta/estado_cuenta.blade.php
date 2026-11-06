@@ -66,7 +66,8 @@
     </style>
 </head>
 
-<body>
+<body class="estado-cuenta-plan">
+<div class="marca-agua-contenido">
     @include('layouts.estilos')
     <header id="header">
         <section>
@@ -486,6 +487,17 @@
             @endif
         @endforeach
     </div>
+</div>
+{{-- Misma protección de espacios del estado de cuenta de cementerio. --}}
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'pagos', 'altoMarcaAgua' => 1050])
+<style>
+/* Tabla extensa: repetir encabezados y conservar cada fila completa,
+   permitiendo que el detalle continúe en más hojas sin recortar movimientos. */
+.estado-cuenta-plan tr{page-break-inside:avoid;break-inside:avoid}
+.estado-cuenta-plan thead{display:table-header-group}
+.estado-cuenta-plan p{orphans:3;widows:3}
+.estado-cuenta-plan .bg-header{page-break-after:avoid}
+</style>
 </body>
 
 </html>

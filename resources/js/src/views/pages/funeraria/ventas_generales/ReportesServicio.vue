@@ -381,9 +381,14 @@
                 :z_index="'z-index58k'"
             ></Firmas>
         </vs-popup>
+        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+            :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
     </div>
 </template>
 <script>
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosGenerales from "@services/reportesDocumentosGenerales";
 import Reporteador from "@pages/Reporteador";
 import funeraria from "@services/funeraria";
 import pagos from "@services/pagos";
@@ -394,6 +399,7 @@ import Firmas from "@pages/Firmas";
 export default {
     name: "ReportesServicios",
     components: {
+        VisorReportes,
         Reporteador,
         CancelarPago,
         FormularioPagos,
@@ -460,6 +466,10 @@ export default {
     },
     data() {
         return {
+            mostrarDocumentoVisor: false,
+            ventaDocumentoId: null,
+            documentoGeneralVisor: "nota",
+            pagoDocumentoVisorId: null,
             localShow: false,
             id_pago: "",
             openCancelar: false,
@@ -508,7 +518,23 @@ export default {
             return;
         },
 
+        /** El id queda fijado al abrir para mantener el mismo expediente en todas las acciones. */
+        async cargarDocumentoVisor() { return (await reportesDocumentosGenerales.visualizar(this.documentoGeneralVisor, { venta_id: this.ventaDocumentoId, id_pago: this.pagoDocumentoVisorId })).data; },
+        async descargarDocumentoPdf(token) { return (await reportesDocumentosGenerales.pdf(this.documentoGeneralVisor, token)).data; },
+        async enviarDocumentoCorreo(token, datos) { return (await reportesDocumentosGenerales.correo(this.documentoGeneralVisor, token, datos)).data; },
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
+            const documento = {
+                "/funeraria/get_nota_venta_gral": "nota",
+                "/pagos/recibo_de_pago": "recibo",
+            }[link.replace(/\/$/, "")];
+            if (documento) {
+                this.documentoGeneralVisor = documento;
+                this.pagoDocumentoVisorId = documento === "recibo" ? Number(parametro) : null;
+                this.ventaDocumentoId = Number(this.datosSolicitud.ventas_generales_id);
+                this.mostrarDocumentoVisor = true;
+                this.$vs.loading.close();
+                return;
+            }
             this.ListaReportes = [];
             this.ListaReportes.push({
                 nombre: nombre_reporte,

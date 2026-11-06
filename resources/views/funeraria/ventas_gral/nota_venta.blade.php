@@ -1,312 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Reportes</title>
-    <style>
-        #header,
-        #header section table {
-            width: 100% !important;
-            padding-top: 0px;
-        }
-
-        #header section table {
-            border-collapse: collapse !important;
-        }
-
-        .logo {
-            max-width: 100% !important;
-        }
-
-        /*fin de parrafos*/
-
-        /*
-        estilos de la tabla de datos
-        **/
-        .datos_tabla {
-            border-collapse: collapse;
-        }
-
-        .datos_tabla tr th,
-        .datos_tabla td {
-            border: 1px solid #ddd;
-        }
-
-        .table-borderless tr td {
-            border: none !important;
-        }
-
-        .td-noborder {
-            border-left: none !important;
-            border-right: none !important;
-        }
-
-        .table-collapsed {
-            border: 1px solid #ddd;
-            border-collapse: collapse;
-        }
-
-        .table-collapsed tr td {
-            border: none !important;
-        }
-
-        .crop {
-            word-break: break-all;
-        }
-
-        .conceptos-content-full {
-            min-height: 750px !important;
-            border: 1px solid #ddd;
-        }
-
-        .conceptos-content {
-            min-height: 550px !important;
-            border: 1px solid #ddd;
-        }
-
-        .comentario-content {
-            min-height: 70px !important;
-            height: 70px;
-        }
-    </style>
-</head>
-
-<body>
-    @include('layouts.estilos')
-
-    <header id="header">
-        <section>
-            <table class="texto-xs2">
-                <tr>
-                    <td class="w-40 px-2">
-                        <table class="left">
-                            <tr>
-                                <td class="w-100">
-                                    <img src="{{ public_path(env('LOGOJPG')) }}" alt="" class="logo w-65">
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                    <td class="w-60 px-2">
-                        <table class="center">
-                            <tr>
-                                <td class="w-100">
-                                    <span
-                                        class="texto-lg2 semibold line-base uppercase">{{ $empresa->razon_social }}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="w-100">
-                                    <span class="texto-lg semibold line-0 uppercase">R.F.C.
-                                        {{ $empresa->rfc }}</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="w-100">
-                                    <span class="texto-xs2  line-base uppercase">
-                                        {{ strtolower($empresa->calle) }} Núm. Ext {{ $empresa->num_ext }} Col.
-                                        {{ strtolower($empresa->colonia) }}. cp. {{ $empresa->cp }}.
-                                        {{ $empresa->ciudad }}
-                                        {{ $empresa->estado }}. Tel. {{ $empresa->telefono }}, fax
-                                        {{ $empresa->fax }},
-                                        Email {{ $empresa->email }}.
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="w-100">
-                                    <span class="texto-base semibold line-0 uppercase">régimen
-                                        {{ $empresa['regimen']['regimen'] }}</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </section>
-    </header>
-
-    <table class="w-100 mt-5 datos_tabla uppercase texto-xs3">
-        <tr>
-            <td class="w-60 py-1 px-2 bg-gray"><span class="bold">Datos del Cliente</span></td>
-            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Número de Venta.</span></td>
-            <td class="w-20 px-1 px-2 center bg-gray"><span class="bold">Fecha de Venta</span></td>
-        </tr>
-        <tr>
-            <td class="w-60 py-1 px-2" rowspan="2">
-                <table class="w-100 table-borderless">
-                    <tr>
-                        <td class="w-100" colspan="2">
-                            <span class="bold">nombre:</span> <span class="light">{{ $datos['nombre'] }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="w-100">
-                            <span class="bold">r.f.c:</span> <span class="light">
-                                @if (trim($datos['rfc']))
-                                    {{ $datos['rfc'] }}
-                                @else
-                                    N/A
-                                @endif
-                            </span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="w-100" colspan="2">
-                            <span class="bold">dirección:</span> <span
-                                class="light">{{ $datos['direccion'] }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="w-100" colspan="2">
-                            <span class="bold">Teléfono (s):</span> <span class="light">{{ $datos['celular'] }}
-                                /
-                                {{ $datos['telefono'] }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="w-100" colspan="2">
-                            <span class="bold">Email:</span> <span class="light">
-                                @if (trim($datos['email']))
-                                    {{ $datos['email'] }}
-                                @else
-                                    N/A
-                                @endif
-                            </span>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td class="w-20 px-1 px-2 center py-2">
-                <span class="light">{{ $datos['ventas_generales_id'] }}</span>
-            </td>
-            <td class="w-20 px-1 px-2 center py-2">
-                <span class="light">{{ $datos['fecha_operacion_texto'] }}</span>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2" class="center py-2">
-                <h1>VENTAS EN GENERAL</h1>
-            </td>
-        </tr>
-    </table>
-
-    <table class="w-100 datos_tabla uppercase table-collapsed texto-xs3 bg-gray">
-        <tr>
-            <td class="w-50 px-1 px-2 center "><span class="bold">DESGLOCE DE CONCEPTOS</span>
-            </td>
-            <td class="w-50 px-1 px-2 center "><span class="bold">Vendedor:
-                </span><span>{{ $datos['venta_general']['vendedor']['nombre'] }}</span>
-            </td>
-        </tr>
-    </table>
-    <div class="{{ $datos['venta_general']['entregado_b'] == 1 ? 'conceptos-content' : 'conceptos-content-full' }}">
-        <table class="w-100 datos_tabla uppercase texto-xs3 mt-2">
-            <tr>
-                <td class="py-1 px-1 bg-gray center"><span class="bold">#</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">descripción</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">$ Subtotal.</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">$ Desc.</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">$ iva</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">$ Costo Neto</span></td>
-                <td class="py-1 px-1 bg-gray center"><span class="bold">Cant.</span></td>
-                <td class="px-1 px-1 center bg-gray"><span class="bold">$ Importe</span></td>
-            </tr>
-            @for ($i = 0; $i < 1; $i++)
-                @foreach ($datos['conceptos_temporales'] as $index => $concepto)
-                    <tr>
-                        <td class="py-1 px-1 center"><span class="light">{{ $index + 1 }}</span></td>
-                        <td class="py-1 px-1 center"><span class="light">{{ $concepto['descripcion'] }}</span>
-                        </td>
-                        <td class="px-1 px-1 center"><span
-                                class="light">{{ number_format($concepto['subtotal'], 2) }}</span></td>
-                        <td class="px-1 px-1 center"><span
-                                class="light">{{ number_format($concepto['descuento'], 2) }}</span></td>
-                        <td class="px-1 px-1 center"><span
-                                class="light">{{ number_format($concepto['impuestos'], 2) }}</span>
-                        <td class="px-1 px-1 center"><span
-                                class="light">{{ number_format($concepto['costo_neto'], 2) }}</span></td>
-                        <td class="px-1 px-1 center"><span class="light">{{ $concepto['cantidad'] }}</span></td>
-                        <td class="px-1 px-1 center"><span
-                                class="light">{{ number_format($concepto['importe'], 2) }}</span></td>
-                    </tr>
-                @endforeach
-            @endfor
-        </table>
-    </div>
-    <div class="mt-0">
-        <table class="w-100 datos_tabla uppercase texto-xs3">
-            <tr>
-                <td class="w-75 py-2 px-2 left"><span class="bold">importe con letra: </span>
-                    <span>son {{ $datos['total_letras'] }} </span>
-                </td>
-                <td class="w-25 px-2 center">
-                    <table class="w-100  uppercase table-borderless">
-                        <tr>
-                            <td class="w-50 left"><span class="bold">subtotal: </span></td>
-                            <td class="w-50 right">$ {{ number_format($datos['subtotal'], 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-50 left"><span class="bold">descuento: </span></td>
-                            <td class="w-50 right">$ {{ number_format($datos['descuento'], 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-50 left"><span class="bold">i.v.a ({{ $datos['tasa_iva'] }}%): </span>
-                            </td>
-                            <td class="w-50 right">${{ number_format($datos['impuestos'], 2) }}</td>
-                        </tr>
-                        <tr>
-                            <td class="w-50 left"><span class="bold">total: </span></td>
-                            <td class="w-50 right">$ {{ number_format($datos['total'], 2) }}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                <td class="py-2 px-2 left comentario-content" colspan="2"><span class="bold">
-                        NOTA / COMENTARIOS: </span>
-                    <span>{{ $datos['nota'] }}</span>
-                </td>
-            </tr>
-        </table>
-        @if ($datos['venta_general']['entregado_b'] == 1)
-            <table class="w-100 datos_tabla uppercase texto-xs3" style="page-break-inside: avoid;">
-                <tr class="bg-gray">
-                    <td class="w-100 py-2 px-2 center" colspan="3"><span class="bold">ACUSE DE ENTREGA</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="w-100 py-4 px-2 left" colspan="3"><span class="bold">NOTA / COMENTARIO: </span>
-                        {{ $datos['venta_general']['nota_entrega'] }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class=" py-2 px-2 center"><span class="bold">FECHA DE ENTREGA</span>
-                    </td>
-                    <td class=" py-2 px-2 center"><span class="bold">NOMBRE DE QUIEN ENTREGÓ</span>
-                    </td>
-                    <td class=" py-2 px-2 center" rowspan="2">
-                        <div class="">
-                            <img src="{{ $firmas['aceptacion_recibido_cliente'] }}" class="firma">
-                        </div>
-                        <span class="bold">FIRMA DE RECIBIDO
-                            CLIENTE</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class=" py-2 px-2 center"><span
-                            class="">{{ $datos['venta_general']['fecha_entrega_texto'] }}</span>
-                    </td>
-                    <td class=" py-2 px-2 center"><span
-                            class="">{{ $datos['venta_general']['entrego']['nombre'] }}</span>
-                    </td>
-                </tr>
-            </table>
-        @endif
-    </div>
-</body>
-
-</html>
+<html lang="es"><head><meta charset="UTF-8"><title>Nota de Venta en General</title>
+<style>
+/* Comprobante comercial aprobado: equivalentes en tablas para WebKit y navegador.
+   Mantener concepto y cierre completos; no escalar toda la página ni truncar textos. */
+body{font-family:Arial,sans-serif;color:#414b51;font-size:13.2px;line-height:1.55;margin:0}
+table{width:100%;border-collapse:collapse}td{vertical-align:top}h1{font-size:28.6px;line-height:1.25;margin:0 0 7.04px;font-weight:600;color:#343f45}h2{font-size:14.3px;color:#8e7125;margin:0 0 13.2px;font-weight:600}
+.cabecera{border-bottom:1.76px solid #ac8a29}.cabecera td{padding-bottom:18.48px;vertical-align:middle}.empresa{text-align:right;font-size:9.9px;line-height:1.65;color:#768187}.logo{width:176.0px;max-width:100%;height:auto}
+.titulo{background:#f5f3ed;border-left:3.52px solid #ad8b28;margin:22.0px 0 23.76px}.titulo td{padding:15.84px;vertical-align:middle}.kicker{font-size:11.0px;letter-spacing:0.88px;color:#9a7b25;margin-bottom:5.28px}.folio{width:30%;color:#808a90;font-size:12.1px}.numero{display:block;font-size:28.6px;line-height:1.2;color:#947421}.muted{font-size:11.44px;color:#808a90}.derecha{text-align:right}.badge{display:inline-block;color:#54806a;background:#edf5f0;padding:4.4px 9.68px;font-size:11.0px;margin-top:8.8px;letter-spacing:0.352px}.cancelado{color:#ae353b;background:#fbefef}
+.cliente{border:0;border-bottom:0.88px solid #e0e5e8;padding:0 0 16.72px;margin-bottom:22.0px;page-break-inside:avoid}.cliente td{padding:0 10.56px 10.56px 0}.cliente label{display:block;color:#8c969d;font-size:11.0px;margin-bottom:2.64px}.icono-cliente{width:16.72px;height:16.72px;vertical-align:middle;margin-right:5.28px}.vendedor{margin:0 0 10.56px;font-size:11.0px;color:#616f77}
+.concepto{border:0.88px solid #dfe4e7;padding:16.72px;margin-bottom:8.8px;page-break-inside:avoid;break-inside:avoid}.concepto .nombre{font-size:15.4px;overflow-wrap:break-word}.nombre strong{display:block;font-weight:600}.etiqueta{display:block;font-size:11.0px;color:#8b969d;font-weight:normal}.concepto .precio{font-size:22.88px;font-weight:600;color:#8d7022;text-align:right;white-space:nowrap;vertical-align:middle;padding-left:13.2px}.detalle{border-top:0.88px solid #e6e9eb;margin-top:14.08px;font-size:12.1px}.detalle td{width:25%;padding-top:12.32px}.detalle small{display:block;color:#929da4;font-size:9.9px}
+.cierre{page-break-inside:avoid;break-inside:avoid;margin-top:19.36px}.letras{font-size:11.0px;color:#7c888f;padding-top:9.68px}.letras strong{display:block;color:#4d5c64;font-weight:400;margin-bottom:7.04px}.totales{font-size:12.1px}.totales td{padding:6.16px 8.8px}.gran-total{border-top:1.76px solid #ad8b28;background:#f6f2e7}.gran-total td{padding:10.56px 9.68px}.gran-total td:last-child{font-size:20.9px;color:#8e6e1d;font-weight:bold;white-space:nowrap}.gran-total small{font-size:9.9px;color:#8e969b;font-weight:normal}.nota{border-top:0.88px solid #e1e5e7;margin-top:23.76px;padding:14.08px 0;font-size:12.1px;page-break-inside:avoid}.nota span{display:block;font-size:11.0px;color:#919ba2;margin-top:7.92px}.acuse{margin-top:13.2px;border:0.88px solid #ddd;padding:10.56px;page-break-inside:avoid}.acuse p{margin:3.52px 0}.firma{max-width:149.6px;max-height:57.2px}
+.marca-agua-contenido{position:relative;background:#fff!important}.marca-agua-contenido>table,.marca-agua-contenido>div:not(.marca-logo){position:relative;z-index:1}.marca-logo{position:absolute;top:60mm;right:0;width:49%;z-index:0}.marca-logo svg{width:100%;height:150mm}.concepto,.cliente,.cierre,.nota,.acuse{background-color:transparent}
+.concepto{border:1px solid #dfe4e7}.cliente{border-bottom:1px solid #e0e5e8}.detalle{border-top:1px solid #e6e9eb}.nota{border-top:1px solid #e1e5e7}
+/* Cinco o más conceptos: ahorrar separaciones manteniendo tipografía y estructura. */
+.compacto .titulo{margin-top:13.2px;margin-bottom:13.2px}.compacto .titulo td{padding:10.56px 15.84px}.compacto .cliente{margin-bottom:10.56px;padding-bottom:7.04px}.compacto .cliente td{padding-bottom:5.28px}.compacto .concepto{padding:7.92px 14.08px;margin-bottom:5.28px}.compacto .detalle{margin-top:6.16px}.compacto .detalle td{padding-top:5.28px}.compacto .cierre{margin-top:10.56px}.compacto .nota{margin-top:10.56px;padding:7.92px 0}
+@media screen{body:has(.solicitud-visor-pie){display:flex!important;flex-direction:column;min-height:250mm!important}.solicitud-visor-contenido{flex:1 0 auto}.solicitud-visor-pie{position:static!important;clear:both;margin-top:17.6px!important;flex:0 0 auto}}
+/* Compensación de escala Chrome/Qt; conserva los tamaños relativos del diseño. */
+@supports(display:grid){body{font-size:10.56px}h1{font-size:22.88px}h2{font-size:11.44px}.logo{width:140.8px}.empresa{font-size:7.92px}.kicker,.etiqueta,.cliente label,.vendedor,.letras,.nota span,.badge{font-size:8.8px}.folio,.totales,.nota,.detalle{font-size:9.68px}.numero{font-size:22.88px}.concepto .nombre{font-size:12.32px}.concepto .precio{font-size:18.48px}.detalle small{font-size:7.92px}.gran-total td:last-child{font-size:16.72px}.gran-total small{font-size:7.92px}}
+/* Estado liquidado destacado, independiente de las etiquetas de entrega/cancelación. */
+.badge.pagada{background:#287457;color:#fff;border:1px solid #206247;font-size:16px;font-weight:bold;padding:7px 14px;letter-spacing:1px;white-space:nowrap}
+.badge.pagada svg{width:20px;height:20px;stroke:#fff;stroke-width:2}
+@supports(display:grid){.badge.pagada{font-size:12.8px;padding:5.6px 11.2px}.badge.pagada svg{width:16px;height:16px}}
+</style></head><body class="{{ count($datos['conceptos_temporales']) > 4 ? 'compacto' : '' }}">
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua'=>'ventas_saldos','altoMarcaAgua'=>1100])
+<div class="marca-agua-contenido"><div class="marca-logo" aria-hidden="true">{!! \App\Exports\MarcaTituloReportes::svg() !!}</div>
+<table class="cabecera"><tr><td style="width:32%"><img class="logo" src="{{ public_path(env('LOGOJPG')) }}" alt="Aeternus Funerales"></td><td class="empresa"><strong>{{ $empresa->razon_social }}</strong><br>RFC: {{ $empresa->rfc }}<br>{{ mb_convert_case($empresa->calle, MB_CASE_TITLE, 'UTF-8') }} {{ $empresa->num_ext }} · {{ mb_convert_case($empresa->colonia, MB_CASE_TITLE, 'UTF-8') }}<br>{{ $empresa->cp }} · {{ $empresa->ciudad }}, {{ $empresa->estado }}<br>Tel. {{ $empresa->telefono }} · Fax {{ $empresa->fax }} · {{ strtolower($empresa->email) }}<br>Régimen: {{ $empresa['regimen']['regimen'] }}</td></tr></table>
+<table class="titulo"><tr><td><div class="kicker">VENTAS EN GENERAL</div><h1>Nota de venta</h1><div>Fecha de venta: <strong>{{ $datos['fecha_operacion_texto'] }}</strong></div></td><td class="derecha folio"><span class="muted">Número de venta</span><strong class="numero">{{ $datos['ventas_generales_id'] }}</strong><span class="badge {{ $datos['operacion_status'] == 0 ? 'cancelado' : ($datos['saldo'] == 0 ? 'pagada' : '') }}">@if($datos['operacion_status'] != 0 && $datos['saldo'] == 0)<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#54806a" stroke-width="1.6" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>@endif{{ $datos['operacion_status'] == 0 ? 'CANCELADA' : ($datos['saldo'] == 0 ? 'PAGADA' : 'PENDIENTE DE PAGO') }}</span>@if($datos['venta_general']['entregado_b'] == 1) <span class="badge">ENTREGADA</span> @endif</td></tr></table>
+<div class="cliente"><h2><svg class="icono-cliente" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#8e7125" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg> Datos del cliente</h2><table><tr><td style="width:60%"><label>Nombre</label><strong>{{ $datos['nombre'] }}</strong></td><td><label>RFC</label>{{ $datos['rfc'] ?: 'No disponible' }}</td></tr><tr><td colspan="2"><label>Dirección</label>{{ $datos['direccion'] }}</td></tr><tr><td><label>Teléfono(s)</label>{{ implode(' / ', array_filter([$datos['celular'], $datos['telefono']])) ?: 'No disponible' }}</td><td><label>Email</label>{{ strtolower($datos['email'] ?: 'No disponible') }}</td></tr></table></div>
+<table class="vendedor"><tr><td>Vendedor: {{ $datos['venta_general']['vendedor']['nombre'] }}</td><td class="derecha">Importes en MXN</td></tr></table>
+{{-- Se conservan todos los campos y cantidades originales; no recalcular importes en la vista. --}}
+@foreach($datos['conceptos_temporales'] as $indice=>$concepto)
+<div class="concepto"><table><tr><td class="nombre"><span class="etiqueta">Concepto {{ $indice+1 }}</span><strong>{{ $concepto['descripcion'] }}</strong><span class="etiqueta">{{ $concepto['cantidad'] }} unidad(es) × $ {{ number_format($concepto['costo_neto'],2) }} costo neto</span></td><td class="precio">$ {{ number_format($concepto['importe'],2) }}</td></tr></table><table class="detalle"><tr><td><small>Subtotal</small>$ {{ number_format($concepto['subtotal'],2) }}</td><td><small>Descuento</small>$ {{ number_format($concepto['descuento'],2) }}</td><td><small>IVA</small>$ {{ number_format($concepto['impuestos'],2) }}</td><td><small>Importe</small>$ {{ number_format($concepto['importe'],2) }}</td></tr></table></div>
+@endforeach
+<div class="cierre"><table><tr><td style="width:57%;padding-right:16px"><div class="letras"><strong>Importe con letra</strong><br>Son {{ $datos['total_letras'] }}</div></td><td style="width:43%"><table class="totales"><tr><td>Subtotal</td><td class="derecha">$ {{ number_format($datos['subtotal'],2) }}</td></tr><tr><td>Descuento</td><td class="derecha">$ {{ number_format($datos['descuento'],2) }}</td></tr><tr><td>IVA ({{ $datos['tasa_iva'] }} %)</td><td class="derecha">$ {{ number_format($datos['impuestos'],2) }}</td></tr><tr class="gran-total"><td>Total</td><td class="derecha">$ {{ number_format($datos['total'],2) }} <small>MXN</small></td></tr></table></td></tr></table></div>
+<div class="nota">Nota / Comentarios<span>{{ $datos['nota'] ?: 'Sin comentarios registrados.' }}</span></div>
+@if($datos['venta_general']['entregado_b'] == 1)
+<div class="acuse"><h2>Acuse de entrega</h2><p>{{ $datos['venta_general']['nota_entrega'] }}</p><table><tr><td>Fecha de entrega<br><strong>{{ $datos['venta_general']['fecha_entrega_texto'] }}</strong></td><td>Entregó<br><strong>{{ $datos['venta_general']['entrego']['nombre'] }}</strong></td><td class="derecha">@if($firmas['aceptacion_recibido_cliente'])<img class="firma" src="{{ $firmas['aceptacion_recibido_cliente'] }}"><br>@endif Firma de recibido del cliente</td></tr></table></div>
+@endif
+</div></body></html>

@@ -4463,7 +4463,8 @@ class CementerioController extends ApiController
         }
 
         //$pdf->setOption('grayscale', true);
-        $pdf->setOption('orientation', 'landscape');
+        // El talonario compacto se presenta en carta vertical tanto en el visor como en el PDF.
+        $pdf->setOption('orientation', 'portrait');
         $pdf->setOption('margin-left', 13.4);
         $pdf->setOption('margin-right', 13.4);
         $pdf->setOption('margin-top', 9.4);
@@ -4961,11 +4962,13 @@ class CementerioController extends ApiController
         }
         //$pdf->setOption('grayscale', true);
         //$pdf->setOption('header-right', 'dddd');
-        $pdf->setOption('margin-left', 20.4);
-        $pdf->setOption('margin-right', 20.4);
+        $pdf->setOption('margin-left', 14.4);
+        $pdf->setOption('margin-right', 14.4);
         $pdf->setOption('margin-top', 10.4);
-        $pdf->setOption('margin-bottom', 35.4);
+        $pdf->setOption('margin-bottom', 25.4);
         $pdf->setOption('page-size', 'Letter');
+        // Esperar el ajuste de una hoja después de cargar las firmas.
+        $pdf->setOption('javascript-delay', 500);
 
         // El visor obtiene HTML y opciones originales; no generar PDF durante la consulta.
         if ($request->attributes->get('_documento_cementerio_visor') === 'reglamento') {

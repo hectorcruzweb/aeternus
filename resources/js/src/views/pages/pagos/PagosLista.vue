@@ -230,14 +230,9 @@
             :accion="accionNombre"
         >
         </Password>
-        <Reporteador
-            v-if="openReportesListaLista"
-            :header="'consultar pago'"
-            :show="openReportesListaLista"
-            :listadereportes="ListaReportes"
-            :request="request"
-            @closeReportes="closeListaReportes"
-        ></Reporteador>
+        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+            :enviar-correo="enviarDocumentoCorreo" @close="closeListaReportes" />
         <CancelarPago
             v-if="openCancelar"
             :show="openCancelar"
@@ -252,7 +247,8 @@
 import pagos from "@services/pagos";
 import FormularioPagos from "@pages/pagos/FormularioPagos";
 import CancelarPago from "@pages/pagos/CancelarPago";
-import Reporteador from "@pages/Reporteador";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosPagos from "@services/reportesDocumentosPagos";
 import flatPickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import "flatpickr/dist/themes/airbnb.css";
@@ -268,7 +264,7 @@ export default {
         "v-select": vSelect,
         Password,
         FormularioPagos,
-        Reporteador,
+        VisorReportes,
         CancelarPago,
         flatPickr,
     },
@@ -304,7 +300,8 @@ export default {
     data() {
         return {
             verFormularioPagos: false,
-            openReportesListaLista: false,
+            mostrarDocumentoVisor: false,
+            pagoDocumentoId: null,
             ListaReportes: [],
             request: {
                 id_pago: "",
@@ -351,27 +348,15 @@ export default {
         };
     },
     methods: {
+        /** Mantiene el recibo principal al consultar movimientos asociados.
+         * Capturar el id evita que la selección de la tabla altere el documento abierto. */
         openReporte(datos) {
-            /**verificandoque tipo de pago es */
-            let url = "/pagos/recibo_de_pago/" + datos.id;
-            this.request.id_pago = datos.id;
-            if (datos.parent_pago_id > 0) {
-                url = "/pagos/recibo_de_pago/" + datos.parent_pago_id;
-                this.request.id_pago = datos.parent_pago_id;
-            }
-            this.ListaReportes = [];
-            this.ListaReportes.push({
-                nombre: "Recibo de Movimiento",
-                url: url,
-            });
-            //estado de cuenta
-            this.request.email =
-                datos.referencias_cubiertas[0].operacion_del_pago.cliente.email;
-
-            this.request.destinatario =
-                datos.referencias_cubiertas[0].operacion_del_pago.cliente.nombre;
-            this.openReportesListaLista = true;
+            this.pagoDocumentoId = Number(datos.parent_pago_id > 0 ? datos.parent_pago_id : datos.id);
+            this.mostrarDocumentoVisor = true;
         },
+        async cargarDocumentoVisor() { return (await reportesDocumentosPagos.visualizar({ id_pago: this.pagoDocumentoId })).data; },
+        async descargarDocumentoPdf(token) { return (await reportesDocumentosPagos.pdf(token)).data; },
+        async enviarDocumentoCorreo(token, datos) { return (await reportesDocumentosPagos.correo(token, datos)).data; },
         closeFormularioPagos() {
             this.verFormularioPagos = false;
         },
@@ -475,7 +460,7 @@ export default {
         },
 
         closeListaReportes() {
-            this.openReportesListaLista = false;
+            this.mostrarDocumentoVisor = false;
             this.id_pago = 0;
             (async () => {
                 await this.get_data(this.actual);

@@ -30,7 +30,7 @@ class EmailController extends ApiController
      * Salida / efectos: Respuesta de éxito/error del envío. Produce un envío real cuando se ejecuta en el
      * proyecto.
      */
-    public function reporte_email(array $datos, $contenido, $nombreArchivo, $mime)
+    public function reporte_email(array $datos, $contenido, $nombreArchivo, $mime, array $adjuntosServidor = [])
     {
         $empresa = app(EmpresaController::class)->get_empresa_data();
         $destinatarios = $datos['destinatarios'] ?? [['email' => $datos['email_address'], 'nombre' => $datos['destinatario']]];
@@ -48,7 +48,7 @@ class EmailController extends ApiController
             'address' => config('services.mailsistema.address'),
             'empresa' => $empresa, 'name_pdf' => $nombreArchivo,
         ];
-        Mail::send('mails.mail', $data, function ($message) use ($empresa, $data, $contenido, $nombreArchivo, $mime, $destinatarios) {
+        Mail::send('mails.mail', $data, function ($message) use ($empresa, $data, $contenido, $nombreArchivo, $mime, $destinatarios, $adjuntosServidor) {
             $message->from($data['address'], strtoupper($empresa->nombre_comercial));
             if (count($destinatarios) === 1) {
                 $message->to($destinatarios[0]['email'], $destinatarios[0]['nombre'] ?? '');
@@ -58,6 +58,10 @@ class EmailController extends ApiController
             }
             $message->subject($data['subject']);
             $message->attachData($contenido, $nombreArchivo, ['mime' => $mime]);
+            // XML u otros adjuntos internos, preparados por el controlador autorizado.
+            foreach ($adjuntosServidor as $adjunto) {
+                $message->attachData($adjunto['contenido'], $adjunto['nombre'], ['mime' => $adjunto['mime']]);
+            }
         });
         if (Mail::failures()) return $this->errorResponse('Ocurrió un error al enviar el correo.', 500);
         return $this->successResponse(1, 200);

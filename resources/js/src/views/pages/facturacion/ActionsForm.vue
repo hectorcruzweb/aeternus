@@ -302,6 +302,9 @@
             :request="request"
             @closeReportes="openReportesLista = false"
         ></Reporteador>
+        <VisorReportes v-if="mostrarDocumentoVisor" :show="mostrarDocumentoVisor"
+            :cargar="cargarDocumentoVisor" :descargar-pdf="descargarDocumentoPdf"
+            :enviar-correo="enviarDocumentoCorreo" @close="mostrarDocumentoVisor = false" />
     </div>
 </template>
 <script>
@@ -309,6 +312,8 @@
 import Password from "@pages/confirmar_password";
 import facturacion from "@services/facturacion";
 import Reporteador from "@pages/Reporteador";
+import VisorReportes from "@pages/VisorReportes.vue";
+import reportesDocumentosCfdi from "@services/reportesDocumentosCfdi";
 import vSelect from "vue-select";
 export default {
     name: "ActionsForm",
@@ -316,6 +321,7 @@ export default {
         "v-select": vSelect,
         Password,
         Reporteador,
+        VisorReportes,
     },
     props: {
         show: {
@@ -377,6 +383,8 @@ export default {
             localShow: false,
             cfdi: [],
             openReportesLista: false,
+            mostrarDocumentoVisor: false,
+            cfdiDocumentoId: null,
             folio_id: "",
             uuid_a_sustituir_cancelar: "",
             motivos: [
@@ -413,7 +421,16 @@ export default {
         closePassword() {
             this.openPassword = false;
         },
+        /** Congelar la selección mientras se consulta o comparte el documento. */
+        async cargarDocumentoVisor() { return (await reportesDocumentosCfdi.visualizar({ folio_id: this.cfdiDocumentoId })).data; },
+        async descargarDocumentoPdf(token) { return (await reportesDocumentosCfdi.pdf(token)).data; },
+        async enviarDocumentoCorreo(token, datos) { return (await reportesDocumentosCfdi.correo(token, datos)).data; },
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
+            if (link.replace(/\/$/, "") === "/facturacion/get_cfdi_pdf") {
+                this.cfdiDocumentoId = Number(this.cfdi.id);
+                this.mostrarDocumentoVisor = true;
+                return;
+            }
             this.ListaReportes = [];
             this.request.folio_id = this.cfdi.id;
             this.request.email = this.cfdi.cliente_email;

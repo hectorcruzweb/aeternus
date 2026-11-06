@@ -65,8 +65,9 @@
     </style>
 </head>
 
-<body>
+<body class="solicitud-plan-documento">
     @include('layouts.estilos')
+    <div class="marca-agua-contenido">
     <header id="header">
         <section>
             <table>
@@ -408,22 +409,7 @@
                     </div>
                 </td>
             </tr>
-            <tr>
-                <td class="w-40 px-2 center">
-                     <img src="{{ $firmas['cliente'] }}" class="firma">
-                    <span>{{$datos['nombre']}}</span>
-                    <div class="w-80 mr-auto ml-auto border-top-black-1 pt-1">
-                        firma del cliente
-                    </div>
-                </td>
-                <td class="w-60 px-2 center">
-                   <img src="{{ $firmas['vendedor'] }}" class="firma">
-                    <span>{{$datos['venta_plan']['vendedor']['nombre']}}</span>
-                    <div class="w-80 mr-auto ml-auto border-top-black-1 pt-1">
-                        nombre y firma del vendedor
-                    </div>
-                </td>
-            </tr>
+            
         </table>
     </div>
     <div class="border-black-1 radius-5 texto-xs2  px-3 py-2 justificar">
@@ -706,6 +692,36 @@
         */
         @endphp
     </div>
+{{-- Firmas al cierre de la solicitud, junto a las condiciones cuando hay espacio. --}}
+<table class="w-100 solicitud-plan-firmas"><tr>
+                <td class="w-40 px-2 center">
+                     <img src="{{ $firmas['cliente'] }}" class="firma">
+                    <span>{{$datos['nombre']}}</span>
+                    <div class="w-80 mr-auto ml-auto border-top-black-1 pt-1">
+                        firma del cliente
+                    </div>
+                </td>
+                <td class="w-60 px-2 center">
+                   <img src="{{ $firmas['vendedor'] }}" class="firma">
+                    <span>{{$datos['venta_plan']['vendedor']['nombre']}}</span>
+                    <div class="w-80 mr-auto ml-auto border-top-black-1 pt-1">
+                        nombre y firma del vendedor
+                    </div>
+                </td>
+            </tr></table>
+</div>
+{{-- Reglas locales: cada contenedor y fila permanece completo al cambiar de hoja.
+     Las firmas originales conservan su proporción, con menor espacio sobrante. --}}
+<style>
+.solicitud-plan-documento .border-black-1,.solicitud-plan-documento tr{page-break-inside:avoid;break-inside:avoid}
+.solicitud-plan-documento p{orphans:3;widows:3}
+.solicitud-plan-documento .firma{max-width:190px;max-height:65px;width:auto;height:auto;display:block;margin:8px auto}
+.solicitud-plan-documento .bg-header{page-break-after:avoid}
+.solicitud-plan-firmas{page-break-inside:avoid;break-inside:avoid;margin-top:12px}
+.solicitud-plan-firmas td{vertical-align:bottom;padding-top:10px;padding-bottom:10px}
+.solicitud-plan-firmas .firma{min-height:40px}
+</style>
+@include('reportes.compartidos.marca_agua', ['seccionMarcaAgua' => 'planes_venta', 'altoMarcaAgua' => 1050])
 </body>
 
 </html>
