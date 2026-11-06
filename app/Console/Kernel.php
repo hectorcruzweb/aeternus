@@ -24,8 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        // Requiere schedule:run cada minuto en el servidor; horario de Mazatlán.
+        $schedule->command('servicios:cancelar-solicitudes-antiguas --aplicar')
+            ->dailyAt('02:00')->timezone('America/Mazatlan')->withoutOverlapping(120);
     }
 
     /**
