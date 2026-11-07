@@ -9,28 +9,31 @@
 ========================================================================================== -->
 
 <template functional>
-    <footer class="the-footer xl:py-2 flex-wrap justify-between size-small" :class="classes">
-        <div class="w-full flex flex-wrap justify-between items-center">
-            <div>
-                <span>COPYRIGHT &copy; {{ new Date().getFullYear() }} Aeternus Funerales,
-                    Todos los derechos reservados.</span>
-            </div>
-            <clock class="hidden xl:block"></clock>
-        </div>
-
-
-    </footer>
+  <footer
+    class="the-footer xl:py-2 flex-wrap justify-between size-small"
+    :class="classes"
+  >
+    <div class="w-full flex flex-wrap justify-between items-center">
+      <div>
+        <span
+          >COPYRIGHT &copy; {{ new Date().getFullYear() }} Aeternus Funerales,
+          Todos los derechos reservados.</span
+        >
+      </div>
+      <clock class="hidden xl:block"></clock>
+    </div>
+  </footer>
 </template>
 <script>
 export default {
-    name: "the-footer",
-    components: {},
-    props: {
-        classes: {
-            type: String
-        }
-    }
-    /*inject: {
+  name: "the-footer",
+  components: {},
+  props: {
+    classes: {
+      type: String,
+    },
+  },
+  /*inject: {
         components: {
             default: {}
         }

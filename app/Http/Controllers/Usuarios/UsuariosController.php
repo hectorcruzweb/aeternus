@@ -322,6 +322,15 @@ class UsuariosController extends ApiController
                 ->join('roles', 'usuarios.roles_id', '=', 'roles.id')
                 ->where('usuarios.id', '=', $request->user()->id)
                 ->get();
+            // Puestos laborales del usuario autenticado; mantener el arreglo de respuesta existente.
+            // No derivar accesos ni cambios de contraseña desde updated_at: no representa esos eventos.
+            $puestosPerfil = $request->user()->puestos()
+                ->where('puestos.status', 1)
+                ->orderBy('puestos.puesto')
+                ->get(['puestos.id', 'puestos.puesto']);
+            foreach ($resultado as $perfil) {
+                $perfil->puestos = $puestosPerfil;
+            }
             return $resultado;
         } else
         //no existe el token y regresamos un codigo de error

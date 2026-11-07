@@ -40,13 +40,18 @@ class PasswordResetNotification extends Notification
      */
     public function toMail($notifiable)
     {
+        // Solo cambia la presentación. Mantener URL/token, remitente, asunto
+        // y canal originales; el broker conserva vigencia y validación del token.
+        // Los contactos usan la misma fuente de empresa que los correos del visor.
+        $empresa = app(\App\Http\Controllers\EmpresaController::class)->get_empresa_data();
         return (new MailMessage)
-            ->greeting('Hola!')
-            ->from(config('mail.from.address'), config('mail.from.name')) // must match SMTP allowed sender
+            ->from(config('mail.from.address'), env('MAIL_SENDER'))
             ->subject(env('MAIL_FROM_NAME') . " | Recuperación de contraseña")
-            ->line("Olvidó su contraseña? De click en el botón para actualizarla.")
-            ->action('Recuperar Contraseña', url('pages/reset-password', $this->token))
-            ->line('Ignore este mensaje si no solicitó un reestablecimiento de contraseña');
+            ->view('mails.password_reset', [
+                'resetUrl' => url('pages/reset-password', $this->token),
+                'nombreDestinatario' => trim((string) ($notifiable->nombre ?? '')),
+                'empresa' => $empresa,
+            ]);
     }
 
     /**
