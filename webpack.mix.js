@@ -3,8 +3,18 @@ const path = require("path");
 let tailwindcss = require("tailwindcss");
 require("dotenv").config();
 
+// Mix 5 declara css-loader 1.x. Vue CLI/VuePress también instalan otras
+// versiones: resolver desde Mix evita tomar accidentalmente la versión raíz.
+// Afecta solo esta compilación; no cambia dependencias ni el diseño del login.
+const mixCssLoader = require.resolve("css-loader", {
+    paths: [path.dirname(require.resolve("laravel-mix/package.json"))],
+});
+
 // Webpack alias
 mix.webpackConfig({
+    resolveLoader: {
+        alias: { "css-loader": mixCssLoader },
+    },
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "resources/js/src"),
