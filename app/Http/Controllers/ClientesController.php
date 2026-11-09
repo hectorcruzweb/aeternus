@@ -57,6 +57,300 @@ class ClientesController extends ApiController
         return Nacionalidades::get();
     }
 
+
+    /**
+     * Listado alternativo de clientes. No modifica ni delega en get_clientes.
+     * Parámetros: numero, busqueda (nombre/teléfonos/email), desde/hasta (alta),
+     * estado, adeudos (sin/pendiente/vencido), operaciones[] (OR entre tipos),
+     * seguimientos (sin/pendiente/vencido) y contacto[] (celular/correo).
+     * Los grupos se combinan mediante AND; operaciones y adeudos se evalúan en
+     * las MISMAS operaciones vigentes. Sin tipos seleccionados se consideran todos.
+     * Pendiente: capital de programados activos menos aplicaciones vigentes de
+     * movimientos 1/3/4/5, redondeado por programado y limitado a cero, sin intereses.
+     * Vencido: pendiente con fecha anterior a hoy en America/Mazatlan, no incluye hoy.
+     * Pagina en SQL, siempre 15 clientes únicos; no carga el catálogo completo en memoria.
+     */
+    public function FiltrarClientes(Request $request)
+    {
+        $filtros = $this->validarFiltrosClientes($request);
+        $corte = \Carbon\Carbon::now('America/Mazatlan');
+        $consulta = $this->consultaFiltrarClientes($filtros, $corte);
+        return $consulta->orderBy('clientes.id', 'desc')
+            ->paginate(15, ['*'], 'page', (int) ($filtros['page'] ?? 1))
+            ->appends($request->except('page'));
+    }
+
+    /** Validación compartida: listado y exportación aceptan exactamente los mismos filtros. */
+    private function validarFiltrosClientes(Request $request)
+    {
+        $filtros = $request->validate([
+            'page' => 'sometimes|integer|min:1',
+            'numero' => 'nullable|integer|min:1',
+            'busqueda' => 'nullable|string|max:100',
+            'desde' => 'nullable|date_format:Y-m-d',
+            'hasta' => 'nullable|date_format:Y-m-d' . ($request->filled('desde') ? '|after_or_equal:desde' : ''),
+            'estado' => 'nullable|in:0,1',
+            'adeudos' => 'nullable|in:sin,pendiente,vencido',
+            'operaciones' => 'sometimes|array|max:5',
+            'operaciones.*' => 'required|integer|in:1,2,3,4,5|distinct',
+            'seguimientos' => 'nullable|in:sin,pendiente,vencido',
+            'contacto' => 'sometimes|array|max:2',
+            'contacto.*' => 'required|in:celular_si,celular_no,correo_si,correo_no|distinct',
+        ]);
+        $contacto = $filtros['contacto'] ?? [];
+        foreach (['celular', 'correo'] as $campo) {
+            if (in_array($campo . '_si', $contacto, true) && in_array($campo . '_no', $contacto, true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['contacto' => 'Seleccione solo una condición por dato de contacto.']);
+            }
+        }
+        return $filtros;
+    }
+
+    /** Abre HTML sin generar archivos. Conserva instantánea hasta 5000 filas; las consultas
+     * mayores guardan filtros y se ejecutan completas únicamente al descargar. */
+    public function reporteListadoClientes(Request $request)
+    {
+        $usuario = $request->user('api');
+        abort_unless($usuario, 403);
+        $filtros = $this->validarFiltrosClientes($request);
+        $corte = \Carbon\Carbon::now('America/Mazatlan');
+        $consulta = $this->consultaFiltrarClientes($filtros, $corte);
+        $total = (clone $consulta)->count();
+        $filas = $total <= 5000 ? $this->filasReporteClientes($consulta, $filtros, $corte) : null;
+        $contexto = ['usuario_id'=>(int)$usuario->id, 'filtros'=>$filtros,
+            'corte'=>$corte->toIso8601String(), 'filas'=>$filas,
+            'empresa'=>app(EmpresaController::class)->get_empresa_data()->toArray()];
+        $token = bin2hex(random_bytes(32));
+        \Illuminate\Support\Facades\Cache::put('clientes_listado_'.$token, $contexto, $corte->copy()->addMinutes(15));
+        $datos = $this->presentarReporteClientes($contexto);
+        return response()->json(['titulo'=>'Listado de clientes',
+            'nombreArchivo'=>'Listado de clientes '.$corte->format('Y-m-d H-i-s').'.xlsx',
+            'tokenDescarga'=>$token, 'totalRegistros'=>$total, 'limiteVisualizacion'=>5000,
+            'vistaPreviaDisponible'=>$filas !== null,
+            'mensaje'=>$filas === null ? 'El reporte no se puede visualizar por su tamaño. Puede descargarlo completo en Excel o PDF.' : null,
+            'hojas'=>$filas !== null ? [['nombre'=>'Clientes', 'html'=>view('reportes.temporales_visor_excel.clientes.listado',$datos)->render()]] : []
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Descarga completa en el formato permitido; nunca utiliza la página visible del listado.
+     * El token privado pertenece al usuario. Su vencimiento responde 410, no cierra la sesión. */
+    public function descargarListadoClientes(Request $request, $token, $formato)
+    {
+        abort_unless(in_array($formato,['excel','pdf'],true),404);
+        $usuario = $request->user('api');
+        abort_unless($usuario,403);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $contexto = \Illuminate\Support\Facades\Cache::get('clientes_listado_'.$token);
+        abort_unless($contexto,410,'La consulta venció. Actualice el reporte antes de descargar.');
+        abort_unless((int)$contexto['usuario_id'] === (int)$usuario->id,403);
+        if ($contexto['filas'] === null) {
+            $contexto['corte'] = \Carbon\Carbon::now('America/Mazatlan')->toIso8601String();
+            $contexto['filas'] = $this->filasReporteClientes($this->consultaFiltrarClientes($contexto['filtros'],\Carbon\Carbon::parse($contexto['corte'])), $contexto['filtros'], \Carbon\Carbon::parse($contexto['corte']));
+        }
+        $datos = $this->presentarReporteClientes($contexto);
+        $nombre = 'Listado de clientes '.\Carbon\Carbon::parse($contexto['corte'])->format('Y-m-d H-i-s');
+        if ($formato === 'excel') {
+            $respuesta = \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ListadoClientesExport($datos),$nombre.'.xlsx');
+        } else {
+            $datos['modoPdf'] = true;
+            $pdf = \PDF::loadView('reportes.temporales_visor_excel.clientes.listado',$datos);
+            $pdf->setOptions(['page-size'=>'Letter','orientation'=>'portrait','encoding'=>'UTF-8',
+                'margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,
+                'print-media-type'=>true,'enable-local-file-access'=>false,'disable-local-file-access'=>true,
+                'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
+                    'fechaImpresion'=>$datos['fecha'],'dominio'=>$datos['dominio']])->render(),'footer-spacing'=>3]);
+            $respuesta = $pdf->download($nombre.'.pdf');
+        }
+        $respuesta->headers->set('Cache-Control','no-store, private');
+        return $respuesta;
+    }
+
+    /** Mapea datos de lectura; teléfonos y correos se conservan como texto, sin fórmulas Excel. */
+    private function filasReporteClientes($consulta, array $filtros = [], $corte = null)
+    {
+        $corte = $corte ?: \Carbon\Carbon::now('America/Mazatlan');
+        $this->agregarIndicadoresReporteClientes($consulta, $filtros, $corte);
+        return $consulta->setEagerLoads([])->addSelect(['clientes.telefono','clientes.fecha_registro'])
+            ->orderBy('clientes.id','desc')->get()->map(function($c){
+                return ['id'=>$c->id,'nombre'=>$c->nombre,'direccion'=>$c->direccion,
+                    'celular'=>$c->celular,'telefono'=>$c->telefono,'email'=>mb_strtolower(trim($c->email ?? ''),'UTF-8'),
+                    'status'=>(int)$c->status,'alta'=>$c->fecha_registro,
+                    'adeudo'=>(float)($c->reporte_adeudo ?? 0),'pagos_vencidos'=>(int)($c->reporte_pagos_vencidos ?? 0),
+                    'seguimientos'=>(int)($c->reporte_seguimientos ?? 0),'operaciones'=>(int)($c->reporte_operaciones ?? 0)];
+            })->all();
+    }
+
+    /** Agregados SQL por cliente, solo al exportar. Mismas reglas del filtro: capital de
+     * programados activos, aplicaciones vigentes 1/3/4/5, operaciones 1/2 y cuotas activas.
+     * El vencido excluye hoy. Cada subconsulta devuelve un escalar, sin duplicar clientes
+     * ni cargar pagos/expedientes completos; los tipos seleccionados acotan los importes. */
+    private function agregarIndicadoresReporteClientes($consulta, array $f, \Carbon\Carbon $corte)
+    {
+        $operaciones = DB::table('operaciones as ro')->whereColumn('ro.clientes_id','clientes.id')
+            ->whereIn('ro.status',[1,2])->where('ro.fecha_operacion','<=',$corte->toDateTimeString())
+            ->where(function($q){$q->where('ro.empresa_operaciones_id','<>',2)->orWhereExists(function($c){
+                $c->selectRaw('1')->from('cuotas_cementerio as rc')->whereColumn('rc.id','ro.cuotas_cementerio_id')->where('rc.status',1);
+            });});
+        if(!empty($f['operaciones'])) {
+            $operaciones->whereIn('ro.empresa_operaciones_id',array_map('intval',$f['operaciones']));
+            $consulta->selectSub((clone $operaciones)->selectRaw('COUNT(*)'),'reporte_operaciones');
+        }
+        if(!empty($f['adeudos'])) {
+            $aplicaciones=DB::table('pagos_pagos_programados as rp')->join('pagos as rg','rg.id','=','rp.pagos_id')
+                ->where('rg.status',1)->whereIn('rg.movimientos_pagos_id',[1,3,4,5])
+                ->select('rp.pagos_programados_id')->selectRaw('SUM(rp.monto) as cubierto')->groupBy('rp.pagos_programados_id');
+            $pendientes=(clone $operaciones)->join('pagos_programados as rpp','rpp.operaciones_id','=','ro.id')
+                ->leftJoinSub($aplicaciones,'ra',function($j){$j->on('ra.pagos_programados_id','=','rpp.id');})
+                ->where('rpp.status',1)->whereRaw('ROUND(rpp.monto_programado - COALESCE(ra.cubierto,0),2)>0');
+            if($f['adeudos']==='vencido') $pendientes->where('rpp.fecha_programada','>=','1000-01-01')->where('rpp.fecha_programada','<',$corte->toDateString());
+            $consulta->selectSub((clone $pendientes)->selectRaw('COALESCE(SUM(ROUND(rpp.monto_programado - COALESCE(ra.cubierto,0),2)),0)'),'reporte_adeudo');
+            if($f['adeudos']==='vencido') $consulta->selectSub((clone $pendientes)->selectRaw('COUNT(*)'),'reporte_pagos_vencidos');
+        }
+        if(!empty($f['seguimientos'])) {
+            $seguimientos=DB::table('seguimientos as rs')->whereColumn('rs.clientes_id','clientes.id')
+                ->where('rs.tipo_cliente_id',1)->where('rs.programado_b',1)->where('rs.status',1)
+                ->whereNull('rs.fechahora_registro_seguimiento')->whereNotExists(function($q){
+                    $q->selectRaw('1')->from('operaciones as rx')->whereColumn('rx.id','rs.operaciones_id')->where('rx.status',0);
+                });
+            if($f['seguimientos']==='vencido') $seguimientos->where('rs.fechahora_programada','>=','1000-01-01')->where('rs.fechahora_programada','<',$corte->toDateString());
+            $consulta->selectSub($seguimientos->selectRaw('COUNT(*)'),'reporte_seguimientos');
+        }
+    }
+
+    /** Títulos de filtros y resumen comunes a HTML, PDF y Excel, sin nuevas consultas de saldos. */
+    private function presentarReporteClientes(array $contexto)
+    {
+        $f = $contexto['filtros']; $etiquetas=[];
+        foreach (['numero'=>'Núm. cliente','busqueda'=>'Nombre, teléfono o correo','desde'=>'Alta desde','hasta'=>'Alta hasta'] as $key=>$label) {
+            if (!empty($f[$key])) $etiquetas[]=$label.': '.(in_array($key,['desde','hasta']) ? \Carbon\Carbon::parse($f[$key])->locale('es')->translatedFormat('j \d\e F \d\e Y') : $f[$key]);
+        }
+        $mapas=['estado'=>['0'=>'Cancelados','1'=>'Activos'],
+            'adeudos'=>['sin'=>'Sin adeudo','pendiente'=>'Con saldo pendiente','vencido'=>'Con pagos vencidos'],
+            'operaciones'=>[1=>'Ventas en cementerio',2=>'Cuotas de mantenimiento',3=>'Servicios funerarios',4=>'Planes funerarios',5=>'Ventas en general'],
+            'seguimientos'=>['sin'=>'Sin seguimiento pendiente','pendiente'=>'Con seguimiento pendiente','vencido'=>'Con seguimiento vencido'],
+            'contacto'=>['celular_si'=>'Con celular','celular_no'=>'Sin celular','correo_si'=>'Con correo','correo_no'=>'Sin correo']];
+        foreach($mapas as $key=>$mapa) foreach((array)($f[$key] ?? []) as $valor) if(isset($mapa[$valor])) $etiquetas[]=$mapa[$valor];
+        $filas=$contexto['filas'] ?? []; $celulares=0; $correos=0;
+        foreach($filas as $fila){
+            $numero=preg_replace('/\D/','',$fila['celular'] ?? '');
+            if(strlen($numero)>=10 && preg_match('/[1-9]/',$numero)) $celulares++;
+            if(filter_var($fila['email'],FILTER_VALIDATE_EMAIL)) $correos++;
+        }
+        // Columnas contextuales comunes: clave, título, formato. No mostrar indicadores ajenos al filtro.
+        $extras=[];
+        if(!empty($f['operaciones'])) $extras[]=['clave'=>'operaciones','titulo'=>'Operaciones vigentes','moneda'=>false];
+        if(!empty($f['adeudos'])) $extras[]=['clave'=>'adeudo','titulo'=>$f['adeudos']==='vencido' ? 'Saldo vencido' : 'Adeudo total','moneda'=>true];
+        if(($f['adeudos'] ?? '')==='vencido') $extras[]=['clave'=>'pagos_vencidos','titulo'=>'Pagos vencidos','moneda'=>false];
+        if(!empty($f['seguimientos'])) $extras[]=['clave'=>'seguimientos','titulo'=>$f['seguimientos']==='vencido' ? 'Seguimientos vencidos' : 'Seguimientos pendientes','moneda'=>false];
+        $logo=public_path(env('LOGOJPG'));
+        $mime=is_file($logo) ? (new \finfo(FILEINFO_MIME_TYPE))->file($logo) : '';
+        return ['extras'=>$extras,'filas'=>$filas,'empresa'=>$contexto['empresa'],'filtros'=>$etiquetas ?: ['Todos los clientes'],
+            'fecha'=>\Carbon\Carbon::parse($contexto['corte'])->locale('es')->translatedFormat('j \d\e F \d\e Y, H:i'),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url'),
+            'logo'=>in_array($mime,['image/png','image/jpeg']) ? 'data:'.$mime.';base64,'.base64_encode(file_get_contents($logo)) : '',
+            'resumen'=>['total'=>count($filas),'celular'=>$celulares,'correo'=>$correos]];
+    }
+
+    /** Construye la consulta sin ejecutarla para mantener separadas reglas y paginación.
+     * Conservar esta base al implementar el reporte: no reconstruir otra lógica de saldos.
+     */
+    private function consultaFiltrarClientes(array $filtros, \Carbon\Carbon $corte)
+    {
+        // Mismos atributos y relaciones que necesita la tabla y sus formularios actuales.
+        $consulta = Clientes::select([
+            'clientes.id', 'clientes.nombre', 'clientes.direccion', 'clientes.cp',
+            'clientes.cp as direccion_fiscal_cp', 'clientes.email', 'clientes.rfc as rfc_raw',
+            'clientes.status', 'clientes.razon_social', 'clientes.direccion_fiscal',
+            'clientes.vivo_b as vivo_b_raw', 'clientes.regimen_fiscal_id',
+            'clientes.nacionalidades_id', 'clientes.generos_id', 'clientes.servicios_gratis',
+            'clientes.nota_servicios_gratis',
+        ])->selectRaw("COALESCE(clientes.rfc, 'N/A') AS rfc")
+            ->selectRaw("COALESCE(clientes.celular, 'N/A') AS celular")
+            ->selectRaw("CASE WHEN clientes.vivo_b = 1 THEN 'Vivo' ELSE 'Fallecido' END AS vivo_b")
+            ->with(['regimen', 'nacionalidad', 'genero']);
+        if (!empty($filtros['numero'])) $consulta->where('clientes.id', $filtros['numero']);
+        if (isset($filtros['estado']) && $filtros['estado'] !== '') $consulta->where('clientes.status', $filtros['estado']);
+        if (!empty($filtros['desde'])) $consulta->where('clientes.fecha_registro', '>=', $filtros['desde'] . ' 00:00:00');
+        if (!empty($filtros['hasta'])) $consulta->where('clientes.fecha_registro', '<', \Carbon\Carbon::createFromFormat('Y-m-d', $filtros['hasta'])->addDay()->toDateString() . ' 00:00:00');
+
+        $texto = trim($filtros['busqueda'] ?? '');
+        if ($texto !== '') {
+            // Escapar comodines: % y _ se interpretan literalmente, siempre con parámetros enlazados.
+            $escapar = function ($valor) { return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $valor); };
+            $digitos = preg_replace('/\D/', '', $texto);
+            $buscarTelefono = $digitos !== '' && preg_match('/^[+0-9\s().-]+$/', $texto);
+            $consulta->where(function ($q) use ($texto, $escapar, $digitos, $buscarTelefono) {
+                $q->where(function ($nombre) use ($texto, $escapar) {
+                    foreach (preg_split('/\s+/u', $texto, -1, PREG_SPLIT_NO_EMPTY) as $palabra) {
+                        $nombre->whereRaw("clientes.nombre LIKE ? ESCAPE '!'", ['%' . $escapar($palabra) . '%']);
+                    }
+                })->orWhereRaw("clientes.email LIKE ? ESCAPE '!'", ['%' . $escapar($texto) . '%']);
+                if ($buscarTelefono) {
+                    foreach (['telefono', 'celular', 'telefono_extra'] as $campo) {
+                        $q->orWhereRaw($this->telefonoNormalizadoClientes($campo) . ' LIKE ?', ['%' . $digitos . '%']);
+                    }
+                }
+            });
+        }
+        foreach ($filtros['contacto'] ?? [] as $condicion) {
+            $celular = $this->telefonoNormalizadoClientes('celular');
+            // Número utilizable: al menos 10 dígitos; descartar vacíos, ceros y textos N/A.
+            $tieneCelular = "(LENGTH($celular) >= 10 AND $celular REGEXP '^[0-9]+$' AND $celular REGEXP '[1-9]')";
+            $tieneCorreo = "(TRIM(COALESCE(clientes.email, '')) REGEXP '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$')";
+            $condiciones = ['celular_si' => $tieneCelular, 'celular_no' => 'NOT ' . $tieneCelular, 'correo_si' => $tieneCorreo, 'correo_no' => 'NOT ' . $tieneCorreo];
+            $consulta->whereRaw($condiciones[$condicion]);
+        }
+
+        $tipos = array_map('intval', $filtros['operaciones'] ?? []);
+        $adeudo = $filtros['adeudos'] ?? '';
+        if ($tipos || $adeudo !== '') {
+            $operaciones = DB::table('operaciones as o')->selectRaw('1')
+                ->whereColumn('o.clientes_id', 'clientes.id')->whereIn('o.status', [1, 2])
+                ->where('o.fecha_operacion', '<=', $corte->toDateTimeString())
+                ->where(function ($q) {
+                    $q->where('o.empresa_operaciones_id', '<>', 2)->orWhereExists(function ($cuota) {
+                        $cuota->selectRaw('1')->from('cuotas_cementerio as cc')
+                            ->whereColumn('cc.id', 'o.cuotas_cementerio_id')->where('cc.status', 1);
+                    });
+                });
+            if ($tipos) $operaciones->whereIn('o.empresa_operaciones_id', $tipos);
+            if ($tipos) $consulta->getQuery()->addWhereExistsQuery(clone $operaciones);
+            if ($adeudo !== '') {
+                $aplicaciones = DB::table('pagos_pagos_programados as ppp')
+                    ->join('pagos as p', 'p.id', '=', 'ppp.pagos_id')
+                    ->where('p.status', 1)->whereIn('p.movimientos_pagos_id', [1, 3, 4, 5])
+                    ->select('ppp.pagos_programados_id')->selectRaw('SUM(ppp.monto) AS capital_cubierto')
+                    ->groupBy('ppp.pagos_programados_id');
+                $pendientes = DB::table('pagos_programados as pp')
+                    ->leftJoinSub($aplicaciones, 'a', function ($join) { $join->on('a.pagos_programados_id', '=', 'pp.id'); })
+                    ->whereColumn('pp.operaciones_id', 'o.id')->where('pp.status', 1)
+                    ->whereRaw('ROUND(pp.monto_programado - COALESCE(a.capital_cubierto, 0), 2) > 0')
+                    ->selectRaw('1');
+                if ($adeudo === 'vencido') $pendientes->where('pp.fecha_programada', '>=', '1000-01-01')->where('pp.fecha_programada', '<', $corte->toDateString());
+                $conDeuda = (clone $operaciones)->addWhereExistsQuery($pendientes);
+                $consulta->getQuery()->addWhereExistsQuery($conDeuda, 'and', $adeudo === 'sin');
+            }
+        }
+        $seguimiento = $filtros['seguimientos'] ?? '';
+        if ($seguimiento !== '') {
+            $pendientes = DB::table('seguimientos as s')->selectRaw('1')
+                ->whereColumn('s.clientes_id', 'clientes.id')->where('s.tipo_cliente_id', 1)
+                ->where('s.programado_b', 1)->where('s.status', 1)->whereNull('s.fechahora_registro_seguimiento')
+                ->whereNotExists(function ($op) {
+                    $op->selectRaw('1')->from('operaciones as oc')->whereColumn('oc.id', 's.operaciones_id')->where('oc.status', 0);
+                });
+            if ($seguimiento === 'vencido') $pendientes->where('s.fechahora_programada', '>=', '1000-01-01')->where('s.fechahora_programada', '<', $corte->toDateString());
+            $consulta->getQuery()->addWhereExistsQuery($pendientes, 'and', $seguimiento === 'sin');
+        }
+        return $consulta;
+    }
+
+    /** Solo recibe nombres internos de columnas, nunca datos del request. Compatible con MySQL 5.7. */
+    private function telefonoNormalizadoClientes($campo)
+    {
+        return "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(clientes.$campo, ''), ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), '.', '')";
+    }
+
     /**obtiene todas los clientes segun los parametros recibidos */
     public function get_clientes(Request $request)
     {

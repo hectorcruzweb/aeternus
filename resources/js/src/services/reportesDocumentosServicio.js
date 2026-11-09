@@ -2,7 +2,7 @@ import axios from "@/axios.js";
 
 /** Catálogo del expediente tipo 3; comparte tres rutas para sus documentos. */
 function ruta(documento) {
-    if (["contrato", "recibo", "solicitud", "autorizacion", "certificado", "guia", "orden", "embalsamiento", "cremacion", "entrega-cenizas", "no-embalsamiento", "constancia-cremacion", "entrega-acta"].indexOf(documento) === -1) throw new Error("Documento no disponible en el visor.");
+    if (!/^guia-[a-z-]+$/.test(documento) && ["guias", "contrato", "recibo", "solicitud", "autorizacion", "certificado", "guia", "orden", "embalsamiento", "cremacion", "entrega-cenizas", "no-embalsamiento", "constancia-cremacion", "entrega-acta"].indexOf(documento) === -1) throw new Error("Documento no disponible en el visor.");
     return "/funeraria/servicios/reportes/" + documento;
 }
 export default {

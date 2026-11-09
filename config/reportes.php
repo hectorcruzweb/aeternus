@@ -12,6 +12,8 @@ $zoom = env('REPORTES_VISOR_ZOOM', 135);
 $zoom = is_numeric($zoom) ? (float) $zoom : 135;
 
 return [
+    // Listados de pagos mayores a este número se exportan solo en Excel.
+    'pagos_limite_pdf' => max(1, (int) env('REPORTES_PAGOS_LIMITE_PDF', 1000)),
     'visor_zoom_porcentaje' => is_finite($zoom) && $zoom >= 50 && $zoom <= 200 ? $zoom : 135,
     // Solo PDF/impresión. Leer con config() en Blade para soportar config:cache.
     'marca_agua' => [

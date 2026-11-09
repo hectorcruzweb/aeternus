@@ -171,7 +171,7 @@ const router = new Router({
                     name: "cementerio_ventas",
                     component: () =>
                         import(
-                            "@/views/pages/cementerio/ventas/VentasList.vue"
+                            "@/views/pages/cementerio/ventas/ListadoVentasCementerioFiltros.vue"
                         ),
                     meta: {
                         breadcrumb: [
@@ -220,7 +220,7 @@ const router = new Router({
                     path: "/cobranza/pagos",
                     name: "cobranza_pagos",
                     component: () =>
-                        import("@/views/pages/pagos/PagosLista.vue"),
+                        import("@/views/pages/pagos/ListadoPagosFiltros.vue"),
                     meta: {
                         breadcrumb: [
                             {
@@ -272,7 +272,7 @@ const router = new Router({
                     path: "/clientes",
                     name: "catalogo_clientes",
                     component: () =>
-                        import("@/views/pages/clientes/ClientesList.vue"),
+                        import("@/views/pages/clientes/ListadoClientesFiltros.vue"),
                     meta: {
                         breadcrumb: [
                             {
@@ -403,7 +403,7 @@ const router = new Router({
                     name: "servicios_funerarios",
                     component: () =>
                         import(
-                            "@/views/pages/funeraria/servicios_funerarios/ServiciosList.vue"
+                            "@/views/pages/funeraria/servicios_funerarios/ListadoServiciosFunerariosFiltros.vue"
                         ),
                     meta: {
                         breadcrumb: [

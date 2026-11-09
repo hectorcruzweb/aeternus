@@ -193,9 +193,18 @@ class FunerariaController extends ApiController
      * firmas originales. No genera PDF ni altera el servicio o sus pagos. */
     public function previewDocumentoServicio(Request $request, $documento)
     {
-        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        $guias = config('guias_servicio', []);
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]) || isset($guias[$documento]) || $documento === 'guias', 404);
         $usuario = $request->user('api');
         abort_unless($usuario, 401);
+        // Catálogo editorial público solo dentro de la sesión: no incluye pasos
+        // ni expedientes. Vue recibe las claves permitidas, nombres y sus grupos.
+        if ($documento === 'guias') {
+            return response()->json(collect($guias)->map(function ($guia, $clave) {
+                return ['clave' => $clave, 'nombre' => $guia['nombre'], 'icono' => $guia['icono'], 'grupo' => $guia['grupo']];
+            })->values());
+        }
+        if (isset($guias[$documento])) return $this->guiaServicioConsulta($request, $documento);
         $request->validate(['id_servicio' => 'required|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable').'|integer|min:1']);
         $id = (int) $request->input('id_servicio');
         abort_unless(ServiciosFunerarios::where('id', $id)->exists(), 404, 'No se encontró el servicio funerario.');
@@ -226,18 +235,42 @@ class FunerariaController extends ApiController
         );
     }
 
+    /**
+     * Guía general del menú: reutiliza el contenido aprobado de la guía del cliente,
+     * sin tomar un servicio real como ejemplo. config/guias_servicio.php aporta
+     * los pasos por escenario; conserva los documentos de referencia originales.
+     * Usa REPORTES_VISOR_ZOOM y REPORTES_MARCA_AGUA_SERVICIOS_FUNERARIOS
+     * mediante el motor/Blade compartidos; no genera PDF durante la consulta.
+     */
+    private function guiaServicioConsulta(Request $request, $documento)
+    {
+        $escenario = config('guias_servicio.' . $documento);
+        $titulo = 'Guía · ' . $escenario['nombre'];
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $pdf = PDF::loadView('funeraria.instrucciones_servicio_funerario.documento', [
+            'datos' => ['tipo_solicitud_texto' => str_replace('Guía de ', '', $titulo), 'servicio_id' => ''],
+            'empresa' => $empresa, 'escenarioGuia' => $escenario,
+        ]);
+        $pdf->setOptions(['title' => $titulo, 'footer-html' => view('funeraria.instrucciones_servicio_funerario.footer'),
+            'margin-left' => 12.4, 'margin-right' => 12.4, 'margin-top' => 12.4,
+            'margin-bottom' => 24.4, 'page-size' => 'letter']);
+        $motor = new \App\Services\VisorDocumentos('funeraria_servicios_');
+        return $motor->preparar($motor->capturar($pdf), $documento, $titulo, null, $request->user('api'),
+            'Guía de consulta · Documento PDF');
+    }
+
     /** Genera el PDF solo al descargar; token privado por usuario/documento.
      * Un token vencido devuelve 410 sin cerrar la sesión del sistema. */
     public function descargarDocumentoServicio(Request $request, $documento, $token)
     {
-        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]) || config('guias_servicio.' . $documento) !== null, 404);
         return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->descargar($request, $token, $documento);
     }
 
     /** Comparte validaciones y envío del visor; el documento solo admite PDF. */
     public function enviarDocumentoServicioCorreo(Request $request, $documento, $token)
     {
-        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]), 404);
+        abort_unless(isset(self::DOCUMENTOS_SERVICIO_VISOR[$documento]) || config('guias_servicio.' . $documento) !== null, 404);
         return (new \App\Services\VisorDocumentos('funeraria_servicios_'))->enviarCorreo($request, $token, $documento);
     }
     // Ventana acordada para priorizar seguimiento: hoy y los seis días anteriores.
@@ -4450,6 +4483,172 @@ class FunerariaController extends ApiController
     }
 
     /**obtiene los servicios funerarios */
+    /** BUSCADOR ALTERNATIVO DE SERVICIOS FUNERARIOS.
+     * Consumido exclusivamente por ListadoServiciosFunerariosFiltros.vue.
+     * La ruta anterior y get_solicitudes_servicios se conservan para formularios,
+     * expedientes y demás módulos. No escribe datos ni recalcula saldos guardados.
+     */
+    /** Grupos combinados con AND; selecciones de cada grupo con OR. Destinos
+     * permite todos/cualquiera. Rango de fechas sobre contratación, no solicitud. */
+    public function FiltrarServiciosFunerarios(Request $r)
+    {
+        $this->validarFiltrosListadoServicios($r);
+        $pagina=$this->consultaFiltrarServiciosFunerarios($r)->orderBy('s.id','desc')->paginate(15);
+        $datos=$pagina->toArray();
+        $datos['data']=collect($pagina->items())->map(function($s){
+            $f=(array)$s;$f['servicio_id']=$s->id;$f['status_b']=$s->status;
+            $f['operacion']=$s->contrato_id?['id'=>$s->contrato_id,'operacion_id'=>$s->contrato_id,'clientes_id'=>$s->contrato_cliente_id,'saldo'=>$s->contrato_saldo,'status'=>$s->contrato_status]:null;
+            $f['status_texto']=$s->contrato_id?((int)$s->contrato_status===0?'Cancelada':((float)$s->contrato_saldo<=0?'Pagada':'Por pagar')):((int)$s->status===0?'Cancelada':'Activa');
+            $f['tipo_solicitud_texto']=(int)$s->tipo_solicitud_id===2?($s->ventas_terrenos_id?'Exhumación y Reinhumación':'Servicio de Exhumación'):'Servicio Funerario';
+            $f['fecha_solicitud_texto']=$s->fechahora_solicitud?fecha_abr($s->fechahora_solicitud):'No disponible';
+            $f['exhumado_b']=(int)$s->exhumados>0;$f['permite_exhumar_b']=(int)$s->cementerios_servicio_id===1&&(int)$s->status!==0&&!$f['exhumado_b'];
+            $f['cliente_nombre']=$s->contrato_id?$s->cliente_nombre:$s->nombre_contratante_temp;
+            unset($f['contrato_id'],$f['contrato_cliente_id'],$f['contrato_saldo'],$f['contrato_status'],$f['exhumados']);return $f;
+        })->all();
+        if($r->boolean('catalogos'))$datos['catalogos']=['traslados'=>DB::table('servicios_funerarios')->where('traslado_b',1)->whereNotNull('destino_traslado')->whereRaw("TRIM(destino_traslado) <> ''")->select('destino_traslado')->distinct()->orderBy('destino_traslado')->pluck('destino_traslado')->all()];
+        return response()->json($datos);
+    }
+    /** Validación común a listado, vista previa y descargas masivas. */
+    private function validarFiltrosListadoServicios(Request $r)
+    {
+        $r->validate(['page'=>'nullable|integer|min:1','numero'=>'nullable|integer|min:1', 'fallecido'=>'nullable|string|max:100','cliente'=>'nullable|string|max:100','estado'=>'nullable|in:0,1,2,3,4','desde'=>'nullable|date_format:Y-m-d','hasta'=>'nullable|date_format:Y-m-d'.($r->filled('desde')?'|after_or_equal:desde':''),
+            'destinos'=>'nullable|array|max:6','destinos.*'=>'in:inhumacion,cremacion,traslado,misa,aseguradora,custodia','coincidencia'=>'nullable|in:todos,cualquiera','embalsamado'=>'nullable|in:0,1',
+            'velacion'=>'nullable|array|max:3','velacion.*'=>'in:empresa,otro,sin','cementerio'=>'nullable|array|max:3','cementerio.*'=>'in:aeternus,otro,sin','origen'=>'nullable|array|max:5','origen.*'=>'in:terreno_futuro,terreno_inmediato,plan_futuro,plan_inmediato,sin','traslados'=>'nullable|array|max:30','traslados.*'=>'string|max:255','catalogos'=>'nullable|boolean']);
+    }
+
+    /** Reporte completo del buscador. Captura privada compartida por PDF/Excel.
+     * Hasta 5000 filas se visualizan sin generar archivos; por encima se permite
+     * descarga completa y se avisa que los datos se consultarán al descargar.
+     */
+    public function reporteListadoServiciosFunerarios(Request $request)
+    {
+        $usuario=$request->user('api');abort_unless($usuario,403);
+        $this->validarFiltrosListadoServicios($request);
+        $total=$this->consultaFiltrarServiciosFunerarios($request)->count();
+        $fecha=Carbon::now('America/Mazatlan');
+        $contexto=['usuario_id'=>(int)$usuario->id,'fecha'=>$fecha->toIso8601String(),
+            'filtros'=>$request->only(['numero','fallecido','cliente','estado','desde','hasta','destinos','coincidencia','embalsamado','velacion','cementerio','origen','traslados']),
+            'empresa'=>app(EmpresaController::class)->get_empresa_data()->toArray(), 'filas'=>null];
+        if($total<=5000)$contexto['filas']=$this->filasReporteListadoServicios($request);
+        $token=bin2hex(random_bytes(32));
+        \Illuminate\Support\Facades\Cache::put('funeraria_listado_servicios_'.$token,$contexto,$fecha->copy()->addMinutes(15));
+        $datos=$this->presentarReporteListadoServicios($contexto);
+        return response()->json(['titulo'=>'Listado de servicios funerarios','nombreArchivo'=>'Servicios funerarios '.$fecha->format('Y-m-d H-i-s').'.xlsx',
+            'tokenDescarga'=>$token,'totalRegistros'=>$total,'limiteVisualizacion'=>5000,'vistaPreviaDisponible'=>$contexto['filas']!==null,
+            'mensaje'=>$contexto['filas']===null?'El reporte no puede visualizarse por su tamaño. Descárguelo completo en PDF o Excel. Los datos se consultarán al descargar.':null,
+            'hojas'=>$contexto['filas']!==null?[['nombre'=>'Servicios','html'=>view('reportes.temporales_visor_excel.funeraria.listado_servicios',$datos)->render()]]:[]
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Tokens de reporte independientes de sesión. Una consulta vencida responde
+     * 410 y no cierra la sesión. No se admiten capturas de otros usuarios. */
+    public function descargarListadoServiciosFunerarios(Request $request,$token,$formato)
+    {
+        abort_unless(in_array($formato,['pdf','excel'],true),404);
+        $usuario=$request->user('api');abort_unless($usuario,403);
+        abort_unless(is_string($token)&&preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $c=\Illuminate\Support\Facades\Cache::get('funeraria_listado_servicios_'.$token);
+        abort_unless($c,410,'La consulta venció. Actualice el reporte antes de descargar.');
+        abort_unless((int)$c['usuario_id']===(int)$usuario->id,403);
+        if($c['filas']===null){
+            $r=Request::create('/funeraria/servicios/filtrar','GET',$c['filtros']);
+            $this->validarFiltrosListadoServicios($r);
+            $c['filas']=$this->filasReporteListadoServicios($r);
+            $c['fecha']=Carbon::now('America/Mazatlan')->toIso8601String();
+        }
+        $d=$this->presentarReporteListadoServicios($c);
+        $nombre='Servicios funerarios '.Carbon::parse($c['fecha'])->format('Y-m-d H-i-s');
+        if($formato==='excel')return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ListadoServiciosFunerariosExport($d),$nombre.'.xlsx');
+        $d['modoPdf']=true;
+        $pdf=PDF::loadView('reportes.temporales_visor_excel.funeraria.listado_servicios',$d);
+        $pdf->setOptions(['page-size'=>'Letter','orientation'=>'portrait','encoding'=>'UTF-8','margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,'print-media-type'=>true,
+            'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',['fechaImpresion'=>$d['fecha'],'dominio'=>$d['dominio']])->render()]);
+        return response($pdf->output(),200,['Content-Type'=>'application/pdf','Content-Disposition'=>'attachment; filename="'.$nombre.'.pdf"','Cache-Control'=>'no-store, private']);
+    }
+
+    /** Consulta compartida con la pantalla, sin paginación y sin ids internos.
+     * El saldo es el mismo campo operaciones.saldo que consume el listado; solo
+     * contratos vigentes aportan saldo al resumen. No incluye intereses nuevos.
+     */
+    private function filasReporteListadoServicios(Request $r)
+    {
+        $salas=DB::table('lugares_servicios')->pluck('lugar','id');
+        return $this->consultaFiltrarServiciosFunerarios($r)->orderBy('s.id','desc')
+            ->addSelect('o.fecha_operacion as contratacion','c.telefono as telefono_cliente','c.celular as celular_cliente','c.email as email_cliente')
+            ->get()->map(function($s)use($salas){
+                $activo=(int)$s->status!==0&&in_array((int)$s->contrato_status,[1,2],true);
+                $estado=(int)$s->status===0||(isset($s->contrato_id)&&(int)$s->contrato_status===0)?'Cancelada':(!$s->contrato_id?'Sin contrato':((float)$s->contrato_saldo<=0?'Pagada':'Por pagar'));
+                $servicios=[];foreach(['inhumacion'=>'Inhumación','cremacion'=>'Cremación','traslado'=>'Traslado','misa'=>'Ceremonia religiosa','aseguradora'=>'Aseguradora','custodia'=>'Custodia']as$campo=>$label)if((int)$s->{$campo.'_b'}===1)$servicios[]=$label;
+                $servicios[]=(int)$s->embalsamar_b===1?'Embalsamado':'No embalsamado';
+                if((int)$s->velacion_b===1)$servicios[]='Velación: '.($salas[$s->lugares_servicios_id]??'Lugar no disponible');
+                if((int)$s->inhumacion_b===1)$servicios[]='Cementerio: '.((int)$s->cementerios_servicio_id===1?'Aeternus':'Otro');
+                if((int)$s->traslado_b===1&&trim($s->destino_traslado??'')!=='')$servicios[]='Destino: '.$s->destino_traslado;
+                if($s->ventas_terrenos_id)$servicios[]='Propiedad en cementerio · Venta '.$s->ventas_terrenos_id;
+                if($s->ventas_planes_id)$servicios[]='Plan a futuro · Venta '.$s->ventas_planes_id;
+                if((int)$s->plan_funerario_inmediato_b===1)$servicios[]='Plan de uso inmediato';
+                return ['servicio'=>(int)$s->id,'fallecido'=>$s->nombre_afectado?:'No disponible',
+                    'cliente'=>($s->contrato_id?$s->cliente_nombre:$s->nombre_contratante_temp)?:'No disponible',
+                    'contacto'=>implode(' / ',array_unique(array_filter($s->contrato_id?[$s->celular_cliente,$s->telefono_cliente]:[$s->telefono_contratante_temp]))),
+                    'email'=>$s->contrato_id?mb_strtolower($s->email_cliente??'','UTF-8'):'',
+                    'solicitud'=>$this->fechaListadoServicios($s->fechahora_solicitud),'contratacion'=>$this->fechaListadoServicios($s->contratacion),
+                    'estado'=>$estado,'conContrato'=>(bool)$s->contrato_id,'saldo'=>$activo?max(0,(float)$s->contrato_saldo):0,'servicios'=>implode(' · ',$servicios)];
+            })->all();
+    }
+
+    /** Metadatos humanos compartidos por pantalla, impresión y Excel. */
+    private function presentarReporteListadoServicios(array $c)
+    {
+        $f=$c['filtros'];$etiquetas=[];
+        foreach(['numero'=>'Núm. servicio','fallecido'=>'Fallecido','cliente'=>'Cliente / contratante temporal']as$k=>$nombre)if(!empty($f[$k]))$etiquetas[]=$nombre.': '.$f[$k];
+        foreach(['desde'=>'Contratación desde','hasta'=>'Contratación hasta']as$k=>$nombre)if(!empty($f[$k]))$etiquetas[]=$nombre.': '.Carbon::parse($f[$k])->locale('es')->translatedFormat('d/M/Y');
+        if(isset($f['estado'])&&$f['estado']!=='')$etiquetas[]='Estado: '.['0'=>'Canceladas','1'=>'Por pagar','2'=>'Pagadas','3'=>'Activas','4'=>'Sin contrato'][$f['estado']];
+        if(isset($f['embalsamado'])&&$f['embalsamado']!=='')$etiquetas[]=(string)$f['embalsamado']==='1'?'Embalsamados':'No embalsamados';
+        $mapas=['destinos'=>['inhumacion'=>'Inhumación','cremacion'=>'Cremación','traslado'=>'Traslado','misa'=>'Ceremonia religiosa','aseguradora'=>'Aseguradora','custodia'=>'Custodia'],
+            'velacion'=>['empresa'=>'Velación en Aeternus','otro'=>'Velación en otro lugar','sin'=>'Sin velación'],
+            'cementerio'=>['aeternus'=>'Cementerio Aeternus','otro'=>'Otro cementerio','sin'=>'Sin inhumación'],
+            'origen'=>['terreno_futuro'=>'Propiedad a futuro','terreno_inmediato'=>'Propiedad de uso inmediato','plan_futuro'=>'Plan funerario a futuro','plan_inmediato'=>'Plan funerario de uso inmediato','sin'=>'Sin propiedad ni plan vinculado']];
+        foreach($mapas as$k=>$map)if(!empty($f[$k]))$etiquetas[]=($k==='destinos'?'Servicios ('.(($f['coincidencia']??'todos')==='todos'?'todos':'al menos uno').'): ':'').implode(' / ',array_map(function($v)use($map){return $map[$v];},$f[$k]));
+        if(!empty($f['traslados']))$etiquetas[]='Destinos de traslado: '.implode(' / ',$f['traslados']);
+        $filas=collect($c['filas']??[]);$ruta=public_path(env('LOGOJPG'));$logo=is_file($ruta)?'data:image/jpeg;base64,'.base64_encode(file_get_contents($ruta)):null;
+        return ['titulo'=>'Listado de servicios funerarios','empresa'=>$c['empresa'],'logo'=>$logo,'filas'=>$filas->all(),
+            'fecha'=>Carbon::parse($c['fecha'])->locale('es')->translatedFormat('d/M/Y H:i'),'dominio'=>parse_url(config('app.url'),PHP_URL_HOST)?:'Aeternus Funerales','filtros'=>$etiquetas?:['Todos los servicios'],
+            'resumen'=>['total'=>$filas->count(),'contratos'=>$filas->where('conContrato',true)->count(),'saldo'=>$filas->sum('saldo')]];
+    }
+    private function fechaListadoServicios($fecha)
+    {
+        return $fecha&&substr($fecha,0,4)!=='0000'?Carbon::parse($fecha)->locale('es')->translatedFormat('d/M/Y'):'No disponible';
+    }
+
+    /** Un contrato por servicio: vigente más reciente; si no existe, último
+     * cancelado. EXISTS en operaciones de origen evita duplicar los resultados. */
+    private function consultaFiltrarServiciosFunerarios(Request $r)
+    {
+        $contrato=DB::table('operaciones as contrato')->select('contrato.id')->whereColumn('contrato.servicios_funerarios_id','s.id')->where('contrato.empresa_operaciones_id',3)->orderByRaw('CASE WHEN contrato.status IN (1,2) THEN 0 ELSE 1 END')->orderBy('contrato.id','desc')->limit(1);
+        $q=DB::table('servicios_funerarios as s')->leftJoin('operaciones as o',function($j)use($contrato){$j->whereRaw('o.id = ('.$contrato->toSql().')', $contrato->getBindings());})->leftJoin('clientes as c','c.id','=','o.clientes_id')
+            ->select('s.*','o.id as contrato_id','o.clientes_id as contrato_cliente_id','o.saldo as contrato_saldo','o.status as contrato_status','c.nombre as cliente_nombre')
+            ->selectSub(function($sub){$sub->from('servicios_funerarios as ex')->selectRaw('COUNT(*)')->whereColumn('ex.servicios_funerarios_exhumado_id','s.id')->where('ex.status',1);},'exhumados');
+        if($r->filled('numero'))$q->where('s.id',(int)$r->numero);
+        $this->filtrarPalabrasServiciosFunerarios($q,'s.nombre_afectado',$r->fallecido);
+        if($r->filled('cliente'))$q->where(function($g)use($r){$g->where(function($x)use($r){$x->whereNotNull('o.id');$this->filtrarPalabrasServiciosFunerarios($x,'c.nombre',$r->cliente);})->orWhere(function($x)use($r){$x->whereNull('o.id');$this->filtrarPalabrasServiciosFunerarios($x,'s.nombre_contratante_temp',$r->cliente);});});
+        if($r->filled('estado'))switch((string)$r->estado){case '1':$q->where('o.status',1)->where('o.saldo','>',0);break;case '2':$q->where('o.status',2)->where('o.saldo',0);break;case '3':$q->where('s.status','>',0);break;case '4':$q->whereNull('o.id')->where('s.status','<>',0);break;case '0':$q->where('s.status',0);break;}
+        if($r->filled('desde'))$q->where('o.fecha_operacion','>=',$r->desde.' 00:00:00');
+        if($r->filled('hasta'))$q->where('o.fecha_operacion','<',Carbon::parse($r->hasta)->addDay()->format('Y-m-d').' 00:00:00');
+        if($r->filled('embalsamado'))$q->whereRaw('COALESCE(s.embalsamar_b,0) = ?',[(int)$r->embalsamado]);
+        if($r->input('destinos'))$q->where(function($g)use($r){foreach($r->destinos as $d){$metodo=$r->input('coincidencia','todos')==='cualquiera'?'orWhere':'where';$g->$metodo('s.'.$d.'_b',1);}});
+        if($r->input('velacion'))$q->where(function($g)use($r){foreach($r->velacion as $v)$g->orWhere(function($x)use($v){if($v==='sin'){$x->whereRaw('COALESCE(s.velacion_b,0) <> 1');return;}$x->where('s.velacion_b',1);$salas=DB::table('lugares_servicios')->select('id')->where('lugar','like','%Aeternus%');if($v==='empresa')$x->whereIn('s.lugares_servicios_id',$salas);else $x->whereNotNull('s.lugares_servicios_id')->whereNotIn('s.lugares_servicios_id',$salas);});});
+        if($r->input('cementerio'))$q->where(function($g)use($r){foreach($r->cementerio as $v)$g->orWhere(function($x)use($v){if($v==='sin'){$x->whereRaw('COALESCE(s.inhumacion_b,0) <> 1');return;}$x->where('s.inhumacion_b',1)->where('s.cementerios_servicio_id',$v==='aeternus'?'=':'<>',1);});});
+        if($r->input('traslados'))$q->where('s.traslado_b',1)->whereIn('s.destino_traslado',$r->traslados);
+        if($r->input('origen'))$q->where(function($g)use($r){foreach($r->origen as $v)$g->orWhere(function($x)use($v){
+            if($v==='sin'){$x->whereNull('s.ventas_terrenos_id')->whereNull('s.ventas_planes_id')->whereRaw('COALESCE(s.plan_funerario_inmediato_b,0) <> 1');return;}
+            if($v==='plan_inmediato'){$x->where('s.plan_funerario_inmediato_b',1);return;}
+            $terreno=strpos($v,'terreno_')===0;
+            $x->whereExists(function($sub)use($v,$terreno){$sub->selectRaw('1')->from('operaciones as origen')->where('origen.empresa_operaciones_id',$terreno?1:4)->whereColumn($terreno?'origen.ventas_terrenos_id':'origen.ventas_planes_id',$terreno?'s.ventas_terrenos_id':'s.ventas_planes_id')->whereIn('origen.status',[1,2]);if($terreno)$sub->where('origen.financiamiento',$v==='terreno_inmediato'?'=':'>',1);});
+        });});
+        return $q;
+    }
+    /** Palabras combinadas sin importar orden. Escape SQL explícito para %, _ y !. */
+    private function filtrarPalabrasServiciosFunerarios($q,$campo,$texto){foreach(preg_split('/\s+/u',trim((string)$texto),-1,PREG_SPLIT_NO_EMPTY) as $p)$q->whereRaw($campo." LIKE ? ESCAPE '!'",['%'.str_replace(['!','%','_'],['!!','!%','!_'],$p).'%']);}
+
     public function get_solicitudes_servicios(Request $request, $id_servicio = 'all', $paginated = false, $uso_plan_funerario_futuro = 0, $uso_terreno_id = 0, $unir_lotes_cantidad = 0, $actualizar_saldos = false)
     {
         $light = $request->light;

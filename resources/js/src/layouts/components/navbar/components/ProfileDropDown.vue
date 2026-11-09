@@ -85,13 +85,25 @@ export default {
 
   },
   mounted() {
-    // Load user info
-    const user = localStorage.getItem("userInfo");
-    if (user) {
-      this.activeUserInfo = JSON.parse(user);
+    // Una versión anterior guardaba solo el email en userInfo. No aceptar esa
+    // caché como perfil: recuperar el objeto sin exigir cerrar/iniciar sesión.
+    let perfil;
+    try {
+      perfil = JSON.parse(localStorage.getItem("userInfo"));
+    } catch (_) {
+      perfil = null;
+    }
+    if (perfil && typeof perfil === "object" && !Array.isArray(perfil) && perfil.nombre) {
+      this.activeUserInfo = perfil;
     } else {
-      this.$store.dispatch("auth/user_datos").then(() => {
-        this.activeUserInfo = JSON.parse(localStorage.getItem("userInfo"));
+      this.$store.dispatch("auth/user_datos").then(perfil => {
+        if (!this._isDestroyed) this.activeUserInfo = perfil;
+      }).catch(() => {
+        if (!this._isDestroyed) this.$vs.notify({
+          title: "Perfil no disponible",
+          text: "No fue posible cargar los datos del usuario. Revise su conexión.",
+          color: "warning",
+        });
       });
     }
 

@@ -148,19 +148,7 @@
                                         </vs-td>
 
                                         <vs-td :data="data[index_cuota].status">
-                                            <img
-                                                class="cursor-pointer img-btn-22 mx-2 hidden"
-                                                src="@assets/images/pdf.svg"
-                                                title="Consultar Documento"
-                                                @click="
-                                                    openReporte(
-                                                        documentos[0].documento,
-                                                        documentos[0].url,
-                                                        data[index_cuota].id,
-                                                        ''
-                                                    )
-                                                "
-                                            />
+                                            <img class="cursor-pointer img-btn-22 mx-2" src="@assets/images/pdf.svg" title="Consultar propiedades y saldos de la cuota" alt="Reporte PDF" @click="abrirDetalleCuota(cuotas)" />
                                             <img
                                                 v-if="
                                                     data[index_cuota].status ==
@@ -231,13 +219,17 @@
 
             <!--fin de compornentes-->
         </vs-popup>
+        <ReporteCuotaOpciones v-if="seleccionarReporteCuota" :show="seleccionarReporteCuota"
+            :descripcion="cuotaReporte ? cuotaReporte.descripcion : ''"
+            @close="seleccionarReporteCuota = false" @seleccionar="verDetalleCuota" />
         <!-- Lista de cuotas: HTML y PDF/correo bajo demanda. -->
         <VisorReportes v-if="mostrarReporteCuotas" :show="mostrarReporteCuotas"
-            :cargar="cargarReporteCuotas" :descargar-pdf="descargarReporteCuotas"
+            :cargar="cargarReporteCuotas" :descargar-archivo="documentoReporteCuota === 'cuota-propiedades' ? descargarExcelCuota : null" :descargar-pdf="descargarReporteCuotas"
             :enviar-correo="enviarReporteCuotas" @close="mostrarReporteCuotas = false" />
     </div>
 </template>
 <script>
+import ReporteCuotaOpciones from "./ReporteCuotaOpciones.vue";
 import VisorReportes from "@pages/VisorReportes.vue";
 import reportesDocumentosCementerio from "@services/reportesDocumentosCementerio";
 import ConfirmarDanger from "@pages/ConfirmarDanger";
@@ -268,6 +260,7 @@ export default {
         },
     },
     components: {
+        ReporteCuotaOpciones,
         ConfirmarDanger,
         Password,
         "v-select": vSelect,
@@ -285,6 +278,11 @@ export default {
                 },
             ],
             mostrarReporteCuotas: false,
+            seleccionarReporteCuota: false,
+            cuotaReporte: null,
+            estadoReporteCuota: 'todos',
+            documentoReporteCuota: 'cuotas',
+            parametrosReporteCuota: {},
             selected: [],
 
             cuotas: [],
@@ -304,20 +302,40 @@ export default {
     methods: {
         /** Abre el listado completo de cuotas en el visor; la consulta no genera PDF. */
         openReporte(nombre_reporte = "", link = "", parametro = "", tipo = "") {
+            this.documentoReporteCuota = 'cuotas';
+            this.parametrosReporteCuota = {};
             this.mostrarReporteCuotas = true;
             this.$vs.loading.close();
         },
+        /** Selección local; no consulta ni genera archivos hasta abrir el visor. */
+        abrirDetalleCuota(cuota) {
+            this.cuotaReporte = cuota;
+            this.estadoReporteCuota = 'todos';
+            this.seleccionarReporteCuota = true;
+        },
+        /** Congela cuota/filtro para que actualizar, imprimir y correo compartan alcance. */
+        verDetalleCuota(estado) {
+            this.estadoReporteCuota = estado;
+            this.documentoReporteCuota = 'cuota-propiedades';
+            this.parametrosReporteCuota = { cuota_id: this.cuotaReporte.id, estado_cuota: this.estadoReporteCuota };
+            this.seleccionarReporteCuota = false;
+            this.$nextTick(() => { this.mostrarReporteCuotas = true; });
+        },
         /** Conserva el alcance original: todas las cuotas, sin exigir una venta individual. */
         async cargarReporteCuotas() {
-            return (await reportesDocumentosCementerio.visualizar("cuotas", {})).data;
+            return (await reportesDocumentosCementerio.visualizar(this.documentoReporteCuota, this.parametrosReporteCuota)).data;
+        },
+        /** Excel bajo demanda de la misma cuota y filtro consultados. */
+        async descargarExcelCuota(token) {
+            return (await reportesDocumentosCementerio.excel(this.documentoReporteCuota, token)).data;
         },
         /** Descarga el PDF horizontal de la instantánea consultada. */
         async descargarReporteCuotas(token) {
-            return (await reportesDocumentosCementerio.pdf("cuotas", token)).data;
+            return (await reportesDocumentosCementerio.pdf(this.documentoReporteCuota, token)).data;
         },
         /** Envía el PDF mediante el formulario compartido de destinatarios y mensaje. */
         async enviarReporteCuotas(token, datos) {
-            return (await reportesDocumentosCementerio.correo("cuotas", token, datos)).data;
+            return (await reportesDocumentosCementerio.correo(this.documentoReporteCuota, token, datos)).data;
         },
 
         openModificar(id_cuotas) {
@@ -460,3 +478,7 @@ export default {
     },
 };
 </script>
+
+<style scoped>
+.cuota-selector{display:block;width:100%;height:38px;border:1px solid #ccc;background:white;padding:6px;margin-top:8px}
+</style>

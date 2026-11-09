@@ -117,6 +117,8 @@ export default {
     },
     data() {
         return {
+            // Debe existir antes del primer render para que Vue 2 observe su carga.
+            navMenuItems: [],
             disableCustomizer: themeConfig.disableCustomizer,
             disableThemeTour: themeConfig.disableThemeTour,
             dynamicWatchers: {},
@@ -274,15 +276,25 @@ export default {
             delete this.dynamicWatchers[i];
         });
     },
-    mounted() {
-        /**VERIRFICANDO QUE SIEMPRE ESTEN DISPONIBLES EL MENU Y LOS DATOS DEL USARIOS */
-        if (localStorage.getItem("AuthMenu")) {
-            this.navMenuItems = JSON.parse(localStorage.getItem("AuthMenu"));
-        } else {
-            this.$store.dispatch("auth/crear_menu").then((res) => {
-                this.navMenuItems = JSON.parse(
-                    localStorage.getItem("AuthMenu")
-                );
+    async mounted() {
+        // Recuperar la caché o consultar sin redirigir ni dejar promesas rechazadas.
+        try {
+            let menu;
+            try {
+                menu = JSON.parse(localStorage.getItem("AuthMenu"));
+            } catch (_) {
+                menu = null;
+            }
+            if (!Array.isArray(menu)) {
+                const respuesta = await this.$store.dispatch("auth/crear_menu");
+                menu = respuesta.data;
+            }
+            if (!this._isDestroyed) this.navMenuItems = menu;
+        } catch (_) {
+            if (!this._isDestroyed) this.$vs.notify({
+                title: "Menú no disponible",
+                text: "No fue posible cargar el menú. Revise su conexión y vuelva a intentarlo.",
+                color: "warning",
             });
         }
     },

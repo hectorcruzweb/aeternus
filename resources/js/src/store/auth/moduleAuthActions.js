@@ -13,73 +13,43 @@ import axios from "../../http/axios/index";
 import router from "@/router";
 
 export default {
-    // JWT
-    loginJWT({ commit, dispatch }, payload) {
-        return new Promise((resolve, reject) => {
-            jwt.login(payload.userDetails.email, payload.userDetails.password)
-                .then(response => {
-                    // If there's user data in response
-                    if (response.data) {
-                        // Navigate User to homepage
-                        // Set accessToken
-                        localStorage.setItem(
-                            "accessToken",
-                            response.data.access_token
-                        );
-                        localStorage.setItem(
-                            "refreshToken",
-                            response.data.refresh_token
-                        );
-                        // Set bearer token in axios
-                        commit("LOGIN_USER", response.data.access_token);
-                        dispatch("crear_menu");
-                        dispatch("user_datos");
+    /** Autentica y prepara la sesión completa antes de entrar al layout.
+     * Esperar las tres consultas evita montar el menú/perfil con datos ausentes.
+     * Si alguna falla, esperar a las demás antes de limpiar sus datos parciales. */
+    async loginJWT({ commit, dispatch }, payload) {
+        const response = await jwt.login(payload.userDetails.email, payload.userDetails.password);
+        if (!response.data || !response.data.access_token)
+            throw new Error("Error de usuario y/o contraseña.");
 
-                        /**lista de urls y permisos para el usuarios logueado */
-                        dispatch("user_modulos_permisos");
-                        // Update user details(perfil del usuario)
-                        commit("UPDATE_USER_INFO", payload.userDetails.email, {
-                            root: true
-                        });
-                        resolve(response);
-                    } else {
-                        reject({
-                            message: "Error de usuario y/o contraseña."
-                        });
-                    }
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
+        localStorage.setItem("accessToken", response.data.access_token);
+        localStorage.setItem("refreshToken", response.data.refresh_token);
+        commit("LOGIN_USER", response.data.access_token);
+        try {
+            const resultados = await Promise.all(
+                ["crear_menu", "user_datos", "user_modulos_permisos"].map(accion =>
+                    dispatch(accion).then(() => ({ correcto: true }), error => ({ correcto: false, error }))
+                )
+            );
+            const fallo = resultados.find(resultado => !resultado.correcto);
+            if (fallo) throw fallo.error || new Error("No fue posible cargar los datos de la sesión.");
+        } catch (error) {
+            commit("LOGOUT_USER");
+            throw error;
+        }
+        await router.push(router.currentRoute.query.to || "/").catch(() => {});
+        return response;
     },
 
-    crear_menu({ commit }) {
-        if (localStorage.getItem("accessToken")) {
-            return new Promise((resolve, reject) => {
-                axios
-                    .get("/get_permisos")
-                    .then(resp => {
-                        if (resp.code) {
-                            reject({
-                                message: "Error"
-                            });
-                        } else {
-                            localStorage.setItem(
-                                "AuthMenu",
-                                JSON.stringify(resp.data)
-                            );
-                            router
-                                .push(router.currentRoute.query.to || "/")
-                                .catch(err => {});
-                            resolve(resp);
-                        }
-                    })
-                    .catch(err => {
-                        reject(err);
-                    });
-            });
-        }
+    /** Carga el menú autorizado. No navega: también se usa para recuperarlo
+     * desde Main.vue cuando falta en el almacenamiento de una sesión vigente. */
+    async crear_menu() {
+        if (!localStorage.getItem("accessToken"))
+            throw new Error("Inicie sesión para cargar el menú.");
+        const resp = await axios.get("/get_permisos");
+        if (resp.code || !Array.isArray(resp.data))
+            throw new Error("No fue posible cargar el menú de navegación.");
+        localStorage.setItem("AuthMenu", JSON.stringify(resp.data));
+        return resp;
     },
 
     //OBTENER INFO DEL USUARIOS
@@ -88,14 +58,13 @@ export default {
             axios
                 .get("/get_perfil")
                 .then(resp => {
-                    if (resp.status == 200) {
-                        localStorage.setItem(
-                            "userInfo",
-                            JSON.stringify(resp.data[0])
-                        );
-                        resolve(resp.data[0]);
+                    const perfil = resp.data && resp.data[0];
+                    if (resp.status == 200 && perfil && typeof perfil === "object" && !Array.isArray(perfil)) {
+                        // Guardar el objeto completo; el email solo no contiene nombre ni imagen.
+                        commit("UPDATE_USER_INFO", perfil, { root: true });
+                        resolve(perfil);
                     } else {
-                        reject();
+                        reject(new Error("No fue posible cargar el perfil del usuario."));
                     }
                 })
                 .catch(err => {

@@ -55,7 +55,7 @@
           <button
             type="button"
             class="visor-reportes__boton"
-            :disabled="isLoading || !documentoListo"
+            :disabled="isLoading || !documentoListo || (reporte && !reporte.pdfDisponible)"
             @click="imprimir"
           >
             <PrinterIcon size="15" /> Imprimir
@@ -74,7 +74,7 @@
             v-if="descargarPdf"
             type="button"
             class="visor-reportes__boton visor-reportes__boton--pdf"
-            :disabled="isLoading || descargando || enviando || !reporte"
+            :disabled="isLoading || descargando || enviando || !reporte || !reporte.pdfDisponible"
             @click="descargarEnPdf"
           >
             <FileTextIcon size="17" aria-hidden="true" /><span
@@ -487,6 +487,8 @@ export default {
         this.reporte = {
           vistaPreviaDisponible: datos.vistaPreviaDisponible !== false,
           soloPdf: !!datos.soloPdf,
+          // Los módulos antiguos conservan PDF si no envían esta capacidad.
+          pdfDisponible: datos.pdfDisponible !== false,
           subtitulo: typeof datos.subtitulo === "string" ? datos.subtitulo : "",
           nota: typeof datos.nota === "string" ? datos.nota : "",
           limiteVisualizacion: datos.limiteVisualizacion || 3500,
@@ -557,7 +559,7 @@ export default {
       contenido.style.transform = "scale(" + escala + ")";
     },
     async imprimir() {
-      if (this.isLoading || !this.documentoListo || !this.reporte) return;
+      if (this.isLoading || !this.documentoListo || !this.reporte || !this.reporte.pdfDisponible) return;
       const marco = this.$refs.documento;
       if (!marco || !marco.contentWindow || !marco.contentDocument) return;
       const peticion = this.peticion;
@@ -596,6 +598,7 @@ export default {
     async descargarFormato(formato) {
       if (!this.reporte || this.isLoading || this.descargando) return;
       if (this.reporte.soloPdf && formato !== "pdf") return;
+      if (formato === "pdf" && !this.reporte.pdfDisponible) return;
       const id = this.peticion;
       this.descargando = true;
       this.formatoDescarga = formato;
@@ -641,6 +644,8 @@ export default {
           try {
             const detalle = JSON.parse(await e.response.data.text());
             mensaje = detalle.message || detalle.error || mensaje;
+            if (detalle.pdfDisponible === false && this.show && id === this.peticion)
+              this.reporte.pdfDisponible = false;
           } catch (_) {
             /* Mantener el mensaje original. */
           }

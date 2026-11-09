@@ -59,6 +59,276 @@ class PagosController extends ApiController
         return (new \App\Services\VisorDocumentos('pagos_'))->enviarCorreo($request, $token, $documento);
     }
 
+
+    /** Catálogo visible del sistema, separado de los identificadores internos de operaciones.
+     * Tipo 2 identifica la propiedad a la que corresponde la cuota (ventas_terrenos_id).
+     * Ampliar este mapa cuando se incorpore un tipo nuevo al sistema. */
+    /** Códigos de pagos.movimientos_pagos_id confirmados por el sistema.
+     * Fuente única del select, validación y etiqueta del nuevo listado; no depende
+     * de que la tabla auxiliar movimientos_pagos esté poblada. */
+    private const MOVIMIENTOS_FILTRO_PAGOS = [
+        1 => 'Abono a capital',
+        2 => 'Abono a intereses',
+        3 => 'Descuento pronto pago',
+        4 => 'Descuento a capital',
+        5 => 'Complemento por cancelación',
+    ];
+
+    private const TIPOS_FILTRO_PAGOS = [
+        1 => ['nombre' => 'Ventas en cementerio', 'campo' => 'ventas_terrenos_id'],
+        2 => ['nombre' => 'Cuotas de mantenimiento', 'campo' => 'ventas_terrenos_id'],
+        3 => ['nombre' => 'Servicios funerarios', 'campo' => 'servicios_funerarios_id'],
+        4 => ['nombre' => 'Planes funerarios', 'campo' => 'ventas_planes_id'],
+        5 => ['nombre' => 'Ventas en general', 'campo' => 'ventas_generales_id'],
+    ];
+
+    /** Nuevo listado independiente: filtros combinables y paginación SQL fija de 15.
+     * No llama ni modifica get_pagos. Conserva movimientos principales/asociados y
+     * cancelados: es un historial de pagos, incluso si después se canceló la operación.
+     * No recalcula adeudos ni cambia saldos. monto_pago corresponde al movimiento;
+     * total_pago es el importe recibido y no se sustituye uno por otro.
+     */
+    public function FiltrarPagos(Request $request)
+    {
+        $this->validarFiltrosPagos($request);
+        $pagina = $this->consultaFiltrarPagos($request)
+            ->orderByDesc('p.fecha_pago')->orderByDesc('p.id')->paginate(15);
+        $pagina->setCollection($this->completarFilasPagos($pagina->getCollection()));
+        $resultado = $pagina->toArray();
+        if ($request->boolean('catalogos')) {
+            $resultado['catalogos'] = [
+                'operaciones' => collect(self::TIPOS_FILTRO_PAGOS)->map(function ($tipo, $id) {
+                    return ['id' => $id, 'nombre' => $tipo['nombre']];
+                })->values(),
+                'movimientos' => collect(self::MOVIMIENTOS_FILTRO_PAGOS)->map(function ($nombre, $id) {
+                    return ['id' => $id, 'nombre' => $nombre];
+                })->values(),
+            ];
+        }
+        return response()->json($resultado);
+    }
+
+    /** Las mismas validaciones alimentan listado y exportación; no depende de page/per_page. */
+    private function validarFiltrosPagos(Request $request)
+    {
+        $request->validate([
+            'page' => 'nullable|integer|min:1', 'buscar_por' => 'nullable|in:pago,referencia',
+            'numero' => 'nullable|string|max:100', 'cliente' => 'nullable|string|max:100',
+            'tipo_operacion' => 'nullable|integer|in:1,2,3,4,5',
+            'numero_operacion' => 'nullable|integer|min:1', 'status' => 'nullable|in:0,1',
+            'movimiento' => 'nullable|integer|in:'.implode(',', array_keys(self::MOVIMIENTOS_FILTRO_PAGOS)),
+            'desde' => 'nullable|date_format:Y-m-d',
+            'hasta' => 'nullable|date_format:Y-m-d'.($request->filled('desde') ? '|after_or_equal:desde' : ''),
+            'catalogos' => 'nullable|boolean',
+        ]);
+        if ($request->input('buscar_por', 'pago') === 'pago' && $request->filled('numero')) {
+            $request->validate(['numero' => 'integer|min:1']);
+        }
+    }
+
+    /** Enriquece una colección de movimientos con una sola consulta de aplicaciones.
+     * Mantiene una fila por movimiento tanto en pantalla como en PDF/Excel. */
+    private function completarFilasPagos($filas)
+    {
+        // Una sola consulta para las aplicaciones de la página; evita N+1 y no
+        // multiplica filas/importes cuando un movimiento cubre varios programados.
+        $aplicaciones = DB::table('pagos_pagos_programados as a')
+            ->join('pagos_programados as pp', 'pp.id', '=', 'a.pagos_programados_id')
+            ->leftJoin('operaciones as o', 'o.id', '=', 'pp.operaciones_id')
+            ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+            ->whereIn('a.pagos_id', $filas->pluck('id'))
+            ->select('a.pagos_id', 'pp.referencia_pago', 'c.nombre as cliente', 'o.empresa_operaciones_id',
+                'o.ventas_terrenos_id', 'o.servicios_funerarios_id', 'o.ventas_planes_id', 'o.ventas_generales_id')
+            ->get()->groupBy('pagos_id');
+        return $filas->transform(function ($pago) use ($aplicaciones) {
+            $detalle = $aplicaciones->get($pago->id, collect());
+            $pago->cliente_texto = $detalle->pluck('cliente')->filter()->unique()->implode(' / ') ?: 'No disponible';
+            $pago->referencias_texto = $detalle->pluck('referencia_pago')->filter()->unique()->implode(' / ');
+            $pago->tipo_operacion_texto = $detalle->pluck('empresa_operaciones_id')->filter()->unique()->map(function ($tipo) {
+                return self::TIPOS_FILTRO_PAGOS[$tipo]['nombre'] ?? 'Operación '.$tipo;
+            })->implode(' / ') ?: 'No disponible';
+            $pago->operaciones_texto = $detalle->map(function ($aplicacion) {
+                $tipo = self::TIPOS_FILTRO_PAGOS[$aplicacion->empresa_operaciones_id] ?? null;
+                if (!$tipo) return null;
+                $campo = $tipo['campo'];
+                return $tipo['nombre'].' · '.($aplicacion->$campo ?: 'Sin referencia');
+            })->filter()->unique()->implode(' / ') ?: 'No disponible';
+            $pago->movimientos_pagos_texto = self::MOVIMIENTOS_FILTRO_PAGOS[$pago->movimientos_pagos_id] ?? 'No disponible';
+            $pago->fecha_pago_texto = $pago->fecha_pago ? fecha_abr($pago->fecha_pago) : 'No disponible';
+            return $pago;
+        });
+    }
+
+    /** Consulta exclusiva del filtrador. Los predicados relacionados se agrupan
+     * dentro de UN EXISTS: cliente/tipo/número/referencia deben coincidir sobre
+     * la misma aplicación. No usa operaciones.id como número visible.
+     * Referencia = pagos_programados.referencia_pago, no referencia bancaria.
+     */
+    private function consultaFiltrarPagos(Request $r)
+    {
+        $q = DB::table('pagos as p')
+            ->select('p.id', 'p.parent_pago_id', 'p.status', 'p.fecha_pago', 'p.monto_pago', 'p.total_pago',
+                'p.movimientos_pagos_id');
+        if ($r->filled('status')) $q->where('p.status', (int) $r->status);
+        if ($r->filled('movimiento')) $q->where('p.movimientos_pagos_id', (int) $r->movimiento);
+        if ($r->filled('desde')) $q->where('p.fecha_pago', '>=', $r->desde);
+        if ($r->filled('hasta')) $q->where('p.fecha_pago', '<', Carbon::parse($r->hasta)->addDay()->toDateString());
+        $numero = trim((string) $r->input('numero', ''));
+        $porReferencia = $r->input('buscar_por', 'pago') === 'referencia' && $numero !== '';
+        if (!$porReferencia && $numero !== '') $q->where('p.id', $numero);
+        if ($porReferencia || $r->filled('cliente') || $r->filled('tipo_operacion') || $r->filled('numero_operacion')) {
+            $q->whereExists(function ($x) use ($r, $porReferencia, $numero) {
+                $x->selectRaw('1')->from('pagos_pagos_programados as a')
+                    ->join('pagos_programados as pp', 'pp.id', '=', 'a.pagos_programados_id')
+                    ->leftJoin('operaciones as o', 'o.id', '=', 'pp.operaciones_id')
+                    ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')->whereColumn('a.pagos_id', 'p.id');
+                if ($porReferencia) $x->where('pp.referencia_pago', $numero); // exacta; conserva ceros iniciales
+                if ($r->filled('tipo_operacion')) $x->where('o.empresa_operaciones_id', (int) $r->tipo_operacion);
+                foreach (preg_split('/\s+/u', trim((string) $r->cliente), -1, PREG_SPLIT_NO_EMPTY) as $palabra) {
+                    $patron = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $palabra).'%';
+                    $x->whereRaw("c.nombre LIKE ? ESCAPE '!'", [$patron]);
+                }
+                if ($r->filled('numero_operacion')) {
+                    $x->where(function ($n) use ($r) {
+                        foreach (self::TIPOS_FILTRO_PAGOS as $id => $tipo) {
+                            if ($r->filled('tipo_operacion') && (int) $r->tipo_operacion !== $id) continue;
+                            $n->orWhere(function ($t) use ($r, $id, $tipo) {
+                                $t->where('o.empresa_operaciones_id', $id)->where('o.'.$tipo['campo'], (int) $r->numero_operacion);
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        return $q;
+    }
+
+
+    /** HTML del reporte completo, sin generar PDF/XLSX. Hasta 5000 filas se guarda
+     * instantánea; por encima se prepara al descargar. Nunca usa la página visible. */
+    public function reporteListadoPagos(Request $request)
+    {
+        $usuario = $request->user('api'); abort_unless($usuario, 403);
+        $this->validarFiltrosPagos($request);
+        $filtros = $request->only(['buscar_por','numero','cliente','tipo_operacion','numero_operacion','desde','hasta','status','movimiento']);
+        $consulta = $this->consultaFiltrarPagos($request);
+        $total = (clone $consulta)->count();
+        $limitePdf = (int) config('reportes.pagos_limite_pdf', 1000);
+        $pdfDisponible = $total <= $limitePdf;
+        $corte = Carbon::now('America/Mazatlan');
+        $contexto = ['usuario_id'=>(int)$usuario->id,'filtros'=>$filtros,'corte'=>$corte->toIso8601String(),
+            'vence'=>$corte->copy()->addMinutes(15)->toIso8601String(),
+            'pdf_disponible'=>$pdfDisponible,'total_registros'=>$total,
+            'limite_id'=>(int)(clone $consulta)->max('p.id'),
+            'empresa'=>app(EmpresaController::class)->get_empresa_data()->toArray(),
+            'filas'=>$pdfDisponible && $total <= 5000 ? $this->filasReportePagos($request) : null];
+        $token = bin2hex(random_bytes(32));
+        \Illuminate\Support\Facades\Cache::put('pagos_listado_'.$token,$contexto,Carbon::parse($contexto['vence']));
+        $d = $this->presentarReportePagos($contexto);
+        return response()->json(['titulo'=>$d['titulo'],'nombreArchivo'=>'Listado de pagos '.$corte->format('Y-m-d H-i-s').'.xlsx',
+            'tokenDescarga'=>$token,'totalRegistros'=>$total,'limiteVisualizacion'=>min(5000,$limitePdf),
+            'pdfDisponible'=>$pdfDisponible,
+            'vistaPreviaDisponible'=>$contexto['filas']!==null,
+            'mensaje'=>$contexto['filas']===null ? 'Por la cantidad de registros, este reporte está disponible únicamente en Excel. Descárguelo completo o aplique filtros para reducir el listado.' : null,
+            'hojas'=>$contexto['filas']!==null ? [['nombre'=>'Pagos','html'=>view('reportes.temporales_visor_excel.pagos.listado',$d)->render()]] : []
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Descarga la instantánea privada; el vencimiento devuelve 410, sin cerrar sesión.
+     * En reportes masivos la primera descarga captura todas las filas y las guarda
+     * para que PDF y Excel posteriores utilicen los mismos datos. */
+    public function descargarListadoPagos(Request $request, $token, $formato)
+    {
+        abort_unless(in_array($formato,['pdf','excel'],true) && preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $usuario=$request->user('api'); abort_unless($usuario,403);
+        $c=\Illuminate\Support\Facades\Cache::get('pagos_listado_'.$token);
+        abort_unless($c,410,'La consulta venció. Actualice el reporte antes de descargar.');
+        abort_unless((int)$c['usuario_id']===(int)$usuario->id,403);
+        // Aplicar también en el servidor: no basta deshabilitar el botón del visor.
+        // Los contextos anteriores se verifican contando su misma selección.
+        if ($formato==='pdf') {
+            $total=$c['total_registros'] ?? $this->consultaFiltrarPagos(new Request($c['filtros']))->where('p.id','<=',$c['limite_id'])->count();
+            if (($c['pdf_disponible'] ?? true)===false || $total > (int) config('reportes.pagos_limite_pdf',1000)) {
+                return response()->json(['message'=>'Este listado es demasiado extenso para PDF. Descargue el reporte completo en Excel o reduzca los filtros.','pdfDisponible'=>false],422);
+            }
+        }
+        if ($c['filas']===null) {
+            $c['filas']=$this->filasReportePagos(new Request($c['filtros']),$c['limite_id']);
+            $c['corte']=Carbon::now('America/Mazatlan')->toIso8601String();
+            \Illuminate\Support\Facades\Cache::put('pagos_listado_'.$token,$c,Carbon::parse($c['vence']));
+        }
+        $d=$this->presentarReportePagos($c);
+        $nombre='Listado de pagos '.Carbon::parse($c['corte'])->format('Y-m-d H-i-s');
+        if ($formato==='excel') {
+            $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ListadoPagosExport($d),$nombre.'.xlsx');
+        } else {
+            $d['modoPdf']=true;
+            $pdf=PDF::loadView('reportes.temporales_visor_excel.pagos.listado',$d);
+            // Snappy antiguo deja el timeout de Symfony (60s) cuando su config
+            // vale false. Establecerlo sobre ESTA instancia, no globalmente.
+            // Los listados extensos se procesan con tablas acotadas en el Blade.
+            $pdf->snappy()->setTimeout(180);
+            if (function_exists('set_time_limit')) set_time_limit(210);
+            $pdf->setOptions(['page-size'=>'Letter','orientation'=>'portrait','encoding'=>'UTF-8',
+                'margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,
+                'print-media-type'=>true,'enable-local-file-access'=>false,'disable-local-file-access'=>true,
+                'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
+                    'fechaImpresion'=>$d['fecha'],'dominio'=>$d['dominio']])->render(),'footer-spacing'=>3]);
+            try {
+                $respuesta=$pdf->download($nombre.'.pdf');
+            } catch (\Symfony\Component\Process\Exception\ProcessTimedOutException $e) {
+                // Si un documento complejo excede el tiempo aun dentro del límite,
+                // mantener Excel disponible y evitar reintentos de PDF en esta consulta.
+                $c['pdf_disponible']=false;
+                \Illuminate\Support\Facades\Cache::put('pagos_listado_'.$token,$c,Carbon::parse($c['vence']));
+                return response()->json(['message'=>'El PDF excedió el tiempo de generación. Puede descargar toda la información en Excel.','pdfDisponible'=>false],422);
+            }
+        }
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+
+    /** Detalle completo por lotes: limita las consultas IN a 500 movimientos sin
+     * multiplicar los importes por la cantidad de referencias cubiertas. */
+    private function filasReportePagos(Request $request, $limiteId = null)
+    {
+        $consulta=$this->consultaFiltrarPagos($request);
+        if ($limiteId!==null) $consulta->where('p.id','<=',$limiteId);
+        $filas=[];
+        $consulta->orderByDesc('p.fecha_pago')->orderByDesc('p.id')->chunk(500,function($lote) use (&$filas) {
+            foreach($this->completarFilasPagos($lote) as $pago) $filas[]=(array)$pago;
+        });
+        return $filas;
+    }
+
+    /** Encabezado corporativo y resumen de movimientos activos, separado por tipo.
+     * No sumar total_pago: los submovimientos repiten el recibido del pago padre.
+     * El reporte muestra monto_pago, igual que la tabla del filtrador. */
+    private function presentarReportePagos(array $c)
+    {
+        $f=$c['filtros'];$etiquetas=[];
+        foreach(['numero'=>(($f['buscar_por']??'pago')==='referencia'?'Referencia':'Núm. de pago'),
+            'cliente'=>'Cliente','numero_operacion'=>'Núm. de venta / servicio','desde'=>'Pago desde','hasta'=>'Pago hasta'] as $campo=>$nombre) {
+            if(isset($f[$campo]) && trim((string)$f[$campo])!=='') $etiquetas[]=$nombre.': '.(in_array($campo,['desde','hasta']) ? Carbon::parse($f[$campo])->locale('es')->translatedFormat('j \d\e F \d\e Y') : $f[$campo]);
+        }
+        if(!empty($f['tipo_operacion'])) $etiquetas[]=self::TIPOS_FILTRO_PAGOS[$f['tipo_operacion']]['nombre'];
+        if(!empty($f['movimiento'])) $etiquetas[]=self::MOVIMIENTOS_FILTRO_PAGOS[$f['movimiento']];
+        if(isset($f['status']) && $f['status']!=='') $etiquetas[]=(string)$f['status']==='1'?'Pagos activos':'Pagos cancelados';
+        $filas=$c['filas']??[];$activos=0;$cancelados=0;$resumen=[];
+        foreach(self::MOVIMIENTOS_FILTRO_PAGOS as $id=>$nombre) $resumen[$id]=['nombre'=>$nombre,'cantidad'=>0,'importe'=>0];
+        foreach($filas as $fila) {
+            if((int)$fila['status']===1) {
+                $activos++;$id=(int)$fila['movimientos_pagos_id'];
+                if(isset($resumen[$id])) {$resumen[$id]['cantidad']++;$resumen[$id]['importe']+=(float)$fila['monto_pago'];}
+            } else $cancelados++;
+        }
+        $ruta=public_path(env('LOGOJPG'));$logo=is_file($ruta)?'data:'.mime_content_type($ruta).';base64,'.base64_encode(file_get_contents($ruta)):null;
+        return ['titulo'=>'Listado de pagos','empresa'=>$c['empresa'],'logo'=>$logo,'filas'=>$filas,
+            'fecha'=>Carbon::parse($c['corte'])->locale('es')->translatedFormat('j \d\e F \d\e Y, H:i'),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST)?:'',
+            'filtros'=>$etiquetas?:['Todos los movimientos · Sin filtros adicionales'],
+            'resumen'=>['total'=>count($filas),'activos'=>$activos,'cancelados'=>$cancelados,'tipos'=>$resumen]];
+    }
+
     public function get_cobradores()
     {
         //no super usuarios

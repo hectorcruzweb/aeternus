@@ -64,10 +64,16 @@ html body.guia-cliente-documento {font-family:Arial,sans-serif!important;font-si
 <header><div class="marca"><img src="{{ public_path(env('LOGOJPG')) }}" alt="Aeternus Funerales"></div><div class="empresa"><strong>{{ $empresa->razon_social }}</strong><span>{{ mb_convert_case(mb_strtolower($empresa->calle, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') }} núm. ext. {{ $empresa->num_ext }}</span><span>@if(trim($empresa->colonia))Col. {{ mb_convert_case(mb_strtolower($empresa->colonia, 'UTF-8'), MB_CASE_TITLE, 'UTF-8') }} · @endif C. P. {{ $empresa->cp }} · {{ $empresa->ciudad }}, {{ $empresa->estado }}</span><span>Tel. {{ $empresa->telefono }} · Fax {{ $empresa->fax }}</span></div></header>
 <div class="titulo"><div><span>ACOMPAÑAMIENTO A LA FAMILIA</span><h2>Guía del cliente</h2></div><div class="folio"><small>{{ $datos['tipo_solicitud_texto'] }}</small><strong>{{ $datos['servicio_id'] }}</strong></div></div>
 <div class="contenido"><section class="proceso"><h3><span class="icono-guia" aria-hidden="true"></span> Cómo se atenderá su servicio</h3>
+@if(isset($escenarioGuia))
+@foreach($escenarioGuia['pasos'] as $indice => $paso)
+<div class="paso"><b>{{ $indice + 1 }}</b><div><h4>{{ $paso['titulo'] }}</h4><p>{{ $paso['texto'] }}</p></div></div>
+@endforeach
+@else
 <div class="paso"><b>1</b><div><h4>Recepción y traslado</h4><p>Una vez recibida su solicitud, Aeternus Funerales realizará, a través del personal que disponga, los trámites y procedimientos necesarios para atender sus requerimientos y trasladar al fallecido a nuestras instalaciones.</p></div></div>
 <div class="paso"><b>2</b><div><h4>Autorizaciones y certificado</h4><p>Nuestro personal le entregará los formatos de autorización y la información necesaria para elaborar el certificado de defunción, cuando corresponda. Con este documento se podrá elaborar el contrato del servicio funerario solicitado.</p></div></div>
 <div class="paso"><b>3</b><div><h4>Formalización del servicio</h4><p>Una vez trasladado el fallecido, la persona responsable de contratar deberá acudir a nuestras instalaciones para firmar la autorización del contrato e indicar los servicios y artículos que se incluirán.</p></div></div>
-</section><section class="documentos"><h3><span class="icono-guia" aria-hidden="true"></span> Documentos para el acta de defunción</h3><table class="documentos-columnas"><tr><td><div class="documentos-grupo"><h4>Del fallecido</h4>
+@endif
+</section><section class="documentos"><h3><span class="icono-guia" aria-hidden="true"></span> {{ isset($escenarioGuia) ? 'Documentación de referencia' : 'Documentos para el acta de defunción' }}</h3>@if(isset($escenarioGuia))<p style="font-size:12px;margin-bottom:12px">La siguiente lista corresponde al trámite del acta de defunción. Revise con el personal cuáles documentos aplican a su caso.</p>@endif<table class="documentos-columnas"><tr><td><div class="documentos-grupo"><h4>Del fallecido</h4>
 <div class="documento"><span class="casilla"></span><div>Certificado médico de defunción</div></div>
 <div class="documento"><span class="casilla"></span><div>Copia del acta de nacimiento</div></div>
 <div class="documento"><span class="casilla"></span><div>Copia de identificación oficial</div></div></div>

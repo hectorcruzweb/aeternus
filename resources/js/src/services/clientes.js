@@ -14,6 +14,15 @@ let cancel;
 
 export default {
     cancel: null,
+    // El visor recibe HTML; los binarios se generan solo al solicitar la descarga.
+    reporteListado(parametros) { return axios.get('/clientes/reportes/listado', { params: parametros }); },
+    descargarListado(token, formato) { return axios.get('/clientes/reportes/listado/' + token + '/' + formato, { responseType: 'blob' }); },
+
+    /** Consulta exclusiva del listado nuevo. Cancelación por instancia del componente,
+     * sin interferir con get_clientes ni con los buscadores de otros módulos. */
+    filtrarClientes(parametros, cancelToken) {
+        return axios.get('/clientes/filtrar', { params: parametros, cancelToken });
+    },
 
     // Autocompletado limitado para destinatarios de reportes.
     /**

@@ -48,6 +48,7 @@ class CementerioController extends ApiController
         'acuse-cancelacion' => ['metodo' => 'acuse_cancelacion', 'titulo' => 'Acuse de Cancelación'],
         'servicios-propiedad' => ['metodo' => 'servicios_propiedad', 'titulo' => 'Servicios en la Propiedad'],
         'recibo' => ['metodo' => 'recibo_de_pago', 'titulo' => 'Recibo de Pago'],
+        'cuota-propiedades' => ['metodo' => 'documentoPropiedadesCuota', 'titulo' => 'Propiedades y saldos de la cuota'],
         'cuotas' => ['metodo' => 'get_cuota_pdf_todas', 'titulo' => 'Cuotas de Mantenimiento en Cementerio'],
         'planes-venta' => ['metodo' => 'lista_precios_pdf', 'titulo' => 'Planes de Venta en Cementerio'],
     ];
@@ -71,10 +72,11 @@ class CementerioController extends ApiController
         $usuario = $request->user('api');
         abort_unless($usuario, 401, 'Es necesario iniciar sesión.');
         // Los catálogos de cuotas y planes no pertenecen a una venta individual.
-        $esCatalogoCuotas = in_array($documento, ['cuotas', 'planes-venta'], true);
+        $esCatalogoCuotas = in_array($documento, ['cuotas', 'planes-venta', 'cuota-propiedades'], true);
         $request->validate(['venta_id' => ($esCatalogoCuotas ? 'nullable' : 'required').'|integer|min:1', 'id_pago' => ($documento === 'recibo' ? 'required' : 'nullable') . '|integer|min:1']);
         // Validar idioma y filtro del catálogo sin permitir invocar métodos arbitrarios.
         if ($documento === 'planes-venta') $request->validate(['idioma' => 'nullable|in:es,en', 'id_tipo_propiedad' => 'nullable|integer|min:1']);
+        if ($documento === 'cuota-propiedades') $request->validate(['cuota_id' => 'required|integer|exists:cuotas_cementerio,id', 'estado_cuota' => 'required|in:todos,pagados,adeudo']);
         $ventaId = $esCatalogoCuotas ? null : (int) $request->input('venta_id');
         if (!$esCatalogoCuotas) {
             abort_unless(DB::table('operaciones')->where('empresa_operaciones_id', 1)
@@ -95,6 +97,7 @@ class CementerioController extends ApiController
         // El atributo es interno: un parámetro de la URL no puede activar esta captura.
         $interno = clone $request;
         $interno->replace(['email_send' => 'false', 'request_parent' => [json_encode(['venta_id' => $ventaId, 'id_pago' => (int) $request->input('id_pago'), 'id_tipo_propiedad' => $request->input('id_tipo_propiedad', '')])]]);
+        $interno->merge(['cuota_id' => $request->input('cuota_id'), 'estado_cuota' => $request->input('estado_cuota', 'todos')]);
         $interno->attributes->set('_documento_cementerio_visor', $documento);
         // El recibo conserva su lógica en PagosController; aquí solo se coordina
         // el visor del expediente, sin duplicar cálculo de pagos ni crear más rutas.
@@ -117,7 +120,27 @@ class CementerioController extends ApiController
         );
 
         $subtitulo = $esCatalogoCuotas ? ($documento === 'planes-venta' ? 'Lista de precios · '.($request->input('idioma', 'es') === 'en' ? 'Inglés' : 'Español').' · Documento PDF' : 'Listado de cuotas de mantenimiento · Documento PDF') : 'Venta núm. ' . $ventaId . ($documento === 'recibo' ? ' · Recibo núm. ' . (int) $request->input('id_pago') : '') . ' · Documento PDF';
-        return (new \App\Services\VisorDocumentos())->preparar($captura, $documento, $definicion['titulo'], $ventaId, $usuario, $subtitulo);
+        if ($documento === 'cuota-propiedades') {
+            $descripcion = DB::table('cuotas_cementerio')->where('id', $request->cuota_id)->value('descripcion');
+            $definicion['titulo'] = 'Propiedades y saldos · ' . $descripcion;
+            $subtitulo = ['todos'=>'Todas las propiedades', 'pagados'=>'Solo pagadas', 'adeudo'=>'Solo con adeudo'][$request->estado_cuota] . ' · Documento PDF';
+        }
+        $respuesta = (new \App\Services\VisorDocumentos())->preparar($captura, $documento, $definicion['titulo'], $ventaId, $usuario, $subtitulo);
+        // Añadir Excel a la misma instantánea privada: nunca volver a consultar
+        // saldos al descargar otro formato de este reporte.
+        if ($documento === 'cuota-propiedades') {
+            // preparar devuelve JsonResponse, no un arreglo; conservar sus cabeceras.
+            $contenidoRespuesta = $respuesta->getData(true);
+            $clave = 'cementerio_solicitud_' . $contenidoRespuesta['tokenDescarga'];
+            $guardado = \Illuminate\Support\Facades\Cache::get($clave);
+            $guardado['excel_cuota'] = $captura['excel_cuota'];
+            \Illuminate\Support\Facades\Cache::put($clave, $guardado, Carbon::now()->addMinutes(15));
+            $contenidoRespuesta['soloPdf'] = false;
+            $contenidoRespuesta['nombreArchivo'] = preg_replace('/\.pdf$/i', '.xlsx', $guardado['nombre']);
+            $contenidoRespuesta['subtitulo'] = str_replace('Documento PDF', 'PDF y Excel', $subtitulo);
+            $respuesta->setData($contenidoRespuesta);
+        }
+        return $respuesta;
     }
 
     /** Captura las opciones originales sin generar el PDF; motor compartido. */
@@ -149,9 +172,14 @@ class CementerioController extends ApiController
     }
 
     /** Descarga el tipo indicado en la ruta; exige token privado del mismo documento y usuario. */
-    public function descargarDocumentoCementerio(Request $request, $documento, $token)
+    public function descargarDocumentoCementerio(Request $request, $documento, $token, $formato = 'pdf')
     {
         abort_unless(isset(self::DOCUMENTOS_VISOR[$documento]), 404);
+        if ($formato === 'excel') {
+            $datos = $this->datosDocumentoCementerioVisor($request, $token, $documento);
+            abort_unless($documento === 'cuota-propiedades' && isset($datos['excel_cuota']), 404);
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\PropiedadesCuotaExport($datos['excel_cuota']), preg_replace('/\.pdf$/i', '.xlsx', $datos['nombre']));
+        }
         return $this->descargarDocumentoCementerioVisor($request, $token, $documento);
     }
 
@@ -183,7 +211,7 @@ class CementerioController extends ApiController
             'destinatarios.*.nombre' => 'nullable|string|max:75',
             'asunto' => 'required|string|max:150',
             'mensaje' => 'nullable|string|max:30000',
-            'formato' => 'required|in:pdf',
+            'formato' => $documento === 'cuota-propiedades' ? 'required|in:pdf,excel' : 'required|in:pdf',
             'completo' => 'sometimes|boolean',
         ]);
         $destinatarios = [];
@@ -202,6 +230,11 @@ class CementerioController extends ApiController
             'mensaje' => 'El mensaje no debe superar 5000 caracteres.',
         ]);
         abort_if($request->boolean('completo'), 422, 'Este documento no tiene una variante de detalle completo.');
+        if ($documento === 'cuota-propiedades' && $request->input('formato') === 'excel') {
+            abort_unless(isset($datos['excel_cuota']), 410, 'Actualice el reporte antes de enviarlo.');
+            $archivo = \Maatwebsite\Excel\Facades\Excel::raw(new \App\Exports\PropiedadesCuotaExport($datos['excel_cuota']), \Maatwebsite\Excel\Excel::XLSX);
+            return app(EmailController::class)->reporte_email(['destinatarios'=>$destinatarios,'asunto'=>trim($request->asunto),'mensaje'=>$mensaje], $archivo, preg_replace('/\.pdf$/i', '.xlsx', $datos['nombre']), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
         return app(EmailController::class)->reporte_email([
             'destinatarios' => $destinatarios,
             'asunto' => trim($request->input('asunto')),
@@ -416,6 +449,49 @@ class CementerioController extends ApiController
         $datos['descripcion_cuota'] = trim($descripcion ?? '') ?: 'No disponible';
         $datos['titulo'] = 'Cuotas de Mantenimiento · ' . $datos['descripcion_cuota'];
         return $datos;
+    }
+
+    /** Reporte completo de una cuota, independiente del mes del dashboard.
+     * Una fila por operación vigente de la cuota; capital calculado por pago
+     * programado activo menos aplicaciones vigentes (1,3,4,5), limitado a cero.
+     * El filtro se aplica después del cálculo y los totales solo incluyen las
+     * filas seleccionadas. El visor captura HTML; PDF/correo se generan a petición.
+     * Se integra al catálogo compartido, sin agregar rutas ni alterar get_cuotas.
+     */
+    public function documentoPropiedadesCuota($idioma, Request $request)
+    {
+        $request->validate(['cuota_id' => 'required|integer|exists:cuotas_cementerio,id', 'estado_cuota' => 'required|in:todos,pagados,adeudo']);
+        $cuota = DB::table('cuotas_cementerio')->where('id', $request->cuota_id)->first();
+        $aplicado = DB::table('pagos_pagos_programados as a')->join('pagos as p', 'p.id', '=', 'a.pagos_id')
+            ->where('p.status', 1)->whereIn('p.movimientos_pagos_id', [1,3,4,5])
+            ->select('a.pagos_programados_id')->selectRaw('SUM(a.monto) as aplicado')->groupBy('a.pagos_programados_id');
+        $capital = DB::table('pagos_programados as pp')->leftJoinSub($aplicado, 'a', function ($j) { $j->on('a.pagos_programados_id', '=', 'pp.id'); })
+            ->where('pp.status', 1)->select('pp.operaciones_id')
+            ->selectRaw('SUM(pp.monto_programado) as programado, SUM(GREATEST(ROUND(pp.monto_programado - COALESCE(a.aplicado,0),2),0)) as pendiente')
+            ->groupBy('pp.operaciones_id');
+        $filas = DB::table('operaciones as o')->join('ventas_terrenos as vt', 'vt.id', '=', 'o.ventas_terrenos_id')
+            ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+            ->leftJoinSub($capital, 'cap', function ($j) { $j->on('cap.operaciones_id', '=', 'o.id'); })
+            ->where('o.empresa_operaciones_id', 2)->where('o.cuotas_cementerio_id', $cuota->id)
+            ->whereIn('o.status', [1,2])->where('o.fecha_operacion', '<=', Carbon::now('America/Mazatlan'))
+            ->select('vt.id as venta', 'vt.ubicacion', 'c.nombre', 'c.telefono', 'c.celular', 'c.email')
+            ->selectRaw('COALESCE(cap.programado,0) as programado, COALESCE(cap.pendiente,0) as pendiente')
+            ->orderBy('vt.id', 'desc')->get();
+        $cementerio = $this->get_cementerio();
+        $filas = $filas->filter(function ($f) use ($request) {
+            return $request->estado_cuota === 'todos' || ($request->estado_cuota === 'pagados' ? $f->pendiente <= 0 : $f->pendiente > 0);
+        })->map(function ($f) use ($cementerio) {
+            $f->ubicacion = $this->ubicacion_texto($f->ubicacion, $cementerio)['ubicacion_texto'];
+            $f->cubierto = max(0, $f->programado - $f->pendiente);
+            $f->email = mb_strtolower($f->email ?? '', 'UTF-8');
+            return $f;
+        })->values();
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $filtro = ['todos'=>'Todas las propiedades', 'pagados'=>'Propiedades pagadas', 'adeudo'=>'Propiedades con adeudo'][$request->estado_cuota];
+        $pdf = PDF::loadView('reportes.temporales_visor_excel.cementerio.propiedades_cuota', compact('cuota','filas','empresa','filtro'));
+        $pdf->setOptions(['page-size'=>'letter','orientation'=>'portrait','margin-top'=>10,'margin-left'=>10,'margin-right'=>10,'margin-bottom'=>15,
+            'footer-html'=>view('cementerios.cuotas_todas.footer', compact('empresa'))]);
+        return array_merge($this->capturarDocumentoCementerioVisor($pdf), ['total_registros'=>$filas->count(), 'excel_cuota'=>['empresa'=>$empresa->toArray(), 'titulo'=>$cuota->descripcion, 'filtro'=>$filtro, 'fecha'=>Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('d/M/Y H:i'), 'filas'=>$filas->map(function ($f) { return (array) $f; })->all()]]);
     }
 
     /**CONTROL DE CUOTAS*/
@@ -3340,6 +3416,1080 @@ class CementerioController extends ApiController
     }
 
     /**obtiene todas las ventas para el paginado de ventas de cementerio */
+    /** Mapa independiente del listado: áreas reales, propiedades únicas y ventas vigentes.
+     * HTML inicial; PDF solo al descargar. No modifica get_mapeado ni su reporte heredado. */
+    public function previewMapaVisualCementerio(Request $request)
+    {
+        $usuario=$request->user('api');abort_unless($usuario,403);
+        $f=$request->validate(['tipo'=>'nullable|integer|min:1|exists:tipo_propiedades,id',
+            'areas'=>'required|array|min:1|max:100','areas.*'=>'required|integer|distinct|exists:propiedades,id',
+            'contenido'=>'required|in:disponibilidad,ventas,servicios,general']);
+        $datos=$this->datosMapaVisualCementerio($f);
+        $token=bin2hex(random_bytes(32));$fecha=Carbon::now('America/Mazatlan');
+        $nombre='Mapa del cementerio '.$fecha->format('Y-m-d H-i-s').'.pdf';
+        \Illuminate\Support\Facades\Cache::put('cementerio_mapa_visual_'.$token,[
+            'usuario_id'=>(int)$usuario->id,'datos'=>$datos,'nombre'=>$nombre],$fecha->copy()->addMinutes(15));
+        return response()->json(['titulo'=>'Mapa visual del cementerio','subtitulo'=>$datos['modalidad'].' · '.count($datos['areas']).' áreas · Documento PDF',
+            'nombreArchivo'=>$nombre,'tokenDescarga'=>$token,'soloPdf'=>true,'totalRegistros'=>count($datos['areas']),
+            'vistaPreviaDisponible'=>true,'hojas'=>[['nombre'=>'Mapa','html'=>view('reportes.temporales_visor_excel.cementerio.mapa_visual',$datos)->render()]]
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Usa la misma instantánea del visor y orientación carta horizontal, con pie común.
+     * Un token caducado responde410 sin afectar la sesión; solo su dueño puede descargar. */
+    public function descargarMapaVisualCementerio(Request $request,$token)
+    {
+        $usuario=$request->user('api');abort_unless($usuario,403);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $contexto=\Illuminate\Support\Facades\Cache::get('cementerio_mapa_visual_'.$token);
+        abort_unless($contexto,410,'La consulta venció. Actualice el mapa para descargarlo.');
+        abort_unless((int)$contexto['usuario_id']===(int)$usuario->id,403);
+        $d=$contexto['datos'];$d['modoPdf']=true;
+        $pdf=\PDF::loadView('reportes.temporales_visor_excel.cementerio.mapa_visual',$d);
+        $pdf->setOptions(['page-size'=>'Letter','orientation'=>'landscape','encoding'=>'UTF-8',
+            'margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,'print-media-type'=>true,
+            'enable-local-file-access'=>false,'disable-local-file-access'=>true,
+            'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',['fechaImpresion'=>$d['fecha'],'dominio'=>$d['dominio']])->render(),'footer-spacing'=>3]);
+        $respuesta=$pdf->download($contexto['nombre']);$respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+
+    /** Construye ocupación para venta, nunca confundir con capacidad disponible de gavetas.
+     * Deduplica por área/fila/lote usando la última operación vigente; servicios únicos
+     * inhumacion_b1/status distinto0. Conserva orientación descendente y alfabeto con Ñ.
+     * Agregados de capital por bloques; no usa el saldo guardado para el desglose. */
+    private function datosMapaVisualCementerio(array $f)
+    {
+        $query=Propiedades::with(['filas_columnas','tipoPropiedad:id,tipo'])->whereIn('id',$f['areas']);
+        if(!empty($f['tipo']))$query->where('tipo_propiedades_id',$f['tipo']);
+        $areas=$query->orderBy('tipo_propiedades_id')->orderBy('id')->get();
+        if($areas->count()!==count($f['areas']))throw \Illuminate\Validation\ValidationException::withMessages(['areas'=>'Las áreas seleccionadas no corresponden al tipo de sección.']);
+        $ventas=Operaciones::where('empresa_operaciones_id',1)->whereIn('status',[1,2])
+            ->where('fecha_operacion','<=',Carbon::now('America/Mazatlan')->toDateTimeString())
+            ->whereHas('venta_terreno',function($q)use($f){$q->whereIn('propiedades_id',$f['areas']);})
+            ->with(['cliente:id,nombre,celular,telefono,email','venta_terreno:id,ubicacion,propiedades_id',
+                'venta_terreno.servicios_por_terreno'=>function($q){$q->where('status','<>',0);}])
+            ->select('id','clientes_id','ventas_terrenos_id','fecha_operacion','numero_convenio','numero_solicitud','total')
+            ->orderBy('fecha_operacion','desc')->orderBy('id','desc')->get();
+        $aplicaciones=DB::table('pagos_pagos_programados as am')->join('pagos as pm','pm.id','=','am.pagos_id')
+            ->where('pm.status',1)->whereIn('pm.movimientos_pagos_id',[1,3,4,5])->select('am.pagos_programados_id')->selectRaw('SUM(am.monto) as capital')->groupBy('am.pagos_programados_id');
+        $saldos=[];
+        if(in_array($f['contenido'],['ventas','general']))foreach(array_chunk($ventas->pluck('id')->all(),1000)as$ids){
+            $pagos=DB::table('pagos_programados as ppm')->leftJoinSub($aplicaciones,'apm',function($j){$j->on('apm.pagos_programados_id','=','ppm.id');})
+                ->whereIn('ppm.operaciones_id',$ids)->where('ppm.status',1)->select('ppm.operaciones_id')
+                ->selectRaw('ROUND(ppm.monto_programado-COALESCE(apm.capital,0),2) as pendiente')->get();
+            foreach($pagos as $p)$saldos[$p->operaciones_id]=($saldos[$p->operaciones_id] ?? 0)+max(0,(float)$p->pendiente);
+        }
+        $porArea=[];
+        foreach($ventas as $venta){
+            $terreno=$venta->venta_terreno;if(!$terreno)continue;
+            $partes=explode('-',$terreno->ubicacion);if(count($partes)!==4)continue;
+            $fila=(int)$partes[2];$lote=(int)$partes[3];$clave=$fila.':'.((int)$partes[0]===4?$lote:0);
+            if(isset($porArea[$terreno->propiedades_id][$clave]))continue;
+            $servicios=[];
+            foreach($terreno->servicios_por_terreno->unique('id') as $persona)$servicios[]=[
+                'id'=>$persona->id,'nombre'=>$persona->nombre_afectado ?: 'Nombre no disponible',
+                'fecha'=>$persona->fechahora_inhumacion && substr($persona->fechahora_inhumacion,0,4)!=='0000' ? Carbon::parse($persona->fechahora_inhumacion)->locale('es')->translatedFormat('d/M/Y') : 'No disponible'];
+            $porArea[$terreno->propiedades_id][$clave]=['venta'=>$venta->ventas_terrenos_id,
+                'fila'=>$fila,'lote'=>$lote,'cliente'=>$venta->cliente->nombre ?? 'No disponible',
+                'telefono'=>($venta->cliente->celular ?? '') ?: ($venta->cliente->telefono ?? 'No disponible'),
+                'email'=>mb_strtolower($venta->cliente->email ?? '', 'UTF-8'),
+                'fecha'=>Carbon::parse($venta->fecha_operacion)->locale('es')->translatedFormat('d/M/Y'),
+                'solicitud'=>$venta->numero_solicitud ?? 'Pendiente','convenio'=>$venta->numero_convenio ?? 'Pendiente',
+                'total'=>(float)$venta->total,'saldo'=>round($saldos[$venta->id] ?? 0,2),'servicios'=>$servicios];
+        }
+        $resultado=[];$alfabeto=explode(',','A,B,C,D,E,F,G,H,I,J,K,L,M,N,Ñ,O,P,Q,R,S,T,U,V,W,X,Y,Z');
+        foreach($areas as $area){
+            $terraza=(int)$area->tipo_propiedades_id===4;
+            $nombre=($terraza?'Terraza':(($area->tipoPropiedad->tipo ?? 'Sección'))).' '.$area->propiedad_indicador;
+            $rangos=[];foreach($area->filas_columnas as $r)$rangos[(int)$r->fila]=[(int)$r->empieza_columna,(int)$r->fin_columna];
+            $filas=[];$total=0;$vendidos=0;$conServicios=0;$personas=0;$detalle=[];
+            for($fila=(int)$area->filas;$fila>=1;$fila--){
+                $celdas=[];$etiqueta=$terraza?($alfabeto[$fila-1] ?? (string)$fila):(string)$fila;
+                for($lote=$terraza?(int)$area->columnas:1;$lote>=1;$lote--){
+                    $existe=!$terraza || (isset($rangos[$fila]) && $lote>=$rangos[$fila][0] && $lote<=$rangos[$fila][1]);
+                    $venta=$existe?($porArea[$area->id][$fila.':'.($terraza?$lote:0)] ?? null):null;
+                    $celdas[]=['numero'=>$terraza?$lote:$fila,'existe'=>$existe,'vendida'=>(bool)$venta,'servicios'=>$venta && count($venta['servicios'])>0];
+                    if(!$existe)continue;$total++;
+                    if($venta){$vendidos++;$personas+=count($venta['servicios']);if(count($venta['servicios']))$conServicios++;
+                        $venta['ubicacion']=$terraza?'Fila '.$etiqueta.' · Lote '.$lote:(((int)$area->tipo_propiedades_id===3?'Fila ':'Módulo ').$fila);
+                        if($f['contenido']!=='servicios' || count($venta['servicios']))$detalle[]=$venta;
+                    }
+                }
+                $filas[]=['etiqueta'=>$etiqueta,'celdas'=>$celdas];
+            }
+            if($f['contenido']==='servicios' && !$conServicios)continue;
+            // Estimación conservadora en puntos para mapas de una sola columna.
+            // Considera nombres, contactos y todos los servicios, sin truncar contenido.
+            // Si no cabe con letra legible, mapa primero y detalle paginado después.
+            $altoDetalle=35;
+            foreach($detalle as $v){
+                $lineasTitular=(int)ceil(mb_strlen($v['cliente'],'UTF-8')/29)+1+(int)ceil(mb_strlen($v['email'] ?: 'Sin correo','UTF-8')/32);
+                $lineasServicios=0;foreach($v['servicios'] as $persona)$lineasServicios+=(int)ceil(mb_strlen('Servicio '.$persona['id'].' '.$persona['nombre'].' Inhumación '.$persona['fecha'],'UTF-8')/25);
+                $lineas=$f['contenido']==='servicios'?max(2,(int)ceil($lineasServicios/2)):max(3,$lineasTitular,$f['contenido']==='general'?$lineasServicios:0);
+                $altoDetalle+=max(28,$lineas*10+8);
+            }
+            $linealEnHoja=!$terraza && max((int)$area->filas*15+30,$altoDetalle)+165<=540;
+            $resultado[]=['nombre'=>$nombre,'terraza'=>$terraza,'linealEnHoja'=>$linealEnHoja,'columnas'=>$terraza?(int)$area->columnas:1,'filas'=>$filas,
+                'total'=>$total,'vendidos'=>$vendidos,'disponibles'=>$total-$vendidos,'conServicios'=>$conServicios,'personas'=>$personas,'detalle'=>$detalle];
+        }
+        $empresa=app(EmpresaController::class)->get_empresa_data()->toArray();$logo=public_path(env('LOGOJPG'));
+        $mime=is_file($logo)?(new \finfo(FILEINFO_MIME_TYPE))->file($logo):'';
+        return ['areas'=>$resultado,'contenido'=>$f['contenido'],
+            'modalidad'=>['disponibilidad'=>'Disponibilidad de propiedades','ventas'=>'Propiedades vendidas','servicios'=>'Propiedades con servicios funerarios','general'=>'Estado general del cementerio'][$f['contenido']],
+            'empresa'=>$empresa,'logo'=>in_array($mime,['image/png','image/jpeg'])?'data:'.$mime.';base64,'.base64_encode(file_get_contents($logo)):'',
+            'fecha'=>Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('j \d\e F \d\e Y, H:i'),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url')];
+    }
+
+    /** Vista HTML del listado filtrado, sin generar PDF/Excel. Máximo 5000 filas en visor.
+     * Las consultas masivas guardan filtros y se ejecutan completas al descargar.
+     * El contexto pertenece al usuario autenticado y su caducidad no invalida su sesión. */
+    public function reporteListadoVentasCementerio(Request $request)
+    {
+        $usuario=$request->user('api'); abort_unless($usuario,403);
+        $total=$this->FiltrarVentasCementerio($request,'conteo');
+        $fecha=Carbon::now('America/Mazatlan');
+        $contexto=['usuario_id'=>(int)$usuario->id,'fecha'=>$fecha->toIso8601String(),
+            'filtros'=>$request->only(['numero_control','filtro_especifico_opcion','status','titular','fallecido','tipo_seccion','area','fila','lote','desde','hasta','sepultados','cuotas_vencidas']),
+            'empresa'=>app(EmpresaController::class)->get_empresa_data()->toArray(),'filas'=>null];
+        if($total<=5000) $contexto['filas']=$this->prepararFilasListadoCementerio($request);
+        $token=bin2hex(random_bytes(32));
+        \Illuminate\Support\Facades\Cache::put('cementerio_listado_'.$token,$contexto,$fecha->copy()->addMinutes(15));
+        $datos=$this->presentarListadoCementerio($contexto);
+        return response()->json(['titulo'=>'Listado de ventas en cementerio',
+            'nombreArchivo'=>'Ventas en cementerio '.$fecha->format('Y-m-d H-i-s').'.xlsx',
+            'tokenDescarga'=>$token,'totalRegistros'=>$total,'limiteVisualizacion'=>5000,
+            'vistaPreviaDisponible'=>$contexto['filas']!==null,
+            'mensaje'=>$contexto['filas']===null ? 'El reporte no puede visualizarse por su tamaño. Puede descargarlo completo en Excel o PDF.' : null,
+            'hojas'=>$contexto['filas']!==null ? [['nombre'=>'Ventas','html'=>view('reportes.temporales_visor_excel.cementerio.listado_ventas',$datos)->render()]] : []
+        ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Descarga completa y privada en el formato solicitado. 410 indica contexto vencido,
+     * no sesión vencida; el usuario puede actualizar el visor y continuar trabajando. */
+    public function descargarListadoVentasCementerio(Request $request,$token,$formato)
+    {
+        abort_unless(in_array($formato,['pdf','excel'],true),404);
+        $usuario=$request->user('api');abort_unless($usuario,403);
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D',$token),404);
+        $contexto=\Illuminate\Support\Facades\Cache::get('cementerio_listado_'.$token);
+        abort_unless($contexto,410,'La consulta venció. Actualice el reporte antes de descargar.');
+        abort_unless((int)$contexto['usuario_id']===(int)$usuario->id,403);
+        if($contexto['filas']===null){
+            $contexto['fecha']=Carbon::now('America/Mazatlan')->toIso8601String();
+            $consulta=Request::create('/cementerio/filtrar-ventas','GET',$contexto['filtros']);
+            $contexto['filas']=$this->prepararFilasListadoCementerio($consulta);
+        }
+        $datos=$this->presentarListadoCementerio($contexto);
+        $nombre='Ventas en cementerio '.Carbon::parse($contexto['fecha'])->format('Y-m-d H-i-s');
+        if($formato==='excel') $respuesta=\Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\ListadoVentasCementerioExport($datos),$nombre.'.xlsx');
+        else {
+            $datos['modoPdf']=true;
+            $pdf=\PDF::loadView('reportes.temporales_visor_excel.cementerio.listado_ventas',$datos);
+            $pdf->setOptions(['page-size'=>'Letter','orientation'=>'portrait','encoding'=>'UTF-8',
+                'margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,
+                'print-media-type'=>true,'enable-local-file-access'=>false,'disable-local-file-access'=>true,
+                'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',[
+                    'fechaImpresion'=>$datos['fecha'],'dominio'=>$datos['dominio']])->render(),'footer-spacing'=>3]);
+            $respuesta=$pdf->download($nombre.'.pdf');
+        }
+        $respuesta->headers->set('Cache-Control','no-store, private');return $respuesta;
+    }
+
+    /** Obtiene las ventas del mismo filtro y agrega capital por programado en lotes SQL.
+     * Saldos sin intereses, canceladas sin deuda vigente; nunca usa total_pago repartido
+     * repetidamente. Solo aplicaciones ppp.monto de pagos status1 movimientos1/3/4/5.
+     * Conserva referencias conocidas por usuario y oculta operaciones.id. */
+    private function prepararFilasListadoCementerio(Request $request)
+    {
+        $ventas=$this->FiltrarVentasCementerio($request,'completo');
+        $aplicaciones=DB::table('pagos_pagos_programados as a')->join('pagos as p','p.id','=','a.pagos_id')
+            ->where('p.status',1)->whereIn('p.movimientos_pagos_id',[1,3,4,5])
+            ->select('a.pagos_programados_id')->selectRaw('SUM(a.monto) as capital')->groupBy('a.pagos_programados_id');
+        $saldos=[];$hoy=Carbon::now('America/Mazatlan')->toDateString();
+        foreach(array_chunk(array_column($ventas,'operacion_id'),1000) as $ids){
+            $filas=DB::table('pagos_programados as pp')->leftJoinSub($aplicaciones,'a',function($j){$j->on('a.pagos_programados_id','=','pp.id');})
+                ->whereIn('pp.operaciones_id',$ids)->where('pp.status',1)
+                ->select('pp.operaciones_id','pp.fecha_programada')->selectRaw('ROUND(pp.monto_programado - COALESCE(a.capital,0),2) as pendiente')->get();
+            foreach($filas as $fila){
+                $id=$fila->operaciones_id;
+                if(!isset($saldos[$id]))$saldos[$id]=['pendiente'=>0,'vencido'=>0,'pagos_vencidos'=>0];
+                $saldo=max(0,(float)$fila->pendiente);$saldos[$id]['pendiente']+=$saldo;
+                if($saldo>0 && $fila->fecha_programada>='1000-01-01' && $fila->fecha_programada<$hoy){$saldos[$id]['vencido']+=$saldo;$saldos[$id]['pagos_vencidos']++;}
+            }
+        }
+        $cuotasPorPropiedad=[];
+        if($request->filled('cuotas_vencidas')) foreach(array_chunk(array_unique(array_column($ventas,'ventas_terrenos_id')),1000) as $ids){
+            $cuotas=$this->consultaCuotasVencidasListado(Carbon::now('America/Mazatlan'))
+                ->whereIn('ocv.ventas_terrenos_id',$ids)->select('ocv.ventas_terrenos_id')
+                ->selectRaw('COUNT(DISTINCT ocv.cuotas_cementerio_id) as cantidad')
+                ->selectRaw('SUM(ROUND(ppcv.monto_programado - COALESCE(apcv.capital,0),2)) as vencido')
+                ->groupBy('ocv.ventas_terrenos_id')->get();
+            foreach($cuotas as $cuota)$cuotasPorPropiedad[$cuota->ventas_terrenos_id]=$cuota;
+        }
+        $resultado=[];
+        foreach($ventas as $venta){
+            $saldo=(int)$venta['operacion_status']===0 ? [] : ($saldos[$venta['operacion_id']] ?? []);
+            $resultado[]=['venta'=>$venta['ventas_terrenos_id'],'cliente'=>$venta['nombre'],
+                'ubicacion'=>$venta['venta_terreno']['ubicacion_texto'] ?? 'No disponible',
+                // Relación del expediente: no contar ni imprimir servicios cancelados.
+                'sepultados'=>array_values(array_map(function($persona){return trim($persona['nombre_afectado'] ?? '') ?: 'Nombre no disponible';},$venta['sepultados'] ?? [])),
+                'cantidad_sepultados'=>count($venta['sepultados'] ?? []),
+                'cuotas_vencidas'=>(int)($cuotasPorPropiedad[$venta['ventas_terrenos_id']]->cantidad ?? 0),
+                'saldo_cuotas_vencidas'=>round((float)($cuotasPorPropiedad[$venta['ventas_terrenos_id']]->vencido ?? 0),2),
+                'fecha'=>Carbon::parse($venta['fecha_operacion'])->locale('es')->translatedFormat('d/M/Y'),
+                'celular'=>$venta['celular'] ?: ($venta['telefono'] ?: 'No disponible'),
+                'email'=>mb_strtolower(trim($venta['email'] ?? ''),'UTF-8'),
+                // Convenio viene como numero_convenio; solo solicitud y título tienen alias _texto.
+                'solicitud'=>$venta['numero_solicitud_texto'] ?? ($venta['numero_solicitud'] ?? 'Pendiente'),
+                'convenio'=>isset($venta['numero_convenio']) && trim((string)$venta['numero_convenio']) !== '' ? $venta['numero_convenio'] : 'Pendiente',
+                'titulo'=>$venta['numero_titulo_texto'] ?? ($venta['numero_titulo'] ?? 'Pendiente'),
+                'estado'=>$venta['status_texto'],'cancelada'=>(int)$venta['operacion_status']===0,
+                'total'=>(float)$venta['total'],'pendiente'=>round($saldo['pendiente'] ?? 0,2),
+                'vencido'=>round($saldo['vencido'] ?? 0,2),'pagos_vencidos'=>$saldo['pagos_vencidos'] ?? 0];
+        }
+        return $resultado;
+    }
+
+    /** Metadatos compartidos por formatos: filtros legibles, totales y columnas contextuales. */
+    private function presentarListadoCementerio(array $contexto)
+    {
+        $f=$contexto['filtros'];$filtros=[];
+        if(!empty($f['numero_control']))$filtros[]=[1=>'Solicitud',2=>'Convenio',3=>'Título',4=>'Venta'][$f['filtro_especifico_opcion']].': '.$f['numero_control'];
+        foreach(['titular'=>'Titular','fallecido'=>'Fallecido','fila'=>'Fila / módulo','lote'=>'Lote'] as $key=>$label)if(!empty($f[$key]))$filtros[]=$label.': '.$f[$key];
+        foreach(['desde'=>'Venta desde','hasta'=>'Venta hasta'] as $key=>$label)if(!empty($f[$key]))$filtros[]=$label.': '.Carbon::parse($f[$key])->locale('es')->translatedFormat('j \d\e F \d\e Y');
+        if(!empty($f['cuotas_vencidas']))$filtros[]=$f['cuotas_vencidas']==='con' ? 'Con cuotas de mantenimiento vencidas' : 'Sin cuotas de mantenimiento vencidas';
+        if(!empty($f['sepultados']))$filtros[]=$f['sepultados']==='con' ? 'Con personas sepultadas' : 'Sin personas sepultadas';
+        if(isset($f['status']) && $f['status']!=='')$filtros[]=[0=>'Canceladas',1=>'Por pagar',2=>'Pagadas',3=>'Activas',4=>'Con saldo vencido'][$f['status']];
+        if(!empty($f['tipo_seccion']))$filtros[]='Sección: '.DB::table('tipo_propiedades')->where('id',$f['tipo_seccion'])->value('tipo');
+        if(!empty($f['area'])){
+            $area=DB::table('propiedades')->where('id',$f['area'])->first();
+            if($area)$filtros[]='Área: '.$area->propiedad_indicador;
+        }
+        $filas=$contexto['filas'] ?? [];$vigentes=collect($filas)->where('cancelada',false);
+        $logo=public_path(env('LOGOJPG'));$mime=is_file($logo) ? (new \finfo(FILEINFO_MIME_TYPE))->file($logo) : '';
+        return ['filas'=>$filas,'empresa'=>$contexto['empresa'],'filtros'=>$filtros ?: ['Todas las ventas'],
+            'fecha'=>Carbon::parse($contexto['fecha'])->locale('es')->translatedFormat('j \d\e F \d\e Y, H:i'),
+            'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url'),
+            'logo'=>in_array($mime,['image/png','image/jpeg']) ? 'data:'.$mime.';base64,'.base64_encode(file_get_contents($logo)) : '',
+            'mostrarCuotas'=>!empty($f['cuotas_vencidas']),
+            'mostrarSepultados'=>!empty($f['sepultados']) || !empty($f['fallecido']),
+            'mostrarVencidos'=>in_array((string)($f['status'] ?? ''),['1','3','4'],true),
+            'resumen'=>['total'=>count($filas),'ventas'=>$vigentes->sum('total'),'pendiente'=>$vigentes->sum('pendiente'),
+                'vencido'=>$vigentes->sum('vencido'),'saldoCuotas'=>collect($filas)->unique('venta')->sum('saldo_cuotas_vencidas'),'sepultados'=>collect($filas)->sum('cantidad_sepultados'),'canceladas'=>count($filas)-$vigentes->count()]];
+    }
+
+    /** Base de cuotas vencidas por propiedad, compartida por filtro y reporte.
+     * Solo operaciones tipo2 status1/2 y cuotas_cementerio status1; programados activos,
+     * fecha anterior a hoy y pendiente positivo tras aplicaciones vigentes a capital.
+     * Se relaciona por ventas_terrenos_id, no por cliente; evita mezclar sus propiedades. */
+    private function consultaCuotasVencidasListado(Carbon $corte)
+    {
+        $aplicaciones=DB::table('pagos_pagos_programados as acv')->join('pagos as pcv','pcv.id','=','acv.pagos_id')
+            ->where('pcv.status',1)->whereIn('pcv.movimientos_pagos_id',[1,3,4,5])
+            ->select('acv.pagos_programados_id')->selectRaw('SUM(acv.monto) as capital')->groupBy('acv.pagos_programados_id');
+        return DB::table('operaciones as ocv')->join('cuotas_cementerio as ccv','ccv.id','=','ocv.cuotas_cementerio_id')
+            ->join('pagos_programados as ppcv','ppcv.operaciones_id','=','ocv.id')
+            ->leftJoinSub($aplicaciones,'apcv',function($j){$j->on('apcv.pagos_programados_id','=','ppcv.id');})
+            ->where('ocv.empresa_operaciones_id',2)->whereIn('ocv.status',[1,2])->where('ccv.status',1)
+            ->where('ocv.fecha_operacion','<=',$corte->toDateTimeString())->where('ppcv.status',1)
+            ->where('ppcv.fecha_programada','>=','1000-01-01')->where('ppcv.fecha_programada','<',$corte->toDateString())
+            ->whereRaw('ROUND(ppcv.monto_programado - COALESCE(apcv.capital,0),2)>0');
+    }
+
+    /** Restricción EXISTS compartida por página, conteo y exportación del filtro vencido.
+     * La opción 4 es un filtro de consulta, NO un nuevo status persistido en operaciones.
+     * Solo capital pendiente positivo de programados activos y ventas vigentes 1/2.
+     * Pagos vigentes1 y movimientos1/3/4/5; se suma ppp.monto, no total_pago.
+     * Hoy y fechas cero no son vencidos; no agrega intereses ni duplica ventas. */
+    private function aplicarSaldoVencidoListadoCementerio($consulta, Carbon $corte)
+    {
+        $aplicaciones=DB::table('pagos_pagos_programados as ppp_v')
+            ->join('pagos as p_v','p_v.id','=','ppp_v.pagos_id')
+            ->where('p_v.status',1)->whereIn('p_v.movimientos_pagos_id',[1,3,4,5])
+            ->select('ppp_v.pagos_programados_id')->selectRaw('SUM(ppp_v.monto) as capital')->groupBy('ppp_v.pagos_programados_id');
+        $consulta->whereIn('operaciones.status',[1,2])->whereExists(function($q) use($aplicaciones,$corte){
+            $q->selectRaw('1')->from('pagos_programados as pp_v')
+                ->leftJoinSub($aplicaciones,'a_v',function($join){$join->on('a_v.pagos_programados_id','=','pp_v.id');})
+                ->whereColumn('pp_v.operaciones_id','operaciones.id')->where('pp_v.status',1)
+                ->where('pp_v.fecha_programada','>=','1000-01-01')->where('pp_v.fecha_programada','<',$corte->toDateString())
+                ->whereRaw('ROUND(pp_v.monto_programado - COALESCE(a_v.capital,0),2)>0');
+        });
+    }
+
+    /** Buscador alternativo de ventas tipo 1. get_ventas permanece intacto para otros módulos.
+     * Valida referencias, estado, titular/fallecido, rango inclusivo de venta y componentes
+     * de ubicación. Pagina en SQL a 15 antes de preparar la representación de cada venta.
+     * Mantiene la estructura de respuesta requerida por tabla, formularios y expediente.
+     * El bloque de presentación conserva las reglas del listado anterior; cualquier cambio
+     * futuro a esa representación debe verificarse contra las acciones del componente nuevo.
+     */
+    public function FiltrarVentasCementerio(Request $request, $modo = 'pagina')
+    {
+        $filtros=$request->validate([
+            'page'=>'sometimes|integer|min:1','numero_control'=>'nullable|integer|min:1',
+            'filtro_especifico_opcion'=>'required|in:1,2,3,4','status'=>'nullable|in:0,1,2,3,4',
+            'titular'=>'nullable|string|max:75','fallecido'=>'nullable|string|max:75',
+            'sepultados'=>'nullable|in:con,sin','cuotas_vencidas'=>'nullable|in:con,sin',
+            'desde'=>'nullable|date_format:Y-m-d',
+            'hasta'=>'nullable|date_format:Y-m-d'.($request->filled('desde') ? '|after_or_equal:desde' : ''),
+            'tipo_seccion'=>'nullable|integer|min:1|exists:tipo_propiedades,id',
+            'area'=>'nullable|integer|min:1|exists:propiedades,id',
+            'fila'=>'nullable|string|max:3','lote'=>'nullable|integer|min:1',
+        ]);
+        $fila=trim($filtros['fila'] ?? '');
+        if($fila !== '') {
+            $letras=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','ñ','o','p','q','r','s','t','u','v','w','x','y','z'];
+            $indice=array_search(mb_strtolower($fila,'UTF-8'),$letras,true);
+            if($indice !== false) $fila=$indice+1;
+            elseif(!ctype_digit($fila) || (int)$fila<1) throw \Illuminate\Validation\ValidationException::withMessages(['fila'=>'Indique una letra de fila o un número de módulo válido.']);
+        }
+        $id_venta=($filtros['filtro_especifico_opcion']==4 && !empty($filtros['numero_control'])) ? $filtros['numero_control'] : 'all';
+        $paginated='paginated';
+
+        $light                    = true;
+        $filtro_especifico_opcion = $request->filtro_especifico_opcion;
+        $titular                  = $request->titular;
+        $fallecido                = $request->fallecido;
+        $numero_control           = $request->numero_control;
+        $status                   = $request->status;
+        $fecha_operacion          = $request->fecha_operacion;
+        $resultado_query          = Operaciones::with('sepultados')->with("venta_terreno");
+        if (! isset($light)) {
+            $resultado_query = $resultado_query->with('pagosProgramados.pagados')
+                ->with('cuota_cementerio_terreno.pagosProgramados.pagados')
+                ->with('cuota_cementerio_terreno.cuota_cementerio:id,descripcion,status')
+                ->with('venta_terreno.vendedor')
+                ->with('venta_terreno.entrego_convenio')
+                ->with('venta_terreno.tipo_propiedad')
+                ->with('beneficiarios')
+                ->with('AjustesPoliticas')
+                ->with('cancelador:id,nombre')
+                ->with('registro:id,nombre');
+        }
+        $resultado_query = $resultado_query->where('empresa_operaciones_id', '=', 1)
+            /**solo ventas de cementerio */
+            ->select(
+                /**venta operacion */
+                'operaciones.id',
+                'operaciones.id as operacion_id',
+                'antiguedad_operacion_id',
+                'empresa_operaciones_id',
+                'subtotal',
+                'tasa_iva',
+                'descuento',
+                'impuestos',
+                'total',
+                'saldo',
+                'descuento_pronto_pago_b',
+                'costo_neto_pronto_pago',
+                DB::raw(
+                    '(NULL) AS costo_neto_calculado'
+                ),
+                DB::raw(
+                    '(NULL) AS descuento_neto_calculado'
+                ),
+                'numero_solicitud',
+                'numero_convenio',
+                'numero_titulo',
+                'titular_sustituto',
+                'parentesco_titular_sustituto',
+                'telefono_titular_sustituto',
+                'ventas_terrenos_id',
+                'financiamiento',
+                'aplica_devolucion_b',
+                'costo_neto_financiamiento_normal',
+                'comision_venta_neto',
+                'operaciones.status as operacion_status',
+                'clientes.id as cliente_id',
+                'clientes.nombre',
+                'clientes.direccion',
+                'clientes.ciudad',
+                'clientes.estado',
+                'clientes.telefono',
+                'clientes.celular',
+                'clientes.telefono_extra',
+                'clientes.rfc',
+                'clientes.email',
+                'clientes.fecha_nac',
+                DB::raw(
+                    'DATE(operaciones.fecha_operacion) as fecha_operacion'
+                ),
+                DB::raw(
+                    'DATE(operaciones.fecha_cancelacion) as fecha_cancelacion_operacion'
+                ),
+                DB::raw(
+                    '(NULL) as fecha_operacion_texto'
+                ),
+                'operaciones.nota',
+                /**fin de datos de  operacion */
+                DB::raw(
+                    '(0) AS tipo_financimiento_texto'
+                ),
+                DB::raw(
+                    '(0) AS num_pagos_programados'
+                ),
+                DB::raw(
+                    '(0) AS num_pagos_programados_vigentes'
+                ),
+                DB::raw(
+                    '(0) AS intereses'
+                ),
+                DB::raw(
+                    '(0) AS total_cubierto'
+                ),
+                DB::raw(
+                    '(0) AS abonado_capital'
+                ),
+                DB::raw(
+                    '(0) AS abonado_intereses'
+                ),
+                DB::raw(
+                    '(0) AS descontado_pronto_pago'
+                ),
+                DB::raw(
+                    '(0) AS descontado_capital'
+                ),
+                DB::raw(
+                    '(0) AS complementado_cancelacion'
+                ),
+                DB::raw(
+                    '(0) AS saldo_neto'
+                ),
+                DB::raw(
+                    '(0) AS pagos_vencidos'
+                ),
+                DB::raw(
+                    '(0) AS dias_vencidos'
+                ),
+                DB::raw(
+                    '(0) AS pagos_programados_cubiertos'
+                ),
+                DB::raw(
+                    '(0) AS pagos_realizados'
+                ),
+                DB::raw(
+                    '(0) AS pagos_vigentes'
+                ),
+                DB::raw(
+                    '(0) AS pagos_cancelados'
+                ),
+                DB::raw(
+                    '(CASE
+                        WHEN operaciones.numero_solicitud <> "" THEN operaciones.numero_solicitud
+                        ELSE "N/A"
+                        END) AS numero_solicitud_texto'
+                ),
+                DB::raw(
+                    '(CASE
+                        WHEN operaciones.numero_titulo <> "" THEN operaciones.numero_titulo
+                        ELSE "Pendiente"
+                        END) AS numero_titulo_texto'
+                ),
+                DB::raw(
+                    '(NULL) AS status_texto'
+                ),
+                /*DB::raw(
+            '(NULL) AS pagos_realizados_arreglo'
+            ),*/
+                'operaciones.registro_id',
+                'operaciones.cancelo_id',
+                'operaciones.modifico_id',
+                'operaciones.nota_cancelacion',
+                'operaciones.motivos_cancelacion_id',
+                'operaciones.cantidad_a_regresar_cancelacion',
+                DB::raw(
+                    '(NULL) AS motivos_cancelacion_texto'
+                )
+            )
+            // Fecha de venta: límite final exclusivo para incluir todo el último día sin DATE(columna).
+            ->where(function($q) use($filtros) {
+                if(!empty($filtros['desde'])) $q->where('operaciones.fecha_operacion','>=',$filtros['desde'].' 00:00:00');
+                if(!empty($filtros['hasta'])) $q->where('operaciones.fecha_operacion','<',Carbon::parse($filtros['hasta'])->addDay()->toDateString().' 00:00:00');
+            })
+            // ubicacion = tipo-area-fila-lote; comparar componentes evita confundir área 1 con 11.
+            ->whereHas('venta_terreno',function($q) use($filtros,$fila) {
+                if(!empty($filtros['tipo_seccion'])) $q->whereRaw("SUBSTRING_INDEX(ubicacion,'-',1) = ?",[(string)$filtros['tipo_seccion']]);
+                if(!empty($filtros['area'])) $q->whereRaw("SUBSTRING_INDEX(SUBSTRING_INDEX(ubicacion,'-',2),'-',-1) = ?",[(string)$filtros['area']]);
+                if($fila !== '') $q->whereRaw("SUBSTRING_INDEX(SUBSTRING_INDEX(ubicacion,'-',3),'-',-1) = ?",[(string)$fila]);
+                if(!empty($filtros['lote'])) $q->whereRaw("SUBSTRING_INDEX(ubicacion,'-',-1) = ?",[(string)$filtros['lote']]);
+            })
+            ->where(function ($q) use ($id_venta) {
+                if (trim($id_venta) == 'all' || $id_venta > 0) {
+                    if (trim($id_venta) == 'all') {
+                        $q->where('operaciones.ventas_terrenos_id', '>', $id_venta);
+                    } else if ($id_venta > 0) {
+                        $q->where('operaciones.ventas_terrenos_id', '=', $id_venta);
+                    }
+                }
+            })
+            ->where(function ($q) use ($numero_control, $filtro_especifico_opcion) {
+                if (trim($numero_control) != '') {
+                    if ($filtro_especifico_opcion == 1) {
+                        /**filtro por numero de solicitud */
+                        $q->where('operaciones.numero_solicitud', '=', $numero_control);
+                    } else if ($filtro_especifico_opcion == 2) {
+                        /**filtro por numero de solicitud */
+                        $q->where('operaciones.numero_convenio', '=', $numero_control);
+                    } else if ($filtro_especifico_opcion == 3) {
+                        /**filtro por numero de solicitud */
+                        $q->where('operaciones.numero_titulo', '=', $numero_control);
+                    } else {
+                        /**filtro por numero de solicitud */
+                        // $q->where('ventas_terrenos.id', $numero_control);
+                    }
+                }
+            })
+
+            ;
+        // Misma relación que alimenta el listado de fallecidos de la propiedad.
+        // sepultados ya excluye servicios status0; EXISTS evita repetir la venta.
+        if(!empty($filtros['cuotas_vencidas'])) {
+            $cuotas=$this->consultaCuotasVencidasListado(Carbon::now('America/Mazatlan'))
+                ->whereColumn('ocv.ventas_terrenos_id','operaciones.ventas_terrenos_id')->selectRaw('1');
+            $resultado_query->getQuery()->addWhereExistsQuery($cuotas,'and',$filtros['cuotas_vencidas']==='sin');
+        }
+        if(($filtros['sepultados'] ?? '') === 'con') $resultado_query->whereHas('sepultados');
+        if(($filtros['sepultados'] ?? '') === 'sin') $resultado_query->whereDoesntHave('sepultados');
+        if ($request->filled('fallecido')) {
+            $resultado_query = $resultado_query->WhereHas('sepultados', function ($q) use ($request) {
+                $q->where('nombre_afectado', 'like', '%' . trim($request->fallecido) . '%');
+            });
+        }
+
+        /*->*/
+
+        //fin de filtrado por ubicacion
+        $resultado_query = $resultado_query->where(function ($q) use ($status) {
+            if (trim($status) != "") {
+                if ($status == 1) {
+                    //solo listo los servicios con adeudo
+                    $q->where('saldo', '>', 0)->where("operaciones.status", "=", 1);
+                } elseif ($status == 2) {
+                    //solo las pagadas
+                    $q->where('operaciones.status', "=", 2)->where('saldo', '<=', 0);
+                } elseif ($status == 3) {
+                    //solo las activas
+                    $q->where('operaciones.status', ">", 0);
+                } elseif ($status == 4) {
+                    $this->aplicarSaldoVencidoListadoCementerio($q, Carbon::now('America/Mazatlan'));
+                } elseif ($status == 0) {
+                    $q->where('operaciones.status', 0);
+                }
+            }
+        })
+            ->join('clientes', 'clientes.id', '=', 'operaciones.clientes_id')
+            ->where('nombre', 'like', '%' . $titular . '%')
+            ->orderBy('operaciones.ventas_terrenos_id', 'desc');
+        // Modos internos del reporte: contar sin hidratar; exportar todas las coincidencias.
+        // El request no puede cambiar este modo y get_ventas conserva su comportamiento.
+        if($modo === 'conteo') return (clone $resultado_query)->count();
+        $paginated=$modo === 'completo' ? false : 'paginated';
+        $resultado_query=$modo === 'completo' ? $resultado_query->get() : $resultado_query->paginate(15, ['*'], 'page', (int)($filtros['page'] ?? 1));
+        /**verificando si el usario necesita el resultado paginado, todo o por id */
+        $resultado = [];
+        if ($paginated == 'paginated') {
+            /**queire el resultado paginado */
+            $resultado_query = $resultado_query->toArray();
+            $resultado       = &$resultado_query['data'];
+        } else {
+            $resultado_query = $resultado_query->toArray();
+            $resultado       = &$resultado_query;
+        }
+        /**datos del cmeenterio para actualizar los valores de la ubicacion */
+        $datos_cementerio = $this->get_cementerio();
+
+        foreach ($resultado as $index_venta => &$venta) {
+
+            foreach ($venta['sepultados'] as $index_sepultado => &$sepultado) {
+                /**asigno los datos de los finados dentro de la propiedad */
+                $sepultado['fecha_defuncion_texto']  = fecha_abr($sepultado['fechahora_defuncion']);
+                $sepultado['fecha_inhumacion_texto'] = fecha_abr($sepultado['fechahora_inhumacion']);
+            }
+
+            /**calculando el costo neto y descuento calcuado */
+            /**aqui voy*/
+            $tasa_iva_decimal = $venta['tasa_iva'] / 100;
+
+            $venta['costo_neto_calculado']     = round($venta['total'] + ($venta['descuento'] * (1 + $tasa_iva_decimal)), 2, PHP_ROUND_HALF_UP);
+            $venta['descuento_neto_calculado'] = round(($venta['descuento'] * (1 + $tasa_iva_decimal)), 2, PHP_ROUND_HALF_UP);
+
+            /**DEFINIENDO EL STATUS DE LA VENTA*/
+            if ($venta['operacion_status'] == 0) {
+                $venta['status_texto'] = 'Cancelada';
+                if ($venta['motivos_cancelacion_id'] == 1) {
+                    /**fue por fal de pago */
+                    $venta['motivos_cancelacion_texto'] = 'falta de pago';
+                } elseif ($venta['motivos_cancelacion_id'] == 2) {
+                    /**fue por peticion de lciente */
+                    $venta['motivos_cancelacion_texto'] = 'a petición del cliente';
+                } elseif ($venta['motivos_cancelacion_id'] == 3) {
+                    /**fue por error de captura */
+                    $venta['motivos_cancelacion_texto'] = 'error de captura';
+                }
+                /**actualizando el motivo de cancelacion */
+            } elseif ($venta['operacion_status'] == 1) {
+                $venta['status_texto'] = 'Por Pagar';
+            } elseif ($venta['operacion_status'] == 2) {
+                $venta['status_texto'] = 'Pagada';
+            }
+
+            $venta['fecha_operacion_texto'] = fecha_abr($venta['fecha_operacion']);
+
+            /**aqui se saca el porcentaje para ver cuanto seria el descuento por pago en cada pronto pago */
+            $porcentaje_descuento_pronto_pago = 0;
+            if ($venta['total'] > 0) {
+                $porcentaje_descuento_pronto_pago = ($venta['costo_neto_pronto_pago'] * 100) / ($venta['total']);
+            }
+
+            /**tipo de financiamiento texto */
+            if ($venta['financiamiento'] == 1) {
+                $venta['tipo_financimiento_texto'] = 'Uso inmediato/Pago único';
+            } else {
+                $venta['tipo_financimiento_texto'] = 'A futuro/'
+                    . $venta['financiamiento'] . ' Mes(s)';
+            }
+
+            if (! isset($light)) {
+                $venta['num_pagos_programados'] = count($venta['pagos_programados']);
+                $num_pagos_programados_vigentes = 0;
+                if ($venta['num_pagos_programados'] > 0) {
+                    /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
+                    /**recorriendo arreglo de pagos programados */
+                    $vencidos                         = 0;
+                    $pagos_programados_cubiertos      = 0;
+                    $dias_vencido_primer_pago_vencido = '';
+                    $pagos_vigentes                   = 0;
+                    $pagos_cancelados                 = 0;
+                    $pagos_realizados                 = 0;
+
+                    $arreglo_de_pagos_realizados = [];
+                    /**guardo los dias que lleva vencido el pago vencido mas antiguo */
+                    foreach ($venta['pagos_programados'] as $index_programado => &$programado) {
+                        /**actualizando el concepto del pago */
+                        if ($programado['conceptos_pagos_id'] == 1) {
+                            $programado['concepto_texto'] = 'Enganche';
+                        } elseif ($programado['conceptos_pagos_id'] == 2) {
+                            $programado['concepto_texto'] = 'Abono';
+                        } else {
+                            $programado['concepto_texto'] = 'Pago Único';
+                        }
+
+                        /**actualizando fecha de pago abre con helper de fechas */
+                        $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
+
+                        //if ($programado['status'] == 1) {
+                        if ($programado['status'] == 1) {
+                            $num_pagos_programados_vigentes++;
+                        }
+                        /**aumento el pago programado vigente */
+                        /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
+                        /**montos segun su tipo de movimiento */
+                        $abonado_intereses       = 0;
+                        $abonado_capital         = 0;
+                        $descontado_pronto_pago  = 0;
+                        $descontado_capital      = 0;
+                        $complemento_cancelacion = 0;
+                        $total_cubierto          = 0;
+                        $fecha_ultimo_pago       = '';
+
+                        foreach ($programado['pagados'] as $index_pagados => &$pagado) {
+                            /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
+                            array_push(
+                                $arreglo_de_pagos_realizados,
+                                $pagado
+                            );
+
+                            if ($pagado['status'] == 1) {
+                                /**si esta activo el pago se toma en cuenta el monto de cada operacion */
+                                /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
+                                 * son los que van incluidos dentro de un parent) */
+                                // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
+                                if ($pagado['movimientos_pagos_id'] == 1) {
+                                    /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
+                                     * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
+                                     */
+                                    // $pago_total += $pagado['monto'];
+                                    $abonado_capital += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 4) {
+                                    /**fue descuento al capital */
+                                    $descontado_capital += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 5) {
+                                    /**fue complemento por cancelacion */
+                                    $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
+                                } else if ($pagado['movimientos_pagos_id'] == 2) {
+                                    /**es tipo interes */
+                                    if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                        /**es abono de intereses */
+                                        $abonado_intereses += $pagado['pagos_cubiertos']['monto'];
+                                        //$pago_total += $pagado['monto'];
+                                    }
+                                } else if ($pagado['movimientos_pagos_id'] == 3) {
+                                    if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                        /**es descuento por pronto pago */
+                                        $descontado_pronto_pago += $pagado['pagos_cubiertos']['monto'];
+                                        //$pago_total += $pagado['monto'];
+                                    }
+                                }
+
+                                /**fecha en que se realizo el ultimo pago */
+                                $fecha_ultimo_pago = $pagado['fecha_pago'];
+                                // }
+                                $pagos_vigentes++;
+                            } //fin if pago status=1
+                            else {
+                                if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                    $pagos_cancelados++;
+                                }
+                            }
+                            if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                $pagos_realizados++;
+                            }
+                        } //fin foreach pagado
+
+                        /** al final del ciclo se actualizan los valores en el pago programado*/
+                        $programado['abonado_capital']           = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                        $programado['abonado_intereses']         = $abonado_intereses;
+                        $programado['descontado_pronto_pago']    = $descontado_pronto_pago;
+                        $programado['descontado_capital']        = $descontado_capital;
+                        $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
+
+                        $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
+
+                        $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
+                        /**asignando la fecha del pago que liquidado el pago programado */
+                        if ($programado['saldo_neto'] <= 0) {
+                            $programado['fecha_ultimo_pago']     = $fecha_ultimo_pago;
+                            $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
+                        }
+                        /**verificando el estado del pago programado*/
+                        /**verificando si la fecha sigue vigente o esta vencida */
+                        /**variables para controlar el incremento por intereses */
+                        $dias_retrasados_del_pago = 0;
+                        $fecha_programada_pago    = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+
+                        /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
+                        $fecha_para_intereses = date('Y-m-d');
+                        if ($venta['operacion_status'] == 0) {
+                            if (trim($venta['fecha_cancelacion_operacion']) != '') {
+                                $fecha_para_intereses = $venta['fecha_cancelacion_operacion'];
+                            }
+                        }
+                        $fecha_hoy                       = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
+                        $interes_generado                = 0;
+                        $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
+                        /**fin varables por intereses */
+                        /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
+                        if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
+                            /**tiene todavia saldo que pagar, se debe verificar si el pago esta vencido para generarle los intereses correspondientes */
+                            if (date('Y-m-d', strtotime($programado['fecha_programada'])) < date('Y-m-d')) {
+                                /**esto me dara los dias que se retraso en el el pago la persona, que debe coincidir la suma de los * intereses cobrados */
+
+                                $dias_retrasados_del_pago = $fecha_programada_pago->diffInDays($fecha_hoy);
+                                if ($dias_vencido_primer_pago_vencido == '') {
+                                    $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
+                                }
+                                $programado['fecha_a_pagar']     = date('Y-m-d');
+                                $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
+                                /**
+                                 * Los intereses moratorios se calcularán
+                                 * multiplicando el monto de lo que adeude el contratante por la tasa de interés anual,
+                                 * dividida entre 365, este resultado se multiplica por el número de días transcurridos entre la fecha de pago que debió
+                                 * ser hecho y la fecha que el contratante
+                                 * liquide el adeudo.
+                                 **/
+                                /**aplicando intereses solo a abonos */
+                                $interes_generado = 0;
+                                if ($programado['conceptos_pagos_id'] == 2) {
+                                    $interes_generado = round(((($programado['monto_programado'] * ($venta['ajustes_politicas']['tasa_fija_anual'] / 12)) / 365) * $dias_retrasados_del_pago), 0, PHP_ROUND_HALF_UP);
+                                    if ($interes_generado > 0) {
+                                        /**esto siginifica que la fecha de pago seria mayor o igual a la fecha en que se hizo el ultimo abono a intereses */
+                                        $interes_generado -= $programado['abonado_intereses'];
+                                    }
+                                }
+                                /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
+                                $programado['saldo_neto'] = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
+                                /**la fecha qui es mayor que la fecha programada del pago */
+                                $programado['status_pago']       = 0;
+                                $programado['status_pago_texto'] = 'Vencido';
+                                $vencidos++;
+                                $programado['dias_vencido'] = $dias_retrasados_del_pago;
+                                $programado['intereses']    = $interes_generado;
+                            } else {
+                                /**la fecha aun no vence */
+                                $programado['fecha_a_pagar']     = $programado['fecha_programada'];
+                                $programado['status_pago']       = 1;
+                                $programado['status_pago_texto'] = 'Pendiente';
+                            }
+                        } else {
+                            $pagos_programados_cubiertos++;
+                            $programado['fecha_a_pagar'] = $pagado['fecha_pago'];
+                            /**el pago programado ya fue cubierto */
+                            $programado['status_pago']       = 2;
+                            $programado['status_pago_texto'] = 'Pagado';
+                        }
+                        /**monto con pronto pago de cada abono */
+                        $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
+                        $programado['total_cubierto']    = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+                        /**actualizando los totales de montos en la venta */
+                        $venta['intereses']                 += $interes_generado;
+                        $venta['abonado_capital']           += $abonado_capital;
+                        $venta['abonado_intereses']         += $abonado_intereses;
+                        $venta['descontado_pronto_pago']    += $descontado_pronto_pago;
+                        $venta['descontado_capital']        += $descontado_capital;
+                        $venta['complementado_cancelacion'] += $complemento_cancelacion;
+                        $venta['saldo_neto']                += $saldo_pago_programado + $interes_generado;
+                        /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
+                        $venta['total_cubierto'] += $programado['total_cubierto'];
+                        /**verificado el monto que seria con pronnto pago  */
+                        //} //fin foreach if status 1 programado
+                    } //fin foreach programados
+                    $venta['pagos_realizados']               = $pagos_realizados;
+                    $venta['pagos_vigentes']                 = $pagos_vigentes;
+                    $venta['num_pagos_programados_vigentes'] = $num_pagos_programados_vigentes;
+                    $venta['pagos_cancelados']               = $pagos_cancelados;
+                    $venta['pagos_programados_cubiertos']    = $pagos_programados_cubiertos;
+                    $venta['pagos_vencidos']                 = $vencidos;
+                    $venta['dias_vencidos']                  = $dias_vencido_primer_pago_vencido;
+                    /**areegloe de todos los pagos limpios(no repetidos) */
+                    //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
+                } else {
+                    /**la venta no tiene pagos programados debido a que fue 100% "GRATIS" */
+                }
+
+                /**incio pagos de cuotas */
+                if (count($venta['cuota_cementerio_terreno']) > 0) {
+                    foreach ($venta['cuota_cementerio_terreno'] as $key => &$cuota) {
+
+                        # code...
+
+                        /**si tiene pagos programados, eso quiere decir que la venta no tuvo 100 de descuento */
+                        /**recorriendo arreglo de pagos programados */
+                        $vencidos                         = 0;
+                        $pagos_programados_cubiertos      = 0;
+                        $dias_vencido_primer_pago_vencido = '';
+                        $pagos_vigentes                   = 0;
+                        $pagos_cancelados                 = 0;
+                        $pagos_realizados                 = 0;
+                        $arreglo_de_pagos_realizados      = [];
+                        /**guardo los dias que lleva vencido el pago vencido mas antiguo */
+                        foreach ($cuota['pagos_programados'] as $index_programado => &$programado) {
+
+                            $status_cuota         = $cuota['cuota_cementerio']['status'];
+                            $programado['status'] = $status_cuota == 0 ? $status_cuota : $programado['status'];
+                            /**actualizando el concepto del pago */
+                            if ($programado['conceptos_pagos_id'] == 1) {
+                                $programado['concepto_texto'] = 'Enganche';
+                            } elseif ($programado['conceptos_pagos_id'] == 2) {
+                                $programado['concepto_texto'] = 'Abono';
+                            } else {
+                                $programado['concepto_texto'] = 'Cuota ' . $cuota['cuota_cementerio']['descripcion'];
+                            }
+
+                            /**actualizando fecha de pago abre con helper de fechas */
+                            $programado['fecha_programada_abr'] = fecha_abr($programado['fecha_programada']);
+
+                            //if ($programado['status'] == 1) {
+                            if ($programado['status'] == 1) {
+                                $num_pagos_programados_vigentes++;
+                            }
+
+                            /**aumento el pago programado vigente */
+                            /**haciendo sumatoria de los montos que se han destinado a un pago programado segun el tipo de movimiento */
+                            /**montos segun su tipo de movimiento */
+                            $abonado_intereses       = 0;
+                            $abonado_capital         = 0;
+                            $descontado_pronto_pago  = 0;
+                            $descontado_capital      = 0;
+                            $complemento_cancelacion = 0;
+                            $total_cubierto          = 0;
+                            $fecha_ultimo_pago       = '';
+
+                            foreach ($programado['pagados'] as $index_pagados => &$pagado) {
+
+                                /**haciendo el arreglo de pagos realizados limpio(no repetidos) */
+                                array_push(
+                                    $arreglo_de_pagos_realizados,
+                                    $pagado
+                                );
+
+                                if ($pagado['status'] == 1) {
+                                    /**si esta activo el pago se toma en cuenta el monto de cada operacion */
+                                    /**tomando en cuenta solo pagos que son parent(todos los tipos menos abono a intereses y descuento por pronto pago, estos 2 tipos
+                                     * son los que van incluidos dentro de un parent) */
+                                    // if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                    /**aqui entrarian en los abonos a capital, descuento al capital y complementos por cancelacion*/
+                                    if ($pagado['movimientos_pagos_id'] == 1) {
+                                        /**si es de tipo 1, abono a copital, por lo regular podria llevar asociados pagos children
+                                         * y se debe de recorrer el foreach para obtener los distintos montos asignados a cada pago programado
+                                         */
+                                        // $pago_total += $pagado['monto'];
+                                        $abonado_capital += $pagado['pagos_cubiertos']['monto'];
+                                    } else if ($pagado['movimientos_pagos_id'] == 4) {
+                                        /**fue descuento al capital */
+                                        $descontado_capital += $pagado['pagos_cubiertos']['monto'];
+                                    } else if ($pagado['movimientos_pagos_id'] == 5) {
+                                        /**fue complemento por cancelacion */
+                                        $complemento_cancelacion += $pagado['pagos_cubiertos']['monto'];
+                                    } else if ($pagado['movimientos_pagos_id'] == 2) {
+                                        /**es tipo interes */
+                                        if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                            /**es abono de intereses */
+                                            $abonado_intereses += $pagado['pagos_cubiertos']['monto'];
+                                            //$pago_total += $pagado['monto'];
+                                        }
+                                    } else if ($pagado['movimientos_pagos_id'] == 3) {
+                                        if ($pagado['pagos_cubiertos']['pagos_programados_id'] == $programado['id']) {
+                                            /**es descuento por pronto pago */
+                                            $descontado_pronto_pago += $pagado['pagos_cubiertos']['monto'];
+                                            //$pago_total += $pagado['monto'];
+                                        }
+                                    }
+
+                                    /**fecha en que se realizo el ultimo pago */
+                                    $fecha_ultimo_pago = $pagado['fecha_pago'];
+                                    // }
+                                    $pagos_vigentes++;
+                                } //fin if pago status=1
+                                else {
+                                    if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                        $pagos_cancelados++;
+                                    }
+                                }
+                                if ($pagado['movimientos_pagos_id'] != 2 && $pagado['movimientos_pagos_id'] != 3) { //se excluyen aqui los que son de pronto pago y cobro por interes
+                                    $pagos_realizados++;
+                                }
+                            } //fin foreach pagado
+
+                            /** al final del ciclo se actualizan los valores en el pago programado*/
+                            $programado['abonado_capital']           = round($abonado_capital, 2, PHP_ROUND_HALF_UP);
+                            $programado['abonado_intereses']         = $abonado_intereses;
+                            $programado['descontado_pronto_pago']    = $descontado_pronto_pago;
+                            $programado['descontado_capital']        = $descontado_capital;
+                            $programado['complementado_cancelacion'] = round($complemento_cancelacion, 2, PHP_ROUND_HALF_UP);
+
+                            $saldo_pago_programado = $programado['monto_programado'] - $abonado_capital - $descontado_pronto_pago - $descontado_capital - $complemento_cancelacion;
+
+                            $programado['saldo_neto'] = round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP);
+                            /**asignando la fecha del pago que liquidado el pago programado */
+                            if ($programado['saldo_neto'] <= 0) {
+                                $programado['fecha_ultimo_pago']     = $fecha_ultimo_pago;
+                                $programado['fecha_ultimo_pago_abr'] = fecha_abr($fecha_ultimo_pago);
+                            }
+                            /**verificando el estado del pago programado*/
+                            /**verificando si la fecha sigue vigente o esta vencida */
+                            /**variables para controlar el incremento por intereses */
+                            $dias_retrasados_del_pago  = 0;
+                            $fecha_programada_pago     = Carbon::createFromFormat('Y-m-d', $programado['fecha_programada']);
+
+                            /**aqui verifico que si la operacion esta activa genere los intereses acorde al dia de hoy, si esta cancelada que tomen intereses a partir de la fecha de cancelacion */
+                            $fecha_para_intereses = date('Y-m-d');
+                            if ($venta['operacion_status'] == 0) {
+                                if (trim($venta['fecha_cancelacion_operacion']) != '') {
+                                    $fecha_para_intereses = $venta['fecha_cancelacion_operacion'];
+                                }
+                            }
+
+                            $fecha_hoy = Carbon::createFromFormat('Y-m-d', $fecha_para_intereses);
+
+                            $interes_generado                = 0;
+                            $programado['fecha_a_pagar_abr'] = fecha_abr($programado['fecha_programada']);
+                            /**fin varables por intereses */
+                            /**verificando que el pago programado tiene un saldo de capital que cobrar para saber si aplica o no intereses */
+                            if (round($saldo_pago_programado, 2, PHP_ROUND_HALF_UP) > 0) {
+                                /**tiene todavia saldo que pagar, se debe verificar si el pago esta vencido para generarle los intereses correspondientes */
+                                if (date('Y-m-d', strtotime($programado['fecha_programada'])) < date('Y-m-d')) {
+                                    /**esto me dara los dias que se retraso en el el pago la persona, que debe coincidir la suma de los * intereses cobrados */
+
+                                    $dias_retrasados_del_pago = $fecha_programada_pago->diffInDays($fecha_hoy);
+                                    if ($dias_vencido_primer_pago_vencido == '') {
+                                        $dias_vencido_primer_pago_vencido = $dias_retrasados_del_pago;
+                                    }
+                                    $programado['fecha_a_pagar']     = date('Y-m-d');
+                                    $programado['fecha_a_pagar_abr'] = fecha_abr(date('Y-m-d'));
+                                    /**
+                                     * Los intereses moratorios se calcularán
+                                     * multiplicando el monto de lo que adeude el contratante por la tasa de interés anual,
+                                     * dividida entre 365, este resultado se multiplica por el número de días transcurridos entre la fecha de pago que debió
+                                     * ser hecho y la fecha que el contratante
+                                     * liquide el adeudo.
+                                     **/
+                                    /**aplicando intereses solo a abonos */
+                                    $interes_generado = 0;
+                                    if ($programado['conceptos_pagos_id'] == 2) {
+                                        $interes_generado = round(((($programado['monto_programado'] * ($venta['ajustes_politicas']['tasa_fija_anual'] / 12)) / 365) * $dias_retrasados_del_pago), 0, PHP_ROUND_HALF_UP);
+                                        if ($interes_generado > 0) {
+                                            /**esto siginifica que la fecha de pago seria mayor o igual a la fecha en que se hizo el ultimo abono a intereses */
+                                            $interes_generado -= $programado['abonado_intereses'];
+                                        }
+                                    }
+
+                                    /**aqui actualizamos el saldo neto del pago con todo e intereses, quitando los intereses que ya se han pagado previamente */
+                                    $programado['saldo_neto']  = round($saldo_pago_programado + $interes_generado, 2, PHP_ROUND_HALF_UP);
+                                    $cuota["saldo"]            = $programado['saldo_neto'];
+                                    /**la fecha qui es mayor que la fecha programada del pago */
+                                    $programado['status_pago']        = 0;
+                                    $programado['status_pago_texto']  = 'Vencido';
+                                    $vencidos++;
+                                    $programado['dias_vencido']  = $dias_retrasados_del_pago;
+                                    $programado['intereses']     = $interes_generado;
+                                } else {
+                                    /**la fecha aun no vence */
+                                    $programado['fecha_a_pagar']     = $programado['fecha_programada'];
+                                    $programado['status_pago']       = 1;
+                                    $programado['status_pago_texto'] = 'Pendiente';
+                                }
+                            } else {
+                                $pagos_programados_cubiertos++;
+                                $programado['fecha_a_pagar'] = $pagado['fecha_pago'];
+                                /**el pago programado ya fue cubierto */
+                                $programado['status_pago']       = 2;
+                                $programado['status_pago_texto'] = 'Pagado';
+                            }
+
+                            /**monto con pronto pago de cada abono */
+                            $programado['monto_pronto_pago'] = round(($porcentaje_descuento_pronto_pago * $programado['monto_programado']) / 100, 0, PHP_ROUND_HALF_UP);
+                            $programado['total_cubierto']    = $abonado_capital + $descontado_pronto_pago + $descontado_capital + $complemento_cancelacion;
+
+                            /**actualizando los totales de montos en la venta */
+
+                            /**calculando el total cubierto de la venta, sin intereses pagados, solo lo que ya esta cubierto */
+                            $venta['total_cubierto'] += $programado['total_cubierto'];
+                            /**verificado el monto que seria con pronnto pago  */
+                            //} //fin foreach if status 1 programado
+                        } //fin foreach programados
+                        /** */
+                    }
+                    /**areegloe de todos los pagos limpios(no repetidos) */
+                    //$venta['pagos_realizados_arreglo'] = $arreglo_de_pagos_realizados;
+                }
+                /**fin pagos de cuotas */
+            }
+
+            /**verificando el tipo de venta segun financiamiento*/
+            if ($venta['venta_terreno']['tipo_financiamiento'] == 1) {
+                $venta['venta_terreno']['tipo_financiamiento_texto'] = 'Uso Inmediato';
+            } else {
+                $venta['venta_terreno']['tipo_financiamiento_texto'] = 'A Futuro';
+            }
+            /**actualiznado ubicacion */
+            $ubicacionPresentada=$this->ubicacion_texto($venta['venta_terreno']['ubicacion'], $datos_cementerio);
+            $venta['venta_terreno']['ubicacion_texto']              = $ubicacionPresentada['ubicacion_texto'];
+            $venta['venta_terreno']['area_nombre']                  = $ubicacionPresentada['area_nombre'];
+            $venta['venta_terreno']['tipo_texto']                   = $ubicacionPresentada['tipo_texto'];
+            $venta['venta_terreno']['fila_texto']                   = $ubicacionPresentada['fila_texto'];
+            $venta['venta_terreno']['lote_texto']                   = $ubicacionPresentada['lote_texto'];
+            $venta['venta_terreno']['fecha_convenio_entrega_texto'] = $venta['venta_terreno']['fecha_registro_convenio'] != null ? fecha_abr($venta['venta_terreno']['fecha_registro_convenio']) : null;
+            /**agregando fila, lote, y tipo, por separado en valor numrico */
+            $venta['venta_terreno']['fila_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[2]));
+            $venta['venta_terreno']['lote_raw'] = (intval(explode("-", $venta['venta_terreno']['ubicacion'])[3]));
+        } //fin foreach venta
+
+        return $resultado_query;
+        /**aqui se puede hacer todo los calculos para llenar la informacion calculada del servicio get_ventas */
+    }
+
     public function get_ventas(Request $request, $id_venta = 'all', $paginated = false)
     {
         $light                    = $request->light;

@@ -118,6 +118,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('firmas/get_areas_firmar/{documento_id?}', 'FirmasController@get_areas_firmar');
     Route::get('firmas/get_firma/{operacion_id?}/{area_id?}/{tipo?}', 'FirmasController@get_firma');
 
+    Route::get('pagos/filtrar', 'PagosController@FiltrarPagos');
+    Route::get('pagos/reporte-filtrado', 'PagosController@reporteListadoPagos');
+    Route::get('pagos/reporte-filtrado/{token}/{formato}', 'PagosController@descargarListadoPagos')->where('formato', 'pdf|excel');
     Route::get('pagos/get_pagos/{id_pago?}/{paginated?}/{ver_subpagos?}', 'PagosController@get_pagos');
 
     Route::post('logout_usuario', 'Usuarios\UsuariosController@logout_usuario');
@@ -203,6 +206,11 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/clientes/alta_cliente', 'ClientesController@alta_cliente');
     Route::post('/clientes/servicios_gratis', 'ClientesController@servicios_gratis');
     Route::get('/clientes/get_clientes', 'ClientesController@get_clientes');
+    // Endpoint exclusivo del listado alternativo; conserva get_clientes para sus consumidores.
+    Route::get('/clientes/filtrar', 'ClientesController@FiltrarClientes');
+    // Reporte del listado filtrado: vista HTML y descarga bajo demanda, ambas autenticadas.
+    Route::get('/clientes/reportes/listado', 'ClientesController@reporteListadoClientes');
+    Route::get('/clientes/reportes/listado/{token}/{formato}', 'ClientesController@descargarListadoClientes')->where('formato', 'excel|pdf');
     Route::get('/clientes/get_clientes_seguimientos', 'ClientesController@get_clientes_seguimientos');
     /**rutas del cementerio */
     Route::get('generarNumeroTitulo', 'CementerioController@generarNumeroTitulo');
@@ -217,10 +225,15 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('titulos/{operacion_id?}', 'CementerioController@generarNumeroTitulo');
     Route::get('cementerio/documento_estado_de_cuenta_cementerio', 'CementerioController@documento_estado_de_cuenta_cementerio');
     Route::get('cementerio/acuse_cancelacion', 'CementerioController@acuse_cancelacion');
+    Route::get('cementerio/reportes/mapa-visual', 'CementerioController@previewMapaVisualCementerio');
+    Route::get('cementerio/reportes/mapa-visual/{token}/pdf', 'CementerioController@descargarMapaVisualCementerio');
+    // Rutas específicas primero: {documento} también coincide con listado-ventas.
+    Route::get('cementerio/reportes/listado-ventas', 'CementerioController@reporteListadoVentasCementerio');
+    Route::get('cementerio/reportes/listado-ventas/{token}/{formato}', 'CementerioController@descargarListadoVentasCementerio')->where('formato','excel|pdf');
     // Tres rutas para todos los documentos migrados de cementerio. El controlador
     // valida el catálogo permitido; futuros módulos tendrán su propio controlador.
     Route::get('cementerio/reportes/{documento}', 'CementerioController@previewDocumentoCementerio');
-    Route::get('cementerio/reportes/{documento}/{token}/pdf', 'CementerioController@descargarDocumentoCementerio');
+    Route::get('cementerio/reportes/{documento}/{token}/{formato}', 'CementerioController@descargarDocumentoCementerio')->where('formato', 'pdf|excel');
     Route::post('cementerio/reportes/{documento}/{token}/correo', 'CementerioController@enviarDocumentoCementerioCorreo')->middleware('throttle:5,1,dashboard-correo:');
     // Compatibilidad con los llamados heredados mientras continúa la migración.
     Route::get('cementerio/documento_solicitud', 'CementerioController@documento_solicitud');
@@ -228,6 +241,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('cementerio/documento_titulo', 'CementerioController@documento_titulo');
     Route::get('cementerio/referencias_de_pago/{id_pago?}', 'CementerioController@referencias_de_pago');
     Route::get('cementerio/reglamento_pago', 'CementerioController@reglamento_pago');
+    Route::get('cementerio/filtrar-ventas', 'CementerioController@FiltrarVentasCementerio');
     Route::get('cementerio/get_ventas/{id_venta?}/{paginated?}/', 'CementerioController@get_ventas');
     Route::get('cementerio/servicios_propiedad', 'CementerioController@servicios_propiedad');
     Route::post('cementerio/cancelar_venta', 'CementerioController@cancelar_venta');
@@ -372,6 +386,10 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('funeraria/contancia_de_no_embalsamiento', 'FunerariaController@contancia_de_no_embalsamiento');
     Route::get('funeraria/get_planes/{solo_a_futuro?}/{id_plan?}', 'FunerariaController@get_planes');
     Route::get('funeraria/get_legistas_embalsamadores', 'FunerariaController@get_legistas_embalsamadores');
+    // Buscador alternativo: conservar la ruta heredada para formularios y expedientes.
+    Route::get('funeraria/servicios/filtrar', 'FunerariaController@FiltrarServiciosFunerarios');
+    Route::get('funeraria/servicios/reporte-filtrado', 'FunerariaController@reporteListadoServiciosFunerarios');
+    Route::get('funeraria/servicios/reporte-filtrado/{token}/{formato}', 'FunerariaController@descargarListadoServiciosFunerarios')->where('formato', 'pdf|excel');
     Route::get('funeraria/get_solicitudes_servicios/{id_servicio?}/{paginated?}/{planes_funerarios_futuro?}/{uso_terreno_id?}/{unir_lotes_cantidad?}/{actualizar_saldos?}', 'FunerariaController@get_solicitudes_servicios');
     Route::get('funeraria/get_inventario/{id_articulo?}/{paginated?}/{solo_existencias?}/{con_material_velacion?}', 'FunerariaController@get_inventario');
     Route::get('funeraria/get_categorias_servicio', 'FunerariaController@get_categorias_servicio');

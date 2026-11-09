@@ -194,7 +194,9 @@ export default {
           this.$vs.notify({
             time: 150000,
             title: "Ha ocurrido un error",
-            text: error.response.data.error,
+            text: (error && error.response && error.response.data &&
+              (error.response.data.error || error.response.data.message)) ||
+              (error && error.message) || "No fue posible completar el inicio de sesión.",
             color: "danger",
           });
         });
