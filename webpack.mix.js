@@ -32,6 +32,9 @@ mix.js("resources/js/app.js", "public/js");
 
 // Sass & CSS
 mix.sass("resources/sass/app.scss", "public/css").options({
+    // Extraer también los estilos Vue: evita mezclar dependencias CSS retiradas
+    // del bundle inicial con estilos inline de rutas asíncronas (login/perfil).
+    extractVueStyles: true,
     postCss: [require("autoprefixer"), require("postcss-rtl")()],
 });
 
@@ -87,3 +90,12 @@ if (mix.inProduction()) {
         },
     });
 }
+
+// Incluir estilos de todas las rutas asíncronas en los CSS iniciales ya enlazados
+// por application.blade.php. No dejar helpers CSS requeridos desde chunks JS.
+mix.override(config => {
+    const ExtractTextPlugin = require("extract-text-webpack-plugin");
+    config.plugins.forEach(plugin => {
+        if (plugin instanceof ExtractTextPlugin) plugin.options.allChunks = true;
+    });
+});
