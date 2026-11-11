@@ -1,9 +1,9 @@
 {{-- Mapa físico: filas/columnas descendentes, límites reales por fila y propiedades únicas.
-     Solo presentación. get_mapeado heredado no se modifica. Papel carta horizontal. --}}
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Mapa del cementerio</title>
+     Solo presentación. get_mapeado heredado no se modifica. Papel carta según el formato. --}}
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>{{ $titulo ?? "Mapa del cementerio" }}</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#edf0f2;color:#343a40;font:11px Arial,sans-serif}.reporte{width:1050px;max-width:none;margin:20px auto;padding:28px;background:white;min-height:700px}.cabecera{width:100%;border-collapse:collapse;border-bottom:2px solid #a58828;margin-bottom:14px}.cabecera td{padding-bottom:12px;vertical-align:middle}.logo{width:155px;max-height:68px;object-fit:contain}.empresa{text-align:right;font-size:9px;line-height:1.4}h1{font-size:21px;margin:8px 0 5px}.nota{font-size:10px;line-height:1.45;color:#6f777d}.area{margin-top:16px}.area+.area{page-break-before:always;padding-top:5px}.area h2{padding:9px 10px;background:#f5f3ec;border-left:3px solid #a58828;font-size:15px;margin:12px 0}.resumen{width:100%;border-collapse:collapse;table-layout:fixed;margin:9px 0}.resumen td{padding:7px 9px;background:#f7f7f6;border-bottom:1px solid #ddd;font-size:10px}.resumen b{display:block;font-size:16px;margin-top:4px}.leyenda{font-size:10px;margin:10px 0;line-height:1.6}.leyenda span{margin-right:16px}.muestra{display:inline-block;width:12px;height:12px;border:1px solid #aaa;vertical-align:middle;margin-right:4px}.m-vendida{background:#fff1f1;border-color:#b44e50}.m-servicio{background:#e6eee9;border-color:#6f8b78}.m-noexiste{background:#ddd}.mapa{width:100%;table-layout:fixed;border-collapse:collapse;margin:9px 0 14px;font-size:10px;page-break-inside:avoid}.mapa th,.mapa td{border:1px solid #555;text-align:center;height:25px;padding:3px 1px}.mapa th{width:25px;background:#555e62;color:white;font-weight:normal}.mapa .vendida{color:#b4484c;text-decoration:line-through;background:#fffafa}.mapa .con-servicio{background:#e6eee9;color:#345a44;font-weight:bold}.mapa .inexistente{background:#ddd}.detalle{width:100%;table-layout:fixed;border-collapse:collapse;margin:12px 0 16px;font-size:10px}.detalle thead{display:table-header-group}.detalle th{padding:7px 5px;background:#42494c;color:white;text-align:center}.detalle td{padding:7px 5px;border-bottom:1px solid #ddd;vertical-align:top;overflow-wrap:break-word;word-wrap:break-word}.detalle tr:nth-child(even){background:#f7f7f7}tr{page-break-inside:avoid}.contacto{font-size:9px;color:#656f76;line-height:1.4}.derecha{text-align:right}.centro{text-align:center}.personas{margin:0;padding-left:14px;font-size:10px;line-height:1.5}.pie{margin-top:16px;border-top:1px solid #ddd;padding-top:7px;font-size:9px;color:#777}.modo-pdf{background:white}.modo-pdf .reporte{width:auto;margin:0;padding:0;min-height:0}.modo-pdf .pie{display:none}
-@media print{@page{size:letter landscape;margin:10mm 10mm 14mm}body{background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}.reporte{width:auto;max-width:none;margin:0;padding:0;min-height:0}.mapa{font-size:9px}.mapa th,.mapa td{height:22px}.area+.area{padding-top:0}}
+@media print{@page{size:letter {{ !empty($resumido) ? 'portrait' : 'landscape' }};margin:10mm 10mm 14mm}body{background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}.reporte{width:auto;max-width:none;margin:0;padding:0;min-height:0}.mapa{font-size:9px}.mapa th,.mapa td{height:22px}.area+.area{padding-top:0}}
 /* Impresión económica: áreas en flujo continuo, sin forzar una hoja por sección.
    Encabezado/resumen/mapa permanecen juntos siempre que quepan; el detalle puede
    continuar en otra hoja repitiendo sus columnas y manteniendo cada venta completa. */
@@ -33,16 +33,33 @@
 .area-disponibilidad-lineal .mapa{width:100%}
 @media screen and (max-width:760px){.area-disponibilidad-lineal{width:48%}}
 @media print{.area.area-disponibilidad-lineal{width:32%;page-break-before:auto;break-before:auto;page-break-inside:avoid;break-inside:avoid}}
+.formato-resumido:not(.modo-pdf) .reporte{width:816px;min-height:1056px}
+@media print{.formato-resumido:not(.modo-pdf) .reporte{width:auto;min-height:0}}
+@if(!empty($resumido) && empty($modoPdf))
+{{-- Sin margen superior o inferior de página, Chromium omite sus encabezados y pies. --}}
+@media print {
+    @page { margin: 0; }
+    .formato-resumido:not(.modo-pdf) .reporte {
+        padding: 10mm 10mm 14mm;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+    }
+}
+@endif
+.detalle .detalle-grupo th{background:#f5f3ec;color:#343a40;border-left:3px solid #a58828;text-align:left;font-size:11px;padding:6px 8px}
 </style>
 @include('reportes.temporales_visor_excel.compartidos.zoom_listados')
-</head><body class="{{ !empty($modoPdf) ? 'modo-pdf' : '' }}"><main class="reporte">
+</head><body class="{{ !empty($modoPdf) ? 'modo-pdf' : '' }}{{ !empty($resumido) ? ' formato-resumido' : '' }}"><main class="reporte">
 <table class="cabecera"><tr><td>
 @if($logo)
 <img class="logo" src="{{ $logo }}" alt="Aeternus Funerales">
 @endif
 </td><td class="empresa"><b>{{ \App\Exports\NombreEmpresaReportes::formatear($empresa['nombre_comercial'] ?? null) }}</b><br>{{ $empresa['razon_social'] ?? '' }}<br>{{ \App\Exports\DireccionReportes::formatear($empresa) }}<br>Tel. {{ $empresa['telefono'] ?? '' }} · {{ mb_strtolower($empresa['email'] ?? '', 'UTF-8') }}</td></tr></table>
-<h1>Mapa visual del cementerio</h1><div class="nota"><b>{{ $modalidad }}</b> · Consulta: {{ $fecha }}</div>
+<h1>{{ $titulo ?? "Mapa visual del cementerio" }}</h1><div class="nota"><b>{{ $modalidad }}</b> · Consulta: {{ $fecha }}</div>
 <p class="nota">Disponibilidad para venta de propiedades. Una propiedad vendida puede tener espacio para más de una persona.</p>
+@if(!empty($resumido))
+@include('reportes.temporales_visor_excel.cementerio.disponibilidad_resumida')
+@else
 @forelse($areas as $area)
 <section class="area {{ !$area['terraza'] ? ($contenido === 'disponibilidad' ? 'area-disponibilidad-lineal' : 'area-lineal') : '' }}"><div class="mapa-bloque"><h2>{{ $area['nombre'] }}</h2>
 <table class="resumen"><tr><td>Propiedades del área<b>{{ number_format($area['total']) }}</b></td><td>Vendidas<b>{{ number_format($area['vendidos']) }}</b></td><td>Disponibles para venta<b>{{ number_format($area['disponibles']) }}</b></td><td>Con servicios registrados<b>{{ number_format($area['conServicios']) }}</b></td></tr></table>
@@ -61,5 +78,6 @@
 @empty
 <p>No se encontraron áreas con la selección indicada.</p>
 @endforelse
+@endif
 <div class="pie">{{ $dominio }} · Generado: {{ $fecha }}</div>
 </main></body></html>

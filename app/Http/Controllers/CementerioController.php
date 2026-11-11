@@ -3421,21 +3421,22 @@ class CementerioController extends ApiController
     public function previewMapaVisualCementerio(Request $request)
     {
         $usuario=$request->user('api');abort_unless($usuario,403);
+        $resumido = in_array($request->input('contenido'), ['resumida', 'resumida_desglose'], true);
         $f=$request->validate(['tipo'=>'nullable|integer|min:1|exists:tipo_propiedades,id',
-            'areas'=>'required|array|min:1|max:100','areas.*'=>'required|integer|distinct|exists:propiedades,id',
-            'contenido'=>'required|in:disponibilidad,ventas,servicios,general']);
+            'areas'=>$resumido ? 'nullable|array' : 'required|array|min:1|max:100','areas.*'=>'required|integer|distinct|exists:propiedades,id',
+            'contenido'=>'required|in:disponibilidad,ventas,servicios,general,resumida,resumida_desglose']);
         $datos=$this->datosMapaVisualCementerio($f);
         $token=bin2hex(random_bytes(32));$fecha=Carbon::now('America/Mazatlan');
-        $nombre='Mapa del cementerio '.$fecha->format('Y-m-d H-i-s').'.pdf';
+        $nombre=$datos['titulo'].' '.$fecha->format('Y-m-d H-i-s').'.pdf';
         \Illuminate\Support\Facades\Cache::put('cementerio_mapa_visual_'.$token,[
             'usuario_id'=>(int)$usuario->id,'datos'=>$datos,'nombre'=>$nombre],$fecha->copy()->addMinutes(15));
-        return response()->json(['titulo'=>'Mapa visual del cementerio','subtitulo'=>$datos['modalidad'].' · '.count($datos['areas']).' áreas · Documento PDF',
+        return response()->json(['titulo'=>$datos['titulo'],'subtitulo'=>$datos['modalidad'].' · '.count($datos['areas']).' áreas · Documento PDF',
             'nombreArchivo'=>$nombre,'tokenDescarga'=>$token,'soloPdf'=>true,'totalRegistros'=>count($datos['areas']),
-            'vistaPreviaDisponible'=>true,'hojas'=>[['nombre'=>'Mapa','html'=>view('reportes.temporales_visor_excel.cementerio.mapa_visual',$datos)->render()]]
+            'vistaPreviaDisponible'=>true,'hojas'=>[['nombre'=>$datos['titulo'],'html'=>view('reportes.temporales_visor_excel.cementerio.mapa_visual',$datos)->render()]]
         ])->header('Cache-Control','no-store, private');
     }
 
-    /** Usa la misma instantánea del visor y orientación carta horizontal, con pie común.
+    /** Usa la misma instantánea del visor, papel carta y pie común.
      * Un token caducado responde410 sin afectar la sesión; solo su dueño puede descargar. */
     public function descargarMapaVisualCementerio(Request $request,$token)
     {
@@ -3446,7 +3447,7 @@ class CementerioController extends ApiController
         abort_unless((int)$contexto['usuario_id']===(int)$usuario->id,403);
         $d=$contexto['datos'];$d['modoPdf']=true;
         $pdf=\PDF::loadView('reportes.temporales_visor_excel.cementerio.mapa_visual',$d);
-        $pdf->setOptions(['page-size'=>'Letter','orientation'=>'landscape','encoding'=>'UTF-8',
+        $pdf->setOptions(['page-size'=>'Letter','orientation'=>!empty($d['resumido']) ? 'portrait' : 'landscape','encoding'=>'UTF-8',
             'margin-top'=>10,'margin-bottom'=>14,'margin-left'=>10,'margin-right'=>10,'print-media-type'=>true,
             'enable-local-file-access'=>false,'disable-local-file-access'=>true,
             'footer-html'=>view('reportes.temporales_visor_excel.compartidos.footer_pdf',['fechaImpresion'=>$d['fecha'],'dominio'=>$d['dominio']])->render(),'footer-spacing'=>3]);
@@ -3459,15 +3460,28 @@ class CementerioController extends ApiController
      * Agregados de capital por bloques; no usa el saldo guardado para el desglose. */
     private function datosMapaVisualCementerio(array $f)
     {
-        $query=Propiedades::with(['filas_columnas','tipoPropiedad:id,tipo'])->whereIn('id',$f['areas']);
-        if(!empty($f['tipo']))$query->where('tipo_propiedades_id',$f['tipo']);
+        $resumido = in_array($f['contenido'], ['resumida', 'resumida_desglose'], true);
+        $query = Propiedades::with(['filas_columnas', 'tipoPropiedad:id,tipo']);
+        if (!$resumido) {
+            $query->whereIn('id', $f['areas']);
+            if (!empty($f['tipo'])) {
+                $query->where('tipo_propiedades_id', $f['tipo']);
+            }
+        }
         $areas=$query->orderBy('tipo_propiedades_id')->orderBy('id')->get();
-        if($areas->count()!==count($f['areas']))throw \Illuminate\Validation\ValidationException::withMessages(['areas'=>'Las áreas seleccionadas no corresponden al tipo de sección.']);
+        if(!$resumido && $areas->count()!==count($f['areas']))throw \Illuminate\Validation\ValidationException::withMessages(['areas'=>'Las áreas seleccionadas no corresponden al tipo de sección.']);
+        $idsAreas = $areas->pluck('id')->all();
+        $relaciones = ['venta_terreno:id,ubicacion,propiedades_id'];
+        if (!$resumido) {
+            $relaciones[] = 'cliente:id,nombre,celular,telefono,email';
+            $relaciones['venta_terreno.servicios_por_terreno'] = function ($q) {
+                $q->where('status', '<>', 0);
+            };
+        }
         $ventas=Operaciones::where('empresa_operaciones_id',1)->whereIn('status',[1,2])
             ->where('fecha_operacion','<=',Carbon::now('America/Mazatlan')->toDateTimeString())
-            ->whereHas('venta_terreno',function($q)use($f){$q->whereIn('propiedades_id',$f['areas']);})
-            ->with(['cliente:id,nombre,celular,telefono,email','venta_terreno:id,ubicacion,propiedades_id',
-                'venta_terreno.servicios_por_terreno'=>function($q){$q->where('status','<>',0);}])
+            ->whereHas('venta_terreno',function($q)use($idsAreas){$q->whereIn('propiedades_id',$idsAreas);})
+            ->with($relaciones)
             ->select('id','clientes_id','ventas_terrenos_id','fecha_operacion','numero_convenio','numero_solicitud','total')
             ->orderBy('fecha_operacion','desc')->orderBy('id','desc')->get();
         $aplicaciones=DB::table('pagos_pagos_programados as am')->join('pagos as pm','pm.id','=','am.pagos_id')
@@ -3485,6 +3499,10 @@ class CementerioController extends ApiController
             $partes=explode('-',$terreno->ubicacion);if(count($partes)!==4)continue;
             $fila=(int)$partes[2];$lote=(int)$partes[3];$clave=$fila.':'.((int)$partes[0]===4?$lote:0);
             if(isset($porArea[$terreno->propiedades_id][$clave]))continue;
+            if ($resumido) {
+                $porArea[$terreno->propiedades_id][$clave] = true;
+                continue;
+            }
             $servicios=[];
             foreach($terreno->servicios_por_terreno->unique('id') as $persona)$servicios[]=[
                 'id'=>$persona->id,'nombre'=>$persona->nombre_afectado ?: 'Nombre no disponible',
@@ -3508,6 +3526,11 @@ class CementerioController extends ApiController
                 for($lote=$terraza?(int)$area->columnas:1;$lote>=1;$lote--){
                     $existe=!$terraza || (isset($rangos[$fila]) && $lote>=$rangos[$fila][0] && $lote<=$rangos[$fila][1]);
                     $venta=$existe?($porArea[$area->id][$fila.':'.($terraza?$lote:0)] ?? null):null;
+                    if ($resumido) {
+                        $total += (int) $existe;
+                        $vendidos += (int) (bool) $venta;
+                        continue;
+                    }
                     $celdas[]=['numero'=>$terraza?$lote:$fila,'existe'=>$existe,'vendida'=>(bool)$venta,'servicios'=>$venta && count($venta['servicios'])>0];
                     if(!$existe)continue;$total++;
                     if($venta){$vendidos++;$personas+=count($venta['servicios']);if(count($venta['servicios']))$conServicios++;
@@ -3515,7 +3538,18 @@ class CementerioController extends ApiController
                         if($f['contenido']!=='servicios' || count($venta['servicios']))$detalle[]=$venta;
                     }
                 }
-                $filas[]=['etiqueta'=>$etiqueta,'celdas'=>$celdas];
+                if (!$resumido) $filas[]=['etiqueta'=>$etiqueta,'celdas'=>$celdas];
+            }
+            if ($resumido) {
+                $resultado[] = [
+                    'nombre' => $area->nombre_area ?: $nombre,
+                    'tipo_id' => $area->tipo_propiedades_id,
+                    'tipo' => $area->tipoPropiedad->tipo ?? 'Sin tipo',
+                    'total' => $total,
+                    'vendidos' => $vendidos,
+                    'disponibles' => $total - $vendidos,
+                ];
+                continue;
             }
             if($f['contenido']==='servicios' && !$conServicios)continue;
             // Estimación conservadora en puntos para mapas de una sola columna.
@@ -3532,12 +3566,34 @@ class CementerioController extends ApiController
             $resultado[]=['nombre'=>$nombre,'terraza'=>$terraza,'linealEnHoja'=>$linealEnHoja,'columnas'=>$terraza?(int)$area->columnas:1,'filas'=>$filas,
                 'total'=>$total,'vendidos'=>$vendidos,'disponibles'=>$total-$vendidos,'conServicios'=>$conServicios,'personas'=>$personas,'detalle'=>$detalle];
         }
-        $empresa=app(EmpresaController::class)->get_empresa_data()->toArray();$logo=public_path(env('LOGOJPG'));
+        $empresa=app(EmpresaController::class)->get_empresa_data()->toArray();$logo=public_path(env('LOGOJPG', 'images/logo/aeternus.jpg'));
         $mime=is_file($logo)?(new \finfo(FILEINFO_MIME_TYPE))->file($logo):'';
-        return ['areas'=>$resultado,'contenido'=>$f['contenido'],
-            'modalidad'=>['disponibilidad'=>'Disponibilidad de propiedades','ventas'=>'Propiedades vendidas','servicios'=>'Propiedades con servicios funerarios','general'=>'Estado general del cementerio'][$f['contenido']],
+        $consulta = Carbon::now('America/Mazatlan')->locale('es');
+        $resumen = collect($resultado);
+        $totales = [
+            'total' => $resumen->sum('total'),
+            'vendidos' => $resumen->sum('vendidos'),
+            'disponibles' => $resumen->sum('disponibles'),
+        ];
+        $grupos = $resumido ? $resumen->groupBy('tipo_id')->map(function ($grupo) {
+            $primera = $grupo->first();
+            $unidad = [3 => ['columna', 'columnas'], 4 => ['terraza', 'terrazas']];
+            $cantidad = $grupo->count();
+            $nombres = $unidad[(int) $primera['tipo_id']] ?? ['sección', 'secciones'];
+            return [
+                'tipo' => $primera['tipo'],
+                'distribucion' => $cantidad . ' ' . $nombres[$cantidad === 1 ? 0 : 1],
+                'total' => $grupo->sum('total'),
+                'vendidos' => $grupo->sum('vendidos'),
+                'disponibles' => $grupo->sum('disponibles'),
+                'ubicaciones' => $grupo->all(),
+            ];
+        })->values()->all() : [];
+        return ['areas'=>$resultado, 'resumido'=>$resumido, 'grupos'=>$grupos, 'totales'=>$totales,
+            'titulo'=>$resumido ? 'Disponibilidad resumida' : 'Mapa visual del cementerio','contenido'=>$f['contenido'],
+            'modalidad'=>['disponibilidad'=>'Disponibilidad de propiedades','ventas'=>'Propiedades vendidas','servicios'=>'Propiedades con servicios funerarios','general'=>'Estado general del cementerio','resumida'=>'Resumen por tipo de propiedad','resumida_desglose'=>'Resumen por tipo y ubicación'][$f['contenido']],
             'empresa'=>$empresa,'logo'=>in_array($mime,['image/png','image/jpeg'])?'data:'.$mime.';base64,'.base64_encode(file_get_contents($logo)):'',
-            'fecha'=>Carbon::now('America/Mazatlan')->locale('es')->translatedFormat('j \d\e F \d\e Y, H:i'),
+            'fecha'=>$consulta->translatedFormat('j \d\e F \d\e Y, g:i') . ($consulta->hour < 12 ? ' a. m.' : ' p. m.'),
             'dominio'=>parse_url(config('app.url'),PHP_URL_HOST) ?: config('app.url')];
     }
 
