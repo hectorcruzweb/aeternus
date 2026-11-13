@@ -168,10 +168,10 @@
             </div>
         </div>
         <VisorReportes v-if="filtrosReporte" :show="true"
-            :cargar="cargarReporteListado" :descargar-pdf="descargarReporteListado" :descargar-archivo="descargarExcelListado"
+            :cargar="cargarReporteListado" :descargar-pdf="descargarReporteListado" :enviar-correo="enviarReporteListado" :descargar-archivo="descargarExcelListado"
             @close="filtrosReporte = null" />
         <VisorReportes v-if="folioOperaciones !== null" :show="true"
-            :cargar="cargarOperacionesCfdi" :descargar-pdf="descargarOperacionesCfdi"
+            :cargar="cargarOperacionesCfdi" :descargar-pdf="descargarOperacionesCfdi" :enviar-correo="enviarOperacionesCorreo"
             @close="folioOperaciones = null" />
 
         <VerNotas v-if="openVerNotas" :show="openVerNotas" :nota="nota_contenido" :title="titulo_nota"
@@ -364,6 +364,9 @@ export default {
             });
             return data;
         },
+        async enviarReporteListado(token, datos) {
+            return (await axios.post("/facturacion/documentos/listado-ingresos/" + encodeURIComponent(token) + "/correo", datos)).data;
+        },
         async descargarReporteListado(token) {
             const { data } = await axios.get("/facturacion/documentos/listado-ingresos/" + encodeURIComponent(token) + "/pdf", {
                 responseType: "blob",
@@ -380,6 +383,9 @@ export default {
                 params: { folio_id: this.folioOperaciones },
             });
             return data;
+        },
+        async enviarOperacionesCorreo(token, datos) {
+            return (await axios.post("/facturacion/documentos/operaciones/" + encodeURIComponent(token) + "/correo", datos)).data;
         },
         async descargarOperacionesCfdi(token) {
             const { data } = await axios.get("/facturacion/documentos/operaciones/" + encodeURIComponent(token) + "/pdf", {

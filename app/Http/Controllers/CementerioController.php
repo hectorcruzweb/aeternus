@@ -3436,6 +3436,17 @@ class CementerioController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarMapaVisualCementerioCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function () use ($request, $token) {
+                return $this->descargarMapaVisualCementerio($request, $token);
+            }, ['pdf']
+        );
+    }
+
     /** Usa la misma instantánea del visor, papel carta y pie común.
      * Un token caducado responde410 sin afectar la sesión; solo su dueño puede descargar. */
     public function descargarMapaVisualCementerio(Request $request,$token)
@@ -3619,6 +3630,17 @@ class CementerioController extends ApiController
             'mensaje'=>$contexto['filas']===null ? 'El reporte no puede visualizarse por su tamaño. Puede descargarlo completo en Excel o PDF.' : null,
             'hojas'=>$contexto['filas']!==null ? [['nombre'=>'Ventas','html'=>view('reportes.temporales_visor_excel.cementerio.listado_ventas',$datos)->render()]] : []
         ])->header('Cache-Control','no-store, private');
+    }
+
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarListadoVentasCementerioCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function ($formato) use ($request, $token) {
+                return $this->descargarListadoVentasCementerio($request, $token, $formato);
+            }
+        );
     }
 
     /** Descarga completa y privada en el formato solicitado. 410 indica contexto vencido,

@@ -90,7 +90,21 @@ Tabla `movimientos_timbres`:
 
 Disponible por lote = cantidad inicial más movimientos hijos al corte; disponible global = suma de lotes activados. Cancelar posteriormente un CFDI no devuelve el timbre consumido.
 
-`HistorialTimbresSeeder` configura tres lotes: 2000 (03/Mar/2022 12:55:28), 2000 (04/Jun/2024 11:29:47), 500 (19/May/2026 23:32:48). Asigna FIFO al lote activado más antiguo con saldo. Detecta inconsistencias y revierte su transacción. No es una sincronización automática con el proveedor ni registra consumos futuros por sí solo.
+El controlador registra un movimiento de −1 después de guardar un timbrado confirmado de Ingreso (1), Egreso (2) o Pago (5). Usa la fecha y el UUID del timbre fiscal. La cancelación no genera un movimiento ni devuelve un timbre. El dashboard suma el saldo de los lotes activos al consultarlo.
+
+El consumo se asigna al lote activo más antiguo con saldo (FIFO interno). Si el PAC confirmó el timbrado y los lotes activos están agotados, se carga al último lote activo para conservar el desfase. Si no existe un lote activo, el consumo queda sin recarga y fuera del saldo de lotes. Si falla el registro local, se conserva el CFDI timbrado y se registra el folio en el log para conciliarlo.
+
+### Reconstruir consumos históricos
+
+Detén temporalmente la emisión de CFDI y ejecuta el seeder desde la raíz del proyecto. En producción, agrega --force para ejecutar sin el aviso interactivo.
+
+```bash
+php artisan db:seed --class=HistorialTimbresSeeder
+```
+
+El seeder reemplaza los consumos hasta el corte en una transacción, a partir de los CFDI de esos tres tipos con UUID y fecha de timbrado, incluidos los cancelados. Conserva recargas y ajustes. Si aún no hay lotes, crea los tres históricos de 2000, 2000 y 500 timbres. La reasignación por fecha y saldo es estimada. Los CFDI sin lote activo se informan por separado y quedan fuera del saldo de recargas. Si se detecta un UUID duplicado, la reconstrucción se revierte.
+
+Compara el saldo total informado con el dashboard tras actualizarlo y con el saldo del PAC. Después, reanuda la emisión.
 
 ## Mantenimiento de saldo/status guardado
 

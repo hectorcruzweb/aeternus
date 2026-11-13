@@ -234,6 +234,17 @@ class PagosController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarListadoPagosCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function ($formato) use ($request, $token) {
+                return $this->descargarListadoPagos($request, $token, $formato);
+            }
+        );
+    }
+
     /** Descarga la instantánea privada; el vencimiento devuelve 410, sin cerrar sesión.
      * En reportes masivos la primera descarga captura todas las filas y las guarda
      * para que PDF y Excel posteriores utilicen los mismos datos. */

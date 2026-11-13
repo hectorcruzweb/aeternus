@@ -165,7 +165,7 @@
             </div>
         </div>
         <VisorReportes v-if="mostrarReporteListado" :show="mostrarReporteListado" :cargar="cargarReporteListado"
-            :descargar-archivo="descargarListadoExcel" :descargar-pdf="descargarListadoPdf" @close="mostrarReporteListado = false" />
+            :descargar-archivo="descargarListadoExcel" :descargar-pdf="descargarListadoPdf" :enviar-correo="enviarReporteListado" @close="mostrarReporteListado = false" />
         <FormularioPagos
             v-if="verFormularioPagos"
             :show="verFormularioPagos"
@@ -268,6 +268,9 @@ export default {
         abrirReporteListado() { this.filtrosReporteListado = { ...this.filtrosListado }; this.mostrarReporteListado = true; },
         async cargarReporteListado() { return (await filtrarPagos.reporte(this.filtrosReporteListado)).data; },
         async descargarListadoExcel(token) { return (await filtrarPagos.descargar(token, 'excel')).data; },
+        async enviarReporteListado(token, datos) {
+            return (await filtrarPagos.enviarReporte(token, datos)).data;
+        },
         async descargarListadoPdf(token) { return (await filtrarPagos.descargar(token, 'pdf')).data; },
 
         /** Mantiene el recibo principal al consultar movimientos asociados.

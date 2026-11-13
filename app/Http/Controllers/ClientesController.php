@@ -132,6 +132,17 @@ class ClientesController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarListadoClientesCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function ($formato) use ($request, $token) {
+                return $this->descargarListadoClientes($request, $token, $formato);
+            }
+        );
+    }
+
     /** Descarga completa en el formato permitido; nunca utiliza la página visible del listado.
      * El token privado pertenece al usuario. Su vencimiento responde 410, no cierra la sesión. */
     public function descargarListadoClientes(Request $request, $token, $formato)

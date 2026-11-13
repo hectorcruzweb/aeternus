@@ -105,7 +105,7 @@
               <input type="radio" v-model="datos.formato" value="excel" name="formatoAdjunto" />
               <GridIcon size="22" aria-hidden="true" /><span><strong>Excel</strong><small>XLSX · Consultar y filtrar datos</small></span>
             </label>
-            <label :class="['reporte-correo__formato', 'reporte-correo__formato--pdf', { 'es-activo': datos.formato === 'pdf' }]">
+            <label v-if="pdfDisponible" :class="['reporte-correo__formato', 'reporte-correo__formato--pdf', { 'es-activo': datos.formato === 'pdf' }]">
               <input type="radio" v-model="datos.formato" value="pdf" name="formatoAdjunto" :disabled="datos.completo" />
               <FileTextIcon size="22" aria-hidden="true" /><span><strong>PDF</strong><small>Documento listo para imprimir</small></span>
             </label>
@@ -146,7 +146,7 @@ import clientes from "../../services/clientes";
 export default {
   name: "EnviarReporteCorreo",
   components: { MailIcon, GridIcon, PaperclipIcon, FileTextIcon, SendIcon, PlusIcon, XIcon, Edit2Icon, CheckIcon, AlertCircleIcon, ConfirmarAceptar, VueEditor },
-  props: { soloPdf: {type:Boolean,default:false},
+  props: { soloPdf: {type:Boolean,default:false}, pdfDisponible: { type: Boolean, default: true },
     show: { type: Boolean, required: true },
     token: { type: String, required: true },
     titulo: { type: String, default: "Reporte" },
@@ -498,6 +498,10 @@ export default {
         enviado = true;
       } catch (e) {
         const detalle = e.response && e.response.data;
+        if (detalle && detalle.pdfDisponible === false) {
+          this.datos.formato = "excel";
+          this.$emit("pdf-no-disponible");
+        }
         const errores = detalle && detalle.errors;
         const primeraClave = errores && Object.keys(errores)[0];
         const validacion = primeraClave && errores[primeraClave][0];

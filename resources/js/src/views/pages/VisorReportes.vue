@@ -61,7 +61,7 @@
             <PrinterIcon size="15" /> Imprimir
           </button>
           <button
-            v-if="enviarCorreo"
+            v-if="enviarCorreo && (!reporte || reporte.pdfDisponible || !reporte.soloPdf)"
             type="button"
             class="visor-reportes__boton"
             :disabled="isLoading || enviando || !reporte"
@@ -204,9 +204,11 @@
         :titulo="reporte.titulo"
         :enviar="enviarCorreo"
         :solo-pdf="!!reporte.soloPdf"
+        :pdf-disponible="reporte.pdfDisponible"
         :detalle-completo-disponible="
           !!descargarCompleto && reporte.excelCompletoDisponible
         "
+        @pdf-no-disponible="reporte.pdfDisponible = false"
         @ocupado="enviando = $event"
         @close="mostrarCorreo = false"
       />

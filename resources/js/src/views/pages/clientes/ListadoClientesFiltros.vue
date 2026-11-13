@@ -42,7 +42,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                     </div>
                     <div class="clientes-filtros__toolbar">
                         <button v-for="grupo in gruposListado" :key="grupo.key" type="button" class="clientes-filtros__group" :class="{'is-selected': cantidadFiltrosGrupo(grupo.key) > 0}" :aria-expanded="grupoListadoAbierto === grupo.key ? 'true' : 'false'" aria-controls="listado-clientes-opciones" @click="grupoListadoAbierto = grupoListadoAbierto === grupo.key ? null : grupo.key">
-                            <feather-icon :icon="grupo.icon" /><span>{{ grupo.label }}</span><span v-if="cantidadFiltrosGrupo(grupo.key)" class="clientes-filtros__count">{{ cantidadFiltrosGrupo(grupo.key) }}</span><feather-icon :icon="grupoListadoAbierto === grupo.key ? 'ChevronUpIcon' : 'ChevronDownIcon'" />
+                            <feather-icon :icon="grupo.icon" aria-hidden="true" /><span class="clientes-filtros__group-label">{{ grupo.label }}<span v-if="cantidadFiltrosGrupo(grupo.key)" class="clientes-filtros__count">{{ cantidadFiltrosGrupo(grupo.key) }}</span></span><feather-icon class="clientes-filtros__group-chevron" aria-hidden="true" :icon="grupoListadoAbierto === grupo.key ? 'ChevronUpIcon' : 'ChevronDownIcon'" />
                         </button>
                         
                     </div>
@@ -203,7 +203,7 @@ con la ruta especifica del modulo que se desea consultar y el id del permiso
                 </div>
             </div>
         </div>
-        <VisorReportes :show="mostrarReporteClientes" :cargar="cargarReporteClientes" :descargar-archivo="descargarClientesExcel" :descargar-pdf="descargarClientesPdf" @close="mostrarReporteClientes = false" />
+        <VisorReportes :show="mostrarReporteClientes" :cargar="cargarReporteClientes" :descargar-archivo="descargarClientesExcel" :descargar-pdf="descargarClientesPdf" :enviar-correo="enviarReporteClientes" @close="mostrarReporteClientes = false" />
         <Password
             v-if="openStatus"
             :show="openStatus"
@@ -348,6 +348,9 @@ export default {
         },
         async cargarReporteClientes() { return (await clientes.reporteListado(this.filtrosReporteClientes)).data; },
         async descargarClientesExcel(token) { return (await clientes.descargarListado(token, 'excel')).data; },
+        async enviarReporteClientes(token, datos) {
+            return (await clientes.enviarListado(token, datos)).data;
+        },
         async descargarClientesPdf(token) { return (await clientes.descargarListado(token, 'pdf')).data; },
         // Construir la fecha local por partes para evitar el desplazamiento UTC de YYYY-MM-DD.
         fechaAltaHumana(valor) {
@@ -609,8 +612,34 @@ export default {
 .clientes-filtros input::placeholder{color:#aaa;font-size:12px}
 .clientes-filtros button,.clientes-filtros__clear{font-family:Arial,sans-serif;cursor:pointer}
 .clientes-filtros button:focus-visible,.clientes-filtros input:focus-visible,.clientes-filtros__clear:focus-visible{outline:2px solid #a58828;outline-offset:3px}
-.clientes-filtros__toolbar{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
-.clientes-filtros__group{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #d4d4d4;border-radius:2px;background:#fff;color:#666;font-size:13px;line-height:20px}
+.clientes-filtros__toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:17px}
+.clientes-filtros__group {
+    display:grid;
+    grid-template-columns:16px minmax(0,1fr) 16px;
+    flex:1 1 0;
+    min-width:0;
+    align-items:center;
+    gap:8px;
+    min-height:36px;
+    padding:0 11px;
+    border:1px solid #d2d2d2;
+    border-radius:0;
+    background:#fff;
+    color:#666;
+    font-size:13px;
+    line-height:20px;
+}
+.clientes-filtros__group-label { min-width:0; text-align:center; overflow-wrap:break-word; }
+.clientes-filtros__group-label .clientes-filtros__count { margin-left:6px; }
+@media (max-width:1100px) {
+    .clientes-filtros__group { flex-basis:30%; }
+}
+@media (max-width:700px) {
+    .clientes-filtros__group { flex-basis:45%; }
+}
+@media (max-width:380px) {
+    .clientes-filtros__group { flex-basis:100%; }
+}
 .clientes-filtros__group.is-selected,.clientes-filtros__group[aria-expanded=true]{border-color:#b4973b;color:#94771f}
 .clientes-filtros__group[aria-expanded=true]{background:#fcfaf4}
 .clientes-filtros__toolbar >>> svg{display:block;width:16px;height:16px}
@@ -630,7 +659,7 @@ export default {
 .clientes-filtros__chips >>> svg{width:11px;height:11px;color:#999}
 .clientes-filtros__error{color:#ac4444;font-size:12px;line-height:1.5;margin-top:12px}
 @media(max-width:900px){.clientes-filtros__fields{grid-template-columns:1fr 1fr}}
-@media(max-width:480px){.clientes-filtros__fields{grid-template-columns:minmax(0,1fr)}.clientes-filtros__panel-heading{align-items:flex-start}.clientes-filtros__group{flex:1 1 42%;justify-content:center}.clientes-filtros input{font-size:16px}}
+@media(max-width:480px){.clientes-filtros__fields{grid-template-columns:minmax(0,1fr)}.clientes-filtros__panel-heading{align-items:flex-start}.clientes-filtros input{font-size:16px}}
 /* Flatpickr crea el input visible fuera del alcance del atributo scoped.
    Seleccionar ese campo explícitamente; conservar oculto el valor ISO interno. */
 .clientes-filtros >>> .clientes-filtros__fecha{display:block;width:100%;min-width:0;height:38px;border:1px solid #c9c9c9;border-radius:0;background:#fff;color:#666;padding:8px 10px;font-family:Arial,sans-serif;font-size:13px;box-sizing:border-box}

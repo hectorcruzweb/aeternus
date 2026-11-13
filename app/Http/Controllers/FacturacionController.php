@@ -1367,6 +1367,16 @@ class FacturacionController extends ApiController
                         ]
                     );
                     DB::commit();
+                    // El PAC ya confirmó el timbrado. Un fallo del inventario local
+                    // no debe revertir el CFDI ni provocar otro intento de timbrado.
+                    try {
+                        $this->registrarConsumoTimbre($folio_para_asignar,
+                            $xml_timbrado['Complemento']['TimbreFiscalDigital'], $request->tipo_comprobante['value']);
+                    } catch (\Throwable $error) {
+                        \Illuminate\Support\Facades\Log::error('No se pudo registrar el consumo de timbre.', [
+                            'cfdi_id' => $folio_para_asignar, 'exception' => $error,
+                        ]);
+                    }
                     return $folio_para_asignar;
                     //$clienteFD = new ClienteFormasDigitales($contents = Storage::disk($storage_disk_xmls)->path($file_guardar));
                     //return $clienteFD->generarCadenaOriginal();
@@ -1383,6 +1393,82 @@ class FacturacionController extends ApiController
             return $th;
         }
     }
+
+    /**
+     * Descuenta un timbre del inventario local después de confirmar el CFDI.
+     *
+     * El flujo de timbrado llama a este método después del commit del CFDI.
+     * Solo Ingreso (1), Egreso (2) y Pago (5) generan un movimiento de -1.
+     * El flujo de cancelación conserva el consumo original.
+     *
+     * Bloquea las recargas durante la asignación para serializar consumos
+     * concurrentes. Usa el UUID y el folio para evitar registrar dos veces
+     * el mismo timbrado. La fecha efectiva proviene del timbre fiscal del PAC.
+     *
+     * Aplica FIFO interno: elige la recarga activa más antigua con saldo.
+     * Si todas están agotadas, registra el consumo en la última recarga
+     * activa y deja visible el saldo negativo. Si no existe recarga activa,
+     * registra el consumo sin lote y este queda fuera del saldo de recargas.
+     *
+     * El dashboard recalcula el saldo al consultarse. Si falla esta operación,
+     * el CFDI ya guardado se conserva y el folio se anota en el log.
+     * HistorialTimbresSeeder permite reconstruir los consumos desde los CFDI.
+     *
+     * @param int $folio ID del CFDI guardado.
+     * @param array $timbre Datos del TimbreFiscalDigital con UUID y FechaTimbrado.
+     * @param int|string $tipo ID del tipo de comprobante SAT.
+     * @return void
+     */
+    private function registrarConsumoTimbre($folio, array $timbre, $tipo)
+    {
+        if (!in_array((int) $tipo, [1, 2, 5], true)
+            || !\Illuminate\Support\Facades\Schema::hasTable('movimientos_timbres')) {
+            return;
+        }
+
+        $uuid = strtolower(trim($timbre['UUID']));
+        $fecha = \Carbon\Carbon::parse($timbre['FechaTimbrado'], 'America/Mazatlan')->format('Y-m-d H:i:s');
+        DB::transaction(function () use ($folio, $uuid, $fecha) {
+            $lotes = DB::table('movimientos_timbres')
+                ->whereIn('tipo', ['recarga', 'saldo_inicial'])->whereNull('recarga_id')
+                ->orderBy('fecha_activacion')->orderBy('id')->lockForUpdate()
+                ->get(['id', 'cantidad', 'fecha_activacion']);
+
+            if (DB::table('movimientos_timbres')->where('tipo', 'consumo')
+                ->where(function ($consulta) use ($folio, $uuid) {
+                    $consulta->where('cfdis_id', $folio)->orWhere('referencia', $uuid);
+                })->lockForUpdate()->first(['id'])) {
+                return;
+            }
+
+            $activos = $lotes->filter(function ($lote) use ($fecha) {
+                return $lote->fecha_activacion && $lote->fecha_activacion <= $fecha;
+            });
+            $recarga = null;
+            foreach ($activos as $lote) {
+                $recarga = $lote->id;
+                $movimientos = DB::table('movimientos_timbres')->where('recarga_id', $recarga)
+                    ->where('fecha_movimiento', '<=', $fecha)->lockForUpdate()->get(['cantidad']);
+                if ($lote->cantidad + $movimientos->sum('cantidad') > 0) {
+                    break;
+                }
+            }
+
+            $ahora = now('America/Mazatlan');
+            DB::table('movimientos_timbres')->insert([
+                'tipo' => 'consumo',
+                'cantidad' => -1,
+                'fecha_movimiento' => $fecha,
+                'referencia' => $uuid,
+                'cfdis_id' => $folio,
+                'recarga_id' => $recarga,
+                'nota' => $recarga === null ? 'Timbrado confirmado sin recarga activa registrada.' : null,
+                'created_at' => $ahora,
+                'updated_at' => $ahora,
+            ]);
+        }, 3);
+    }
+
 
     public function regresar_bd_folio()
     {
@@ -2215,6 +2301,19 @@ class FacturacionController extends ApiController
         );
     }
 
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarListadoCfdiCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function ($formato) use ($request, $token) {
+                return $formato === 'excel'
+                    ? $this->descargarListadoCfdiExcel($request, $token)
+                    : $this->descargarListadoCfdi($request, $token);
+            }
+        );
+    }
+
     /** Descarga la instantánea del listado que se abrió en el visor. */
     public function descargarListadoCfdi(Request $request, $token)
     {
@@ -2250,6 +2349,17 @@ class FacturacionController extends ApiController
 
         return $visor->preparar($visor->capturar($pdf), 'operaciones', $titulo, $cfdi->id,
             $request->user('api'), 'Folio ' . $cfdi->id . ' · Operaciones vinculadas: ' . $operaciones->count());
+    }
+
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarOperacionesCfdiCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function () use ($request, $token) {
+                return $this->descargarOperacionesCfdi($request, $token);
+            }, ['pdf']
+        );
     }
 
     /** Descarga el PDF correspondiente a la vista previa del usuario autenticado. */

@@ -4540,6 +4540,17 @@ class FunerariaController extends ApiController
         ])->header('Cache-Control','no-store, private');
     }
 
+    /** Envía el adjunto generado para la misma consulta que se abrió en el visor. */
+    public function enviarListadoServiciosFunerariosCorreo(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar(
+            $request,
+            function ($formato) use ($request, $token) {
+                return $this->descargarListadoServiciosFunerarios($request, $token, $formato);
+            }
+        );
+    }
+
     /** Tokens de reporte independientes de sesión. Una consulta vencida responde
      * 410 y no cierra la sesión. No se admiten capturas de otros usuarios. */
     public function descargarListadoServiciosFunerarios(Request $request,$token,$formato)

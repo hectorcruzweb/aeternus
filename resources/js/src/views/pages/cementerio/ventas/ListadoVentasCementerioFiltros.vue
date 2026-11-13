@@ -58,7 +58,7 @@
       </vx-card>
     </div>
     <MapaCementerioReporte v-if="mostrarMapaCementerio" :show="mostrarMapaCementerio" :areas="areasCementerio" :tipo-inicial="filtros.tipoSeccion" :area-inicial="filtros.area" @close="mostrarMapaCementerio = false" />
-    <VisorReportes :show="mostrarReporte" :cargar="cargarReporte" :descargar-archivo="descargarExcel" :descargar-pdf="descargarPdf" @close="mostrarReporte = false" />
+    <VisorReportes :show="mostrarReporte" :cargar="cargarReporte" :descargar-archivo="descargarExcel" :descargar-pdf="descargarPdf" :enviar-correo="enviarReporteListado" @close="mostrarReporte = false" />
     <div id="resultados" class="mt-5 flex flex-col flex-1">
       <div
         v-if="noDataFound"
@@ -518,6 +518,9 @@ export default {
       return (await axios.get('/cementerio/reportes/listado-ventas',{params})).data;
     },
     async descargarExcel(token) { return (await axios.get('/cementerio/reportes/listado-ventas/'+token+'/excel',{responseType:'blob'})).data; },
+    async enviarReporteListado(token, datos) {
+        return (await axios.post('/cementerio/reportes/listado-ventas/' + encodeURIComponent(token) + '/correo', datos)).data;
+    },
     async descargarPdf(token) { return (await axios.get('/cementerio/reportes/listado-ventas/'+token+'/pdf',{responseType:'blob'})).data; },
     /** Reutiliza el catálogo real para mostrar nombres de áreas; no usa identificadores visibles. */
     async cargarAreas() {

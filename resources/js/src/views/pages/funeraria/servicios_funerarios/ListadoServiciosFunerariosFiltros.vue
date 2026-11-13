@@ -20,7 +20,7 @@
 
         <!-- Versión alternativa: el listado anterior permanece intacto. -->
         <div class="pt-2 vx-col w-full"><FiltrosServiciosFunerarios :traslados="catalogosTraslados" :reporte-deshabilitado="cargandoFiltros || !!errorFiltros" @change="aplicarFiltros" @reporte="abrirReporteFiltrado" /></div>
-        <VisorReportes v-if="mostrarReporteFiltrado" :show="mostrarReporteFiltrado" :cargar="cargarReporteFiltrado" :descargar-archivo="descargarExcelFiltrado" :descargar-pdf="descargarPdfFiltrado" @close="mostrarReporteFiltrado = false" />
+        <VisorReportes v-if="mostrarReporteFiltrado" :show="mostrarReporteFiltrado" :cargar="cargarReporteFiltrado" :descargar-archivo="descargarExcelFiltrado" :descargar-pdf="descargarPdfFiltrado" :enviar-correo="enviarReporteFiltrado" @close="mostrarReporteFiltrado = false" />
         <p v-if="errorFiltros" class="servicios-error" role="alert">{{ errorFiltros }}</p>
         <p v-if="cargandoFiltros" class="servicios-cargando" role="status">Actualizando servicios…</p>
         <div id="resultados" class="mt-5 flex flex-col flex-1">
@@ -505,6 +505,9 @@ export default {
         },
         async cargarReporteFiltrado() { return (await filtrarServicios.reporte(this.filtrosReporteFiltrado)).data; },
         async descargarExcelFiltrado(token) { return (await filtrarServicios.descargar(token, 'excel')).data; },
+        async enviarReporteFiltrado(token, datos) {
+            return (await filtrarServicios.enviarReporte(token, datos)).data;
+        },
         async descargarPdfFiltrado(token) { return (await filtrarServicios.descargar(token, 'pdf')).data; },
         aplicarFiltros(filtros) {
             this.filtrosServicios = filtros;

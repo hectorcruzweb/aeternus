@@ -16,6 +16,9 @@ export default {
     cancel: null,
     // El visor recibe HTML; los binarios se generan solo al solicitar la descarga.
     reporteListado(parametros) { return axios.get('/clientes/reportes/listado', { params: parametros }); },
+    enviarListado(token, datos) {
+        return axios.post('/clientes/reportes/listado/' + encodeURIComponent(token) + '/correo', datos);
+    },
     descargarListado(token, formato) { return axios.get('/clientes/reportes/listado/' + token + '/' + formato, { responseType: 'blob' }); },
 
     /** Consulta exclusiva del listado nuevo. Cancelación por instancia del componente,

@@ -24,7 +24,7 @@
         <div class="mapa-opciones__acciones"><button type="button" class="mapa-opciones__cancelar" @click="cancelar">Cancelar</button><button type="button" class="mapa-opciones__generar" :disabled="!esResumen && !seleccion.length" @click="generar"><feather-icon :icon="esResumen ? 'FileTextIcon' : 'MapIcon'" />{{ esResumen ? 'Ver reporte' : 'Ver mapa' }}</button></div>
       </div>
     </vs-popup>
-    <VisorReportes v-if="mostrarVisor" :show="mostrarVisor" :cargar="cargarMapa" :descargar-pdf="descargarPdf" @close="mostrarVisor = false" />
+    <VisorReportes v-if="mostrarVisor" :show="mostrarVisor" :cargar="cargarMapa" :descargar-pdf="descargarPdf" :enviar-correo="enviarMapaCorreo" @close="mostrarVisor = false" />
   </div>
 </template>
 <script>
@@ -63,6 +63,9 @@ export default {
       this.mostrarVisor = true;
     },
     async cargarMapa(){return (await axios.get('/cementerio/reportes/mapa-visual',{params:this.parametros})).data;},
+    async enviarMapaCorreo(token, datos) {
+        return (await axios.post('/cementerio/reportes/mapa-visual/' + encodeURIComponent(token) + '/correo', datos)).data;
+    },
     async descargarPdf(token){return (await axios.get('/cementerio/reportes/mapa-visual/'+token+'/pdf',{responseType:'blob'})).data;},
     bloquearExterior(e){if(e.target.classList&&e.target.classList.contains('vs-popup--background')){e.preventDefault();e.stopImmediatePropagation();}},
     alCambiarVisibilidad(v){if(!v)this.cancelar();},
