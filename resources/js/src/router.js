@@ -244,7 +244,7 @@ const router = new Router({
                     path: "/cobranza/facturacion",
                     name: "cobranza_facturacion",
                     component: () =>
-                        import("@/views/pages/facturacion/ListaFacturas.vue"),
+                        import("@/views/pages/facturacion/ListadoCfdisFiltros.vue"),
                     meta: {
                         breadcrumb: [
                             {

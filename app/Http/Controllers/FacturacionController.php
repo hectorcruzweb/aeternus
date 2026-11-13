@@ -1946,6 +1946,321 @@ class FacturacionController extends ApiController
         return $resultado_query;
     }
 
+    /**
+     * Lista CFDI en páginas de 15 con filtros combinables. Los límites de timbrado
+     * incluyen los días seleccionados y se pueden usar por separado.
+     */
+    public function FiltrarCfdis(Request $request)
+    {
+        $consulta = $this->consultaFiltrarCfdis($request);
+        $tiposCfdi = $this->get_tipos_comprobante()->pluck('tipo', 'id');
+        $metodos = MetodosPago::pluck('clave', 'id');
+        $pagina = $consulta->orderByDesc('id')->paginate(15);
+        $pagina->getCollection()->transform(function ($cfdi) use ($tiposCfdi, $metodos) {
+            $saldo = null;
+            if ((int) $cfdi->sat_tipo_comprobante_id === 1) {
+                $saldo = (int) $cfdi->sat_metodos_pago_id === 1 ? 0 :
+                    round($cfdi->total - $cfdi->pagos_asociados->where('status', 1)->sum('monto_relacion')
+                        - $cfdi->egresos_asociados->where('status', 1)->sum('monto_relacion'), 2);
+            }
+
+            return [
+                'id' => $cfdi->id,
+                'uuid' => $cfdi->uuid,
+                'cliente_nombre' => optional($cfdi->cliente)->nombre ?: $cfdi->nombre_receptor,
+                'rfc_receptor' => $cfdi->rfc_receptor,
+                'fecha_timbrado_texto' => $cfdi->fecha_timbrado ? fecha_abr($cfdi->fecha_timbrado) : null,
+                'tipo_comprobante_texto' => $tiposCfdi->get($cfdi->sat_tipo_comprobante_id),
+                'sat_metodos_pago_texto' => $metodos->get($cfdi->sat_metodos_pago_id),
+                'status' => $cfdi->status,
+                'status_texto' => [0 => 'Cancelado', 1 => 'Vigente', 3 => 'En proceso de cancelación'][$cfdi->status] ?? 'Cancelado',
+                'total' => $cfdi->total,
+                'saldo_cfdi' => $saldo,
+                'nota' => $cfdi->nota,
+                'operaciones_count' => (int) $cfdi->operaciones_count,
+            ];
+        });
+
+        return $pagina;
+    }
+
+    /** Comparte los criterios de búsqueda entre la pantalla y el reporte de ingresos. */
+    private function consultaFiltrarCfdis(Request $request, $ingresosPorDefecto = false)
+    {
+        $referencias = [
+            1 => 'ventas_terrenos_id',
+            2 => 'ventas_terrenos_id',
+            3 => 'servicios_funerarios_id',
+            4 => 'ventas_planes_id',
+            5 => 'ventas_generales_id',
+        ];
+        $filtros = $request->validate([
+            'folio' => 'nullable|integer|min:1',
+            'uuid' => 'nullable|string|max:36',
+            'cliente' => 'nullable|string|max:150',
+            'rfc' => 'nullable|string|max:13',
+            'tipo_cfdi' => 'nullable|integer|exists:sat_tipo_comprobante,id',
+            'status' => 'nullable|in:0,1,3',
+            'metodo_pago' => 'nullable|in:PUE,PPD',
+            'saldo_pendiente' => 'nullable|in:1',
+            'desde' => 'nullable|date_format:Y-m-d',
+            'hasta' => 'nullable|date_format:Y-m-d',
+            'operaciones_relacionadas' => 'nullable|in:con,sin',
+            'tipos_servicio' => 'nullable|array|max:5',
+            'tipos_servicio.*' => 'integer|distinct|in:1,2,3,4,5',
+            'numero_servicio' => 'nullable|integer|min:1',
+            'page' => 'nullable|integer|min:1',
+        ]);
+
+        if (isset($filtros['desde'], $filtros['hasta']) && $filtros['hasta'] < $filtros['desde']) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'hasta' => 'La fecha final debe ser igual o posterior a la inicial.',
+            ]);
+        }
+
+        $consulta = Cfdis::query()->select([
+            'id', 'uuid', 'clientes_id', 'nombre_receptor', 'rfc_receptor', 'fecha_timbrado',
+            'sat_tipo_comprobante_id', 'sat_metodos_pago_id', 'status', 'total', 'nota',
+        ])->selectRaw('(SELECT COUNT(DISTINCT co.operaciones_id) FROM cfdis_operaciones co
+            INNER JOIN operaciones o ON o.id = co.operaciones_id WHERE co.cfdis_id = cfdis.id) AS operaciones_count')
+            ->with(['cliente:id,nombre', 'pagos_asociados', 'egresos_asociados']);
+
+        if ($ingresosPorDefecto && !$request->filled('tipo_cfdi')) {
+            $consulta->where('sat_tipo_comprobante_id', 1);
+        }
+
+        foreach (['folio' => 'id', 'tipo_cfdi' => 'sat_tipo_comprobante_id', 'status' => 'status', 'rfc' => 'rfc_receptor'] as $filtro => $campo) {
+            if ($request->filled($filtro)) {
+                $consulta->where($campo, $filtros[$filtro]);
+            }
+        }
+
+        if (isset($filtros['metodo_pago'])) {
+            $consulta->whereIn('sat_metodos_pago_id', function ($metodos) use ($filtros) {
+                $metodos->select('id')->from('sat_metodos_pago')->where('clave', $filtros['metodo_pago']);
+            });
+        }
+
+        // Replica el saldo del listado: solo ingresos PPD vigentes, con pagos y egresos vigentes aplicados.
+        if ($request->filled('saldo_pendiente')) {
+            $consulta->where('cfdis.status', 1)->where('cfdis.sat_tipo_comprobante_id', 1)
+                ->where('cfdis.sat_metodos_pago_id', 2)
+                ->whereRaw('ROUND(cfdis.total - COALESCE((
+                    SELECT SUM(r.monto_relacion)
+                    FROM cfdis_tipo_relacion r
+                    INNER JOIN cfdis relacionado ON relacionado.id = r.cfdis_id
+                    WHERE r.cfdis_id_relacionado = cfdis.id
+                        AND r.tipo_relacion_id IN (2, 3) AND relacionado.status = 1
+                ), 0), 2) > 0');
+        }
+
+        if ($request->filled('uuid')) {
+            $consulta->where('uuid', 'like', trim($filtros['uuid']).'%');
+        }
+        if ($request->filled('cliente')) {
+            $nombre = '%'.trim($filtros['cliente']).'%';
+            $consulta->where(function ($q) use ($nombre) {
+                $q->where('nombre_receptor', 'like', $nombre)
+                    ->orWhereHas('cliente', function ($cliente) use ($nombre) {
+                        $cliente->where('nombre', 'like', $nombre);
+                    });
+            });
+        }
+        if ($request->filled('desde')) {
+            $consulta->where('fecha_timbrado', '>=', $filtros['desde'].' 00:00:00');
+        }
+        if ($request->filled('hasta')) {
+            $fin = \Carbon\Carbon::parse($filtros['hasta'])->addDay()->toDateString();
+            $consulta->where('fecha_timbrado', '<', $fin.' 00:00:00');
+        }
+
+        if (isset($filtros['operaciones_relacionadas'])) {
+            $this->filtrarCfdisPorOperacion($consulta, [], null, [], $filtros['operaciones_relacionadas'] === 'sin');
+        }
+
+        $tipos = $filtros['tipos_servicio'] ?? [];
+        $numero = $filtros['numero_servicio'] ?? null;
+        if ($tipos || $numero !== null) {
+            $this->filtrarCfdisPorOperacion($consulta, $tipos, $numero, $referencias);
+        }
+
+        return $consulta;
+    }
+
+    /**
+     * Busca una operación vinculada directamente al CFDI que cumpla el tipo
+     * y la referencia comercial. EXISTS evita duplicar comprobantes.
+     */
+    private function filtrarCfdisPorOperacion($consulta, array $tipos, $numero, array $referencias, $sinOperaciones = false)
+    {
+        $consulta->whereExists(function ($operaciones) use ($tipos, $numero, $referencias) {
+            $operaciones->selectRaw('1')->from('cfdis_operaciones as co')
+                ->join('operaciones as o', 'o.id', '=', 'co.operaciones_id')
+                ->whereColumn('co.cfdis_id', 'cfdis.id');
+
+            if ($tipos) {
+                $operaciones->whereIn('o.empresa_operaciones_id', $tipos);
+            }
+            if ($numero !== null) {
+                $operaciones->where(function ($referencia) use ($numero, $referencias) {
+                    foreach ($referencias as $tipo => $campo) {
+                        $referencia->orWhere(function ($operacion) use ($tipo, $campo, $numero) {
+                            $operacion->where('o.empresa_operaciones_id', $tipo)->where('o.'.$campo, $numero);
+                        });
+                    }
+                });
+            }
+        }, 'and', $sinOperaciones);
+    }
+
+    /** Consulta las operaciones directas y elimina vínculos duplicados por CFDI. */
+    private function consultaOperacionesCfdi()
+    {
+        return DB::table('cfdis_operaciones as co')
+            ->join('operaciones as o', 'o.id', '=', 'co.operaciones_id')
+            ->leftJoin('clientes as c', 'c.id', '=', 'o.clientes_id')
+            ->select('co.cfdis_id as cfdi_id', 'o.id', 'o.empresa_operaciones_id', 'o.ventas_terrenos_id', 'o.cuotas_cementerio_id',
+                'o.servicios_funerarios_id', 'o.ventas_planes_id', 'o.ventas_generales_id',
+                'o.fecha_operacion', 'o.status', 'o.total', 'o.saldo', 'c.nombre as cliente')
+            ->distinct()->orderByDesc('o.fecha_operacion')->orderByDesc('o.id');
+    }
+
+    /** Agrupa ingresos filtrados con sus operaciones y aplicaciones de pagos y egresos. */
+    public function previewListadoCfdi(Request $request)
+    {
+        $consulta = $this->consultaFiltrarCfdis($request, true);
+        $tipo = (int) $request->input('tipo_cfdi', 1) ?: 1;
+        $esIngreso = $tipo === 1;
+        $relacionAplicada = [2 => 'cfdis_egresados', 5 => 'cfdis_pagados'][$tipo] ?? null;
+        if (!$esIngreso) {
+            $consulta->setEagerLoads([]);
+            $consulta->with($relacionAplicada ? ['cliente:id,nombre', $relacionAplicada] : ['cliente:id,nombre']);
+        }
+        $cfdis = $consulta->addSelect('sat_monedas_id')->orderByDesc('id')->get();
+        $operaciones = $cfdis->isEmpty() ? collect() : $this->consultaOperacionesCfdi()
+            ->whereIn('co.cfdis_id', $cfdis->modelKeys())
+            ->get()->groupBy('cfdi_id');
+        $empresa = app(EmpresaController::class)->get_empresa_data();
+        $monedas = DB::table('sat_monedas')->pluck('codigo_moneda', 'id');
+        $resumen = [];
+        foreach ($cfdis as $cfdi) {
+            $moneda = $monedas->get($cfdi->sat_monedas_id) ?: 'Sin moneda';
+            $resumen[$moneda] = $resumen[$moneda] ?? ['cantidad' => 0, 'total' => 0, 'saldo' => 0, 'aplicado' => 0];
+            $cfdi->importe_aplicado_reporte = $relacionAplicada ? $cfdi->{$relacionAplicada}->sum('monto_relacion') : null;
+            $cfdi->saldo_reporte = !$esIngreso || (int) $cfdi->sat_metodos_pago_id === 1 ? 0 :
+                round($cfdi->total - $cfdi->pagos_asociados->where('status', 1)->sum('monto_relacion')
+                    - $cfdi->egresos_asociados->where('status', 1)->sum('monto_relacion'), 2);
+            $resumen[$moneda]['cantidad']++;
+            $resumen[$moneda]['total'] += $cfdi->total;
+            $resumen[$moneda]['saldo'] += $cfdi->saldo_reporte;
+            $resumen[$moneda]['aplicado'] += $cfdi->importe_aplicado_reporte ?? 0;
+        }
+
+        $tipoTexto = $this->get_tipos_comprobante()->pluck('tipo', 'id')->get($tipo, 'CFDI');
+        $titulo = 'Reporte del listado de CFDI · '.$tipoTexto;
+        $visor = new \App\Services\VisorDocumentos('facturacion_listado_cfdi_');
+        $fecha = now('America/Mazatlan')->format('d/m/Y H:i');
+        $tipos = collect($this->get_empresa_tipo_operaciones())->pluck('tipo', 'id');
+        $datos = [
+            'titulo' => $titulo,
+            'cfdis' => $cfdis,
+            'operaciones' => $operaciones,
+            'tiposOperacion' => $tipos,
+            'metodos' => MetodosPago::pluck('clave', 'id'),
+            'monedas' => $monedas,
+            'empresa' => $empresa,
+            'resumen' => $resumen,
+            'esIngreso' => $esIngreso,
+            'tipoTexto' => $tipoTexto,
+            'filtros' => $request->only(['folio', 'uuid', 'cliente', 'rfc', 'status', 'metodo_pago',
+                'desde', 'hasta', 'operaciones_relacionadas', 'tipos_servicio', 'numero_servicio', 'saldo_pendiente']),
+            'fecha' => $fecha,
+            'logo' => env('LOGOJPG') ? public_path(env('LOGOJPG')) : null,
+        ];
+        $pdf = PDF::loadView('reportes.temporales_visor_excel.facturacion.listado_cfdi', $datos)->setOptions([
+            'title' => $titulo, 'page-size' => 'Letter', 'orientation' => 'Portrait',
+            'margin-top' => 10, 'margin-right' => 10, 'margin-bottom' => 14, 'margin-left' => 10,
+            'footer-html' => view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
+                'dominio' => \App\Exports\NombreEmpresaReportes::formatear($empresa['nombre_comercial'] ?? null)
+                    . ' · ' . ($empresa['telefono'] ?? '') . ' · ' . ($empresa['email'] ?? ''),
+                'fechaImpresion' => $fecha,
+            ]),
+        ]);
+
+        $captura = $visor->capturar($pdf);
+        $captura['total_registros'] = $cfdis->count();
+        $respuesta = $visor->preparar($captura, 'listado-ingresos', $titulo, null, $request->user('api'),
+            $cfdis->count() . ' CFDI · '.$tipoTexto.' · PDF y Excel');
+        $vista = $respuesta->getData(true);
+        $vista['soloPdf'] = false;
+        $vista['nombreArchivo'] = preg_replace('/\.pdf$/i', '.xlsx', $vista['nombreArchivo']);
+        $vista['nota'] = 'El PDF y el Excel se generan al descargarlos.';
+        \Illuminate\Support\Facades\Cache::put('facturacion_listado_excel_'.$vista['tokenDescarga'], [
+            'usuario_id' => (int) $request->user('api')->id,
+            'datos' => $datos,
+            'nombre' => $vista['nombreArchivo'],
+        ], \Carbon\Carbon::parse($vista['venceEn']));
+        return $respuesta->setData($vista);
+    }
+
+    /** Exporta los mismos resultados y filtros guardados al abrir el visor. */
+    public function descargarListadoCfdiExcel(Request $request, $token)
+    {
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D', $token), 404);
+        $reporte = \Illuminate\Support\Facades\Cache::get('facturacion_listado_excel_'.$token);
+        abort_unless($reporte, 410, 'La consulta del reporte venció. Actualice el reporte.');
+        abort_unless($reporte['usuario_id'] === (int) $request->user('api')->id, 403);
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ListadoCfdiExport($reporte['datos']), $reporte['nombre']
+        );
+    }
+
+    /** Descarga la instantánea del listado que se abrió en el visor. */
+    public function descargarListadoCfdi(Request $request, $token)
+    {
+        return (new \App\Services\VisorDocumentos('facturacion_listado_cfdi_'))
+            ->descargar($request, $token, 'listado-ingresos');
+    }
+
+
+
+    /** Prepara el resumen de un CFDI y las operaciones vinculadas directamente. */
+    public function previewOperacionesCfdi(Request $request)
+    {
+        $request->validate(['folio_id' => 'required|integer|min:1']);
+        $cfdi = Cfdis::with(['cliente:id,nombre'])->findOrFail($request->input('folio_id'));
+        $operaciones = $this->consultaOperacionesCfdi()->where('co.cfdis_id', $cfdi->id)->get();
+
+        $titulo = 'CFDI y operaciones relacionadas';
+        $visor = new \App\Services\VisorDocumentos('facturacion_operaciones_cfdi_');
+        $pdf = PDF::loadView('reportes.temporales_visor_excel.facturacion.operaciones_cfdi', [
+            'titulo' => $titulo,
+            'cfdi' => $cfdi,
+            'operaciones' => $operaciones,
+            'tiposOperacion' => collect($this->get_empresa_tipo_operaciones())->pluck('tipo', 'id'),
+            'tipoCfdi' => $this->get_tipos_comprobante()->pluck('tipo', 'id')->get($cfdi->sat_tipo_comprobante_id),
+            'metodoPago' => MetodosPago::where('id', $cfdi->sat_metodos_pago_id)->value('clave'),
+            'moneda' => DB::table('sat_monedas')->where('id', $cfdi->sat_monedas_id)->value('codigo_moneda'),
+            'fechaConsulta' => now('America/Mazatlan')->format('d/m/Y H:i'),
+            'logo' => env('LOGOJPG') ? public_path(env('LOGOJPG')) : null,
+        ])->setOptions([
+            'title' => $titulo, 'page-size' => 'Letter',
+            'margin-top' => 12, 'margin-right' => 12, 'margin-bottom' => 12, 'margin-left' => 12,
+        ]);
+
+        return $visor->preparar($visor->capturar($pdf), 'operaciones', $titulo, $cfdi->id,
+            $request->user('api'), 'Folio ' . $cfdi->id . ' · Operaciones vinculadas: ' . $operaciones->count());
+    }
+
+    /** Descarga el PDF correspondiente a la vista previa del usuario autenticado. */
+    public function descargarOperacionesCfdi(Request $request, $token)
+    {
+        return (new \App\Services\VisorDocumentos('facturacion_operaciones_cfdi_'))
+            ->descargar($request, $token, 'operaciones');
+    }
+
+
+
     /** Visor de CFDI: captura HTML con los mismos datos/XML y validaciones del PDF
      * anterior. Catálogo cerrado, ampliable sin crear rutas por cada documento. */
     private const DOCUMENTOS_CFDI_VISOR = ['cfdi' => 'Comprobante Fiscal Digital'];

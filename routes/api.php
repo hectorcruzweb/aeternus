@@ -412,6 +412,7 @@ Route::middleware(['auth:api'])->group(function () {
     Route::get('facturacion/get_empresa_tipo_operaciones', 'FacturacionController@get_empresa_tipo_operaciones');
     Route::get('facturacion/get_operaciones/{id_operacion_local?}/{paginated?}/', 'FacturacionController@get_operaciones');
     Route::get('facturacion/get_cfdi_from_xml/{folio?}', 'FacturacionController@leer_xml');
+    Route::get('facturacion/filtrar-cfdis', 'FacturacionController@FiltrarCfdis');
     Route::get('facturacion/get_cfdis_timbrados/{folio_id?}/{paginated?}/{metodo_pago_id?}/{tipo_comprobante_id?}', 'FacturacionController@get_cfdis_timbrados');
     Route::get('facturacion/get_cfdi_download/{folio_id?}', 'FacturacionController@get_cfdi_download');
     Route::get('facturacion/consultar_cfdi_folio/{folio_id?}', 'FacturacionController@consultar_cfdi_folio');
@@ -420,6 +421,11 @@ Route::middleware(['auth:api'])->group(function () {
     /**rutas de timbrado de cfdi */
     // Visor de CFDI: mismo permiso que el PDF existente y catálogo por documento.
     Route::prefix('facturacion/documentos')->middleware(['permiso:21,62'])->group(function () {
+        Route::get('listado-ingresos', 'FacturacionController@previewListadoCfdi');
+        Route::get('listado-ingresos/{token}/pdf', 'FacturacionController@descargarListadoCfdi');
+        Route::get('listado-ingresos/{token}/excel', 'FacturacionController@descargarListadoCfdiExcel');
+        Route::get('operaciones', 'FacturacionController@previewOperacionesCfdi');
+        Route::get('operaciones/{token}/pdf', 'FacturacionController@descargarOperacionesCfdi');
         Route::get('{documento}', 'FacturacionController@previewDocumentoCfdi');
         Route::get('{documento}/{token}/pdf', 'FacturacionController@descargarDocumentoCfdi');
         Route::post('{documento}/{token}/correo', 'FacturacionController@enviarDocumentoCfdiCorreo')->middleware('throttle:5,1,dashboard-correo:');
