@@ -145,7 +145,7 @@ const router = new Router({
                     name: "Control de asistencia",
                     component: () =>
                         import(
-                            "@/views/pages/control_de_asistencia/checador.vue"
+                            "@/views/pages/control_de_asistencia/ChecadorRegistros.vue"
                         ),
                     //component: () => import('@/views/pages/empresa/Empresa.vue'),
                     meta: {

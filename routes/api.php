@@ -450,12 +450,18 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/checador/cancelar_registro', 'ChecadorController@cancelar_registro')->middleware(['permiso:23,67']);
     Route::post('/checador/habilitar_registro', 'ChecadorController@habilitar_registro')->middleware(['permiso:23,67']);
     Route::post('/checador/guardar_dias_descanso', 'ChecadorController@guardar_dias_descanso')->middleware(['permiso:23,69']);
+    Route::get('checador/registros/visor', 'ChecadorController@previsualizarRegistrosChecador')->middleware(['permiso:23,68']);
+    Route::get('checador/registros/visor/{token}/{formato}', 'ChecadorController@descargarRegistrosChecador')->where('formato', 'pdf|excel')->middleware(['permiso:23,68']);
+    Route::post('checador/registros/visor/{token}/correo', 'ChecadorController@enviarRegistrosChecador')->middleware(['permiso:23,68', 'throttle:5,1,dashboard-correo:']);
     Route::get('checador/lista_registros/{fecha_inicio?}/{fecha_fin?}/{empleado_id?}', 'ChecadorController@lista_registros')->middleware(['permiso:23,68']);
     Route::get('checador/get_registros_checador_frontend/{registro_id?}/{usuario_id?}/{paginated?}/{area_filtro?}', 'ChecadorController@get_registros_checador');
     Route::get('checador/get_asistencia_reporte/{paginated?}', 'ChecadorController@get_asistencia_reporte');
     Route::get('checador/get_empleados/{empleados_todos?}', 'ChecadorController@get_empleados');
     Route::get('checador/get_empleados_dias_descanso/{id_empleado?}', 'ChecadorController@get_empleados_dias_descanso');
     Route::get('checador/get_empleados_paginados', 'ChecadorController@get_empleados_paginados');
+    Route::get('checador/tarjetas/visor', 'ChecadorController@previsualizarTarjetaAsistencia')->middleware(['permiso:23,70']);
+    Route::get('checador/tarjetas/visor/{token}/pdf', 'ChecadorController@descargarTarjetaAsistencia')->middleware(['permiso:23,70']);
+    Route::post('checador/tarjetas/visor/{token}/correo', 'ChecadorController@enviarTarjetaAsistencia')->middleware(['permiso:23,70', 'throttle:5,1,dashboard-correo:']);
     Route::get('checador/reporte_tarjeta', 'ChecadorController@reporte_tarjeta')->middleware(['permiso:23,70']);
 
     /*Rutas para cotizaciones */

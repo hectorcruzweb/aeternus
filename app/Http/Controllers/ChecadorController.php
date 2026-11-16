@@ -59,6 +59,10 @@ class ChecadorController extends ApiController
                         ELSE "Cementerio"
                         END) AS area_des')
         )/*->whereHas('registros')*/->with("rol:id,rol")->where('nombre', 'like', '%' . $request->nombre . '%')->orderBy("id", "asc");
+        if ($request->filled('usuario_id')) {
+            $usuario = $request->validate(['usuario_id' => 'integer|min:2'])['usuario_id'];
+            $resultado_query->where('usuarios.id', $usuario);
+        }
         if ($request->area > 0) {
             $resultado_query = $resultado_query->where("cementerio_funeraria_filtro", "=", $request->area);
         }
@@ -329,8 +333,17 @@ class ChecadorController extends ApiController
         if ($registro_id != "all") {
             $resultado_query->where("id", "=", $registro_id);
         }
-        if ((isset($request->fecha_inicio) && trim($request->fecha_inicio) != "") && (isset($request->fecha_fin) && trim($request->fecha_fin) != "")) {
-            $resultado_query->whereDate('fecha_hora', '>=', $request->fecha_inicio)->whereDate('fecha_hora', '<=', $request->fecha_fin);
+        if ($request->filled('nombre_empleado')) {
+            $nombre = $request->validate(['nombre_empleado' => 'string|max:100'])['nombre_empleado'];
+            $resultado_query->whereHas('usuario', function ($query) use ($nombre) {
+                $query->where('nombre', 'like', '%' . $nombre . '%');
+            });
+        }
+        if ($request->filled('fecha_inicio')) {
+            $resultado_query->whereDate('fecha_hora', '>=', $request->fecha_inicio);
+        }
+        if ($request->filled('fecha_fin')) {
+            $resultado_query->whereDate('fecha_hora', '<=', $request->fecha_fin);
         }
         $resultado_query = $resultado_query->get();
         $resultado = array();
@@ -358,7 +371,7 @@ class ChecadorController extends ApiController
         return $resultado_query;
     }
 
-    public function get_asistencia_reporte(Request $request, $paginated = "no_paginated")
+    public function get_asistencia_reporte(Request $request, $paginated = "no_paginated", ?array $filtrosListado = null)
     {
         request()->validate(
             [
@@ -376,7 +389,7 @@ class ChecadorController extends ApiController
             "id",
             "nombre",
             "roles_id",
-            "genero"
+            "genero", "cementerio_funeraria_filtro"
         )->with("rol:id,rol")->with("dias_descanso")->where('nombre', 'like', '%' . $request->nombre . '%');
 
         if ($request->cementerio_funeraria_filtro > 0) {
@@ -400,8 +413,12 @@ class ChecadorController extends ApiController
             "horarios.diashorario"
         ]);
         $resultado_query = $resultado_query->where("id", ">", 1);
-        $resultado_query = $resultado_query->where("status", ">", 0);
-        $resultado_query = $resultado_query->get();
+        if ($filtrosListado === null) {
+            $resultado_query->where('status', '>', 0);
+        } elseif (isset($filtrosListado['estado'])) {
+            $resultado_query->where('status', $filtrosListado['estado']);
+        }
+        $resultado_query = $resultado_query->orderBy('id')->get();
         $resultado = array();
         if ($paginated == "paginated") {
             $resultado_query = $this->showAllPaginated($resultado_query)->toArray();
@@ -425,6 +442,7 @@ class ChecadorController extends ApiController
                 "empleado" => strtoupper($empleado["nombre"]),
                 "rol" => $empleado["rol"],
                 "genero" => $empleado["genero"],
+                "area" => [1 => "Funeraria", 2 => "Cementerio"][$empleado["cementerio_funeraria_filtro"]] ?? "Sin área asignada",
                 "indicadores_empleado" => [
                     "dias_a_descansar" => 0,
                     "dias_descansados" => 0,
@@ -444,7 +462,7 @@ class ChecadorController extends ApiController
             $fecha_inicial = new DateTime($request->fecha_inicio);
             $fecha_fin = new DateTime($request->fecha_fin);
             //dias para los que se generará la tarjeta
-            $dias_tarjeta = $fecha_inicial->diff($fecha_fin)->d + 1;
+            $dias_tarjeta = $fecha_inicial->diff($fecha_fin)->days + 1;
             //creando los dias que componen la tarjeta
             for ($dia = $fecha_inicial; $dia <= $fecha_fin; $dia->modify('+1 day')) {
                 $tarjeta_empleado = [
@@ -638,7 +656,7 @@ class ChecadorController extends ApiController
             $empleado["indicadores_empleado"]["tiempo_trabajado"] = (($horas_trabajadas - ($horas_trabajadas % 60)) / 60) . " h " . ($horas_trabajadas % 60) . " Min.";
 
             //porcentaje_asistencia
-            $empleado["indicadores_empleado"]["porcentaje_asistencia"] = round(($horas_trabajadas * 100) / $horas_requeridas, 0);
+            $empleado["indicadores_empleado"]["porcentaje_asistencia"] = $horas_requeridas > 0 ? round(($horas_trabajadas * 100) / $horas_requeridas, 0) : 0;
             if ($empleado["indicadores_empleado"]["tiempo_faltante_jornada"] < 480) {
                 //si el tiempo faltante de jornada es mayor a 480 min = 1 dia de 8 horas se marca como que no cumple con su jornada
                 $empleado["indicadores_empleado"]["cumplio_jornada"] = "Si";
@@ -813,6 +831,139 @@ class ChecadorController extends ApiController
         }
     }
 
+    /** Captura los filtros y las filas una sola vez para el visor y sus exportaciones. */
+    public function previsualizarRegistrosChecador(Request $request)
+    {
+        $filtros = $request->validate([
+            'desde' => 'nullable|required_without:hasta|date_format:Y-m-d',
+            'hasta' => ['nullable', 'required_without:desde', 'date_format:Y-m-d',
+                $request->filled('desde') ? 'after_or_equal:desde' : 'date'],
+            'usuario_id' => 'nullable|integer|min:1',
+            'area' => 'nullable|in:0,1,2',
+        ]);
+        $desde = $filtros['desde'] ?? null;
+        $hasta = $filtros['hasta'] ?? null;
+        $usuarioId = $filtros['usuario_id'] ?? 'all';
+        $area = $filtros['area'] ?? 0;
+        $registros = $this->get_registros_checador(new Request([
+            'fecha_inicio' => $desde, 'fecha_fin' => $hasta,
+        ]), 'all', $usuarioId, 'no_paginated', $area);
+        $filas = [];
+        $entradas = $salidas = $cancelados = 0;
+        $incidencias = $this->incidenciasRegistrosChecador($registros, $desde, $hasta);
+        foreach ($registros as $registro) {
+            $filas[] = [
+                $registro['fecha_registro_texto'] . ' · ' . $registro['hora_registro'],
+                $registro['usuario']['nombre'] ?? 'No disponible',
+                $registro['usuario']['area_des'] ?? 'No disponible',
+                $registro['tipo_registro_texto'], $registro['forma_registro'], $registro['status_texto'],
+                $incidencias[$registro['id']] ?? '',
+            ];
+            $activo = (int) $registro['status'] === 1;
+            $entradas += $activo && (int) $registro['tipo_registro_id'] === 1 ? 1 : 0;
+            $salidas += $activo && (int) $registro['tipo_registro_id'] === 0 ? 1 : 0;
+            $cancelados += $activo ? 0 : 1;
+        }
+        $corte = now('America/Mazatlan');
+        $empresa = app(EmpresaController::class)->get_empresa_data()->toArray();
+        $rutaLogo = env('LOGOJPG') ? public_path(env('LOGOJPG')) : null;
+        $datos = [
+            'titulo' => 'Registros del checador',
+            'nombreArchivo' => 'Registros del checador ' . $corte->format('Y-m-d H-i-s'),
+            'empresa' => $empresa,
+            'logo' => $rutaLogo && is_file($rutaLogo) ? 'data:' . mime_content_type($rutaLogo) . ';base64,' . base64_encode(file_get_contents($rutaLogo)) : null,
+            'fecha' => $corte->format('d/m/Y H:i'),
+            'dominio' => parse_url(config('app.url'), PHP_URL_HOST) ?: $request->getHost(),
+            'periodo' => implode(' · ', array_filter([$desde ? 'Desde ' . fecha_abr($desde) : null, $hasta ? 'Hasta ' . fecha_abr($hasta) : null])),
+            'empleado' => $usuarioId === 'all' ? 'Todos' : (User::whereKey($usuarioId)->value('nombre') ?? 'No disponible'),
+            'area' => [0 => 'Ambas', 1 => 'Funeraria', 2 => 'Cementerio'][$area],
+            'columnas' => ['Fecha y hora', 'Empleado', 'Área', 'Tipo de registro', 'Forma de registro', 'Estado', 'Incidencia'],
+            'limite_pdf' => 1000, 'incidencias' => count($incidencias),
+            'filas' => $filas, 'entradas' => $entradas, 'salidas' => $salidas, 'cancelados' => $cancelados,
+            'usuario_id' => (int) $request->user('api')->id,
+        ];
+        $token = bin2hex(random_bytes(32));
+        $vence = $corte->copy()->addMinutes(15);
+        $limite = $datos['limite_pdf'];
+        $visible = count($filas) <= $limite;
+        \Illuminate\Support\Facades\Cache::put('checador_registros_' . $token, $datos, $vence);
+
+        return response()->json([
+            'titulo' => $datos['titulo'], 'subtitulo' => $datos['periodo'],
+            'nombreArchivo' => $datos['nombreArchivo'] . '.xlsx',
+            'tokenDescarga' => $token, 'venceEn' => $vence->toIso8601String(),
+            'totalRegistros' => count($filas), 'limiteVisualizacion' => $limite,
+            'vistaPreviaDisponible' => $visible, 'pdfDisponible' => $visible,
+            'mensaje' => $visible ? null : 'El reporte completo está disponible en Excel. Para obtener un PDF, reduce el periodo o aplica más filtros.',
+            'hojas' => $visible ? [['nombre' => 'Registros', 'html' => view('checador.registros.visor', $datos)->render()]] : [],
+        ])->header('Cache-Control', 'no-store, private');
+    }
+
+    /** Revisa marcas activas consecutivas, incluyendo las adyacentes al periodo. */
+    private function incidenciasRegistrosChecador(array $registros, $desde, $hasta): array
+    {
+        $incidencias = [];
+        foreach (collect($registros)->where('status', 1)->groupBy('usuarios_id') as $usuarioId => $marcas) {
+            $marcas = $marcas->sort(function ($a, $b) {
+                return strcmp($a['fecha_hora'], $b['fecha_hora']) ?: ($a['id'] <=> $b['id']);
+            })->values();
+            $consulta = RegistrosChecador::where('usuarios_id', $usuarioId)->where('status', 1);
+            $anterior = $desde ? (clone $consulta)->where('fecha_hora', '<', $desde . ' 00:00:00')
+                ->orderByDesc('fecha_hora')->orderByDesc('id')->value('tipo_registro_id') : null;
+            $siguiente = $hasta ? (clone $consulta)->where('fecha_hora', '>=', \Carbon\Carbon::parse($hasta)->addDay()->startOfDay())
+                ->orderBy('fecha_hora')->orderBy('id')->value('tipo_registro_id') : null;
+
+            foreach ($marcas as $indice => $marca) {
+                $previa = $marcas->get($indice - 1)['tipo_registro_id'] ?? $anterior;
+                $posterior = $marcas->get($indice + 1)['tipo_registro_id'] ?? $siguiente;
+                if ((int) $marca['tipo_registro_id'] === 1) {
+                    if ($posterior !== null && (int) $posterior === 1) {
+                        $incidencias[$marca['id']] = 'Entrada sin salida';
+                    }
+                } elseif ($previa === null || (int) $previa !== 1) {
+                    $incidencias[$marca['id']] = 'Salida sin entrada';
+                }
+            }
+        }
+        return $incidencias;
+    }
+
+    /** Exporta la misma captura privada en carta vertical o Excel. */
+    public function descargarRegistrosChecador(Request $request, $token, $formato)
+    {
+        abort_unless(preg_match('/^[a-f0-9]{64}$/D', $token) && in_array($formato, ['pdf', 'excel'], true), 404);
+        $datos = \Illuminate\Support\Facades\Cache::get('checador_registros_' . $token);
+        abort_unless($datos, 410, 'La consulta venció. Actualiza el reporte.');
+        abort_unless($datos['usuario_id'] === (int) $request->user('api')->id, 403);
+        if ($formato === 'excel') {
+            $respuesta = \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\RegistrosChecadorExport($datos), $datos['nombreArchivo'] . '.xlsx'
+            );
+        } else {
+            if (count($datos['filas']) > $datos['limite_pdf']) {
+                return response()->json(['message' => 'Este listado está disponible únicamente en Excel.', 'pdfDisponible' => false], 422);
+            }
+            $datos['modoPdf'] = true;
+            $respuesta = PDF::loadView('checador.registros.visor', $datos)->setOptions([
+                'page-size' => 'Letter', 'orientation' => 'portrait', 'encoding' => 'UTF-8',
+                'margin-top' => 10, 'margin-bottom' => 14, 'margin-left' => 10, 'margin-right' => 10,
+                'footer-html' => view('reportes.temporales_visor_excel.compartidos.footer_pdf', [
+                    'fechaImpresion' => $datos['fecha'], 'dominio' => $datos['dominio'],
+                ])->render(), 'footer-spacing' => 3,
+            ])->download($datos['nombreArchivo'] . '.pdf');
+        }
+        $respuesta->headers->set('Cache-Control', 'no-store, private');
+        return $respuesta;
+    }
+
+    /** Envía el archivo solicitado mediante el flujo de correo del visor. */
+    public function enviarRegistrosChecador(Request $request, $token)
+    {
+        return app(\App\Services\CorreoReporteFiltrado::class)->enviar($request, function ($formato) use ($request, $token) {
+            return $this->descargarRegistrosChecador($request, $token, $formato);
+        });
+    }
+
     public function lista_registros(Request $request, $fecha_inicio = "all", $fecha_fin = "all", $usuario_id = "all")
     {
         // --- 1️⃣ Determine if email should be sent ---
@@ -825,6 +976,7 @@ class ChecadorController extends ApiController
         $filterRequest = new \Illuminate\Http\Request([
             'fecha_inicio' => $fecha_inicio === "all" ? "" : $fecha_inicio,
             'fecha_fin' => $fecha_fin === "all" ? "" : $fecha_fin,
+            'nombre_empleado' => $request->input('nombre_empleado'),
         ]);
 
         // --- 3️⃣ Get registros ---
@@ -837,10 +989,15 @@ class ChecadorController extends ApiController
         // --- 5️⃣ Get empleado info ---
         $empleado = $usuario_id !== "all" ? optional(User::find($usuario_id))->nombre : "Todos";
 
-        // --- 6️⃣ Prepare date range string ---
-        $fecha = $fecha_inicio !== "all"
-            ? ("Del " . fecha_abr($fecha_inicio) . " al " . fecha_abr($fecha_fin))
-            : "Todo el Historial";
+        // Los límites son independientes, igual que en el listado.
+        $fecha = 'Todo el historial';
+        if ($fecha_inicio !== 'all' && $fecha_fin !== 'all') {
+            $fecha = 'Del ' . fecha_abr($fecha_inicio) . ' al ' . fecha_abr($fecha_fin);
+        } elseif ($fecha_inicio !== 'all') {
+            $fecha = 'Desde ' . fecha_abr($fecha_inicio);
+        } elseif ($fecha_fin !== 'all') {
+            $fecha = 'Hasta ' . fecha_abr($fecha_fin);
+        }
 
         $datos = [
             "empleado" => $empleado,
@@ -901,55 +1058,14 @@ class ChecadorController extends ApiController
         $email = $request->boolean('email_send'); // converts 'true'/'false' to boolean
         $email_to = $request->email_address ?? 'hector@gmail.com';
 
-        // --- 3️⃣ Prepare request for service method ---
-        $requestService = new \Illuminate\Http\Request([
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin' => $request->fecha_fin,
-            'usuario_id' => $request->usuario_id ?? null,
-            'nombre' => $request->nombre ?? null,
-            'cementerio_funeraria_filtro' => $request->cementerio_funeraria_filtro ?? null,
-        ]);
-
-        // --- 4️⃣ Prepare report date string ---
-        $fecha_del_reporte = strtoupper("DEL " . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
-
-        // --- 5️⃣ Get asistencia data ---
-        $datos = $this->get_asistencia_reporte($requestService);
-        if (empty($datos['tarjetas'])) {
-            return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 204);
-        }
-
-        // --- 6️⃣ Prepare PDF name ---
-        if (!$request->filled('usuario_id')) {
-            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE TODOS LOS EMPLEADOS " . $fecha_del_reporte) . '.pdf';
-        } else {
-            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE " . $datos['tarjetas'][0]['empleado'] . " " . $fecha_del_reporte) . '.pdf';
-        }
-
-        // --- 7️⃣ Get empresa data ---
-        $get_funeraria = new EmpresaController();
-        $empresa = $get_funeraria->get_empresa_data();
-
-        // --- 8️⃣ Generate PDF safely ---
         try {
-            $pdf = PDF::loadView('checador/tarjeta/reporte', [
-                'datos' => $datos,
-                'fecha_del_reporte' => $fecha_del_reporte,
-                'empresa' => $empresa
-            ]);
-
-            $pdf->setOptions([
-                'title' => $name_pdf,
-                'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
-                'page-size' => 'Letter',
-                'margin-left' => 13.4,
-                'margin-right' => 9.4,
-                'margin-top' => 9.4,
-                'margin-bottom' => 9.4,
-            ]);
+            [$pdf, $name_pdf] = $this->prepararPdfTarjetaAsistencia($request);
         } catch (\RuntimeException $e) {
             \Log::error('PDF generation failed: ' . $e->getMessage());
             return $this->errorResponse('Error generating PDF', 500);
+        }
+        if (!$pdf) {
+            return $this->errorResponse('Error, no se han encontrado datos que mostrar.', 204);
         }
 
         // --- 9️⃣ Send email if requested ---
@@ -967,5 +1083,104 @@ class ChecadorController extends ApiController
 
         // --- 10️⃣ Return PDF inline for browser ---
         return $pdf->inline($name_pdf);
+    }
+
+    /** Prepara la tarjeta en HTML con el mismo Blade y cálculo que el PDF existente. */
+    public function previsualizarTarjetaAsistencia(Request $request)
+    {
+        $filtros = $request->validate([
+            'usuario_id' => 'required_without:lote|nullable|integer|min:2',
+            'lote' => 'sometimes|in:1',
+            'area' => 'nullable|in:1,2',
+            'estado' => 'nullable|in:0,1',
+            'fecha_inicio' => 'required|date_format:Y-m-d',
+            'fecha_fin' => 'required|date_format:Y-m-d|after_or_equal:fecha_inicio',
+        ]);
+        $lote = isset($filtros['lote']);
+        $consulta = new Request($filtros + ['cementerio_funeraria_filtro' => $filtros['area'] ?? null]);
+        [$pdf, , $datos, $periodo] = $this->prepararPdfTarjetaAsistencia($consulta, true, $lote ? $filtros : null);
+        abort_unless($pdf, 404, 'No se encontraron empleados para los filtros seleccionados.');
+
+        $titulo = $lote ? 'Tarjetas de asistencia' : 'Tarjeta de asistencia';
+        $detalle = $lote ? count($datos['tarjetas']) . ' empleados' : $datos['tarjetas'][0]['empleado'];
+        $visor = new \App\Services\VisorDocumentos('checador_tarjeta_');
+        $captura = $visor->capturar($pdf);
+        // Chromium necesita reservar altura para el cierre en tarjetas de hasta ocho días.
+        $captura['css_navegador'] = '@media print{html body .tarjeta-corta{font-size:11px;zoom:.85;page-break-inside:avoid;break-inside:avoid}html body .tarjeta-corta .firma[style]{height:23mm!important}html body .tarjeta-corta .firma-periodo{margin-top:8mm}}';
+        return $visor->preparar($captura, 'tarjeta-asistencia', $titulo,
+            $lote ? null : $filtros['usuario_id'], $request->user('api'), $detalle . ' · ' . $periodo);
+    }
+
+    /** Recupera el documento privado de la vista previa y genera el PDF. */
+    public function descargarTarjetaAsistencia(Request $request, $token)
+    {
+        return (new \App\Services\VisorDocumentos('checador_tarjeta_'))
+            ->descargar($request, $token, 'tarjeta-asistencia');
+    }
+
+    /** Envía el PDF de la misma consulta mediante el correo del visor. */
+    public function enviarTarjetaAsistencia(Request $request, $token)
+    {
+        return (new \App\Services\VisorDocumentos('checador_tarjeta_'))
+            ->enviarCorreo($request, $token, 'tarjeta-asistencia');
+    }
+
+    /** Construye el PDF compartido por la ruta anterior y el visor. */
+    private function prepararPdfTarjetaAsistencia(Request $request, bool $usarFormatoDiario = false, ?array $filtrosListado = null)
+    {
+        // --- 3️⃣ Prepare request for service method ---
+        $requestService = new \Illuminate\Http\Request([
+            'fecha_inicio' => $request->fecha_inicio,
+            'fecha_fin' => $request->fecha_fin,
+            'usuario_id' => $request->usuario_id ?? null,
+            'nombre' => $request->nombre ?? null,
+            'cementerio_funeraria_filtro' => $request->cementerio_funeraria_filtro ?? null,
+        ]);
+
+        // --- 4️⃣ Prepare report date string ---
+        $fecha_del_reporte = strtoupper("DEL " . fecha_abr($request->fecha_inicio) . " al " . fecha_abr($request->fecha_fin));
+
+        // --- 5️⃣ Get asistencia data ---
+        $datos = $this->get_asistencia_reporte($requestService, 'no_paginated', $filtrosListado);
+        if (empty($datos['tarjetas'])) {
+            return [null, null, $datos, $fecha_del_reporte];
+        }
+
+        // --- 6️⃣ Prepare PDF name ---
+        if (!$request->filled('usuario_id')) {
+            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE TODOS LOS EMPLEADOS " . $fecha_del_reporte) . '.pdf';
+        } else {
+            $name_pdf = strtoupper("TARJETA DE ASISTENCIA DE " . $datos['tarjetas'][0]['empleado'] . " " . $fecha_del_reporte) . '.pdf';
+        }
+
+        // --- 7️⃣ Get empresa data ---
+        $get_funeraria = new EmpresaController();
+        $empresa = $get_funeraria->get_empresa_data();
+
+        // --- 8️⃣ Generate PDF safely ---
+        $plantilla = $usarFormatoDiario ? 'checador.tarjeta.reporte_diario' : 'checador.tarjeta.reporte';
+        $rutaLogo = $usarFormatoDiario && env('LOGOJPG') ? public_path(env('LOGOJPG')) : null;
+        $logo = $rutaLogo && is_readable($rutaLogo)
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($rutaLogo))
+            : null;
+        $pdf = PDF::loadView($plantilla, [
+            'logo' => $logo,
+            'datos' => $datos,
+            'fecha_del_reporte' => $fecha_del_reporte,
+            'empresa' => $empresa
+        ]);
+
+        $pdf->setOptions([
+            'title' => $name_pdf,
+            'footer-html' => view('checador.tarjeta.footer', ['empresa' => $empresa]),
+            'orientation' => $usarFormatoDiario ? 'landscape' : 'portrait',
+            'page-size' => 'Letter',
+            'margin-left' => 13.4,
+            'margin-right' => 9.4,
+            'margin-top' => 9.4,
+            'margin-bottom' => 9.4,
+        ]);
+
+        return [$pdf, $name_pdf, $datos, $fecha_del_reporte];
     }
 }
