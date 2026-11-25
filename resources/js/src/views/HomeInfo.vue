@@ -2,7 +2,7 @@
   <div class="dashboard" :aria-busy="isLoading ? 'true' : 'false'">
     <!-- Configuración de temporada siempre visible para el programador. -->
     <MensajeTemporada
-      :habilitado="false && !isLoading"
+      :habilitado="true && !isLoading"
       :modo-desarrollador="false"
       :una-vez-por-sesion="false"
       :duracion="4000"
